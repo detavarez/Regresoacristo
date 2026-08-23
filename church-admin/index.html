@@ -596,7 +596,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-003';
+const APP_VERSION = 'church-admin Ver-004';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -968,14 +968,12 @@ async function guardarPersona(evt) {
     const apellido = document.getElementById('pApellido').value.trim();
     const segundoNombre = document.getElementById('pSegundoNombre').value.trim();
     const segundoApellido = document.getElementById('pSegundoApellido').value.trim();
-    const nombreCompleto = [nombre, segundoNombre, apellido, segundoApellido].filter(Boolean).join(' ');
 
     const payload = {
       nombre,
       segundo_nombre: segundoNombre || null,
       apellido,
       segundo_apellido: segundoApellido || null,
-      nombre_completo: nombreCompleto,
       fecha_nacimiento: document.getElementById('pFechaNacimiento').value || null,
       telefono: document.getElementById('pTelefono').value.trim() || null,
       correo: document.getElementById('pCorreo').value.trim() || null,
