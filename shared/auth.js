@@ -9,8 +9,8 @@
  * 'free_store', 'instituto_biblico') ANTES de cargar este script:
  *
  *   <script>const APP_SLUG = 'church_admin';</script>
- *   <script src="/shared/supabase-client.js"></script>
- *   <script src="/shared/auth.js"></script>
+ *   <script src="../shared/supabase-client.js"></script>
+ *   <script src="../shared/auth.js"></script>
  */
 
 if (typeof APP_SLUG === 'undefined') {
