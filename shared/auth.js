@@ -1,6 +1,6 @@
 /**
  * shared/auth.js
- * Ver-001 
+ * Ver-001
  *
  * Maneja login, logout, sesión activa, y resolución de rol/permisos por
  * app. Depende de shared/supabase-client.js (debe cargarse antes).
@@ -66,7 +66,7 @@ async function cargarSesion() {
 
   const { data: usuarioApp, error: errApp } = await sbCall(
     sb.from('usuario_apps')
-      .select('rol, permisos_override')
+      .select('rol, permisos')
       .eq('usuario_id', usuario.id)
       .eq('app', APP_SLUG)
       .single()
@@ -79,7 +79,7 @@ async function cargarSesion() {
     usuario,
     personaId: usuario.persona_id,
     rol: usuarioApp.rol,
-    permisos: resolverPermisos(usuarioApp.rol, usuarioApp.permisos_override),
+    permisos: resolverPermisos(usuarioApp.rol, usuarioApp.permisos),
   };
 
   return { ok: true };
