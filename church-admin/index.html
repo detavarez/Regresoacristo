@@ -177,6 +177,87 @@
   }
   .puntoEstado.ok { background: #2e8b57; }
   .puntoEstado.error { background: var(--danger); }
+
+  /* ── Vista Finanzas ───────────────────────────────────────────── */
+  .btnVolver {
+    background: none;
+    border: none;
+    color: var(--navy);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btnVolver:hover { text-decoration: underline; }
+
+  .grid-resumen {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .tarjetaResumen {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .tarjetaResumen .etiqueta {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 6px;
+  }
+  .tarjetaResumen .monto {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .tarjetaResumen.ingreso .monto { color: #1f7a4d; }
+  .tarjetaResumen.egreso .monto { color: var(--danger); }
+
+  .tablaWrap {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .tablaWrap h3 {
+    margin: 0;
+    padding: 16px 18px;
+    font-size: 0.95rem;
+    color: var(--navy);
+    border-bottom: 1px solid var(--border);
+  }
+  table.tablaTrans { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  table.tablaTrans th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  table.tablaTrans td {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+  }
+  table.tablaTrans td.montoIngreso { color: #1f7a4d; font-weight: 600; }
+  table.tablaTrans td.montoEgreso { color: var(--danger); font-weight: 600; }
+  .estadoCargando, .estadoVacio {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
 </style>
 </head>
 <body>
@@ -210,32 +291,64 @@
   </div>
 
   <div class="contenido">
-    <h2 id="saludoUsuario">Bienvenido</h2>
-    <p class="fecha" id="fechaHoy"></p>
+    <!-- ═══ Vista: Dashboard (grid de módulos) ═══ -->
+    <div id="vistaDashboard">
+      <h2 id="saludoUsuario">Bienvenido</h2>
+      <p class="fecha" id="fechaHoy"></p>
 
-    <div class="grid-modulos">
-      <div class="tarjetaModulo" onclick="alert('Próximo paso: conectar Finanzas a Supabase')">
-        <div class="icono">💰</div>
-        <h3>Finanzas</h3>
-        <p>Diezmos, ofrendas, gastos, reportes</p>
+      <div class="grid-modulos">
+        <div class="tarjetaModulo" onclick="mostrarFinanzas()">
+          <div class="icono">💰</div>
+          <h3>Finanzas</h3>
+          <p>Diezmos, ofrendas, gastos, reportes</p>
+        </div>
+        <div class="tarjetaModulo deshabilitado"><div class="icono">📇</div><h3>Secretaría</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo deshabilitado"><div class="icono">🤝</div><h3>Cuidado Pastoral</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo deshabilitado"><div class="icono">🙋</div><h3>Voluntarios</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo deshabilitado"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo deshabilitado"><div class="icono">✅</div><h3>Asistencia</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo deshabilitado"><div class="icono">👥</div><h3>Grupos Pequeños</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo deshabilitado"><div class="icono">⚙️</div><h3>Administración</h3><p>Próximamente</p></div>
       </div>
-      <div class="tarjetaModulo deshabilitado"><div class="icono">📇</div><h3>Secretaría</h3><p>Próximamente</p></div>
-      <div class="tarjetaModulo deshabilitado"><div class="icono">🤝</div><h3>Cuidado Pastoral</h3><p>Próximamente</p></div>
-      <div class="tarjetaModulo deshabilitado"><div class="icono">🙋</div><h3>Voluntarios</h3><p>Próximamente</p></div>
-      <div class="tarjetaModulo deshabilitado"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Próximamente</p></div>
-      <div class="tarjetaModulo deshabilitado"><div class="icono">✅</div><h3>Asistencia</h3><p>Próximamente</p></div>
-      <div class="tarjetaModulo deshabilitado"><div class="icono">👥</div><h3>Grupos Pequeños</h3><p>Próximamente</p></div>
-      <div class="tarjetaModulo deshabilitado"><div class="icono">⚙️</div><h3>Administración</h3><p>Próximamente</p></div>
+
+      <div class="panelEstado" id="panelEstadoConexion">
+        Verificando conexión con Supabase…
+      </div>
     </div>
 
-    <div class="panelEstado" id="panelEstadoConexion">
-      Verificando conexión con Supabase…
+    <!-- ═══ Vista: Finanzas ═══ -->
+    <div id="vistaFinanzas" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Finanzas</h2>
+      <p class="fecha" id="finanzasSubtitulo"></p>
+
+      <div class="grid-resumen">
+        <div class="tarjetaResumen ingreso">
+          <div class="etiqueta">Ingresos del mes</div>
+          <div class="monto" id="finTotalIngresos">—</div>
+        </div>
+        <div class="tarjetaResumen egreso">
+          <div class="etiqueta">Egresos del mes</div>
+          <div class="monto" id="finTotalEgresos">—</div>
+        </div>
+        <div class="tarjetaResumen">
+          <div class="etiqueta">Balance del mes</div>
+          <div class="monto" id="finBalance">—</div>
+        </div>
+      </div>
+
+      <div class="tablaWrap">
+        <h3>Transacciones recientes</h3>
+        <div id="finContenidoTabla">
+          <div class="estadoCargando">Cargando transacciones…</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-001';
+const APP_VERSION = 'church-admin Ver-002';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -298,6 +411,100 @@ async function verificarConexion() {
   } else {
     panel.innerHTML = `<span class="puntoEstado ok"></span><strong>Conectado a Supabase.</strong> ${APP_VERSION}`;
   }
+}
+
+// ── Navegación entre vistas ──────────────────────────────────────────────
+function mostrarDashboard() {
+  document.getElementById('vistaFinanzas').style.display = 'none';
+  document.getElementById('vistaDashboard').style.display = 'block';
+}
+
+function mostrarFinanzas() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaFinanzas').style.display = 'block';
+  cargarFinanzas();
+}
+
+// ── Finanzas: carga real desde Supabase ──────────────────────────────────
+function formatoMoneda(n) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n || 0);
+}
+
+function esIngreso(tipo) {
+  return (tipo || '').toLowerCase().includes('ingreso');
+}
+
+async function cargarFinanzas() {
+  const hoy = new Date();
+  const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().slice(0, 10);
+  const hoyStr = hoy.toISOString().slice(0, 10);
+
+  document.getElementById('finanzasSubtitulo').textContent = hoy.toLocaleDateString('es-ES', {
+    month: 'long', year: 'numeric'
+  });
+
+  const tablaDiv = document.getElementById('finContenidoTabla');
+  tablaDiv.innerHTML = '<div class="estadoCargando">Cargando transacciones…</div>';
+
+  const { data: transacciones, error } = await sbCall(
+    sb.from('transacciones')
+      .select('*')
+      .gte('fecha', primerDiaMes)
+      .lte('fecha', hoyStr)
+      .eq('solo_fondo', false)
+      .order('fecha', { ascending: false })
+      .order('creado_en', { ascending: false })
+  );
+
+  if (error) {
+    tablaDiv.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+    document.getElementById('finTotalIngresos').textContent = '—';
+    document.getElementById('finTotalEgresos').textContent = '—';
+    document.getElementById('finBalance').textContent = '—';
+    return;
+  }
+
+  const filas = transacciones || [];
+
+  // Totales del mes
+  let totalIngresos = 0, totalEgresos = 0;
+  filas.forEach(t => {
+    const monto = Number(t.monto) || 0;
+    if (esIngreso(t.tipo)) totalIngresos += monto;
+    else totalEgresos += monto;
+  });
+
+  document.getElementById('finTotalIngresos').textContent = formatoMoneda(totalIngresos);
+  document.getElementById('finTotalEgresos').textContent = formatoMoneda(totalEgresos);
+  document.getElementById('finBalance').textContent = formatoMoneda(totalIngresos - totalEgresos);
+
+  // Tabla de transacciones recientes (últimas 20)
+  if (filas.length === 0) {
+    tablaDiv.innerHTML = '<div class="estadoVacio">No hay transacciones este mes.</div>';
+    return;
+  }
+
+  const recientes = filas.slice(0, 20);
+  const filasHtml = recientes.map(t => {
+    const claseMonto = esIngreso(t.tipo) ? 'montoIngreso' : 'montoEgreso';
+    const signo = esIngreso(t.tipo) ? '+' : '−';
+    return `
+      <tr>
+        <td>${t.fecha}</td>
+        <td>${t.descripcion || t.categoria || '—'}</td>
+        <td>${t.categoria || '—'}</td>
+        <td>${t.metodo || '—'}</td>
+        <td class="${claseMonto}">${signo} ${formatoMoneda(Math.abs(Number(t.monto) || 0))}</td>
+      </tr>`;
+  }).join('');
+
+  tablaDiv.innerHTML = `
+    <table class="tablaTrans">
+      <thead>
+        <tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Método</th><th>Monto</th></tr>
+      </thead>
+      <tbody>${filasHtml}</tbody>
+    </table>`;
 }
 
 // ── Auto-login si ya hay sesión guardada ─────────────────────────────────
