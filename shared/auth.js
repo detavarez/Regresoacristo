@@ -58,7 +58,7 @@ async function cargarSesion() {
   }
 
   const { data: usuario, error: errUsuario } = await sbCall(
-    sb.from('usuarios').select('*').eq('auth_id', authUser.id).single()
+    sb.from('usuarios').select('*').eq('id', authUser.id).single()
   );
   if (errUsuario || !usuario) {
     return { ok: false, mensaje: 'No se encontró el perfil de usuario.' };
