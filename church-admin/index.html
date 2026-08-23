@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Church Admin — Regreso a Cristo</title>
+<script>const APP_SLUG = 'church_admin';</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/shared/supabase-client.js"></script>
+<script src="/shared/auth.js"></script>
+<style>
+  :root {
+    --navy: #0f2445;
+    --navy-light: #16345f;
+    --gold: #c9a227;
+    --gold-light: #e0c25e;
+    --bg: #f4f6f9;
+    --text: #1c2733;
+    --text-muted: #5a6a7a;
+    --border: #d8dee5;
+    --danger: #b3261e;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  /* ── Pantalla de login ────────────────────────────────────────── */
+  #pantallaLogin {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, var(--navy) 0%, var(--navy-light) 100%);
+    padding: 20px;
+  }
+  .tarjetaLogin {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  }
+  .tarjetaLogin h1 {
+    font-size: 1.4rem;
+    margin: 0 0 4px;
+    color: var(--navy);
+  }
+  .tarjetaLogin .subtitulo {
+    margin: 0 0 28px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  .campo { margin-bottom: 16px; }
+  .campo label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+  }
+  .campo input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+  .campo input:focus {
+    outline: 2px solid var(--gold);
+    outline-offset: 1px;
+    border-color: var(--gold);
+  }
+  .btnPrincipal {
+    width: 100%;
+    padding: 12px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .btnPrincipal:hover { background: var(--navy-light); }
+  .btnPrincipal:disabled { opacity: 0.6; cursor: default; }
+  .mensajeError {
+    background: #fdeceb;
+    color: var(--danger);
+    border: 1px solid #f3c6c2;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* ── Shell principal ──────────────────────────────────────────── */
+  #pantallaApp { display: none; min-height: 100vh; }
+  .topbar {
+    background: var(--navy);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topbar .marca {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .topbar .marca span { color: var(--gold-light); }
+  .topbar .usuarioInfo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.85rem;
+  }
+  .topbar button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+  }
+  .topbar button:hover { background: rgba(255,255,255,0.1); }
+
+  .contenido { padding: 28px 24px; max-width: 1100px; margin: 0 auto; }
+  .contenido h2 { color: var(--navy); margin-bottom: 4px; }
+  .contenido .fecha { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; }
+
+  .grid-modulos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .tarjetaModulo {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    cursor: pointer;
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .tarjetaModulo:hover {
+    box-shadow: 0 6px 18px rgba(15,36,69,0.12);
+    transform: translateY(-2px);
+  }
+  .tarjetaModulo .icono { font-size: 1.6rem; margin-bottom: 8px; }
+  .tarjetaModulo h3 { margin: 0 0 4px; font-size: 1rem; color: var(--navy); }
+  .tarjetaModulo p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
+  .tarjetaModulo.deshabilitado { opacity: 0.5; cursor: default; }
+
+  .panelEstado {
+    margin-top: 28px;
+    padding: 16px 18px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .panelEstado strong { color: var(--text); }
+  .puntoEstado {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  .puntoEstado.ok { background: #2e8b57; }
+  .puntoEstado.error { background: var(--danger); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ PANTALLA DE LOGIN ═══════════════ -->
+<div id="pantallaLogin">
+  <form class="tarjetaLogin" id="formLogin" onsubmit="return manejarLogin(event)">
+    <h1>Church Admin</h1>
+    <p class="subtitulo">Iglesia Regreso a Cristo</p>
+    <div class="mensajeError" id="mensajeErrorLogin"></div>
+    <div class="campo">
+      <label for="inputEmail">Correo electrónico</label>
+      <input type="email" id="inputEmail" autocomplete="username" required>
+    </div>
+    <div class="campo">
+      <label for="inputPassword">Contraseña</label>
+      <input type="password" id="inputPassword" autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="btnPrincipal" id="btnLogin">Ingresar</button>
+  </form>
+</div>
+
+<!-- ═══════════════ SHELL PRINCIPAL ═══════════════ -->
+<div id="pantallaApp">
+  <div class="topbar">
+    <div class="marca">Church <span>Admin</span></div>
+    <div class="usuarioInfo">
+      <span id="nombreUsuarioTop"></span>
+      <button onclick="manejarLogout()">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="contenido">
+    <h2 id="saludoUsuario">Bienvenido</h2>
+    <p class="fecha" id="fechaHoy"></p>
+
+    <div class="grid-modulos">
+      <div class="tarjetaModulo" onclick="alert('Próximo paso: conectar Finanzas a Supabase')">
+        <div class="icono">💰</div>
+        <h3>Finanzas</h3>
+        <p>Diezmos, ofrendas, gastos, reportes</p>
+      </div>
+      <div class="tarjetaModulo deshabilitado"><div class="icono">📇</div><h3>Secretaría</h3><p>Próximamente</p></div>
+      <div class="tarjetaModulo deshabilitado"><div class="icono">🤝</div><h3>Cuidado Pastoral</h3><p>Próximamente</p></div>
+      <div class="tarjetaModulo deshabilitado"><div class="icono">🙋</div><h3>Voluntarios</h3><p>Próximamente</p></div>
+      <div class="tarjetaModulo deshabilitado"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Próximamente</p></div>
+      <div class="tarjetaModulo deshabilitado"><div class="icono">✅</div><h3>Asistencia</h3><p>Próximamente</p></div>
+      <div class="tarjetaModulo deshabilitado"><div class="icono">👥</div><h3>Grupos Pequeños</h3><p>Próximamente</p></div>
+      <div class="tarjetaModulo deshabilitado"><div class="icono">⚙️</div><h3>Administración</h3><p>Próximamente</p></div>
+    </div>
+
+    <div class="panelEstado" id="panelEstadoConexion">
+      Verificando conexión con Supabase…
+    </div>
+  </div>
+</div>
+
+<script>
+const APP_VERSION = 'church-admin Ver-001';
+
+// ── Login ──────────────────────────────────────────────────────────────
+async function manejarLogin(evt) {
+  evt.preventDefault();
+  const email = document.getElementById('inputEmail').value.trim();
+  const password = document.getElementById('inputPassword').value;
+  const btn = document.getElementById('btnLogin');
+  const msg = document.getElementById('mensajeErrorLogin');
+
+  msg.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Ingresando…';
+
+  const resultado = await iniciarSesion(email, password);
+
+  if (!resultado.ok) {
+    msg.textContent = resultado.mensaje;
+    msg.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+    return false;
+  }
+
+  mostrarApp();
+  return false;
+}
+
+async function manejarLogout() {
+  await cerrarSesion();
+  document.getElementById('pantallaApp').style.display = 'none';
+  document.getElementById('pantallaLogin').style.display = 'flex';
+  document.getElementById('inputEmail').value = '';
+  document.getElementById('inputPassword').value = '';
+}
+
+function mostrarApp() {
+  const sesion = getSesion();
+  document.getElementById('pantallaLogin').style.display = 'none';
+  document.getElementById('pantallaApp').style.display = 'block';
+
+  const nombre = sesion.usuario?.nombre || sesion.usuario?.email || 'Usuario';
+  document.getElementById('nombreUsuarioTop').textContent = `${nombre} · ${sesion.rol || ''}`;
+  document.getElementById('saludoUsuario').textContent = `Bienvenido, ${nombre}`;
+  document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-ES', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  verificarConexion();
+}
+
+// ── Verificación de conexión (prueba real a Supabase) ───────────────────
+async function verificarConexion() {
+  const panel = document.getElementById('panelEstadoConexion');
+  const { data, error } = await sbCall(
+    sb.from('personas').select('id', { count: 'exact', head: true })
+  );
+
+  if (error) {
+    panel.innerHTML = `<span class="puntoEstado error"></span><strong>Sin conexión a Supabase.</strong> ${error.message}`;
+  } else {
+    panel.innerHTML = `<span class="puntoEstado ok"></span><strong>Conectado a Supabase.</strong> ${APP_VERSION}`;
+  }
+}
+
+// ── Auto-login si ya hay sesión guardada ─────────────────────────────────
+(async function iniciar() {
+  const resultado = await cargarSesion();
+  if (resultado.ok) {
+    mostrarApp();
+  }
+})();
+</script>
+
+</body>
+</html>
