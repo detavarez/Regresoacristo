@@ -276,7 +276,7 @@ function mostrarApp() {
   document.getElementById('pantallaLogin').style.display = 'none';
   document.getElementById('pantallaApp').style.display = 'block';
 
-  const nombre = sesion.usuario?.nombre || sesion.usuario?.email || 'Usuario';
+  const nombre = sesion.usuario?.nombre || sesion.usuario?.correo || 'Usuario';
   document.getElementById('nombreUsuarioTop').textContent = `${nombre} · ${sesion.rol || ''}`;
   document.getElementById('saludoUsuario').textContent = `Bienvenido, ${nombre}`;
   document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-ES', {
