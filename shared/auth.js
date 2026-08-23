@@ -1,6 +1,6 @@
 /**
  * shared/auth.js
- * Ver-001
+ * Ver-001 
  *
  * Maneja login, logout, sesión activa, y resolución de rol/permisos por
  * app. Depende de shared/supabase-client.js (debe cargarse antes).
