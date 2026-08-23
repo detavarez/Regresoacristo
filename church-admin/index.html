@@ -259,7 +259,37 @@
     font-size: 0.85rem;
   }
 
-  /* ── Secretaría ────────────────────────────────────────────────── */
+  /* ── Cuidado Pastoral ─────────────────────────────────────────── */
+  .tarjetaSeguimiento {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .tarjetaSeguimiento:hover { box-shadow: 0 4px 14px rgba(15,36,69,0.1); }
+  .tarjetaSeguimiento .nombrePersona { font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+  .tarjetaSeguimiento .metaLinea { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+  .tarjetaSeguimiento .notasPreview { font-size: 0.85rem; color: var(--text); }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-prioridad-Baja { background: #e6f0e9; color: #2e6b47; }
+  .badge-prioridad-Media { background: #fff3d6; color: #8a6100; }
+  .badge-prioridad-Alta { background: #fde3d3; color: #a34d0a; }
+  .badge-prioridad-Urgente { background: #fdeceb; color: var(--danger); }
+  .badge-tipo { background: var(--bg); color: var(--text-muted); }
+  .proximoVencido { color: var(--danger); font-weight: 600; }
   .subtabs {
     display: flex;
     gap: 4px;
@@ -469,7 +499,7 @@
           <h3>Secretaría</h3>
           <p>Directorio de miembros y familias</p>
         </div>
-        <div class="tarjetaModulo deshabilitado"><div class="icono">🤝</div><h3>Cuidado Pastoral</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo" onclick="mostrarPastoral()"><div class="icono">🤝</div><h3>Cuidado Pastoral</h3><p>Seguimientos y visitas</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">🙋</div><h3>Voluntarios</h3><p>Próximamente</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Próximamente</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">✅</div><h3>Asistencia</h3><p>Próximamente</p></div>
@@ -540,6 +570,70 @@
       </div>
     </div>
 
+    <!-- ═══ Vista: Cuidado Pastoral ═══ -->
+    <div id="vistaPastoral" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Cuidado Pastoral</h2>
+      <p class="fecha">Seguimientos, visitas y necesidades pastorales</p>
+
+      <div class="barraAcciones">
+        <input type="text" id="buscadorPastoral" placeholder="Buscar por nombre de persona…" oninput="filtrarSeguimientos()">
+        <button class="btnAccion" onclick="abrirFormSeguimiento()">+ Nuevo Seguimiento</button>
+      </div>
+
+      <div id="listaSeguimientos">
+        <div class="estadoCargando">Cargando seguimientos…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Seguimiento Pastoral ═══════════════ -->
+<div class="modalOverlay" id="modalSeguimiento">
+  <div class="modalCaja">
+    <h3 id="modalSeguimientoTitulo">Nuevo Seguimiento</h3>
+    <form id="formSeguimiento" onsubmit="return guardarSeguimiento(event)">
+      <input type="hidden" id="seguimientoId">
+      <div class="formGrid">
+        <div class="full">
+          <label for="sPersonaBuscar">Persona *</label>
+          <input type="text" id="sPersonaBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarPersonaSeguimiento()">
+          <input type="hidden" id="sPersonaId" required>
+          <div id="sugerenciasPersona" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="sPersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+
+        <div><label for="sFecha">Fecha *</label><input type="date" id="sFecha" required></div>
+        <div>
+          <label for="sTipo">Tipo *</label>
+          <select id="sTipo" required>
+            <option value="Visita">Visita</option>
+            <option value="Llamada">Llamada</option>
+            <option value="Oración">Oración</option>
+            <option value="Hospital">Hospital</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div>
+          <label for="sPrioridad">Prioridad</label>
+          <select id="sPrioridad">
+            <option value="Baja">Baja</option>
+            <option value="Media" selected>Media</option>
+            <option value="Alta">Alta</option>
+            <option value="Urgente">Urgente</option>
+          </select>
+        </div>
+        <div><label for="sProximoSeguimiento">Próximo seguimiento</label><input type="date" id="sProximoSeguimiento"></div>
+        <div class="full"><label for="sNotas">Notas del encuentro</label><textarea id="sNotas" rows="4"></textarea></div>
+      </div>
+
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarSeguimiento" onclick="eliminarSeguimiento()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalSeguimiento()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -596,7 +690,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-004';
+const APP_VERSION = 'church-admin Ver-005';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -665,6 +759,7 @@ async function verificarConexion() {
 function mostrarDashboard() {
   document.getElementById('vistaFinanzas').style.display = 'none';
   document.getElementById('vistaSecretaria').style.display = 'none';
+  document.getElementById('vistaPastoral').style.display = 'none';
   document.getElementById('vistaDashboard').style.display = 'block';
 }
 
@@ -1029,6 +1124,222 @@ async function archivarPersonaActual() {
 
   cerrarModalPersona();
   await cargarDirectorio();
+}
+
+// ── Cuidado Pastoral ──────────────────────────────────────────────────────
+let cacheSeguimientos = [];
+
+function mostrarPastoral() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaPastoral').style.display = 'block';
+  cargarSeguimientos();
+}
+
+function formatoFecha(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${m}/${d}/${y}`;
+}
+
+function esFechaVencida(iso) {
+  if (!iso) return false;
+  return iso < new Date().toISOString().slice(0, 10);
+}
+
+async function cargarSeguimientos() {
+  const lista = document.getElementById('listaSeguimientos');
+  lista.innerHTML = '<div class="estadoCargando">Cargando seguimientos…</div>';
+
+  // Aseguramos tener el directorio de personas en cache para mostrar nombres y buscar
+  if (cacheDirectorio.length === 0) {
+    await sbCall(sb.from('personas').select('*').eq('archivado', false)).then(({ data }) => {
+      if (data) cacheDirectorio = data;
+    });
+  }
+
+  const { data, error } = await sbCall(
+    sb.from('seguimientos_pastorales')
+      .select('*')
+      .order('fecha', { ascending: false })
+  );
+
+  if (error) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+    return;
+  }
+
+  cacheSeguimientos = data || [];
+  renderSeguimientos(cacheSeguimientos);
+}
+
+function nombrePersonaPorId(id) {
+  const p = cacheDirectorio.find(x => x.id === id);
+  if (!p) return 'Persona no encontrada';
+  return p.nombre_completo || `${p.nombre} ${p.apellido}`;
+}
+
+function renderSeguimientos(filas) {
+  const lista = document.getElementById('listaSeguimientos');
+
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay seguimientos registrados.</div>';
+    return;
+  }
+
+  lista.innerHTML = filas.map(s => {
+    const vencido = esFechaVencida(s.fecha_proximo_seguimiento);
+    const proximoHtml = s.fecha_proximo_seguimiento
+      ? `<span class="${vencido ? 'proximoVencido' : ''}">Próximo: ${formatoFecha(s.fecha_proximo_seguimiento)}${vencido ? ' (vencido)' : ''}</span>`
+      : '';
+    return `
+      <div class="tarjetaSeguimiento" onclick="abrirFormSeguimiento('${s.id}')">
+        <div>
+          <div class="nombrePersona">${nombrePersonaPorId(s.persona_id)}</div>
+          <div class="metaLinea">
+            <span class="badge badge-tipo">${s.tipo}</span>
+            &nbsp;${formatoFecha(s.fecha)}
+            ${proximoHtml ? ' · ' + proximoHtml : ''}
+          </div>
+          ${s.notas ? `<div class="notasPreview">${s.notas.length > 140 ? s.notas.slice(0, 140) + '…' : s.notas}</div>` : ''}
+        </div>
+        <span class="badge badge-prioridad-${s.prioridad}">${s.prioridad}</span>
+      </div>`;
+  }).join('');
+}
+
+function filtrarSeguimientos() {
+  const q = document.getElementById('buscadorPastoral').value.trim().toLowerCase();
+  if (!q) { renderSeguimientos(cacheSeguimientos); return; }
+  const filtrados = cacheSeguimientos.filter(s =>
+    nombrePersonaPorId(s.persona_id).toLowerCase().includes(q)
+  );
+  renderSeguimientos(filtrados);
+}
+
+// ── Modal Seguimiento ────────────────────────────────────────────────────
+function abrirFormSeguimiento(id) {
+  const form = document.getElementById('formSeguimiento');
+  form.reset();
+  document.getElementById('seguimientoId').value = '';
+  document.getElementById('sPersonaId').value = '';
+  document.getElementById('sPersonaBuscar').value = '';
+  document.getElementById('sPersonaSeleccionada').textContent = '';
+  document.getElementById('sugerenciasPersona').style.display = 'none';
+  document.getElementById('btnEliminarSeguimiento').style.display = 'none';
+  document.getElementById('sFecha').value = new Date().toISOString().slice(0, 10);
+
+  if (id) {
+    const s = cacheSeguimientos.find(x => x.id === id);
+    if (s) {
+      document.getElementById('modalSeguimientoTitulo').textContent = 'Editar Seguimiento';
+      document.getElementById('seguimientoId').value = s.id;
+      document.getElementById('sPersonaId').value = s.persona_id;
+      document.getElementById('sPersonaSeleccionada').textContent = nombrePersonaPorId(s.persona_id);
+      document.getElementById('sFecha').value = s.fecha;
+      document.getElementById('sTipo').value = s.tipo;
+      document.getElementById('sPrioridad').value = s.prioridad;
+      document.getElementById('sProximoSeguimiento').value = s.fecha_proximo_seguimiento || '';
+      document.getElementById('sNotas').value = s.notas || '';
+      document.getElementById('btnEliminarSeguimiento').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalSeguimientoTitulo').textContent = 'Nuevo Seguimiento';
+  }
+
+  document.getElementById('modalSeguimiento').classList.add('abierto');
+}
+
+function cerrarModalSeguimiento() {
+  document.getElementById('modalSeguimiento').classList.remove('abierto');
+}
+
+function filtrarPersonaSeguimiento() {
+  const q = document.getElementById('sPersonaBuscar').value.trim().toLowerCase();
+  const contenedor = document.getElementById('sugerenciasPersona');
+
+  if (q.length < 2) {
+    contenedor.style.display = 'none';
+    return;
+  }
+
+  const coincidencias = cacheDirectorio.filter(p =>
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (coincidencias.length === 0) {
+    contenedor.innerHTML = '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+    contenedor.style.display = 'block';
+    return;
+  }
+
+  contenedor.innerHTML = coincidencias.map(p => `
+    <div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;"
+         onmousedown="seleccionarPersonaSeguimiento('${p.id}')">
+      ${p.nombre_completo || `${p.nombre} ${p.apellido}`}
+    </div>`).join('');
+  contenedor.style.display = 'block';
+}
+
+function seleccionarPersonaSeguimiento(id) {
+  document.getElementById('sPersonaId').value = id;
+  document.getElementById('sPersonaSeleccionada').textContent = nombrePersonaPorId(id);
+  document.getElementById('sPersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersona').style.display = 'none';
+}
+
+async function guardarSeguimiento(evt) {
+  evt.preventDefault();
+
+  const personaId = document.getElementById('sPersonaId').value;
+  if (!personaId) {
+    alert('Selecciona una persona de la lista de sugerencias.');
+    return false;
+  }
+
+  const id = document.getElementById('seguimientoId').value;
+  const sesion = getSesion();
+
+  const payload = {
+    persona_id: personaId,
+    fecha: document.getElementById('sFecha').value,
+    tipo: document.getElementById('sTipo').value,
+    prioridad: document.getElementById('sPrioridad').value,
+    fecha_proximo_seguimiento: document.getElementById('sProximoSeguimiento').value || null,
+    notas: document.getElementById('sNotas').value.trim() || null,
+    atendido_por: sesion.usuario?.id || null,
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('seguimientos_pastorales').update(payload).eq('id', id)));
+  } else {
+    payload.creado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('seguimientos_pastorales').insert(payload)));
+  }
+
+  if (error) {
+    alert('Error al guardar: ' + error.message);
+    return false;
+  }
+
+  cerrarModalSeguimiento();
+  cargarSeguimientos();
+  return false;
+}
+
+async function eliminarSeguimiento() {
+  const id = document.getElementById('seguimientoId').value;
+  if (!id) return;
+  if (!confirm('¿Eliminar este seguimiento? Esta acción no se puede deshacer.')) return;
+
+  const { error } = await sbCall(sb.from('seguimientos_pastorales').delete().eq('id', id));
+  if (error) {
+    alert('Error al eliminar: ' + error.message);
+    return;
+  }
+
+  cerrarModalSeguimiento();
+  cargarSeguimientos();
 }
 
 // ── Auto-login si ya hay sesión guardada ─────────────────────────────────
