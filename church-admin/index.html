@@ -290,6 +290,8 @@
   .badge-prioridad-Urgente { background: #fdeceb; color: var(--danger); }
   .badge-tipo { background: var(--bg); color: var(--text-muted); }
   .proximoVencido { color: var(--danger); font-weight: 600; }
+  .badge-estado-Activo { background: #e6f0e9; color: #2e6b47; }
+  .badge-estado-Inactivo { background: #eceff2; color: var(--text-muted); }
   .subtabs {
     display: flex;
     gap: 4px;
@@ -500,7 +502,7 @@
           <p>Directorio de miembros y familias</p>
         </div>
         <div class="tarjetaModulo" onclick="mostrarPastoral()"><div class="icono">🤝</div><h3>Cuidado Pastoral</h3><p>Seguimientos y visitas</p></div>
-        <div class="tarjetaModulo deshabilitado"><div class="icono">🙋</div><h3>Voluntarios</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo" onclick="mostrarVoluntarios()"><div class="icono">🙋</div><h3>Voluntarios</h3><p>Ministerios y asignaciones</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Próximamente</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">✅</div><h3>Asistencia</h3><p>Próximamente</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">👥</div><h3>Grupos Pequeños</h3><p>Próximamente</p></div>
@@ -586,6 +588,65 @@
       </div>
     </div>
 
+    <!-- ═══ Vista: Voluntarios ═══ -->
+    <div id="vistaVoluntarios" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Voluntarios</h2>
+      <p class="fecha">Ministerios y asignaciones de voluntarios</p>
+
+      <div class="barraAcciones">
+        <input type="text" id="buscadorVoluntarios" placeholder="Buscar por nombre o ministerio…" oninput="filtrarVoluntarios()">
+        <button class="btnAccion" onclick="abrirFormVoluntario()">+ Nueva Asignación</button>
+      </div>
+
+      <div id="listaVoluntarios">
+        <div class="estadoCargando">Cargando voluntarios…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nueva/Editar Asignación de Voluntario ═══════════════ -->
+<div class="modalOverlay" id="modalVoluntario">
+  <div class="modalCaja">
+    <h3 id="modalVoluntarioTitulo">Nueva Asignación</h3>
+    <form id="formVoluntario" onsubmit="return guardarVoluntario(event)">
+      <input type="hidden" id="vAsignacionId">
+      <div class="formGrid">
+        <div class="full">
+          <label for="vPersonaBuscar">Persona *</label>
+          <input type="text" id="vPersonaBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarPersonaVoluntario()">
+          <input type="hidden" id="vPersonaId" required>
+          <div id="sugerenciasPersonaVoluntario" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="vPersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+
+        <div>
+          <label for="vMinisterio">Ministerio *</label>
+          <select id="vMinisterio" required>
+            <option value="">Selecciona…</option>
+          </select>
+        </div>
+        <div><label for="vRol">Rol / función</label><input type="text" id="vRol" placeholder="Líder, Miembro, Ujier principal…"></div>
+        <div><label for="vFechaInicio">Fecha de inicio</label><input type="date" id="vFechaInicio"></div>
+        <div>
+          <label for="vEstado">Estado</label>
+          <select id="vEstado">
+            <option value="Activo" selected>Activo</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
+        </div>
+        <div class="full"><label for="vDisponibilidad">Disponibilidad</label><input type="text" id="vDisponibilidad" placeholder="Domingos AM, Miércoles PM…"></div>
+        <div class="full"><label for="vNotas">Notas</label><textarea id="vNotas" rows="3"></textarea></div>
+      </div>
+
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarVoluntario" onclick="eliminarVoluntario()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalVoluntario()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -690,7 +751,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-005';
+const APP_VERSION = 'church-admin Ver-006';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -760,6 +821,7 @@ function mostrarDashboard() {
   document.getElementById('vistaFinanzas').style.display = 'none';
   document.getElementById('vistaSecretaria').style.display = 'none';
   document.getElementById('vistaPastoral').style.display = 'none';
+  document.getElementById('vistaVoluntarios').style.display = 'none';
   document.getElementById('vistaDashboard').style.display = 'block';
 }
 
@@ -1340,6 +1402,216 @@ async function eliminarSeguimiento() {
 
   cerrarModalSeguimiento();
   cargarSeguimientos();
+}
+
+// ── Voluntarios ───────────────────────────────────────────────────────────
+let cacheVoluntarios = [];
+let cacheMinisterios = [];
+
+function mostrarVoluntarios() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaVoluntarios').style.display = 'block';
+  cargarVoluntarios();
+}
+
+function nombreMinisterioPorId(id) {
+  const m = cacheMinisterios.find(x => x.id === id);
+  return m ? m.nombre : 'Ministerio no encontrado';
+}
+
+async function cargarVoluntarios() {
+  const lista = document.getElementById('listaVoluntarios');
+  lista.innerHTML = '<div class="estadoCargando">Cargando voluntarios…</div>';
+
+  if (cacheDirectorio.length === 0) {
+    await sbCall(sb.from('personas').select('*').eq('archivado', false)).then(({ data }) => {
+      if (data) cacheDirectorio = data;
+    });
+  }
+
+  const [{ data: ministerios, error: errMin }, { data: asignaciones, error: errAsig }] = await Promise.all([
+    sbCall(sb.from('ministerios').select('*').order('nombre', { ascending: true })),
+    sbCall(sb.from('voluntarios_asignaciones').select('*').order('creado_en', { ascending: false })),
+  ]);
+
+  if (errMin || errAsig) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${(errMin || errAsig).message}</div>`;
+    return;
+  }
+
+  cacheMinisterios = ministerios || [];
+  cacheVoluntarios = asignaciones || [];
+
+  const selectMinisterio = document.getElementById('vMinisterio');
+  selectMinisterio.innerHTML = '<option value="">Selecciona…</option>' +
+    cacheMinisterios.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+
+  renderVoluntarios(cacheVoluntarios);
+}
+
+function renderVoluntarios(filas) {
+  const lista = document.getElementById('listaVoluntarios');
+
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay asignaciones de voluntarios registradas.</div>';
+    return;
+  }
+
+  lista.innerHTML = filas.map(v => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormVoluntario('${v.id}')">
+      <div>
+        <div class="nombrePersona">${nombrePersonaPorId(v.persona_id)}</div>
+        <div class="metaLinea">
+          <span class="badge badge-tipo">${nombreMinisterioPorId(v.ministerio_id)}</span>
+          ${v.rol ? ' · ' + v.rol : ''}
+          ${v.fecha_inicio ? ' · Desde ' + formatoFecha(v.fecha_inicio) : ''}
+        </div>
+        ${v.disponibilidad ? `<div class="notasPreview">📅 ${v.disponibilidad}</div>` : ''}
+      </div>
+      <span class="badge badge-estado-${v.estado}">${v.estado}</span>
+    </div>`).join('');
+}
+
+function filtrarVoluntarios() {
+  const q = document.getElementById('buscadorVoluntarios').value.trim().toLowerCase();
+  if (!q) { renderVoluntarios(cacheVoluntarios); return; }
+  const filtrados = cacheVoluntarios.filter(v =>
+    nombrePersonaPorId(v.persona_id).toLowerCase().includes(q) ||
+    nombreMinisterioPorId(v.ministerio_id).toLowerCase().includes(q)
+  );
+  renderVoluntarios(filtrados);
+}
+
+// ── Modal Voluntario ─────────────────────────────────────────────────────
+function abrirFormVoluntario(id) {
+  const form = document.getElementById('formVoluntario');
+  form.reset();
+  document.getElementById('vAsignacionId').value = '';
+  document.getElementById('vPersonaId').value = '';
+  document.getElementById('vPersonaBuscar').value = '';
+  document.getElementById('vPersonaSeleccionada').textContent = '';
+  document.getElementById('sugerenciasPersonaVoluntario').style.display = 'none';
+  document.getElementById('btnEliminarVoluntario').style.display = 'none';
+  document.getElementById('vFechaInicio').value = new Date().toISOString().slice(0, 10);
+
+  if (id) {
+    const v = cacheVoluntarios.find(x => x.id === id);
+    if (v) {
+      document.getElementById('modalVoluntarioTitulo').textContent = 'Editar Asignación';
+      document.getElementById('vAsignacionId').value = v.id;
+      document.getElementById('vPersonaId').value = v.persona_id;
+      document.getElementById('vPersonaSeleccionada').textContent = nombrePersonaPorId(v.persona_id);
+      document.getElementById('vMinisterio').value = v.ministerio_id;
+      document.getElementById('vRol').value = v.rol || '';
+      document.getElementById('vFechaInicio').value = v.fecha_inicio || '';
+      document.getElementById('vEstado').value = v.estado;
+      document.getElementById('vDisponibilidad').value = v.disponibilidad || '';
+      document.getElementById('vNotas').value = v.notas || '';
+      document.getElementById('btnEliminarVoluntario').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalVoluntarioTitulo').textContent = 'Nueva Asignación';
+  }
+
+  document.getElementById('modalVoluntario').classList.add('abierto');
+}
+
+function cerrarModalVoluntario() {
+  document.getElementById('modalVoluntario').classList.remove('abierto');
+}
+
+function filtrarPersonaVoluntario() {
+  const q = document.getElementById('vPersonaBuscar').value.trim().toLowerCase();
+  const contenedor = document.getElementById('sugerenciasPersonaVoluntario');
+
+  if (q.length < 2) {
+    contenedor.style.display = 'none';
+    return;
+  }
+
+  const coincidencias = cacheDirectorio.filter(p =>
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (coincidencias.length === 0) {
+    contenedor.innerHTML = '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+    contenedor.style.display = 'block';
+    return;
+  }
+
+  contenedor.innerHTML = coincidencias.map(p => `
+    <div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;"
+         onmousedown="seleccionarPersonaVoluntario('${p.id}')">
+      ${p.nombre_completo || `${p.nombre} ${p.apellido}`}
+    </div>`).join('');
+  contenedor.style.display = 'block';
+}
+
+function seleccionarPersonaVoluntario(id) {
+  document.getElementById('vPersonaId').value = id;
+  document.getElementById('vPersonaSeleccionada').textContent = nombrePersonaPorId(id);
+  document.getElementById('vPersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersonaVoluntario').style.display = 'none';
+}
+
+async function guardarVoluntario(evt) {
+  evt.preventDefault();
+
+  const personaId = document.getElementById('vPersonaId').value;
+  const ministerioId = document.getElementById('vMinisterio').value;
+  if (!personaId) {
+    alert('Selecciona una persona de la lista de sugerencias.');
+    return false;
+  }
+  if (!ministerioId) {
+    alert('Selecciona un ministerio.');
+    return false;
+  }
+
+  const id = document.getElementById('vAsignacionId').value;
+  const sesion = getSesion();
+
+  const payload = {
+    persona_id: personaId,
+    ministerio_id: ministerioId,
+    rol: document.getElementById('vRol').value.trim() || null,
+    fecha_inicio: document.getElementById('vFechaInicio').value || null,
+    estado: document.getElementById('vEstado').value,
+    disponibilidad: document.getElementById('vDisponibilidad').value.trim() || null,
+    notas: document.getElementById('vNotas').value.trim() || null,
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('voluntarios_asignaciones').update(payload).eq('id', id)));
+  } else {
+    payload.creado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('voluntarios_asignaciones').insert(payload)));
+  }
+
+  if (error) {
+    alert('Error al guardar: ' + error.message);
+    return false;
+  }
+
+  cerrarModalVoluntario();
+  cargarVoluntarios();
+  return false;
+}
+
+async function eliminarVoluntario() {
+  const id = document.getElementById('vAsignacionId').value;
+  if (!id) return;
+  if (!confirm('¿Eliminar esta asignación? Esta acción no se puede deshacer.')) return;
+
+  const { error } = await sbCall(sb.from('voluntarios_asignaciones').delete().eq('id', id));
+  if (error) {
+    alert('Error al eliminar: ' + error.message);
+    return;
+  }
+
+  cerrarModalVoluntario();
+  cargarVoluntarios();
 }
 
 // ── Auto-login si ya hay sesión guardada ─────────────────────────────────
