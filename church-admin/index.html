@@ -509,7 +509,7 @@
         <div class="tarjetaModulo" onclick="mostrarComunicaciones()"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Anuncios y mensajes</p></div>
         <div class="tarjetaModulo" onclick="mostrarAsistencia()"><div class="icono">✅</div><h3>Asistencia</h3><p>Registro de servicios y reuniones</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">👥</div><h3>Grupos Pequeños</h3><p>Próximamente</p></div>
-        <div class="tarjetaModulo deshabilitado"><div class="icono">⚙️</div><h3>Administración</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo" onclick="mostrarAdministracion()"><div class="icono">⚙️</div><h3>Administración</h3><p>Usuarios, roles y catálogos</p></div>
       </div>
 
       <div class="panelEstado" id="panelEstadoConexion">
@@ -657,6 +657,73 @@
       </div>
     </div>
 
+    <!-- ═══ Vista: Administración ═══ -->
+    <div id="vistaAdministracion" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Administración</h2>
+      <p class="fecha">Usuarios, roles y catálogos del sistema</p>
+
+      <div class="subtabs">
+        <button class="subtab activa" id="subtabUsuariosBtn" onclick="cambiarSubtabAdmin('usuarios')">Usuarios y Roles</button>
+        <button class="subtab" id="subtabCatalogosBtn" onclick="cambiarSubtabAdmin('catalogos')">Catálogos</button>
+      </div>
+
+      <!-- Sub-vista: Usuarios y Roles -->
+      <div id="subvistaUsuarios">
+        <p class="fecha" style="margin-bottom:16px;">Para crear una cuenta nueva desde cero, hazlo en Supabase Dashboard → Authentication. Aquí puedes asignar o cambiar el rol de alguien que ya tiene cuenta.</p>
+        <div id="listaUsuariosAdmin">
+          <div class="estadoCargando">Cargando usuarios…</div>
+        </div>
+      </div>
+
+      <!-- Sub-vista: Catálogos -->
+      <div id="subvistaCatalogos" style="display:none;">
+        <div class="tablaWrap" style="margin-bottom:20px;">
+          <h3>Ministerios</h3>
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
+            <input type="text" id="nuevoMinisterioInput" placeholder="Nombre del nuevo ministerio…" style="flex:1;">
+            <button class="btnAccion" onclick="agregarMinisterio()">+ Agregar</button>
+          </div>
+          <div id="listaCatalogoMinisterios" style="padding:8px 18px;"></div>
+        </div>
+
+        <div class="tablaWrap">
+          <h3>Tipos de Servicio</h3>
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
+            <input type="text" id="nuevoTipoServicioInput" placeholder="Nombre del nuevo tipo de servicio…" style="flex:1;">
+            <button class="btnAccion" onclick="agregarTipoServicio()">+ Agregar</button>
+          </div>
+          <div id="listaCatalogoTiposServicio" style="padding:8px 18px;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Editar Rol de Usuario ═══════════════ -->
+<div class="modalOverlay" id="modalRolUsuario">
+  <div class="modalCaja">
+    <h3 id="modalRolUsuarioTitulo">Editar acceso</h3>
+    <form id="formRolUsuario" onsubmit="return guardarRolUsuario(event)">
+      <input type="hidden" id="ruUsuarioId">
+      <div class="formGrid">
+        <div class="full" id="ruNombreUsuario" style="font-weight:600; color: var(--navy);"></div>
+        <div>
+          <label for="ruRol">Rol en Church Admin</label>
+          <select id="ruRol">
+            <option value="">Sin acceso</option>
+            <option value="Administrador">Administrador</option>
+            <option value="Tesorero">Tesorero</option>
+            <option value="Colaborador">Colaborador</option>
+          </select>
+        </div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" onclick="cerrarModalRolUsuario()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -904,7 +971,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-008';
+const APP_VERSION = 'church-admin Ver-009';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -977,6 +1044,7 @@ function mostrarDashboard() {
   document.getElementById('vistaVoluntarios').style.display = 'none';
   document.getElementById('vistaComunicaciones').style.display = 'none';
   document.getElementById('vistaAsistencia').style.display = 'none';
+  document.getElementById('vistaAdministracion').style.display = 'none';
   document.getElementById('vistaDashboard').style.display = 'block';
 }
 
@@ -2202,6 +2270,184 @@ async function eliminarAsistencia() {
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalAsistencia();
   cargarAsistencia();
+}
+
+// ── Administración ────────────────────────────────────────────────────────
+let cacheUsuariosAdmin = [];
+let cacheUsuarioApps = [];
+
+function mostrarAdministracion() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaAdministracion').style.display = 'block';
+  cargarUsuariosAdmin();
+  cargarCatalogos();
+}
+
+function cambiarSubtabAdmin(tab) {
+  const esUsuarios = tab === 'usuarios';
+  document.getElementById('subtabUsuariosBtn').classList.toggle('activa', esUsuarios);
+  document.getElementById('subtabCatalogosBtn').classList.toggle('activa', !esUsuarios);
+  document.getElementById('subvistaUsuarios').style.display = esUsuarios ? 'block' : 'none';
+  document.getElementById('subvistaCatalogos').style.display = esUsuarios ? 'none' : 'block';
+}
+
+// ── Usuarios y Roles ──────────────────────────────────────────────────────
+async function cargarUsuariosAdmin() {
+  const lista = document.getElementById('listaUsuariosAdmin');
+  lista.innerHTML = '<div class="estadoCargando">Cargando usuarios…</div>';
+
+  const [{ data: usuarios, error: errU }, { data: apps, error: errA }] = await Promise.all([
+    sbCall(sb.from('usuarios').select('*').order('nombre', { ascending: true })),
+    sbCall(sb.from('usuario_apps').select('*').eq('app', 'church_admin')),
+  ]);
+
+  if (errU || errA) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${(errU || errA).message}</div>`;
+    return;
+  }
+
+  cacheUsuariosAdmin = usuarios || [];
+  cacheUsuarioApps = apps || [];
+  renderUsuariosAdmin();
+}
+
+function rolDeUsuario(usuarioId) {
+  const fila = cacheUsuarioApps.find(a => a.usuario_id === usuarioId);
+  return fila ? fila.rol : null;
+}
+
+function renderUsuariosAdmin() {
+  const lista = document.getElementById('listaUsuariosAdmin');
+  if (cacheUsuariosAdmin.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay usuarios registrados.</div>';
+    return;
+  }
+  lista.innerHTML = cacheUsuariosAdmin.map(u => {
+    const rol = rolDeUsuario(u.id);
+    return `
+      <div class="tarjetaSeguimiento" onclick="abrirModalRolUsuario('${u.id}')">
+        <div>
+          <div class="nombrePersona">${u.nombre || u.correo}</div>
+          <div class="metaLinea">${u.correo}${u.activo === false ? ' · Cuenta inactiva' : ''}</div>
+        </div>
+        ${rol ? `<span class="badge badge-tipo">${rol}</span>` : `<span class="badge badge-estado-Inactivo">Sin acceso</span>`}
+      </div>`;
+  }).join('');
+}
+
+function abrirModalRolUsuario(usuarioId) {
+  const u = cacheUsuariosAdmin.find(x => x.id === usuarioId);
+  if (!u) return;
+  document.getElementById('ruUsuarioId').value = usuarioId;
+  document.getElementById('ruNombreUsuario').textContent = `${u.nombre || u.correo} (${u.correo})`;
+  document.getElementById('ruRol').value = rolDeUsuario(usuarioId) || '';
+  document.getElementById('modalRolUsuario').classList.add('abierto');
+}
+
+function cerrarModalRolUsuario() {
+  document.getElementById('modalRolUsuario').classList.remove('abierto');
+}
+
+async function guardarRolUsuario(evt) {
+  evt.preventDefault();
+  const usuarioId = document.getElementById('ruUsuarioId').value;
+  const nuevoRol = document.getElementById('ruRol').value;
+  const filaExistente = cacheUsuarioApps.find(a => a.usuario_id === usuarioId);
+
+  let error;
+  if (!nuevoRol) {
+    // "Sin acceso" — quitar el registro si existía
+    if (filaExistente) {
+      ({ error } = await sbCall(sb.from('usuario_apps').delete().eq('usuario_id', usuarioId).eq('app', 'church_admin')));
+    }
+  } else if (filaExistente) {
+    ({ error } = await sbCall(
+      sb.from('usuario_apps').update({ rol: nuevoRol }).eq('usuario_id', usuarioId).eq('app', 'church_admin')
+    ));
+  } else {
+    ({ error } = await sbCall(
+      sb.from('usuario_apps').insert({ usuario_id: usuarioId, app: 'church_admin', rol: nuevoRol, permisos: {}, activo: true })
+    ));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalRolUsuario();
+  cargarUsuariosAdmin();
+  return false;
+}
+
+// ── Catálogos: Ministerios y Tipos de Servicio ───────────────────────────
+async function cargarCatalogos() {
+  const [{ data: ministerios }, { data: tipos }] = await Promise.all([
+    sbCall(sb.from('ministerios').select('*').order('nombre', { ascending: true })),
+    sbCall(sb.from('tipos_servicio').select('*').order('nombre', { ascending: true })),
+  ]);
+  cacheMinisterios = ministerios || [];
+  cacheTiposServicio = tipos || [];
+  renderCatalogoMinisterios();
+  renderCatalogoTiposServicio();
+}
+
+function renderCatalogoMinisterios() {
+  const cont = document.getElementById('listaCatalogoMinisterios');
+  if (cacheMinisterios.length === 0) {
+    cont.innerHTML = '<div class="estadoVacio">Sin ministerios registrados.</div>';
+    return;
+  }
+  cont.innerHTML = cacheMinisterios.map(m => `
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
+      <span>${m.nombre}</span>
+      <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="toggleActivoMinisterio('${m.id}', ${!m.activo})">
+        ${m.activo ? 'Activo' : 'Inactivo'}
+      </button>
+    </div>`).join('');
+}
+
+function renderCatalogoTiposServicio() {
+  const cont = document.getElementById('listaCatalogoTiposServicio');
+  if (cacheTiposServicio.length === 0) {
+    cont.innerHTML = '<div class="estadoVacio">Sin tipos de servicio registrados.</div>';
+    return;
+  }
+  cont.innerHTML = cacheTiposServicio.map(t => `
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
+      <span>${t.nombre}</span>
+      <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="toggleActivoTipoServicio('${t.id}', ${!t.activo})">
+        ${t.activo ? 'Activo' : 'Inactivo'}
+      </button>
+    </div>`).join('');
+}
+
+async function agregarMinisterio() {
+  const input = document.getElementById('nuevoMinisterioInput');
+  const nombre = input.value.trim();
+  if (!nombre) return;
+  const { error } = await sbCall(sb.from('ministerios').insert({ nombre, activo: true }));
+  if (error) { alert('Error al agregar: ' + error.message); return; }
+  input.value = '';
+  cargarCatalogos();
+}
+
+async function toggleActivoMinisterio(id, nuevoValor) {
+  const { error } = await sbCall(sb.from('ministerios').update({ activo: nuevoValor }).eq('id', id));
+  if (error) { alert('Error: ' + error.message); return; }
+  cargarCatalogos();
+}
+
+async function agregarTipoServicio() {
+  const input = document.getElementById('nuevoTipoServicioInput');
+  const nombre = input.value.trim();
+  if (!nombre) return;
+  const { error } = await sbCall(sb.from('tipos_servicio').insert({ nombre, activo: true }));
+  if (error) { alert('Error al agregar: ' + error.message); return; }
+  input.value = '';
+  cargarCatalogos();
+}
+
+async function toggleActivoTipoServicio(id, nuevoValor) {
+  const { error } = await sbCall(sb.from('tipos_servicio').update({ activo: nuevoValor }).eq('id', id));
+  if (error) { alert('Error: ' + error.message); return; }
+  cargarCatalogos();
 }
 
 // ── Auto-login si ya hay sesión guardada ─────────────────────────────────
