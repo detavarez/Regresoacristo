@@ -507,7 +507,7 @@
         <div class="tarjetaModulo" onclick="mostrarPastoral()"><div class="icono">🤝</div><h3>Cuidado Pastoral</h3><p>Seguimientos y visitas</p></div>
         <div class="tarjetaModulo" onclick="mostrarVoluntarios()"><div class="icono">🙋</div><h3>Voluntarios</h3><p>Ministerios y asignaciones</p></div>
         <div class="tarjetaModulo" onclick="mostrarComunicaciones()"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Anuncios y mensajes</p></div>
-        <div class="tarjetaModulo deshabilitado"><div class="icono">✅</div><h3>Asistencia</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo" onclick="mostrarAsistencia()"><div class="icono">✅</div><h3>Asistencia</h3><p>Registro de servicios y reuniones</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">👥</div><h3>Grupos Pequeños</h3><p>Próximamente</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">⚙️</div><h3>Administración</h3><p>Próximamente</p></div>
       </div>
@@ -641,6 +641,57 @@
       </div>
     </div>
 
+    <!-- ═══ Vista: Asistencia ═══ -->
+    <div id="vistaAsistencia" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Asistencia</h2>
+      <p class="fecha">Registro de asistencia a servicios y reuniones</p>
+
+      <div class="barraAcciones">
+        <input type="text" id="buscadorAsistencia" placeholder="Buscar por tipo de servicio…" oninput="filtrarAsistencia()">
+        <button class="btnAccion" onclick="abrirFormAsistencia()">+ Nuevo Registro</button>
+      </div>
+
+      <div id="listaAsistencia">
+        <div class="estadoCargando">Cargando registros…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Registro de Asistencia ═══════════════ -->
+<div class="modalOverlay" id="modalAsistencia">
+  <div class="modalCaja">
+    <h3 id="modalAsistenciaTitulo">Nuevo Registro</h3>
+    <form id="formAsistencia" onsubmit="return guardarAsistencia(event)">
+      <input type="hidden" id="asRegistroId">
+      <div class="formGrid">
+        <div>
+          <label for="asTipoServicio">Tipo de servicio *</label>
+          <select id="asTipoServicio" required></select>
+        </div>
+        <div><label for="asFecha">Fecha *</label><input type="date" id="asFecha" required></div>
+        <div><label for="asTotal">Total de asistentes *</label><input type="number" id="asTotal" min="0" required></div>
+        <div class="full"><label for="asNotas">Notas</label><textarea id="asNotas" rows="2"></textarea></div>
+      </div>
+
+      <div class="seccionForm" style="margin-top:18px;">
+        <button type="button" class="btnSecundario" style="width:100%; text-align:left;" onclick="toggleChecklistAsistencia()">
+          👥 Marcar personas presentes (opcional) — <span id="contadorPresentes">0 marcadas</span>
+        </button>
+        <div id="checklistAsistenciaWrap" style="display:none; margin-top:10px;">
+          <input type="text" id="buscadorChecklistAsistencia" placeholder="Buscar persona…" oninput="renderChecklistAsistencia()" style="margin-bottom:8px;">
+          <div id="checklistAsistencia" style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
+        </div>
+      </div>
+
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarAsistencia" onclick="eliminarAsistencia()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalAsistencia()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -853,7 +904,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-007';
+const APP_VERSION = 'church-admin Ver-008';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -925,6 +976,7 @@ function mostrarDashboard() {
   document.getElementById('vistaPastoral').style.display = 'none';
   document.getElementById('vistaVoluntarios').style.display = 'none';
   document.getElementById('vistaComunicaciones').style.display = 'none';
+  document.getElementById('vistaAsistencia').style.display = 'none';
   document.getElementById('vistaDashboard').style.display = 'block';
 }
 
@@ -1952,6 +2004,204 @@ async function eliminarMensaje() {
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalMensaje();
   cargarMensajes();
+}
+
+// ── Asistencia ────────────────────────────────────────────────────────────
+let cacheAsistencia = [];
+let cacheTiposServicio = [];
+let presentesSeleccionados = new Set();
+
+function mostrarAsistencia() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaAsistencia').style.display = 'block';
+  cargarAsistencia();
+}
+
+function nombreTipoServicioPorId(id) {
+  const t = cacheTiposServicio.find(x => x.id === id);
+  return t ? t.nombre : 'Tipo no encontrado';
+}
+
+async function cargarAsistencia() {
+  const lista = document.getElementById('listaAsistencia');
+  lista.innerHTML = '<div class="estadoCargando">Cargando registros…</div>';
+
+  if (cacheDirectorio.length === 0) {
+    await sbCall(sb.from('personas').select('*').eq('archivado', false)).then(({ data }) => {
+      if (data) cacheDirectorio = data;
+    });
+  }
+
+  const [{ data: tipos, error: errTipos }, { data: registros, error: errReg }] = await Promise.all([
+    sbCall(sb.from('tipos_servicio').select('*').eq('activo', true).order('nombre', { ascending: true })),
+    sbCall(sb.from('asistencia_registros').select('*').order('fecha', { ascending: false })),
+  ]);
+
+  if (errTipos || errReg) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${(errTipos || errReg).message}</div>`;
+    return;
+  }
+
+  cacheTiposServicio = tipos || [];
+  cacheAsistencia = registros || [];
+
+  const select = document.getElementById('asTipoServicio');
+  select.innerHTML = cacheTiposServicio.map(t => `<option value="${t.id}">${t.nombre}</option>`).join('');
+
+  renderAsistencia(cacheAsistencia);
+}
+
+function renderAsistencia(filas) {
+  const lista = document.getElementById('listaAsistencia');
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay registros de asistencia.</div>';
+    return;
+  }
+  lista.innerHTML = filas.map(r => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormAsistencia('${r.id}')">
+      <div>
+        <div class="nombrePersona">${nombreTipoServicioPorId(r.tipo_servicio_id)}</div>
+        <div class="metaLinea">${formatoFecha(r.fecha)}</div>
+        ${r.notas ? `<div class="notasPreview">${r.notas}</div>` : ''}
+      </div>
+      <span class="badge badge-tipo">${r.total_asistentes} asistentes</span>
+    </div>`).join('');
+}
+
+function filtrarAsistencia() {
+  const q = document.getElementById('buscadorAsistencia').value.trim().toLowerCase();
+  if (!q) { renderAsistencia(cacheAsistencia); return; }
+  renderAsistencia(cacheAsistencia.filter(r => nombreTipoServicioPorId(r.tipo_servicio_id).toLowerCase().includes(q)));
+}
+
+// ── Modal Asistencia ─────────────────────────────────────────────────────
+async function abrirFormAsistencia(id) {
+  document.getElementById('formAsistencia').reset();
+  document.getElementById('asRegistroId').value = '';
+  document.getElementById('btnEliminarAsistencia').style.display = 'none';
+  document.getElementById('asFecha').value = new Date().toISOString().slice(0, 10);
+  presentesSeleccionados = new Set();
+  document.getElementById('checklistAsistenciaWrap').style.display = 'none';
+  document.getElementById('buscadorChecklistAsistencia').value = '';
+
+  if (id) {
+    const r = cacheAsistencia.find(x => x.id === id);
+    if (r) {
+      document.getElementById('modalAsistenciaTitulo').textContent = 'Editar Registro';
+      document.getElementById('asRegistroId').value = r.id;
+      document.getElementById('asTipoServicio').value = r.tipo_servicio_id;
+      document.getElementById('asFecha').value = r.fecha;
+      document.getElementById('asTotal').value = r.total_asistentes;
+      document.getElementById('asNotas').value = r.notas || '';
+      document.getElementById('btnEliminarAsistencia').style.display = 'inline-block';
+
+      const { data: detalle } = await sbCall(
+        sb.from('asistencia_detalle').select('persona_id').eq('registro_id', id)
+      );
+      if (detalle) presentesSeleccionados = new Set(detalle.map(d => d.persona_id));
+    }
+  } else {
+    document.getElementById('modalAsistenciaTitulo').textContent = 'Nuevo Registro';
+  }
+
+  actualizarContadorPresentes();
+  renderChecklistAsistencia();
+  document.getElementById('modalAsistencia').classList.add('abierto');
+}
+
+function cerrarModalAsistencia() {
+  document.getElementById('modalAsistencia').classList.remove('abierto');
+}
+
+function toggleChecklistAsistencia() {
+  const wrap = document.getElementById('checklistAsistenciaWrap');
+  wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+}
+
+function actualizarContadorPresentes() {
+  document.getElementById('contadorPresentes').textContent = `${presentesSeleccionados.size} marcadas`;
+}
+
+function renderChecklistAsistencia() {
+  const q = document.getElementById('buscadorChecklistAsistencia').value.trim().toLowerCase();
+  const contenedor = document.getElementById('checklistAsistencia');
+
+  const personas = q
+    ? cacheDirectorio.filter(p => (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q))
+    : cacheDirectorio.slice(0, 50);
+
+  if (personas.length === 0) {
+    contenedor.innerHTML = '<div style="padding:8px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+    return;
+  }
+
+  contenedor.innerHTML = personas.map(p => {
+    const marcado = presentesSeleccionados.has(p.id);
+    const nombre = p.nombre_completo || `${p.nombre} ${p.apellido}`;
+    return `
+      <label style="display:flex; align-items:center; gap:8px; padding:6px 4px; font-size:0.85rem; cursor:pointer;">
+        <input type="checkbox" ${marcado ? 'checked' : ''} onchange="togglePersonaPresente('${p.id}', this.checked)">
+        ${nombre}
+      </label>`;
+  }).join('');
+}
+
+function togglePersonaPresente(id, marcado) {
+  if (marcado) presentesSeleccionados.add(id);
+  else presentesSeleccionados.delete(id);
+  actualizarContadorPresentes();
+}
+
+async function guardarAsistencia(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('asRegistroId').value;
+  const sesion = getSesion();
+
+  const payload = {
+    tipo_servicio_id: document.getElementById('asTipoServicio').value,
+    fecha: document.getElementById('asFecha').value,
+    total_asistentes: parseInt(document.getElementById('asTotal').value, 10) || 0,
+    notas: document.getElementById('asNotas').value.trim() || null,
+  };
+
+  let registroId = id;
+  let error;
+
+  if (id) {
+    ({ error } = await sbCall(sb.from('asistencia_registros').update(payload).eq('id', id)));
+  } else {
+    payload.creado_por = sesion.usuario?.id || null;
+    const resultado = await sbCall(sb.from('asistencia_registros').insert(payload).select().single());
+    error = resultado.error;
+    if (resultado.data) registroId = resultado.data.id;
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+
+  // Sincronizar detalle: borrar existente y volver a insertar la selección actual
+  await sbCall(sb.from('asistencia_detalle').delete().eq('registro_id', registroId));
+  if (presentesSeleccionados.size > 0) {
+    const filas = Array.from(presentesSeleccionados).map(personaId => ({
+      registro_id: registroId, persona_id: personaId,
+    }));
+    const { error: errDetalle } = await sbCall(sb.from('asistencia_detalle').insert(filas));
+    if (errDetalle) {
+      alert('El registro se guardó, pero hubo un error al guardar las personas marcadas: ' + errDetalle.message);
+    }
+  }
+
+  cerrarModalAsistencia();
+  cargarAsistencia();
+  return false;
+}
+
+async function eliminarAsistencia() {
+  const id = document.getElementById('asRegistroId').value;
+  if (!id || !confirm('¿Eliminar este registro de asistencia? Esto también borra las personas marcadas.')) return;
+  const { error } = await sbCall(sb.from('asistencia_registros').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalAsistencia();
+  cargarAsistencia();
 }
 
 // ── Auto-login si ya hay sesión guardada ─────────────────────────────────
