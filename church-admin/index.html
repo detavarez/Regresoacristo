@@ -292,6 +292,9 @@
   .proximoVencido { color: var(--danger); font-weight: 600; }
   .badge-estado-Activo { background: #e6f0e9; color: #2e6b47; }
   .badge-estado-Inactivo { background: #eceff2; color: var(--text-muted); }
+  .badge-categoria-General { background: var(--bg); color: var(--text-muted); }
+  .badge-categoria-Evento { background: #e2edfa; color: #1d5a9e; }
+  .badge-categoria-Urgente { background: #fdeceb; color: var(--danger); }
   .subtabs {
     display: flex;
     gap: 4px;
@@ -503,7 +506,7 @@
         </div>
         <div class="tarjetaModulo" onclick="mostrarPastoral()"><div class="icono">🤝</div><h3>Cuidado Pastoral</h3><p>Seguimientos y visitas</p></div>
         <div class="tarjetaModulo" onclick="mostrarVoluntarios()"><div class="icono">🙋</div><h3>Voluntarios</h3><p>Ministerios y asignaciones</p></div>
-        <div class="tarjetaModulo deshabilitado"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo" onclick="mostrarComunicaciones()"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Anuncios y mensajes</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">✅</div><h3>Asistencia</h3><p>Próximamente</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">👥</div><h3>Grupos Pequeños</h3><p>Próximamente</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">⚙️</div><h3>Administración</h3><p>Próximamente</p></div>
@@ -604,6 +607,105 @@
       </div>
     </div>
 
+    <!-- ═══ Vista: Comunicaciones ═══ -->
+    <div id="vistaComunicaciones" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Comunicaciones</h2>
+      <p class="fecha">Anuncios y registro de mensajes enviados</p>
+
+      <div class="subtabs">
+        <button class="subtab activa" id="subtabAnunciosBtn" onclick="cambiarSubtabComunicaciones('anuncios')">Anuncios</button>
+        <button class="subtab" id="subtabMensajesBtn" onclick="cambiarSubtabComunicaciones('mensajes')">Mensajes enviados</button>
+      </div>
+
+      <!-- Sub-vista: Anuncios -->
+      <div id="subvistaAnuncios">
+        <div class="barraAcciones">
+          <input type="text" id="buscadorAnuncios" placeholder="Buscar por título…" oninput="filtrarAnuncios()">
+          <button class="btnAccion" onclick="abrirFormAnuncio()">+ Nuevo Anuncio</button>
+        </div>
+        <div id="listaAnuncios">
+          <div class="estadoCargando">Cargando anuncios…</div>
+        </div>
+      </div>
+
+      <!-- Sub-vista: Mensajes enviados -->
+      <div id="subvistaMensajes" style="display:none;">
+        <div class="barraAcciones">
+          <input type="text" id="buscadorMensajes" placeholder="Buscar por asunto…" oninput="filtrarMensajes()">
+          <button class="btnAccion" onclick="abrirFormMensaje()">+ Registrar Mensaje</button>
+        </div>
+        <div id="listaMensajes">
+          <div class="estadoCargando">Cargando mensajes…</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Anuncio ═══════════════ -->
+<div class="modalOverlay" id="modalAnuncio">
+  <div class="modalCaja">
+    <h3 id="modalAnuncioTitulo">Nuevo Anuncio</h3>
+    <form id="formAnuncio" onsubmit="return guardarAnuncio(event)">
+      <input type="hidden" id="aAnuncioId">
+      <div class="formGrid">
+        <div class="full"><label for="aTitulo">Título *</label><input type="text" id="aTitulo" required></div>
+        <div class="full"><label for="aContenido">Contenido *</label><textarea id="aContenido" rows="4" required></textarea></div>
+        <div>
+          <label for="aCategoria">Categoría</label>
+          <select id="aCategoria">
+            <option value="General" selected>General</option>
+            <option value="Evento">Evento</option>
+            <option value="Urgente">Urgente</option>
+          </select>
+        </div>
+        <div><label for="aFechaPublicacion">Fecha de publicación</label><input type="date" id="aFechaPublicacion"></div>
+        <div><label for="aFechaExpiracion">Fecha de expiración</label><input type="date" id="aFechaExpiracion"></div>
+        <div>
+          <label for="aActivo">Estado</label>
+          <select id="aActivo">
+            <option value="true" selected>Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarAnuncio" onclick="eliminarAnuncio()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalAnuncio()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Mensaje Enviado ═══════════════ -->
+<div class="modalOverlay" id="modalMensaje">
+  <div class="modalCaja">
+    <h3 id="modalMensajeTitulo">Registrar Mensaje</h3>
+    <form id="formMensaje" onsubmit="return guardarMensaje(event)">
+      <input type="hidden" id="mMensajeId">
+      <div class="formGrid">
+        <div class="full"><label for="mAsunto">Asunto *</label><input type="text" id="mAsunto" required></div>
+        <div class="full"><label for="mContenido">Contenido *</label><textarea id="mContenido" rows="4" required></textarea></div>
+        <div>
+          <label for="mCanal">Canal</label>
+          <select id="mCanal">
+            <option value="Correo" selected>Correo</option>
+            <option value="SMS">SMS</option>
+            <option value="Ambos">Ambos</option>
+          </select>
+        </div>
+        <div><label for="mFechaEnvio">Fecha de envío</label><input type="date" id="mFechaEnvio"></div>
+        <div class="full"><label for="mDestinatarios">Destinatarios *</label><input type="text" id="mDestinatarios" placeholder="Toda la congregación, Ministerio de Alabanza…" required></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarMensaje" onclick="eliminarMensaje()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalMensaje()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -751,7 +853,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-006';
+const APP_VERSION = 'church-admin Ver-007';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -822,6 +924,7 @@ function mostrarDashboard() {
   document.getElementById('vistaSecretaria').style.display = 'none';
   document.getElementById('vistaPastoral').style.display = 'none';
   document.getElementById('vistaVoluntarios').style.display = 'none';
+  document.getElementById('vistaComunicaciones').style.display = 'none';
   document.getElementById('vistaDashboard').style.display = 'block';
 }
 
@@ -1612,6 +1715,243 @@ async function eliminarVoluntario() {
 
   cerrarModalVoluntario();
   cargarVoluntarios();
+}
+
+// ── Comunicaciones ────────────────────────────────────────────────────────
+let cacheAnuncios = [];
+let cacheMensajes = [];
+
+function mostrarComunicaciones() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaComunicaciones').style.display = 'block';
+  cargarAnuncios();
+  cargarMensajes();
+}
+
+function cambiarSubtabComunicaciones(tab) {
+  const esAnuncios = tab === 'anuncios';
+  document.getElementById('subtabAnunciosBtn').classList.toggle('activa', esAnuncios);
+  document.getElementById('subtabMensajesBtn').classList.toggle('activa', !esAnuncios);
+  document.getElementById('subvistaAnuncios').style.display = esAnuncios ? 'block' : 'none';
+  document.getElementById('subvistaMensajes').style.display = esAnuncios ? 'none' : 'block';
+}
+
+// ── Anuncios ──────────────────────────────────────────────────────────────
+async function cargarAnuncios() {
+  const lista = document.getElementById('listaAnuncios');
+  lista.innerHTML = '<div class="estadoCargando">Cargando anuncios…</div>';
+
+  const { data, error } = await sbCall(
+    sb.from('anuncios').select('*').order('fecha_publicacion', { ascending: false })
+  );
+
+  if (error) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+    return;
+  }
+
+  cacheAnuncios = data || [];
+  renderAnuncios(cacheAnuncios);
+}
+
+function renderAnuncios(filas) {
+  const lista = document.getElementById('listaAnuncios');
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay anuncios registrados.</div>';
+    return;
+  }
+  lista.innerHTML = filas.map(a => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormAnuncio('${a.id}')">
+      <div>
+        <div class="nombrePersona">${a.titulo}</div>
+        <div class="metaLinea">
+          <span class="badge badge-categoria-${a.categoria}">${a.categoria}</span>
+          &nbsp;${formatoFecha(a.fecha_publicacion)}
+          ${a.fecha_expiracion ? ' · Expira ' + formatoFecha(a.fecha_expiracion) : ''}
+        </div>
+        <div class="notasPreview">${a.contenido.length > 140 ? a.contenido.slice(0, 140) + '…' : a.contenido}</div>
+      </div>
+      <span class="badge badge-estado-${a.activo ? 'Activo' : 'Inactivo'}">${a.activo ? 'Activo' : 'Inactivo'}</span>
+    </div>`).join('');
+}
+
+function filtrarAnuncios() {
+  const q = document.getElementById('buscadorAnuncios').value.trim().toLowerCase();
+  if (!q) { renderAnuncios(cacheAnuncios); return; }
+  renderAnuncios(cacheAnuncios.filter(a => a.titulo.toLowerCase().includes(q)));
+}
+
+function abrirFormAnuncio(id) {
+  document.getElementById('formAnuncio').reset();
+  document.getElementById('aAnuncioId').value = '';
+  document.getElementById('btnEliminarAnuncio').style.display = 'none';
+  document.getElementById('aFechaPublicacion').value = new Date().toISOString().slice(0, 10);
+
+  if (id) {
+    const a = cacheAnuncios.find(x => x.id === id);
+    if (a) {
+      document.getElementById('modalAnuncioTitulo').textContent = 'Editar Anuncio';
+      document.getElementById('aAnuncioId').value = a.id;
+      document.getElementById('aTitulo').value = a.titulo;
+      document.getElementById('aContenido').value = a.contenido;
+      document.getElementById('aCategoria').value = a.categoria;
+      document.getElementById('aFechaPublicacion').value = a.fecha_publicacion || '';
+      document.getElementById('aFechaExpiracion').value = a.fecha_expiracion || '';
+      document.getElementById('aActivo').value = String(a.activo);
+      document.getElementById('btnEliminarAnuncio').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalAnuncioTitulo').textContent = 'Nuevo Anuncio';
+  }
+  document.getElementById('modalAnuncio').classList.add('abierto');
+}
+
+function cerrarModalAnuncio() {
+  document.getElementById('modalAnuncio').classList.remove('abierto');
+}
+
+async function guardarAnuncio(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('aAnuncioId').value;
+  const sesion = getSesion();
+
+  const payload = {
+    titulo: document.getElementById('aTitulo').value.trim(),
+    contenido: document.getElementById('aContenido').value.trim(),
+    categoria: document.getElementById('aCategoria').value,
+    fecha_publicacion: document.getElementById('aFechaPublicacion').value || null,
+    fecha_expiracion: document.getElementById('aFechaExpiracion').value || null,
+    activo: document.getElementById('aActivo').value === 'true',
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('anuncios').update(payload).eq('id', id)));
+  } else {
+    payload.creado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('anuncios').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalAnuncio();
+  cargarAnuncios();
+  return false;
+}
+
+async function eliminarAnuncio() {
+  const id = document.getElementById('aAnuncioId').value;
+  if (!id || !confirm('¿Eliminar este anuncio?')) return;
+  const { error } = await sbCall(sb.from('anuncios').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalAnuncio();
+  cargarAnuncios();
+}
+
+// ── Mensajes enviados ─────────────────────────────────────────────────────
+async function cargarMensajes() {
+  const lista = document.getElementById('listaMensajes');
+  lista.innerHTML = '<div class="estadoCargando">Cargando mensajes…</div>';
+
+  const { data, error } = await sbCall(
+    sb.from('mensajes_enviados').select('*').order('fecha_envio', { ascending: false })
+  );
+
+  if (error) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+    return;
+  }
+
+  cacheMensajes = data || [];
+  renderMensajes(cacheMensajes);
+}
+
+function renderMensajes(filas) {
+  const lista = document.getElementById('listaMensajes');
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay mensajes registrados.</div>';
+    return;
+  }
+  lista.innerHTML = filas.map(m => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormMensaje('${m.id}')">
+      <div>
+        <div class="nombrePersona">${m.asunto}</div>
+        <div class="metaLinea">
+          <span class="badge badge-tipo">${m.canal}</span>
+          &nbsp;${formatoFecha(m.fecha_envio)} · A: ${m.destinatarios}
+        </div>
+        <div class="notasPreview">${m.contenido.length > 140 ? m.contenido.slice(0, 140) + '…' : m.contenido}</div>
+      </div>
+    </div>`).join('');
+}
+
+function filtrarMensajes() {
+  const q = document.getElementById('buscadorMensajes').value.trim().toLowerCase();
+  if (!q) { renderMensajes(cacheMensajes); return; }
+  renderMensajes(cacheMensajes.filter(m => m.asunto.toLowerCase().includes(q)));
+}
+
+function abrirFormMensaje(id) {
+  document.getElementById('formMensaje').reset();
+  document.getElementById('mMensajeId').value = '';
+  document.getElementById('btnEliminarMensaje').style.display = 'none';
+  document.getElementById('mFechaEnvio').value = new Date().toISOString().slice(0, 10);
+
+  if (id) {
+    const m = cacheMensajes.find(x => x.id === id);
+    if (m) {
+      document.getElementById('modalMensajeTitulo').textContent = 'Editar Mensaje';
+      document.getElementById('mMensajeId').value = m.id;
+      document.getElementById('mAsunto').value = m.asunto;
+      document.getElementById('mContenido').value = m.contenido;
+      document.getElementById('mCanal').value = m.canal;
+      document.getElementById('mFechaEnvio').value = m.fecha_envio || '';
+      document.getElementById('mDestinatarios').value = m.destinatarios;
+      document.getElementById('btnEliminarMensaje').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalMensajeTitulo').textContent = 'Registrar Mensaje';
+  }
+  document.getElementById('modalMensaje').classList.add('abierto');
+}
+
+function cerrarModalMensaje() {
+  document.getElementById('modalMensaje').classList.remove('abierto');
+}
+
+async function guardarMensaje(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('mMensajeId').value;
+  const sesion = getSesion();
+
+  const payload = {
+    asunto: document.getElementById('mAsunto').value.trim(),
+    contenido: document.getElementById('mContenido').value.trim(),
+    canal: document.getElementById('mCanal').value,
+    fecha_envio: document.getElementById('mFechaEnvio').value || null,
+    destinatarios: document.getElementById('mDestinatarios').value.trim(),
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('mensajes_enviados').update(payload).eq('id', id)));
+  } else {
+    payload.enviado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('mensajes_enviados').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalMensaje();
+  cargarMensajes();
+  return false;
+}
+
+async function eliminarMensaje() {
+  const id = document.getElementById('mMensajeId').value;
+  if (!id || !confirm('¿Eliminar este registro de mensaje?')) return;
+  const { error } = await sbCall(sb.from('mensajes_enviados').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalMensaje();
+  cargarMensajes();
 }
 
 // ── Auto-login si ya hay sesión guardada ─────────────────────────────────
