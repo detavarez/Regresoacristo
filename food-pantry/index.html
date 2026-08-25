@@ -148,6 +148,7 @@
   .badge-tipo { background: var(--bg); color: var(--text-muted); }
   .badge-estado-Activo { background: #e6f0e9; color: #2e6b47; }
   .badge-estado-Inactivo { background: #eceff2; color: var(--text-muted); }
+  .proximoVencido { color: var(--danger); font-weight: 600; }
 
   .modalOverlay {
     display: none; position: fixed; inset: 0; background: rgba(15,36,69,0.5);
@@ -222,7 +223,7 @@
 
       <div class="grid-modulos">
         <div class="tarjetaModulo" onclick="mostrarBeneficiarios()"><div class="icono">🧑‍🤝‍🧑</div><h3>Beneficiarios</h3><p>Familias que reciben ayuda</p></div>
-        <div class="tarjetaModulo deshabilitado"><div class="icono">📦</div><h3>Inventario</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo" onclick="mostrarInventario()"><div class="icono">📦</div><h3>Inventario</h3><p>Artículos y existencias</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">🛒</div><h3>Distribuciones</h3><p>Próximamente</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">🎁</div><h3>Donantes</h3><p>Próximamente</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">👷</div><h3>Equipo</h3><p>Próximamente</p></div>
@@ -249,6 +250,44 @@
       </div>
     </div>
 
+    <!-- ═══ Vista: Inventario ═══ -->
+    <div id="vistaInventario" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Inventario</h2>
+      <p class="fecha">Artículos y existencias disponibles</p>
+
+      <div class="barraAcciones">
+        <input type="text" id="buscadorInventario" placeholder="Buscar por artículo o categoría…" oninput="filtrarInventario()">
+        <button class="btnAccion" onclick="abrirFormInventario()">+ Nuevo Artículo</button>
+      </div>
+
+      <div id="listaInventario">
+        <div class="estadoCargando">Cargando inventario…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Artículo de Inventario ═══════════════ -->
+<div class="modalOverlay" id="modalInventario">
+  <div class="modalCaja">
+    <h3 id="modalInventarioTitulo">Nuevo Artículo</h3>
+    <form id="formInventario" onsubmit="return guardarInventario(event)">
+      <input type="hidden" id="iArticuloId">
+      <div class="formGrid">
+        <div class="full"><label for="iArticulo">Artículo *</label><input type="text" id="iArticulo" required></div>
+        <div><label for="iCategoria">Categoría</label><input type="text" id="iCategoria" placeholder="Enlatados, Lácteos, Higiene…"></div>
+        <div><label for="iUnidad">Unidad</label><input type="text" id="iUnidad" placeholder="latas, lbs, cajas…"></div>
+        <div><label for="iCantidad">Cantidad *</label><input type="number" id="iCantidad" step="any" min="0" required></div>
+        <div><label for="iFechaVencimiento">Fecha de vencimiento</label><input type="date" id="iFechaVencimiento"></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarInventario" onclick="eliminarInventario()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalInventario()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -288,7 +327,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'food-pantry Ver-002';
+const APP_VERSION = 'food-pantry Ver-003';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -354,6 +393,7 @@ async function verificarConexion() {
 
 function mostrarDashboard() {
   document.getElementById('vistaBeneficiarios').style.display = 'none';
+  document.getElementById('vistaInventario').style.display = 'none';
   document.getElementById('vistaDashboard').style.display = 'block';
 }
 
@@ -529,6 +569,129 @@ async function eliminarBeneficiario() {
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalBeneficiario();
   cargarBeneficiarios();
+}
+
+// ── Inventario ────────────────────────────────────────────────────────────
+let cacheInventario = [];
+
+async function mostrarInventario() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaInventario').style.display = 'block';
+  await cargarInventario();
+}
+
+function esFechaVencida(iso) {
+  if (!iso) return false;
+  return iso < new Date().toISOString().slice(0, 10);
+}
+
+async function cargarInventario() {
+  const lista = document.getElementById('listaInventario');
+  lista.innerHTML = '<div class="estadoCargando">Cargando inventario…</div>';
+
+  const { data, error } = await sbCall(
+    sb.from('food_pantry_inventario').select('*').order('articulo', { ascending: true })
+  );
+
+  if (error) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+    return;
+  }
+
+  cacheInventario = data || [];
+  renderInventario(cacheInventario);
+}
+
+function renderInventario(filas) {
+  const lista = document.getElementById('listaInventario');
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay artículos en el inventario.</div>';
+    return;
+  }
+  lista.innerHTML = filas.map(i => {
+    const vencido = esFechaVencida(i.fecha_vencimiento);
+    return `
+      <div class="tarjetaSeguimiento" onclick="abrirFormInventario('${i.id}')">
+        <div>
+          <div class="nombrePersona">${i.articulo}</div>
+          <div class="metaLinea">
+            ${i.categoria ? `<span class="badge badge-tipo">${i.categoria}</span>&nbsp;` : ''}
+            ${i.fecha_vencimiento ? `<span class="${vencido ? 'proximoVencido' : ''}">Vence: ${formatoFecha(i.fecha_vencimiento)}${vencido ? ' (vencido)' : ''}</span>` : ''}
+          </div>
+        </div>
+        <span class="badge badge-tipo">${i.cantidad} ${i.unidad || ''}</span>
+      </div>`;
+  }).join('');
+}
+
+function filtrarInventario() {
+  const q = document.getElementById('buscadorInventario').value.trim().toLowerCase();
+  if (!q) { renderInventario(cacheInventario); return; }
+  renderInventario(cacheInventario.filter(i =>
+    i.articulo.toLowerCase().includes(q) || (i.categoria || '').toLowerCase().includes(q)
+  ));
+}
+
+function abrirFormInventario(id) {
+  document.getElementById('formInventario').reset();
+  document.getElementById('iArticuloId').value = '';
+  document.getElementById('btnEliminarInventario').style.display = 'none';
+
+  if (id) {
+    const i = cacheInventario.find(x => x.id === id);
+    if (i) {
+      document.getElementById('modalInventarioTitulo').textContent = 'Editar Artículo';
+      document.getElementById('iArticuloId').value = i.id;
+      document.getElementById('iArticulo').value = i.articulo;
+      document.getElementById('iCategoria').value = i.categoria || '';
+      document.getElementById('iUnidad').value = i.unidad || '';
+      document.getElementById('iCantidad').value = i.cantidad;
+      document.getElementById('iFechaVencimiento').value = i.fecha_vencimiento || '';
+      document.getElementById('btnEliminarInventario').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalInventarioTitulo').textContent = 'Nuevo Artículo';
+  }
+
+  document.getElementById('modalInventario').classList.add('abierto');
+}
+
+function cerrarModalInventario() {
+  document.getElementById('modalInventario').classList.remove('abierto');
+}
+
+async function guardarInventario(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('iArticuloId').value;
+
+  const payload = {
+    articulo: document.getElementById('iArticulo').value.trim(),
+    categoria: document.getElementById('iCategoria').value.trim() || null,
+    unidad: document.getElementById('iUnidad').value.trim() || null,
+    cantidad: parseFloat(document.getElementById('iCantidad').value) || 0,
+    fecha_vencimiento: document.getElementById('iFechaVencimiento').value || null,
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('food_pantry_inventario').update(payload).eq('id', id)));
+  } else {
+    ({ error } = await sbCall(sb.from('food_pantry_inventario').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalInventario();
+  cargarInventario();
+  return false;
+}
+
+async function eliminarInventario() {
+  const id = document.getElementById('iArticuloId').value;
+  if (!id || !confirm('¿Eliminar este artículo del inventario?')) return;
+  const { error } = await sbCall(sb.from('food_pantry_inventario').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalInventario();
+  cargarInventario();
 }
 
 // ── Auto-login si ya hay sesión guardada ─────────────────────────────────
