@@ -225,7 +225,7 @@
         <div class="tarjetaModulo" onclick="mostrarBeneficiarios()"><div class="icono">🧑‍🤝‍🧑</div><h3>Beneficiarios</h3><p>Familias que reciben ayuda</p></div>
         <div class="tarjetaModulo" onclick="mostrarInventario()"><div class="icono">📦</div><h3>Inventario</h3><p>Artículos y existencias</p></div>
         <div class="tarjetaModulo" onclick="mostrarDistribuciones()"><div class="icono">🛒</div><h3>Distribuciones</h3><p>Entregas a beneficiarios</p></div>
-        <div class="tarjetaModulo deshabilitado"><div class="icono">🎁</div><h3>Donantes</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo" onclick="mostrarDonantes()"><div class="icono">🎁</div><h3>Donantes</h3><p>Personas y organizaciones</p></div>
         <div class="tarjetaModulo deshabilitado"><div class="icono">👷</div><h3>Equipo</h3><p>Próximamente</p></div>
       </div>
 
@@ -282,6 +282,65 @@
       </div>
     </div>
 
+    <!-- ═══ Vista: Donantes ═══ -->
+    <div id="vistaDonantes" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Donantes</h2>
+      <p class="fecha">Personas y organizaciones que donan al Food Pantry</p>
+
+      <div class="barraAcciones">
+        <input type="text" id="buscadorDonantes" placeholder="Buscar por nombre…" oninput="filtrarDonantes()">
+        <button class="btnAccion" onclick="abrirFormDonante()">+ Nuevo Donante</button>
+      </div>
+
+      <div id="listaDonantes">
+        <div class="estadoCargando">Cargando donantes…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Donante ═══════════════ -->
+<div class="modalOverlay" id="modalDonante">
+  <div class="modalCaja">
+    <h3 id="modalDonanteTitulo">Nuevo Donante</h3>
+    <form id="formDonante" onsubmit="return guardarDonante(event)">
+      <input type="hidden" id="doDonanteId">
+      <div class="formGrid">
+        <div class="full">
+          <label for="doTipo">Tipo de donante *</label>
+          <select id="doTipo" onchange="cambiarTipoDonante()">
+            <option value="persona">Persona</option>
+            <option value="organizacion">Organización</option>
+          </select>
+        </div>
+
+        <div class="full" id="doPersonaWrap">
+          <label for="doPersonaBuscar">Persona *</label>
+          <input type="text" id="doPersonaBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarPersonaDonante()">
+          <input type="hidden" id="doPersonaId">
+          <div id="sugerenciasPersonaDonante" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="doPersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+
+        <div class="full" id="doOrgWrap" style="display:none;">
+          <label for="doOrgBuscar">Organización *</label>
+          <input type="text" id="doOrgBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarOrgDonante()">
+          <input type="hidden" id="doOrgId">
+          <div id="sugerenciasOrgDonante" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="doOrgSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+
+        <div class="full"><label for="doNotas">Notas</label><textarea id="doNotas" rows="3"></textarea></div>
+      </div>
+
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarDonante" onclick="eliminarDonante()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalDonante()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -385,7 +444,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'food-pantry Ver-004';
+const APP_VERSION = 'food-pantry Ver-005';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -453,6 +512,7 @@ function mostrarDashboard() {
   document.getElementById('vistaBeneficiarios').style.display = 'none';
   document.getElementById('vistaInventario').style.display = 'none';
   document.getElementById('vistaDistribuciones').style.display = 'none';
+  document.getElementById('vistaDonantes').style.display = 'none';
   document.getElementById('vistaDashboard').style.display = 'block';
 }
 
@@ -986,6 +1046,203 @@ async function eliminarDistribucion() {
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalVerDistribucion();
   cargarDistribuciones();
+}
+
+// ── Donantes ──────────────────────────────────────────────────────────────
+let cacheDonantes = [];
+let cacheOrganizaciones = [];
+
+async function mostrarDonantes() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaDonantes').style.display = 'block';
+  await cargarDonantes();
+}
+
+async function cargarDonantes() {
+  const lista = document.getElementById('listaDonantes');
+  lista.innerHTML = '<div class="estadoCargando">Cargando donantes…</div>';
+
+  if (cacheDirectorio.length === 0) {
+    await sbCall(sb.from('personas').select('*').eq('archivado', false)).then(({ data }) => {
+      if (data) cacheDirectorio = data;
+    });
+  }
+
+  const [{ data: orgs, error: errOrg }, { data: donantes, error: errDon }] = await Promise.all([
+    sbCall(sb.from('organizaciones').select('*').eq('archivado', false).order('nombre', { ascending: true })),
+    sbCall(sb.from('food_pantry_donantes').select('*').order('creado_en', { ascending: false })),
+  ]);
+
+  if (errOrg || errDon) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${(errOrg || errDon).message}</div>`;
+    return;
+  }
+
+  cacheOrganizaciones = orgs || [];
+  cacheDonantes = donantes || [];
+  renderDonantes(cacheDonantes);
+}
+
+function nombreDonante(d) {
+  if (d.persona_id) return nombrePersonaPorId(d.persona_id);
+  if (d.organizacion_id) {
+    const org = cacheOrganizaciones.find(o => o.id === d.organizacion_id);
+    return org ? org.nombre : 'Organización no encontrada';
+  }
+  return 'Donante sin nombre';
+}
+
+function renderDonantes(filas) {
+  const lista = document.getElementById('listaDonantes');
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay donantes registrados.</div>';
+    return;
+  }
+  lista.innerHTML = filas.map(d => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormDonante('${d.id}')">
+      <div>
+        <div class="nombrePersona">${nombreDonante(d)}</div>
+        ${d.notas ? `<div class="notasPreview">${d.notas}</div>` : ''}
+      </div>
+      <span class="badge badge-tipo">${d.organizacion_id ? 'Organización' : 'Persona'}</span>
+    </div>`).join('');
+}
+
+function filtrarDonantes() {
+  const q = document.getElementById('buscadorDonantes').value.trim().toLowerCase();
+  if (!q) { renderDonantes(cacheDonantes); return; }
+  renderDonantes(cacheDonantes.filter(d => nombreDonante(d).toLowerCase().includes(q)));
+}
+
+// ── Modal Donante ─────────────────────────────────────────────────────────
+function cambiarTipoDonante() {
+  const esPersona = document.getElementById('doTipo').value === 'persona';
+  document.getElementById('doPersonaWrap').style.display = esPersona ? 'block' : 'none';
+  document.getElementById('doOrgWrap').style.display = esPersona ? 'none' : 'block';
+}
+
+function abrirFormDonante(id) {
+  document.getElementById('formDonante').reset();
+  document.getElementById('doDonanteId').value = '';
+  document.getElementById('doPersonaId').value = '';
+  document.getElementById('doPersonaBuscar').value = '';
+  document.getElementById('doPersonaSeleccionada').textContent = '';
+  document.getElementById('doOrgId').value = '';
+  document.getElementById('doOrgBuscar').value = '';
+  document.getElementById('doOrgSeleccionada').textContent = '';
+  document.getElementById('sugerenciasPersonaDonante').style.display = 'none';
+  document.getElementById('sugerenciasOrgDonante').style.display = 'none';
+  document.getElementById('btnEliminarDonante').style.display = 'none';
+  document.getElementById('doTipo').value = 'persona';
+  cambiarTipoDonante();
+
+  if (id) {
+    const d = cacheDonantes.find(x => x.id === id);
+    if (d) {
+      document.getElementById('modalDonanteTitulo').textContent = 'Editar Donante';
+      document.getElementById('doDonanteId').value = d.id;
+      document.getElementById('doNotas').value = d.notas || '';
+      if (d.organizacion_id) {
+        document.getElementById('doTipo').value = 'organizacion';
+        cambiarTipoDonante();
+        document.getElementById('doOrgId').value = d.organizacion_id;
+        document.getElementById('doOrgSeleccionada').textContent = nombreDonante(d);
+      } else if (d.persona_id) {
+        document.getElementById('doPersonaId').value = d.persona_id;
+        document.getElementById('doPersonaSeleccionada').textContent = nombreDonante(d);
+      }
+      document.getElementById('btnEliminarDonante').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalDonanteTitulo').textContent = 'Nuevo Donante';
+  }
+
+  document.getElementById('modalDonante').classList.add('abierto');
+}
+
+function cerrarModalDonante() {
+  document.getElementById('modalDonante').classList.remove('abierto');
+}
+
+function filtrarPersonaDonante() {
+  const q = document.getElementById('doPersonaBuscar').value.trim().toLowerCase();
+  const contenedor = document.getElementById('sugerenciasPersonaDonante');
+  if (q.length < 2) { contenedor.style.display = 'none'; return; }
+
+  const coincidencias = cacheDirectorio.filter(p =>
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  contenedor.innerHTML = coincidencias.length
+    ? coincidencias.map(p => `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;" onmousedown="seleccionarPersonaDonante('${p.id}')">${p.nombre_completo || `${p.nombre} ${p.apellido}`}</div>`).join('')
+    : '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+  contenedor.style.display = 'block';
+}
+
+function seleccionarPersonaDonante(id) {
+  document.getElementById('doPersonaId').value = id;
+  document.getElementById('doPersonaSeleccionada').textContent = nombrePersonaPorId(id);
+  document.getElementById('doPersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersonaDonante').style.display = 'none';
+}
+
+function filtrarOrgDonante() {
+  const q = document.getElementById('doOrgBuscar').value.trim().toLowerCase();
+  const contenedor = document.getElementById('sugerenciasOrgDonante');
+  if (q.length < 2) { contenedor.style.display = 'none'; return; }
+
+  const coincidencias = cacheOrganizaciones.filter(o => o.nombre.toLowerCase().includes(q)).slice(0, 8);
+
+  contenedor.innerHTML = coincidencias.length
+    ? coincidencias.map(o => `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;" onmousedown="seleccionarOrgDonante('${o.id}')">${o.nombre}</div>`).join('')
+    : '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+  contenedor.style.display = 'block';
+}
+
+function seleccionarOrgDonante(id) {
+  const org = cacheOrganizaciones.find(o => o.id === id);
+  document.getElementById('doOrgId').value = id;
+  document.getElementById('doOrgSeleccionada').textContent = org ? org.nombre : '';
+  document.getElementById('doOrgBuscar').value = '';
+  document.getElementById('sugerenciasOrgDonante').style.display = 'none';
+}
+
+async function guardarDonante(evt) {
+  evt.preventDefault();
+  const esPersona = document.getElementById('doTipo').value === 'persona';
+  const personaId = document.getElementById('doPersonaId').value;
+  const orgId = document.getElementById('doOrgId').value;
+
+  if (esPersona && !personaId) { alert('Selecciona una persona.'); return false; }
+  if (!esPersona && !orgId) { alert('Selecciona una organización.'); return false; }
+
+  const id = document.getElementById('doDonanteId').value;
+  const payload = {
+    persona_id: esPersona ? personaId : null,
+    organizacion_id: esPersona ? null : orgId,
+    notas: document.getElementById('doNotas').value.trim() || null,
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('food_pantry_donantes').update(payload).eq('id', id)));
+  } else {
+    ({ error } = await sbCall(sb.from('food_pantry_donantes').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalDonante();
+  cargarDonantes();
+  return false;
+}
+
+async function eliminarDonante() {
+  const id = document.getElementById('doDonanteId').value;
+  if (!id || !confirm('¿Eliminar este donante?')) return;
+  const { error } = await sbCall(sb.from('food_pantry_donantes').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalDonante();
+  cargarDonantes();
 }
 
 // ── Auto-login si ya hay sesión guardada ─────────────────────────────────
