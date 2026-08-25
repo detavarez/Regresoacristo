@@ -508,7 +508,7 @@
         <div class="tarjetaModulo" onclick="mostrarVoluntarios()"><div class="icono">🙋</div><h3>Voluntarios</h3><p>Ministerios y asignaciones</p></div>
         <div class="tarjetaModulo" onclick="mostrarComunicaciones()"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Anuncios y mensajes</p></div>
         <div class="tarjetaModulo" onclick="mostrarAsistencia()"><div class="icono">✅</div><h3>Asistencia</h3><p>Registro de servicios y reuniones</p></div>
-        <div class="tarjetaModulo deshabilitado"><div class="icono">👥</div><h3>Grupos Pequeños</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo" onclick="mostrarGrupos()"><div class="icono">👥</div><h3>Grupos Pequeños</h3><p>Células, líderes y miembros</p></div>
         <div class="tarjetaModulo" onclick="mostrarAdministracion()"><div class="icono">⚙️</div><h3>Administración</h3><p>Usuarios, roles y catálogos</p></div>
       </div>
 
@@ -698,6 +698,81 @@
       </div>
     </div>
 
+    <!-- ═══ Vista: Grupos Pequeños ═══ -->
+    <div id="vistaGrupos" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Grupos Pequeños</h2>
+      <p class="fecha">Células, líderes y miembros</p>
+
+      <div class="barraAcciones">
+        <input type="text" id="buscadorGrupos" placeholder="Buscar por nombre o líder…" oninput="filtrarGrupos()">
+        <button class="btnAccion" onclick="abrirFormGrupo()">+ Nuevo Grupo</button>
+      </div>
+
+      <div id="listaGrupos">
+        <div class="estadoCargando">Cargando grupos…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Grupo Pequeño ═══════════════ -->
+<div class="modalOverlay" id="modalGrupo">
+  <div class="modalCaja">
+    <h3 id="modalGrupoTitulo">Nuevo Grupo</h3>
+    <form id="formGrupo" onsubmit="return guardarGrupo(event)">
+      <input type="hidden" id="gGrupoId">
+      <div class="formGrid">
+        <div class="full"><label for="gNombre">Nombre del grupo *</label><input type="text" id="gNombre" required></div>
+
+        <div class="full">
+          <label for="gLiderBuscar">Líder</label>
+          <input type="text" id="gLiderBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarLiderGrupo()">
+          <input type="hidden" id="gLiderId">
+          <div id="sugerenciasLiderGrupo" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="gLiderSeleccionado" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+
+        <div><label for="gDiaHorario">Día y horario</label><input type="text" id="gDiaHorario" placeholder="Martes 7:00 PM"></div>
+        <div><label for="gUbicacion">Ubicación</label><input type="text" id="gUbicacion" placeholder="Casa de la familia..., Salón 3…"></div>
+        <div><label for="gCapacidadMaxima">Capacidad máxima</label><input type="number" id="gCapacidadMaxima" min="0"></div>
+        <div>
+          <label for="gActivo">Estado</label>
+          <select id="gActivo">
+            <option value="true" selected>Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+        <div class="full"><label for="gDescripcion">Descripción</label><textarea id="gDescripcion" rows="3"></textarea></div>
+      </div>
+
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarGrupo" onclick="eliminarGrupo()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalGrupo()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Miembros del Grupo ═══════════════ -->
+<div class="modalOverlay" id="modalMiembrosGrupo">
+  <div class="modalCaja">
+    <h3 id="modalMiembrosGrupoTitulo">Miembros del grupo</h3>
+
+    <div style="margin-bottom:14px;">
+      <input type="text" id="mgPersonaBuscar" placeholder="Buscar persona para agregar…" autocomplete="off" oninput="filtrarPersonaMiembroGrupo()">
+      <div id="sugerenciasPersonaMiembroGrupo" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+    </div>
+
+    <div id="listaMiembrosGrupo" style="max-height:280px; overflow-y:auto;">
+      <div class="estadoCargando">Cargando miembros…</div>
+    </div>
+
+    <div class="formAcciones">
+      <button type="button" class="btnSecundario" onclick="cerrarModalMiembrosGrupo()">Cerrar</button>
+    </div>
   </div>
 </div>
 
@@ -971,7 +1046,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-009';
+const APP_VERSION = 'church-admin Ver-010';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -1045,6 +1120,7 @@ function mostrarDashboard() {
   document.getElementById('vistaComunicaciones').style.display = 'none';
   document.getElementById('vistaAsistencia').style.display = 'none';
   document.getElementById('vistaAdministracion').style.display = 'none';
+  document.getElementById('vistaGrupos').style.display = 'none';
   document.getElementById('vistaDashboard').style.display = 'block';
 }
 
@@ -2448,6 +2524,264 @@ async function toggleActivoTipoServicio(id, nuevoValor) {
   const { error } = await sbCall(sb.from('tipos_servicio').update({ activo: nuevoValor }).eq('id', id));
   if (error) { alert('Error: ' + error.message); return; }
   cargarCatalogos();
+}
+
+// ── Grupos Pequeños ───────────────────────────────────────────────────────
+let cacheGrupos = [];
+let grupoActualMiembros = [];
+let grupoActualId = null;
+
+function mostrarGrupos() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaGrupos').style.display = 'block';
+  cargarGrupos();
+}
+
+async function cargarGrupos() {
+  const lista = document.getElementById('listaGrupos');
+  lista.innerHTML = '<div class="estadoCargando">Cargando grupos…</div>';
+
+  if (cacheDirectorio.length === 0) {
+    await sbCall(sb.from('personas').select('*').eq('archivado', false)).then(({ data }) => {
+      if (data) cacheDirectorio = data;
+    });
+  }
+
+  const { data, error } = await sbCall(
+    sb.from('grupos_pequenos').select('*').order('nombre', { ascending: true })
+  );
+
+  if (error) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+    return;
+  }
+
+  cacheGrupos = data || [];
+  renderGrupos(cacheGrupos);
+}
+
+function renderGrupos(filas) {
+  const lista = document.getElementById('listaGrupos');
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay grupos pequeños registrados.</div>';
+    return;
+  }
+  lista.innerHTML = filas.map(g => `
+    <div class="tarjetaSeguimiento">
+      <div style="cursor:pointer; flex:1;" onclick="abrirFormGrupo('${g.id}')">
+        <div class="nombrePersona">${g.nombre}</div>
+        <div class="metaLinea">
+          ${g.lider_persona_id ? 'Líder: ' + nombrePersonaPorId(g.lider_persona_id) : 'Sin líder asignado'}
+          ${g.dia_horario ? ' · ' + g.dia_horario : ''}
+          ${g.ubicacion ? ' · ' + g.ubicacion : ''}
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        <span class="badge badge-estado-${g.activo ? 'Activo' : 'Inactivo'}">${g.activo ? 'Activo' : 'Inactivo'}</span>
+        <button class="btnSecundario" style="padding:4px 10px; font-size:0.75rem;" onclick="event.stopPropagation(); abrirModalMiembrosGrupo('${g.id}')">👥 Miembros</button>
+      </div>
+    </div>`).join('');
+}
+
+function filtrarGrupos() {
+  const q = document.getElementById('buscadorGrupos').value.trim().toLowerCase();
+  if (!q) { renderGrupos(cacheGrupos); return; }
+  renderGrupos(cacheGrupos.filter(g =>
+    g.nombre.toLowerCase().includes(q) ||
+    (g.lider_persona_id && nombrePersonaPorId(g.lider_persona_id).toLowerCase().includes(q))
+  ));
+}
+
+// ── Modal Grupo ───────────────────────────────────────────────────────────
+function abrirFormGrupo(id) {
+  document.getElementById('formGrupo').reset();
+  document.getElementById('gGrupoId').value = '';
+  document.getElementById('gLiderId').value = '';
+  document.getElementById('gLiderBuscar').value = '';
+  document.getElementById('gLiderSeleccionado').textContent = '';
+  document.getElementById('sugerenciasLiderGrupo').style.display = 'none';
+  document.getElementById('btnEliminarGrupo').style.display = 'none';
+
+  if (id) {
+    const g = cacheGrupos.find(x => x.id === id);
+    if (g) {
+      document.getElementById('modalGrupoTitulo').textContent = 'Editar Grupo';
+      document.getElementById('gGrupoId').value = g.id;
+      document.getElementById('gNombre').value = g.nombre;
+      if (g.lider_persona_id) {
+        document.getElementById('gLiderId').value = g.lider_persona_id;
+        document.getElementById('gLiderSeleccionado').textContent = nombrePersonaPorId(g.lider_persona_id);
+      }
+      document.getElementById('gDiaHorario').value = g.dia_horario || '';
+      document.getElementById('gUbicacion').value = g.ubicacion || '';
+      document.getElementById('gCapacidadMaxima').value = g.capacidad_maxima ?? '';
+      document.getElementById('gActivo').value = String(g.activo);
+      document.getElementById('gDescripcion').value = g.descripcion || '';
+      document.getElementById('btnEliminarGrupo').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalGrupoTitulo').textContent = 'Nuevo Grupo';
+  }
+
+  document.getElementById('modalGrupo').classList.add('abierto');
+}
+
+function cerrarModalGrupo() {
+  document.getElementById('modalGrupo').classList.remove('abierto');
+}
+
+function filtrarLiderGrupo() {
+  const q = document.getElementById('gLiderBuscar').value.trim().toLowerCase();
+  const contenedor = document.getElementById('sugerenciasLiderGrupo');
+
+  if (q.length < 2) { contenedor.style.display = 'none'; return; }
+
+  const coincidencias = cacheDirectorio.filter(p =>
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (coincidencias.length === 0) {
+    contenedor.innerHTML = '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+    contenedor.style.display = 'block';
+    return;
+  }
+
+  contenedor.innerHTML = coincidencias.map(p => `
+    <div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;"
+         onmousedown="seleccionarLiderGrupo('${p.id}')">
+      ${p.nombre_completo || `${p.nombre} ${p.apellido}`}
+    </div>`).join('');
+  contenedor.style.display = 'block';
+}
+
+function seleccionarLiderGrupo(id) {
+  document.getElementById('gLiderId').value = id;
+  document.getElementById('gLiderSeleccionado').textContent = nombrePersonaPorId(id);
+  document.getElementById('gLiderBuscar').value = '';
+  document.getElementById('sugerenciasLiderGrupo').style.display = 'none';
+}
+
+async function guardarGrupo(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('gGrupoId').value;
+  const sesion = getSesion();
+  const capacidad = document.getElementById('gCapacidadMaxima').value;
+
+  const payload = {
+    nombre: document.getElementById('gNombre').value.trim(),
+    lider_persona_id: document.getElementById('gLiderId').value || null,
+    dia_horario: document.getElementById('gDiaHorario').value.trim() || null,
+    ubicacion: document.getElementById('gUbicacion').value.trim() || null,
+    capacidad_maxima: capacidad ? parseInt(capacidad, 10) : null,
+    activo: document.getElementById('gActivo').value === 'true',
+    descripcion: document.getElementById('gDescripcion').value.trim() || null,
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('grupos_pequenos').update(payload).eq('id', id)));
+  } else {
+    payload.creado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('grupos_pequenos').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalGrupo();
+  cargarGrupos();
+  return false;
+}
+
+async function eliminarGrupo() {
+  const id = document.getElementById('gGrupoId').value;
+  if (!id || !confirm('¿Eliminar este grupo? Esto también borra la lista de miembros asignados.')) return;
+  const { error } = await sbCall(sb.from('grupos_pequenos').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalGrupo();
+  cargarGrupos();
+}
+
+// ── Modal Miembros del Grupo ──────────────────────────────────────────────
+async function abrirModalMiembrosGrupo(grupoId) {
+  grupoActualId = grupoId;
+  const g = cacheGrupos.find(x => x.id === grupoId);
+  document.getElementById('modalMiembrosGrupoTitulo').textContent = `Miembros — ${g ? g.nombre : ''}`;
+  document.getElementById('mgPersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersonaMiembroGrupo').style.display = 'none';
+  document.getElementById('listaMiembrosGrupo').innerHTML = '<div class="estadoCargando">Cargando miembros…</div>';
+  document.getElementById('modalMiembrosGrupo').classList.add('abierto');
+
+  const { data, error } = await sbCall(
+    sb.from('grupos_pequenos_miembros').select('*').eq('grupo_id', grupoId)
+  );
+
+  if (error) {
+    document.getElementById('listaMiembrosGrupo').innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`;
+    return;
+  }
+
+  grupoActualMiembros = data || [];
+  renderMiembrosGrupo();
+}
+
+function cerrarModalMiembrosGrupo() {
+  document.getElementById('modalMiembrosGrupo').classList.remove('abierto');
+  grupoActualId = null;
+}
+
+function renderMiembrosGrupo() {
+  const cont = document.getElementById('listaMiembrosGrupo');
+  if (grupoActualMiembros.length === 0) {
+    cont.innerHTML = '<div class="estadoVacio">Aún no hay miembros en este grupo.</div>';
+    return;
+  }
+  cont.innerHTML = grupoActualMiembros.map(m => `
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border);">
+      <span>${nombrePersonaPorId(m.persona_id)}</span>
+      <button class="btnPeligro" style="padding:4px 10px; font-size:0.75rem;" onclick="quitarMiembroGrupo('${m.id}')">Quitar</button>
+    </div>`).join('');
+}
+
+function filtrarPersonaMiembroGrupo() {
+  const q = document.getElementById('mgPersonaBuscar').value.trim().toLowerCase();
+  const contenedor = document.getElementById('sugerenciasPersonaMiembroGrupo');
+
+  if (q.length < 2) { contenedor.style.display = 'none'; return; }
+
+  const yaAsignados = new Set(grupoActualMiembros.map(m => m.persona_id));
+  const coincidencias = cacheDirectorio.filter(p =>
+    !yaAsignados.has(p.id) &&
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (coincidencias.length === 0) {
+    contenedor.innerHTML = '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+    contenedor.style.display = 'block';
+    return;
+  }
+
+  contenedor.innerHTML = coincidencias.map(p => `
+    <div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;"
+         onmousedown="agregarMiembroGrupo('${p.id}')">
+      ${p.nombre_completo || `${p.nombre} ${p.apellido}`}
+    </div>`).join('');
+  contenedor.style.display = 'block';
+}
+
+async function agregarMiembroGrupo(personaId) {
+  const { error } = await sbCall(
+    sb.from('grupos_pequenos_miembros').insert({ grupo_id: grupoActualId, persona_id: personaId })
+  );
+  if (error) { alert('Error al agregar: ' + error.message); return; }
+
+  document.getElementById('mgPersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersonaMiembroGrupo').style.display = 'none';
+  await abrirModalMiembrosGrupo(grupoActualId);
+}
+
+async function quitarMiembroGrupo(miembroId) {
+  const { error } = await sbCall(sb.from('grupos_pequenos_miembros').delete().eq('id', miembroId));
+  if (error) { alert('Error al quitar: ' + error.message); return; }
+  await abrirModalMiembrosGrupo(grupoActualId);
 }
 
 // ── Auto-login si ya hay sesión guardada ─────────────────────────────────
