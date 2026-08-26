@@ -149,6 +149,14 @@
   .badge-estado-Activo { background: #e6f0e9; color: #2e6b47; }
   .badge-estado-Inactivo { background: #eceff2; color: var(--text-muted); }
   .proximoVencido { color: var(--danger); font-weight: 600; }
+  .subtabs {
+    display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border);
+  }
+  .subtab {
+    background: none; border: none; padding: 10px 16px; font-size: 0.85rem; font-weight: 600;
+    color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent;
+  }
+  .subtab.activa { color: var(--navy); border-bottom-color: var(--navy); }
 
   .modalOverlay {
     display: none; position: fixed; inset: 0; background: rgba(15,36,69,0.5);
@@ -226,7 +234,7 @@
         <div class="tarjetaModulo" onclick="mostrarInventario()"><div class="icono">📦</div><h3>Inventario</h3><p>Artículos y existencias</p></div>
         <div class="tarjetaModulo" onclick="mostrarDistribuciones()"><div class="icono">🛒</div><h3>Distribuciones</h3><p>Entregas a beneficiarios</p></div>
         <div class="tarjetaModulo" onclick="mostrarDonantes()"><div class="icono">🎁</div><h3>Donantes</h3><p>Personas y organizaciones</p></div>
-        <div class="tarjetaModulo deshabilitado"><div class="icono">👷</div><h3>Equipo</h3><p>Próximamente</p></div>
+        <div class="tarjetaModulo" onclick="mostrarEquipo()"><div class="icono">👷</div><h3>Equipo</h3><p>Personal y voluntarios</p></div>
       </div>
 
       <div class="panelEstado" id="panelEstadoConexion">
@@ -298,6 +306,100 @@
       </div>
     </div>
 
+    <!-- ═══ Vista: Equipo ═══ -->
+    <div id="vistaEquipo" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Equipo</h2>
+      <p class="fecha">Personal y voluntarios del Food Pantry</p>
+
+      <div class="subtabs">
+        <button class="subtab activa" id="subtabPersonalBtn" onclick="cambiarSubtabEquipo('personal')">Personal</button>
+        <button class="subtab" id="subtabVoluntariosBtn" onclick="cambiarSubtabEquipo('voluntarios')">Voluntarios</button>
+      </div>
+
+      <!-- Sub-vista: Personal -->
+      <div id="subvistaPersonal">
+        <div class="barraAcciones">
+          <input type="text" id="buscadorPersonal" placeholder="Buscar por nombre…" oninput="filtrarPersonal()">
+          <button class="btnAccion" onclick="abrirFormPersonal()">+ Nuevo Personal</button>
+        </div>
+        <div id="listaPersonal"><div class="estadoCargando">Cargando personal…</div></div>
+      </div>
+
+      <!-- Sub-vista: Voluntarios -->
+      <div id="subvistaVoluntariosFP" style="display:none;">
+        <div class="barraAcciones">
+          <input type="text" id="buscadorVoluntariosFP" placeholder="Buscar por nombre…" oninput="filtrarVoluntariosFP()">
+          <button class="btnAccion" onclick="abrirFormVoluntarioFP()">+ Nuevo Voluntario</button>
+        </div>
+        <div id="listaVoluntariosFP"><div class="estadoCargando">Cargando voluntarios…</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Personal ═══════════════ -->
+<div class="modalOverlay" id="modalPersonal">
+  <div class="modalCaja">
+    <h3 id="modalPersonalTitulo">Nuevo Personal</h3>
+    <form id="formPersonal" onsubmit="return guardarPersonal(event)">
+      <input type="hidden" id="peRegistroId">
+      <div class="formGrid">
+        <div class="full">
+          <label for="pePersonaBuscar">Persona *</label>
+          <input type="text" id="pePersonaBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarPersonaPersonal()">
+          <input type="hidden" id="pePersonaId">
+          <div id="sugerenciasPersonaPersonal" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="pePersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+        <div><label for="pePuesto">Puesto</label><input type="text" id="pePuesto" placeholder="Coordinador, Recepción…"></div>
+        <div>
+          <label for="peActivo">Estado</label>
+          <select id="peActivo">
+            <option value="true" selected>Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarPersonal" onclick="eliminarPersonal()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalPersonal()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Voluntario FP ═══════════════ -->
+<div class="modalOverlay" id="modalVoluntarioFP">
+  <div class="modalCaja">
+    <h3 id="modalVoluntarioFPTitulo">Nuevo Voluntario</h3>
+    <form id="formVoluntarioFP" onsubmit="return guardarVoluntarioFP(event)">
+      <input type="hidden" id="vfRegistroId">
+      <div class="formGrid">
+        <div class="full">
+          <label for="vfPersonaBuscar">Persona *</label>
+          <input type="text" id="vfPersonaBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarPersonaVoluntarioFP()">
+          <input type="hidden" id="vfPersonaId">
+          <div id="sugerenciasPersonaVoluntarioFP" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="vfPersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+        <div class="full"><label for="vfDisponibilidad">Disponibilidad</label><input type="text" id="vfDisponibilidad" placeholder="Sábados 9am-12pm…"></div>
+        <div>
+          <label for="vfActivo">Estado</label>
+          <select id="vfActivo">
+            <option value="true" selected>Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarVoluntarioFP" onclick="eliminarVoluntarioFP()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalVoluntarioFP()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -444,7 +546,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'food-pantry Ver-007';
+const APP_VERSION = 'food-pantry Ver-008';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -513,6 +615,7 @@ function mostrarDashboard() {
   document.getElementById('vistaInventario').style.display = 'none';
   document.getElementById('vistaDistribuciones').style.display = 'none';
   document.getElementById('vistaDonantes').style.display = 'none';
+  document.getElementById('vistaEquipo').style.display = 'none';
   document.getElementById('vistaDashboard').style.display = 'block';
 }
 
@@ -1290,6 +1393,282 @@ async function eliminarDonante() {
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalDonante();
   cargarDonantes();
+}
+
+// ── Equipo (Personal + Voluntarios) ─────────────────────────────────────
+let cachePersonal = [];
+let cacheVoluntariosFP = [];
+
+async function mostrarEquipo() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaEquipo').style.display = 'block';
+
+  if (cacheDirectorio.length === 0) {
+    await sbCall(sb.from('personas').select('*').eq('archivado', false)).then(({ data }) => {
+      if (data) cacheDirectorio = data;
+    });
+  }
+
+  await cargarPersonal();
+  await cargarVoluntariosFP();
+}
+
+function cambiarSubtabEquipo(tab) {
+  const esPersonal = tab === 'personal';
+  document.getElementById('subtabPersonalBtn').classList.toggle('activa', esPersonal);
+  document.getElementById('subtabVoluntariosBtn').classList.toggle('activa', !esPersonal);
+  document.getElementById('subvistaPersonal').style.display = esPersonal ? 'block' : 'none';
+  document.getElementById('subvistaVoluntariosFP').style.display = esPersonal ? 'none' : 'block';
+}
+
+// ── Personal ──────────────────────────────────────────────────────────────
+async function cargarPersonal() {
+  const lista = document.getElementById('listaPersonal');
+  lista.innerHTML = '<div class="estadoCargando">Cargando personal…</div>';
+
+  const { data, error } = await sbCall(sb.from('food_pantry_personal').select('*').order('creado_en', { ascending: false }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
+
+  cachePersonal = data || [];
+  renderPersonal(cachePersonal);
+}
+
+function renderPersonal(filas) {
+  const lista = document.getElementById('listaPersonal');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay personal registrado.</div>'; return; }
+  lista.innerHTML = filas.map(p => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormPersonal('${p.id}')">
+      <div>
+        <div class="nombrePersona">${nombrePersonaPorId(p.persona_id)}</div>
+        ${p.puesto ? `<div class="metaLinea">${p.puesto}</div>` : ''}
+      </div>
+      <span class="badge badge-estado-${p.activo ? 'Activo' : 'Inactivo'}">${p.activo ? 'Activo' : 'Inactivo'}</span>
+    </div>`).join('');
+}
+
+function filtrarPersonal() {
+  const q = document.getElementById('buscadorPersonal').value.trim().toLowerCase();
+  if (!q) { renderPersonal(cachePersonal); return; }
+  renderPersonal(cachePersonal.filter(p => nombrePersonaPorId(p.persona_id).toLowerCase().includes(q)));
+}
+
+function abrirFormPersonal(id) {
+  document.getElementById('formPersonal').reset();
+  document.getElementById('peRegistroId').value = '';
+  document.getElementById('pePersonaId').value = '';
+  document.getElementById('pePersonaBuscar').value = '';
+  document.getElementById('pePersonaSeleccionada').textContent = '';
+  document.getElementById('sugerenciasPersonaPersonal').style.display = 'none';
+  document.getElementById('btnEliminarPersonal').style.display = 'none';
+
+  if (id) {
+    const p = cachePersonal.find(x => x.id === id);
+    if (p) {
+      document.getElementById('modalPersonalTitulo').textContent = 'Editar Personal';
+      document.getElementById('peRegistroId').value = p.id;
+      document.getElementById('pePersonaId').value = p.persona_id;
+      document.getElementById('pePersonaSeleccionada').textContent = nombrePersonaPorId(p.persona_id);
+      document.getElementById('pePuesto').value = p.puesto || '';
+      document.getElementById('peActivo').value = String(p.activo);
+      document.getElementById('btnEliminarPersonal').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalPersonalTitulo').textContent = 'Nuevo Personal';
+  }
+  document.getElementById('modalPersonal').classList.add('abierto');
+}
+
+function cerrarModalPersonal() {
+  document.getElementById('modalPersonal').classList.remove('abierto');
+}
+
+function filtrarPersonaPersonal() {
+  const q = document.getElementById('pePersonaBuscar').value.trim();
+  const contenedor = document.getElementById('sugerenciasPersonaPersonal');
+  if (q.length < 2) { contenedor.style.display = 'none'; return; }
+
+  const coincidencias = cacheDirectorio.filter(p =>
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q.toLowerCase())
+  ).slice(0, 8);
+
+  let html = coincidencias.map(p =>
+    `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;" onmousedown="seleccionarPersonaPersonal('${p.id}')">${p.nombre_completo || `${p.nombre} ${p.apellido}`}</div>`
+  ).join('');
+  html += `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem; color: var(--navy); font-weight:600; border-top:${coincidencias.length ? '1px solid var(--border)' : 'none'};" onmousedown="crearPersonaPersonal('${q.replace(/'/g, "\\'")}')">+ Agregar persona nueva</div>`;
+
+  contenedor.innerHTML = html;
+  contenedor.style.display = 'block';
+}
+
+async function crearPersonaPersonal(nombreBusqueda) {
+  const id = await crearPersonaRapida(nombreBusqueda);
+  if (id) seleccionarPersonaPersonal(id);
+}
+
+function seleccionarPersonaPersonal(id) {
+  document.getElementById('pePersonaId').value = id;
+  document.getElementById('pePersonaSeleccionada').textContent = nombrePersonaPorId(id);
+  document.getElementById('pePersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersonaPersonal').style.display = 'none';
+}
+
+async function guardarPersonal(evt) {
+  evt.preventDefault();
+  const personaId = document.getElementById('pePersonaId').value;
+  if (!personaId) { alert('Selecciona una persona.'); return false; }
+
+  const id = document.getElementById('peRegistroId').value;
+  const payload = {
+    persona_id: personaId,
+    puesto: document.getElementById('pePuesto').value.trim() || null,
+    activo: document.getElementById('peActivo').value === 'true',
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('food_pantry_personal').update(payload).eq('id', id)));
+  } else {
+    ({ error } = await sbCall(sb.from('food_pantry_personal').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalPersonal();
+  cargarPersonal();
+  return false;
+}
+
+async function eliminarPersonal() {
+  const id = document.getElementById('peRegistroId').value;
+  if (!id || !confirm('¿Eliminar este registro de personal?')) return;
+  const { error } = await sbCall(sb.from('food_pantry_personal').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalPersonal();
+  cargarPersonal();
+}
+
+// ── Voluntarios (Food Pantry) ────────────────────────────────────────────
+async function cargarVoluntariosFP() {
+  const lista = document.getElementById('listaVoluntariosFP');
+  lista.innerHTML = '<div class="estadoCargando">Cargando voluntarios…</div>';
+
+  const { data, error } = await sbCall(sb.from('food_pantry_voluntarios').select('*').order('creado_en', { ascending: false }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
+
+  cacheVoluntariosFP = data || [];
+  renderVoluntariosFP(cacheVoluntariosFP);
+}
+
+function renderVoluntariosFP(filas) {
+  const lista = document.getElementById('listaVoluntariosFP');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay voluntarios registrados.</div>'; return; }
+  lista.innerHTML = filas.map(v => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormVoluntarioFP('${v.id}')">
+      <div>
+        <div class="nombrePersona">${nombrePersonaPorId(v.persona_id)}</div>
+        ${v.disponibilidad ? `<div class="metaLinea">📅 ${v.disponibilidad}</div>` : ''}
+      </div>
+      <span class="badge badge-estado-${v.activo ? 'Activo' : 'Inactivo'}">${v.activo ? 'Activo' : 'Inactivo'}</span>
+    </div>`).join('');
+}
+
+function filtrarVoluntariosFP() {
+  const q = document.getElementById('buscadorVoluntariosFP').value.trim().toLowerCase();
+  if (!q) { renderVoluntariosFP(cacheVoluntariosFP); return; }
+  renderVoluntariosFP(cacheVoluntariosFP.filter(v => nombrePersonaPorId(v.persona_id).toLowerCase().includes(q)));
+}
+
+function abrirFormVoluntarioFP(id) {
+  document.getElementById('formVoluntarioFP').reset();
+  document.getElementById('vfRegistroId').value = '';
+  document.getElementById('vfPersonaId').value = '';
+  document.getElementById('vfPersonaBuscar').value = '';
+  document.getElementById('vfPersonaSeleccionada').textContent = '';
+  document.getElementById('sugerenciasPersonaVoluntarioFP').style.display = 'none';
+  document.getElementById('btnEliminarVoluntarioFP').style.display = 'none';
+
+  if (id) {
+    const v = cacheVoluntariosFP.find(x => x.id === id);
+    if (v) {
+      document.getElementById('modalVoluntarioFPTitulo').textContent = 'Editar Voluntario';
+      document.getElementById('vfRegistroId').value = v.id;
+      document.getElementById('vfPersonaId').value = v.persona_id;
+      document.getElementById('vfPersonaSeleccionada').textContent = nombrePersonaPorId(v.persona_id);
+      document.getElementById('vfDisponibilidad').value = v.disponibilidad || '';
+      document.getElementById('vfActivo').value = String(v.activo);
+      document.getElementById('btnEliminarVoluntarioFP').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalVoluntarioFPTitulo').textContent = 'Nuevo Voluntario';
+  }
+  document.getElementById('modalVoluntarioFP').classList.add('abierto');
+}
+
+function cerrarModalVoluntarioFP() {
+  document.getElementById('modalVoluntarioFP').classList.remove('abierto');
+}
+
+function filtrarPersonaVoluntarioFP() {
+  const q = document.getElementById('vfPersonaBuscar').value.trim();
+  const contenedor = document.getElementById('sugerenciasPersonaVoluntarioFP');
+  if (q.length < 2) { contenedor.style.display = 'none'; return; }
+
+  const coincidencias = cacheDirectorio.filter(p =>
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q.toLowerCase())
+  ).slice(0, 8);
+
+  let html = coincidencias.map(p =>
+    `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;" onmousedown="seleccionarPersonaVoluntarioFP('${p.id}')">${p.nombre_completo || `${p.nombre} ${p.apellido}`}</div>`
+  ).join('');
+  html += `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem; color: var(--navy); font-weight:600; border-top:${coincidencias.length ? '1px solid var(--border)' : 'none'};" onmousedown="crearPersonaVoluntarioFP('${q.replace(/'/g, "\\'")}')">+ Agregar persona nueva</div>`;
+
+  contenedor.innerHTML = html;
+  contenedor.style.display = 'block';
+}
+
+async function crearPersonaVoluntarioFP(nombreBusqueda) {
+  const id = await crearPersonaRapida(nombreBusqueda);
+  if (id) seleccionarPersonaVoluntarioFP(id);
+}
+
+function seleccionarPersonaVoluntarioFP(id) {
+  document.getElementById('vfPersonaId').value = id;
+  document.getElementById('vfPersonaSeleccionada').textContent = nombrePersonaPorId(id);
+  document.getElementById('vfPersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersonaVoluntarioFP').style.display = 'none';
+}
+
+async function guardarVoluntarioFP(evt) {
+  evt.preventDefault();
+  const personaId = document.getElementById('vfPersonaId').value;
+  if (!personaId) { alert('Selecciona una persona.'); return false; }
+
+  const id = document.getElementById('vfRegistroId').value;
+  const payload = {
+    persona_id: personaId,
+    disponibilidad: document.getElementById('vfDisponibilidad').value.trim() || null,
+    activo: document.getElementById('vfActivo').value === 'true',
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('food_pantry_voluntarios').update(payload).eq('id', id)));
+  } else {
+    ({ error } = await sbCall(sb.from('food_pantry_voluntarios').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalVoluntarioFP();
+  cargarVoluntariosFP();
+  return false;
+}
+
+async function eliminarVoluntarioFP() {
+  const id = document.getElementById('vfRegistroId').value;
+  if (!id || !confirm('¿Eliminar este voluntario?')) return;
+  const { error } = await sbCall(sb.from('food_pantry_voluntarios').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalVoluntarioFP();
+  cargarVoluntariosFP();
 }
 
 // ── Auto-login si ya hay sesión guardada ─────────────────────────────────
