@@ -1,0 +1,1011 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Kids Check-In</title>
+<style>
+  :root{
+    --ink:#1c2430;
+    --ink-soft:#54606f;
+    --paper:#f7f3ec;
+    --card:#ffffff;
+    --line:#e3dcce;
+    --accent:#e2662c;
+    --accent-dark:#bd4f1e;
+    --go:#2f9e58;
+    --go-dark:#227a42;
+    --go-soft:#e5f4ea;
+    --stop:#d1473f;
+    --stop-dark:#ab332c;
+    --stop-soft:#fbe9e7;
+    --amber:#d99a24;
+    --amber-dark:#a9760f;
+    --amber-soft:#faf1da;
+    --navy:#243449;
+    --navy-dark:#182534;
+    --navy-soft:#e7ecf2;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-user-select:none;user-select:none;
+    overscroll-behavior:none;
+  }
+  input,textarea{-webkit-user-select:text;user-select:text;}
+  button{font-family:inherit;cursor:pointer;touch-action:manipulation;}
+
+  .topbar{
+    position:sticky;top:0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:.7rem 1rem;background:var(--navy);color:#fff;
+  }
+  .brand{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:1.05rem;letter-spacing:.2px;}
+  .brand-mark{font-size:1.3rem;}
+  .topbar-right{display:flex;align-items:center;gap:.8rem;}
+  .conn{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:#cfd8e3;}
+  .dot{width:9px;height:9px;border-radius:50%;background:#8a97a8;display:inline-block;}
+  .dot.ok{background:#4fd07a;}
+  .dot.bad{background:#e2665c;}
+  .icon-btn{
+    background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:10px;
+    width:38px;height:38px;font-size:1.1rem;line-height:1;
+  }
+  .icon-btn:active{background:rgba(255,255,255,.25);}
+
+  main{max-width:640px;margin:0 auto;padding:1.1rem 1.1rem 2.5rem;}
+  .screen{display:none;flex-direction:column;gap:1rem;min-height:60vh;}
+  .screen.active{display:flex;}
+
+  h1{font-size:1.5rem;margin:.2rem 0 0;}
+  h2{font-size:1.25rem;margin:0;}
+  .sub{color:var(--ink-soft);margin:.1rem 0 0;font-size:.95rem;}
+  .hint{color:var(--ink-soft);font-size:.92rem;margin:0;}
+  .error{color:var(--stop-dark);font-weight:600;min-height:1.1em;margin:0;font-size:.92rem;}
+  .empty{color:var(--ink-soft);text-align:center;padding:1.4rem 0;}
+
+  /* HOME */
+  .home-hero{
+    background:var(--navy);color:#fff;border-radius:20px;padding:1.4rem 1.4rem 1.6rem;
+  }
+  .home-hero h1{color:#fff;}
+  .home-hero .sub{color:#c6d0dd;}
+  .stat-row{display:flex;gap:1.4rem;margin-top:1rem;}
+  .stat{display:flex;flex-direction:column;}
+  .stat-num{font-size:2.1rem;font-weight:800;line-height:1;}
+  .stat-label{font-size:.78rem;color:#c6d0dd;text-transform:uppercase;letter-spacing:.5px;margin-top:.25rem;}
+  .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;}
+  .action-btn{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;
+    border:none;border-radius:20px;padding:1.5rem .5rem;font-size:1.05rem;font-weight:700;color:#fff;
+    min-height:118px;
+  }
+  .action-btn .action-icon{font-size:1.9rem;}
+  .action-btn.go{background:var(--go);}
+  .action-btn.go:active{background:var(--go-dark);}
+  .action-btn.stop{background:var(--stop);}
+  .action-btn.stop:active{background:var(--stop-dark);}
+  .action-btn.amber{background:var(--amber);}
+  .action-btn.amber:active{background:var(--amber-dark);}
+  .action-btn.navy{background:var(--navy);}
+  .action-btn.navy:active{background:var(--navy-dark);}
+  .settings-link{
+    align-self:center;background:none;border:none;color:var(--ink-soft);font-size:.9rem;
+    padding:.6rem;margin-top:.2rem;
+  }
+
+  /* Buttons */
+  .btn-row{display:flex;gap:.7rem;margin-top:.3rem;}
+  .btn{
+    flex:1;border-radius:14px;border:2px solid transparent;padding:1rem;font-size:1.02rem;font-weight:700;
+  }
+  .btn.primary{background:var(--navy);color:#fff;}
+  .btn.primary.go{background:var(--go);}
+  .btn.primary.stop{background:var(--stop);}
+  .btn.primary.amber{background:var(--amber);}
+  .btn.ghost{background:#fff;color:var(--ink);border-color:var(--line);}
+  .btn.outline{background:#fff;color:var(--navy);border-color:var(--navy);width:100%;}
+  .btn.small{flex:none;padding:.5rem .9rem;font-size:.85rem;border-radius:10px;background:var(--stop);color:#fff;}
+  .btn:active{filter:brightness(.92);}
+
+  /* Inputs */
+  .big-input{
+    width:100%;font-size:2rem;text-align:center;padding:.9rem;border-radius:16px;
+    border:2px solid var(--line);background:#fff;letter-spacing:2px;
+  }
+  .big-input.pin{letter-spacing:10px;}
+  .text-input{
+    width:100%;font-size:1.05rem;padding:.75rem;border-radius:12px;border:2px solid var(--line);
+    background:#fff;font-family:inherit;margin-bottom:.7rem;
+  }
+  .text-input.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;}
+  label{font-size:.85rem;color:var(--ink-soft);font-weight:700;display:block;margin-bottom:.3rem;}
+
+  /* Keypad */
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;max-width:340px;margin:0 auto;width:100%;}
+  .key{
+    font-size:1.5rem;padding:1.05rem 0;border-radius:14px;border:2px solid var(--line);
+    background:#fff;color:var(--ink);font-weight:700;
+  }
+  .key:active{background:var(--navy-soft);}
+  .key-clear{color:var(--stop-dark);}
+  .key-back{color:var(--ink-soft);}
+
+  /* Ticket / stub */
+  .success-wrap{display:flex;flex-direction:column;align-items:center;gap:.9rem;padding:.5rem 0;}
+  .ticket{
+    position:relative;background:var(--card);border:2px solid var(--ink);border-radius:var(--radius);
+    padding:1.3rem 1.6rem;text-align:center;max-width:320px;margin:0 auto;width:100%;
+  }
+  .ticket::before,.ticket::after{
+    content:"";position:absolute;width:22px;height:22px;background:var(--paper);
+    border:2px solid var(--ink);border-radius:50%;top:50%;transform:translateY(-50%);
+  }
+  .ticket::before{left:-13px;}
+  .ticket::after{right:-13px;}
+  .ticket.amber{border-color:var(--amber-dark);}
+  .ticket.amber::before,.ticket.amber::after{border-color:var(--amber-dark);}
+  .ticket-label{font-size:.72rem;letter-spacing:1.5px;color:var(--ink-soft);font-weight:700;}
+  .ticket-number{font-size:2.6rem;font-weight:800;line-height:1.1;margin:.2rem 0;}
+  .ticket-name{font-size:1.2rem;font-weight:700;}
+  .ticket-time{font-size:.88rem;color:var(--ink-soft);margin-top:.2rem;}
+  .big-icon{font-size:2.6rem;}
+
+  /* Alert tiles */
+  .tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.7rem;}
+  .tile{
+    display:flex;flex-direction:column;align-items:center;gap:.25rem;
+    background:#fff;border:2px solid var(--line);border-radius:14px;padding:.85rem .4rem;
+  }
+  .tile:active{background:var(--amber-soft);border-color:var(--amber-dark);}
+  .tile-num{font-size:1.4rem;font-weight:800;}
+  .tile-name{font-size:.78rem;color:var(--ink-soft);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+
+  .preview-label{font-size:.82rem;color:var(--ink-soft);margin:0;font-weight:700;}
+  .preview-text{
+    background:var(--navy);color:#fff;padding:.9rem 1rem;border-radius:12px;font-size:1.1rem;
+    text-align:center;margin:0;
+  }
+
+  /* Roster */
+  .roster-banner{border-radius:14px;padding:.85rem 1rem;font-weight:700;text-align:center;}
+  .roster-banner.good{background:var(--go-soft);color:var(--go-dark);}
+  .roster-banner.warn{background:var(--amber-soft);color:var(--amber-dark);}
+  .roster-banner.neutral{background:var(--navy-soft);color:var(--navy);}
+  .roster-list{display:flex;flex-direction:column;gap:.55rem;max-height:52vh;overflow-y:auto;}
+  .roster-row{
+    display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;align-items:center;
+    gap:.15rem .8rem;background:#fff;border:2px solid var(--line);border-radius:12px;padding:.7rem .9rem;
+  }
+  .roster-row.in{border-left:5px solid var(--go);}
+  .roster-row.out{border-left:5px solid var(--ink-soft);opacity:.75;}
+  .roster-num{font-weight:800;font-size:1.05rem;grid-row:1/3;}
+  .roster-name{font-weight:700;}
+  .roster-name small{font-weight:400;color:var(--stop-dark);}
+  .roster-status{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-soft);grid-row:1;}
+  .roster-times{font-size:.8rem;color:var(--ink-soft);grid-column:2;grid-row:2;}
+  .roster-row .btn.small{grid-row:1/3;}
+
+  fieldset{border:2px solid var(--line);border-radius:14px;margin:0 0 1rem;padding:.9rem 1rem 1rem;}
+  legend{font-weight:800;padding:0 .4rem;font-size:.95rem;}
+  .settings-form{max-height:60vh;overflow-y:auto;padding-right:.2rem;}
+
+  @media (max-width:380px){
+    .stat-num{font-size:1.7rem;}
+    .action-btn{min-height:100px;font-size:.95rem;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="brand-mark">🧒</span><span class="brand-name">Kids Check-In</span></div>
+  <div class="topbar-right">
+    <span class="conn"><span class="dot" id="connDot"></span><span id="connText">Checking…</span></span>
+    <button class="icon-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
+    <button class="icon-btn" id="homeBtn" title="Home">🏠</button>
+  </div>
+</div>
+
+<main id="app">
+
+  <!-- HOME -->
+  <section class="screen active" id="scr-home">
+    <div class="home-hero">
+      <h1 id="sessionTitle">Today's Check-In</h1>
+      <p class="sub" id="homeDate"></p>
+      <div class="stat-row">
+        <div class="stat"><span class="stat-num" id="statActive">0</span><span class="stat-label">Checked In</span></div>
+        <div class="stat"><span class="stat-num" id="statTotal">0</span><span class="stat-label">Total Today</span></div>
+      </div>
+    </div>
+    <div class="action-grid">
+      <button class="action-btn go" data-action="checkin"><span class="action-icon">➕</span><span>Check In</span></button>
+      <button class="action-btn stop" data-action="checkout"><span class="action-icon">➖</span><span>Check Out</span></button>
+      <button class="action-btn amber" data-action="alert"><span class="action-icon">🔔</span><span>Alert Parent</span></button>
+      <button class="action-btn navy" data-action="roster"><span class="action-icon">📋</span><span>Roster</span></button>
+    </div>
+    <button class="settings-link" data-action="settings">⚙️ Settings</button>
+  </section>
+
+  <!-- CHECK-IN: NUMBER -->
+  <section class="screen" id="scr-checkin-number">
+    <h2>Check In — Enter Number</h2>
+    <p class="hint">Scan the card, type the number, or tap below.</p>
+    <input type="text" inputmode="numeric" id="checkinNumberInput" class="big-input" placeholder="Number" autocomplete="off">
+    <div class="keypad" data-target="checkinNumberInput"></div>
+    <p class="error" id="checkinNumberError"></p>
+    <div class="btn-row">
+      <button class="btn ghost" data-action="home">Cancel</button>
+      <button class="btn primary go" id="checkinNumberGo">Continue →</button>
+    </div>
+  </section>
+
+  <!-- CHECK-IN: DETAILS -->
+  <section class="screen" id="scr-checkin-details">
+    <h2>Check In — <span id="checkinNumberLabel"></span></h2>
+    <div>
+      <label for="checkinNameInput">Child's Name</label>
+      <input type="text" id="checkinNameInput" class="text-input" placeholder="Full name" autocomplete="off">
+      <label for="checkinNotesInput">Notes / Allergies (optional)</label>
+      <textarea id="checkinNotesInput" class="text-input" rows="2" placeholder="e.g. peanut allergy"></textarea>
+    </div>
+    <p class="error" id="checkinDetailsError"></p>
+    <div class="btn-row">
+      <button class="btn ghost" data-action="checkin">← Back</button>
+      <button class="btn primary go" id="checkinDetailsGo">Check In ✓</button>
+    </div>
+  </section>
+
+  <!-- CHECK-IN: SUCCESS -->
+  <section class="screen" id="scr-checkin-success">
+    <div class="success-wrap">
+      <div class="ticket">
+        <div class="ticket-label">CHECKED IN</div>
+        <div class="ticket-number" id="successNumber">--</div>
+        <div class="ticket-name" id="successName"></div>
+        <div class="ticket-time" id="successTime"></div>
+      </div>
+      <p class="hint">Give the matching number card to the parent.</p>
+    </div>
+    <button class="btn primary go" data-action="home">Done</button>
+  </section>
+
+  <!-- CHECK-OUT: NUMBER -->
+  <section class="screen" id="scr-checkout-number">
+    <h2>Check Out — Enter Number</h2>
+    <p class="hint">Scan the parent's card, type the number, or tap below.</p>
+    <input type="text" inputmode="numeric" id="checkoutNumberInput" class="big-input" placeholder="Number" autocomplete="off">
+    <div class="keypad" data-target="checkoutNumberInput"></div>
+    <p class="error" id="checkoutNumberError"></p>
+    <div class="btn-row">
+      <button class="btn ghost" data-action="home">Cancel</button>
+      <button class="btn primary stop" id="checkoutNumberGo">Find Child →</button>
+    </div>
+  </section>
+
+  <!-- CHECK-OUT: CONFIRM -->
+  <section class="screen" id="scr-checkout-confirm">
+    <h2>Confirm Pickup</h2>
+    <div class="ticket">
+      <div class="ticket-label">NUMBER</div>
+      <div class="ticket-number" id="checkoutNumberLabel">--</div>
+      <div class="ticket-name" id="checkoutNameLabel"></div>
+      <div class="ticket-time" id="checkoutInTimeLabel"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn ghost" data-action="checkout">← Back</button>
+      <button class="btn primary stop" id="checkoutConfirmGo">Check Out ✓</button>
+    </div>
+  </section>
+
+  <!-- CHECK-OUT: SUCCESS -->
+  <section class="screen" id="scr-checkout-success">
+    <div class="success-wrap">
+      <div class="ticket">
+        <div class="ticket-label">PICKED UP</div>
+        <div class="ticket-number" id="checkoutSuccessNumber">--</div>
+        <div class="ticket-name" id="checkoutSuccessName"></div>
+        <div class="ticket-time" id="checkoutSuccessTime"></div>
+      </div>
+    </div>
+    <button class="btn primary stop" data-action="home">Done</button>
+  </section>
+
+  <!-- ALERT: PIN -->
+  <section class="screen" id="scr-alert-pin">
+    <h2>Staff PIN</h2>
+    <p class="hint">Enter the 4-digit staff PIN to send a parent alert.</p>
+    <input type="password" inputmode="numeric" maxlength="4" id="alertPinInput" class="big-input pin" autocomplete="off">
+    <div class="keypad" data-target="alertPinInput"></div>
+    <p class="error" id="alertPinError"></p>
+    <button class="btn ghost" data-action="home">Cancel</button>
+  </section>
+
+  <!-- ALERT: SELECT -->
+  <section class="screen" id="scr-alert-select">
+    <h2>Who needs a parent?</h2>
+    <p class="hint">Tap the child's number.</p>
+    <div class="tile-grid" id="alertTileGrid"></div>
+    <p class="empty" id="alertEmptyState" hidden>No children are currently checked in.</p>
+    <button class="btn ghost" data-action="home">Cancel</button>
+  </section>
+
+  <!-- ALERT: CONFIRM -->
+  <section class="screen" id="scr-alert-confirm">
+    <h2>Send Alert?</h2>
+    <div class="ticket amber">
+      <div class="ticket-label">NUMBER</div>
+      <div class="ticket-number" id="alertConfirmNumber">--</div>
+      <div class="ticket-name" id="alertConfirmName"></div>
+    </div>
+    <p class="preview-label">This will show on the screen:</p>
+    <p class="preview-text" id="alertPreviewText"></p>
+    <p class="error" id="alertSendError"></p>
+    <div class="btn-row">
+      <button class="btn ghost" id="alertConfirmBack">← Back</button>
+      <button class="btn primary amber" id="alertConfirmSend">Send Alert 🔔</button>
+    </div>
+  </section>
+
+  <!-- ALERT: SENT -->
+  <section class="screen" id="scr-alert-sent">
+    <div class="success-wrap">
+      <div class="big-icon">🔔</div>
+      <h2>Alert Sent</h2>
+      <p id="alertSentSummary"></p>
+      <p class="hint" id="alertCountdown"></p>
+    </div>
+    <div class="btn-row">
+      <button class="btn primary stop" id="alertClearNowBtn">Clear Alert Now</button>
+      <button class="btn ghost" data-action="home">Done</button>
+    </div>
+  </section>
+
+  <!-- ROSTER -->
+  <section class="screen" id="scr-roster">
+    <h2>Roster</h2>
+    <div class="roster-banner" id="rosterBanner"></div>
+    <input type="text" id="rosterSearch" class="text-input" placeholder="Search name or number…">
+    <div class="roster-list" id="rosterList"></div>
+    <div class="btn-row">
+      <button class="btn ghost" data-action="home">← Home</button>
+      <button class="btn outline" id="rosterExportBtn">Export CSV ⬇</button>
+    </div>
+  </section>
+
+  <!-- SETTINGS: PIN -->
+  <section class="screen" id="scr-settings-pin">
+    <h2>Staff PIN</h2>
+    <p class="hint">Enter the 4-digit staff PIN to open settings.</p>
+    <input type="password" inputmode="numeric" maxlength="4" id="settingsPinInput" class="big-input pin" autocomplete="off">
+    <div class="keypad" data-target="settingsPinInput"></div>
+    <p class="error" id="settingsPinError"></p>
+    <button class="btn ghost" data-action="home">Cancel</button>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="screen" id="scr-settings">
+    <h2>Settings</h2>
+    <div class="settings-form">
+      <fieldset>
+        <legend>Staff Access</legend>
+        <label for="setPin">Staff PIN (4 digits)</label>
+        <input type="text" inputmode="numeric" maxlength="4" id="setPin" class="text-input">
+      </fieldset>
+
+      <fieldset>
+        <legend>FreeShow Connection</legend>
+        <label for="setHost">Host / IP address of the computer running FreeShow</label>
+        <input type="text" id="setHost" class="text-input" placeholder="localhost">
+        <label for="setPort">Port</label>
+        <input type="text" id="setPort" class="text-input" placeholder="5506">
+        <button class="btn outline" id="testConnBtn" type="button">Test Connection</button>
+        <p class="hint" id="testConnResult"></p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Alert Message</legend>
+        <label for="setMessageTemplate">Message template</label>
+        <input type="text" id="setMessageTemplate" class="text-input">
+        <p class="hint">Use <code>{{number}}</code> and <code>{{name}}</code> as placeholders.</p>
+        <label for="setAutoClear">Auto-clear after (minutes)</label>
+        <input type="number" min="1" max="60" id="setAutoClear" class="text-input">
+      </fieldset>
+
+      <fieldset>
+        <legend>Advanced: FreeShow action payloads</legend>
+        <p class="hint">Only change these if you've customized the FreeShow project. See SETUP-INSTRUCTIONS.md.</p>
+        <label for="setAlertActionId">Show-alert action ID</label>
+        <input type="text" id="setAlertActionId" class="text-input mono">
+        <label for="setAlertPayload">Show-alert payload (JSON)</label>
+        <textarea id="setAlertPayload" class="text-input mono" rows="2"></textarea>
+        <label for="setClearActionId">Clear-alert action ID</label>
+        <input type="text" id="setClearActionId" class="text-input mono">
+        <label for="setClearPayload">Clear-alert payload (JSON)</label>
+        <textarea id="setClearPayload" class="text-input mono" rows="2"></textarea>
+        <button class="btn outline" id="testAlertBtn" type="button">Send Test Alert</button>
+        <p class="hint" id="testAlertResult"></p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Session</legend>
+        <label for="setSessionLabel">Session label (optional)</label>
+        <input type="text" id="setSessionLabel" class="text-input" placeholder="e.g. Sunday 9am">
+        <button class="btn outline" id="newSessionBtn" type="button">Start New Session…</button>
+      </fieldset>
+    </div>
+    <p class="error" id="settingsError"></p>
+    <div class="btn-row">
+      <button class="btn ghost" data-action="home">Cancel</button>
+      <button class="btn primary" id="settingsSaveBtn">Save Settings</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEYS = {
+    settings: 'kcs_settings_v1',
+    records: 'kcs_records_v1',
+    alerts: 'kcs_alerts_v1',
+    history: 'kcs_history_v1'
+  };
+
+  var DEFAULT_SETTINGS = {
+    staffPin: '1234',
+    freeshowHost: 'localhost',
+    freeshowPort: '5506',
+    alertActionId: 'change_variable',
+    alertPayloadTemplate: '{"name":"KidsAlert","key":"value","value":"{{message}}"}',
+    clearActionId: 'change_variable',
+    clearPayloadTemplate: '{"name":"KidsAlert","key":"value","value":""}',
+    messageTemplate: '🔔  Card #{{number}}  —  please come to the Kids Room',
+    alertAutoClearMinutes: 5,
+    sessionLabel: ''
+  };
+
+  var settings = loadSettings();
+  var records = loadRecords();
+  var alerts = loadAlerts();
+
+  var pendingCheckinNumber = null;
+  var selectedRecordForCheckout = null;
+  var selectedRecordForAlert = null;
+  var currentAlertEntry = null;
+  var alertClearTimer = null;
+  var alertCountdownInterval = null;
+
+  /* ---------- storage ---------- */
+  function loadSettings(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEYS.settings);
+      return raw ? Object.assign({}, DEFAULT_SETTINGS, JSON.parse(raw)) : Object.assign({}, DEFAULT_SETTINGS);
+    }catch(e){ return Object.assign({}, DEFAULT_SETTINGS); }
+  }
+  function saveSettings(){ localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(settings)); }
+  function loadRecords(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEYS.records)) || []; }catch(e){ return []; } }
+  function saveRecords(){ localStorage.setItem(STORAGE_KEYS.records, JSON.stringify(records)); }
+  function loadAlerts(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEYS.alerts)) || []; }catch(e){ return []; } }
+  function saveAlerts(){ localStorage.setItem(STORAGE_KEYS.alerts, JSON.stringify(alerts)); }
+  function loadHistory(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEYS.history)) || []; }catch(e){ return []; } }
+  function saveHistory(h){ localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(h)); }
+
+  /* ---------- helpers ---------- */
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+  function formatTime(ts){ return new Date(ts).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}); }
+  function normalizeNumber(s){ var n = parseInt(String(s).replace(/\D/g,''),10); return isNaN(n) ? '' : String(n); }
+  function activeRecords(){ return records.filter(function(r){ return r.status === 'checked-in'; }); }
+  function findActiveByNumber(num){ return records.find(function(r){ return r.status === 'checked-in' && r.number === num; }); }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+  function fillTemplatePlain(tpl, vars){
+    var out = tpl;
+    Object.keys(vars).forEach(function(k){ out = out.split('{{'+k+'}}').join(String(vars[k])); });
+    return out;
+  }
+  function fillTemplateJsonSafe(tpl, vars){
+    var out = tpl;
+    Object.keys(vars).forEach(function(k){
+      var safe = JSON.stringify(String(vars[k])).slice(1,-1);
+      out = out.split('{{'+k+'}}').join(safe);
+    });
+    return out;
+  }
+
+  /* ---------- FreeShow API ---------- */
+  function freeshowRequestWith(cfg, actionId, data){
+    var url = 'http://' + cfg.freeshowHost + ':' + cfg.freeshowPort +
+      '?action=' + encodeURIComponent(actionId) + '&data=' + encodeURIComponent(JSON.stringify(data));
+    return fetch(url).then(function(res){
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      return res;
+    });
+  }
+  function freeshowRequest(actionId, data){ return freeshowRequestWith(settings, actionId, data); }
+
+  function sendAlertForRecord(rec){
+    var message = fillTemplatePlain(settings.messageTemplate, {number: rec.number, name: rec.childName});
+    var jsonStr = fillTemplateJsonSafe(settings.alertPayloadTemplate, {message: message, number: rec.number, name: rec.childName});
+    var data;
+    try{ data = JSON.parse(jsonStr); }catch(e){ return Promise.reject(new Error('Invalid show-alert payload template')); }
+    return freeshowRequest(settings.alertActionId, data).then(function(){ return message; });
+  }
+  function clearAlertAction(){
+    var data;
+    try{ data = JSON.parse(settings.clearPayloadTemplate); }catch(e){ data = {}; }
+    return freeshowRequest(settings.clearActionId, data);
+  }
+
+  function checkConnection(){
+    var dot = document.getElementById('connDot');
+    var txt = document.getElementById('connText');
+    freeshowRequest('get_output', {}).then(function(){
+      dot.className = 'dot ok'; txt.textContent = 'FreeShow Connected';
+    }).catch(function(){
+      dot.className = 'dot bad'; txt.textContent = 'FreeShow Offline';
+    });
+  }
+
+  /* ---------- navigation ---------- */
+  var currentScreen = 'home';
+  function show(name){
+    var all = document.querySelectorAll('.screen');
+    for(var i=0;i<all.length;i++){ all[i].classList.remove('active'); }
+    document.getElementById('scr-' + name).classList.add('active');
+    currentScreen = name;
+  }
+
+  function goTo(action){
+    switch(action){
+      case 'home':
+        show('home'); renderHome(); break;
+      case 'checkin':
+        document.getElementById('checkinNumberInput').value = '';
+        document.getElementById('checkinNumberError').textContent = '';
+        show('checkin-number');
+        setTimeout(function(){ document.getElementById('checkinNumberInput').focus(); }, 50);
+        break;
+      case 'checkout':
+        document.getElementById('checkoutNumberInput').value = '';
+        document.getElementById('checkoutNumberError').textContent = '';
+        show('checkout-number');
+        setTimeout(function(){ document.getElementById('checkoutNumberInput').focus(); }, 50);
+        break;
+      case 'alert':
+        document.getElementById('alertPinInput').value = '';
+        document.getElementById('alertPinError').textContent = '';
+        show('alert-pin');
+        setTimeout(function(){ document.getElementById('alertPinInput').focus(); }, 50);
+        break;
+      case 'roster':
+        renderRoster();
+        show('roster');
+        break;
+      case 'settings':
+        document.getElementById('settingsPinInput').value = '';
+        document.getElementById('settingsPinError').textContent = '';
+        show('settings-pin');
+        setTimeout(function(){ document.getElementById('settingsPinInput').focus(); }, 50);
+        break;
+    }
+  }
+
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-action]');
+    if(!btn) return;
+    goTo(btn.dataset.action);
+  });
+  document.getElementById('homeBtn').addEventListener('click', function(){ goTo('home'); });
+  document.getElementById('fullscreenBtn').addEventListener('click', function(){
+    if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().catch(function(){}); }
+  });
+
+  /* ---------- keypad ---------- */
+  function mountKeypad(el){
+    var targetId = el.dataset.target;
+    var keys = ['1','2','3','4','5','6','7','8','9','C','0','⌫'];
+    el.innerHTML = '';
+    keys.forEach(function(k){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'key' + (k === '⌫' ? ' key-back' : '') + (k === 'C' ? ' key-clear' : '');
+      b.textContent = k;
+      b.addEventListener('click', function(){
+        var input = document.getElementById(targetId);
+        if(k === '⌫'){ input.value = input.value.slice(0,-1); }
+        else if(k === 'C'){ input.value = ''; }
+        else { input.value += k; }
+        input.dispatchEvent(new Event('input', {bubbles:true}));
+        input.focus();
+      });
+      el.appendChild(b);
+    });
+  }
+
+  /* ---------- HOME ---------- */
+  function renderHome(){
+    document.getElementById('homeDate').textContent = new Date().toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
+    document.getElementById('statActive').textContent = activeRecords().length;
+    document.getElementById('statTotal').textContent = records.length;
+    document.getElementById('sessionTitle').textContent = settings.sessionLabel ? settings.sessionLabel : "Today's Check-In";
+  }
+
+  /* ---------- CHECK-IN ---------- */
+  document.getElementById('checkinNumberInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('checkinNumberGo').click(); }
+  });
+  document.getElementById('checkinNumberGo').addEventListener('click', function(){
+    var raw = document.getElementById('checkinNumberInput').value.trim();
+    var err = document.getElementById('checkinNumberError');
+    err.textContent = '';
+    if(!raw || !/^\d+$/.test(raw)){ err.textContent = 'Enter a valid number.'; return; }
+    var num = normalizeNumber(raw);
+    var existing = findActiveByNumber(num);
+    if(existing){
+      var proceed = confirm('Number ' + num + ' is already checked in for ' + existing.childName + '. Use this number again anyway?');
+      if(!proceed) return;
+    }
+    pendingCheckinNumber = num;
+    document.getElementById('checkinNumberLabel').textContent = '#' + num;
+    document.getElementById('checkinNameInput').value = '';
+    document.getElementById('checkinNotesInput').value = '';
+    document.getElementById('checkinDetailsError').textContent = '';
+    show('checkin-details');
+    setTimeout(function(){ document.getElementById('checkinNameInput').focus(); }, 50);
+  });
+
+  document.getElementById('checkinDetailsGo').addEventListener('click', function(){
+    var name = document.getElementById('checkinNameInput').value.trim();
+    var err = document.getElementById('checkinDetailsError');
+    if(!name){ err.textContent = "Enter the child's name."; return; }
+    err.textContent = '';
+    var notes = document.getElementById('checkinNotesInput').value.trim();
+    var rec = { id: uid(), number: pendingCheckinNumber, childName: name, notes: notes, checkInTime: Date.now(), checkOutTime: null, status: 'checked-in' };
+    records.push(rec); saveRecords();
+    document.getElementById('successNumber').textContent = '#' + rec.number;
+    document.getElementById('successName').textContent = rec.childName;
+    document.getElementById('successTime').textContent = 'Checked in at ' + formatTime(rec.checkInTime);
+    renderHome();
+    show('checkin-success');
+  });
+
+  /* ---------- CHECK-OUT ---------- */
+  document.getElementById('checkoutNumberInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('checkoutNumberGo').click(); }
+  });
+  document.getElementById('checkoutNumberGo').addEventListener('click', function(){
+    var raw = document.getElementById('checkoutNumberInput').value.trim();
+    var err = document.getElementById('checkoutNumberError');
+    err.textContent = '';
+    if(!raw || !/^\d+$/.test(raw)){ err.textContent = 'Enter a valid number.'; return; }
+    var num = normalizeNumber(raw);
+    var rec = findActiveByNumber(num);
+    if(!rec){ err.textContent = 'No active check-in found for #' + num + '.'; return; }
+    selectedRecordForCheckout = rec;
+    document.getElementById('checkoutNumberLabel').textContent = '#' + rec.number;
+    document.getElementById('checkoutNameLabel').textContent = rec.childName;
+    document.getElementById('checkoutInTimeLabel').textContent = 'Checked in at ' + formatTime(rec.checkInTime);
+    show('checkout-confirm');
+  });
+
+  document.getElementById('checkoutConfirmGo').addEventListener('click', function(){
+    var rec = selectedRecordForCheckout;
+    if(!rec) return;
+    rec.status = 'checked-out';
+    rec.checkOutTime = Date.now();
+    saveRecords();
+    document.getElementById('checkoutSuccessNumber').textContent = '#' + rec.number;
+    document.getElementById('checkoutSuccessName').textContent = rec.childName;
+    document.getElementById('checkoutSuccessTime').textContent = 'Picked up at ' + formatTime(rec.checkOutTime);
+    renderHome();
+    show('checkout-success');
+  });
+
+  function quickCheckout(rec){
+    if(!confirm('Check out #' + rec.number + ' — ' + rec.childName + '?')) return;
+    rec.status = 'checked-out';
+    rec.checkOutTime = Date.now();
+    saveRecords();
+    renderRoster();
+    renderHome();
+  }
+
+  /* ---------- ALERT ---------- */
+  document.getElementById('alertPinInput').addEventListener('input', function(){
+    if(this.value.length === 4){
+      var entered = this.value;
+      this.value = '';
+      if(entered === settings.staffPin){
+        document.getElementById('alertPinError').textContent = '';
+        renderAlertTiles();
+        show('alert-select');
+      } else {
+        document.getElementById('alertPinError').textContent = 'Incorrect PIN.';
+      }
+    }
+  });
+
+  function renderAlertTiles(){
+    var grid = document.getElementById('alertTileGrid');
+    var empty = document.getElementById('alertEmptyState');
+    var active = activeRecords().slice().sort(function(a,b){ return Number(a.number) - Number(b.number); });
+    grid.innerHTML = '';
+    empty.hidden = active.length > 0;
+    active.forEach(function(rec){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'tile';
+      btn.innerHTML = '<span class="tile-num">#' + escapeHtml(rec.number) + '</span><span class="tile-name">' + escapeHtml(rec.childName) + '</span>';
+      btn.addEventListener('click', function(){ selectAlertRecord(rec); });
+      grid.appendChild(btn);
+    });
+  }
+
+  function selectAlertRecord(rec){
+    selectedRecordForAlert = rec;
+    document.getElementById('alertConfirmNumber').textContent = '#' + rec.number;
+    document.getElementById('alertConfirmName').textContent = rec.childName;
+    document.getElementById('alertPreviewText').textContent = fillTemplatePlain(settings.messageTemplate, {number: rec.number, name: rec.childName});
+    document.getElementById('alertSendError').textContent = '';
+    show('alert-confirm');
+  }
+
+  document.getElementById('alertConfirmBack').addEventListener('click', function(){ show('alert-select'); });
+
+  document.getElementById('alertConfirmSend').addEventListener('click', function(){
+    var btn = this;
+    var errEl = document.getElementById('alertSendError');
+    errEl.textContent = '';
+    btn.disabled = true; btn.textContent = 'Sending…';
+    sendAlertForRecord(selectedRecordForAlert).then(function(message){
+      var entry = { id: uid(), number: selectedRecordForAlert.number, childName: selectedRecordForAlert.childName, sentAt: Date.now(), clearedAt: null };
+      alerts.push(entry); saveAlerts();
+      startAlertCountdown(entry);
+      show('alert-sent');
+    }).catch(function(e){
+      errEl.textContent = 'Could not reach FreeShow: ' + e.message + '. Check Settings.';
+    }).finally(function(){
+      btn.disabled = false; btn.textContent = 'Send Alert 🔔';
+    });
+  });
+
+  function startAlertCountdown(entry){
+    currentAlertEntry = entry;
+    document.getElementById('alertSentSummary').textContent = '#' + entry.number + ' — ' + entry.childName;
+    clearTimeout(alertClearTimer); clearInterval(alertCountdownInterval);
+    var durationMs = (Number(settings.alertAutoClearMinutes) || 5) * 60000;
+    var endAt = Date.now() + durationMs;
+    function tick(){
+      var remain = Math.max(0, endAt - Date.now());
+      var mm = Math.floor(remain / 60000);
+      var ss = Math.floor((remain % 60000) / 1000);
+      var label = document.getElementById('alertCountdown');
+      if(label) label.textContent = remain > 0 ? ('Auto-clears in ' + mm + ':' + (ss < 10 ? '0' + ss : ss)) : 'Clearing…';
+    }
+    tick();
+    alertCountdownInterval = setInterval(tick, 1000);
+    alertClearTimer = setTimeout(function(){ finishClearAlert(); }, durationMs);
+  }
+
+  function finishClearAlert(){
+    clearTimeout(alertClearTimer); clearInterval(alertCountdownInterval);
+    return clearAlertAction().catch(function(){ /* best effort */ }).then(function(){
+      if(currentAlertEntry){ currentAlertEntry.clearedAt = Date.now(); saveAlerts(); currentAlertEntry = null; }
+    });
+  }
+
+  document.getElementById('alertClearNowBtn').addEventListener('click', function(){
+    finishClearAlert().then(function(){ show('home'); renderHome(); });
+  });
+
+  /* ---------- ROSTER ---------- */
+  function renderRoster(){
+    var banner = document.getElementById('rosterBanner');
+    var active = activeRecords();
+    if(records.length === 0){
+      banner.className = 'roster-banner neutral';
+      banner.textContent = 'No check-ins yet today.';
+    } else if(active.length === 0){
+      banner.className = 'roster-banner good';
+      banner.textContent = '✅ All children have been picked up.';
+    } else {
+      banner.className = 'roster-banner warn';
+      banner.textContent = '⚠️ ' + active.length + (active.length > 1 ? ' children are' : ' child is') + ' still checked in.';
+    }
+    renderRosterList(document.getElementById('rosterSearch').value);
+  }
+
+  function renderRosterList(filter){
+    var list = document.getElementById('rosterList');
+    var q = (filter || '').trim().toLowerCase();
+    var rows = records.slice().sort(function(a,b){ return b.checkInTime - a.checkInTime; }).filter(function(r){
+      if(!q) return true;
+      return r.number.indexOf(q) !== -1 || r.childName.toLowerCase().indexOf(q) !== -1;
+    });
+    list.innerHTML = '';
+    if(rows.length === 0){ list.innerHTML = '<p class="empty">No matching records.</p>'; return; }
+    rows.forEach(function(r){
+      var row = document.createElement('div');
+      row.className = 'roster-row ' + (r.status === 'checked-in' ? 'in' : 'out');
+      var timesHtml = formatTime(r.checkInTime) + (r.checkOutTime ? (' → ' + formatTime(r.checkOutTime)) : '');
+      row.innerHTML =
+        '<span class="roster-num">#' + escapeHtml(r.number) + '</span>' +
+        '<span class="roster-name">' + escapeHtml(r.childName) + (r.notes ? ('<br><small>' + escapeHtml(r.notes) + '</small>') : '') + '</span>' +
+        '<span class="roster-status">' + (r.status === 'checked-in' ? 'Checked In' : 'Picked Up') + '</span>' +
+        '<span class="roster-times">' + timesHtml + '</span>';
+      if(r.status === 'checked-in'){
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn small';
+        btn.textContent = 'Check Out';
+        btn.addEventListener('click', function(e){ e.stopPropagation(); quickCheckout(r); });
+        row.appendChild(btn);
+      }
+      list.appendChild(row);
+    });
+  }
+  document.getElementById('rosterSearch').addEventListener('input', function(e){ renderRosterList(e.target.value); });
+
+  function csvEscape(s){ s = String(s); return /[",\n]/.test(s) ? ('"' + s.replace(/"/g,'""') + '"') : s; }
+  function dateStamp(){ return new Date().toISOString().slice(0,10); }
+  function exportCSV(){
+    var header = ['Number','Name','Notes','Status','CheckIn','CheckOut'];
+    var lines = [header.join(',')];
+    records.forEach(function(r){
+      lines.push([
+        r.number, csvEscape(r.childName), csvEscape(r.notes || ''), r.status,
+        new Date(r.checkInTime).toLocaleString(),
+        r.checkOutTime ? new Date(r.checkOutTime).toLocaleString() : ''
+      ].join(','));
+    });
+    var blob = new Blob([lines.join('\n')], {type:'text/csv'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'kids-checkin-' + dateStamp() + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+  document.getElementById('rosterExportBtn').addEventListener('click', exportCSV);
+
+  /* ---------- SETTINGS ---------- */
+  document.getElementById('settingsPinInput').addEventListener('input', function(){
+    if(this.value.length === 4){
+      var entered = this.value;
+      this.value = '';
+      if(entered === settings.staffPin){
+        document.getElementById('settingsPinError').textContent = '';
+        populateSettingsForm();
+        show('settings');
+      } else {
+        document.getElementById('settingsPinError').textContent = 'Incorrect PIN.';
+      }
+    }
+  });
+
+  function populateSettingsForm(){
+    document.getElementById('setPin').value = settings.staffPin;
+    document.getElementById('setHost').value = settings.freeshowHost;
+    document.getElementById('setPort').value = settings.freeshowPort;
+    document.getElementById('setMessageTemplate').value = settings.messageTemplate;
+    document.getElementById('setAutoClear').value = settings.alertAutoClearMinutes;
+    document.getElementById('setAlertActionId').value = settings.alertActionId;
+    document.getElementById('setAlertPayload').value = settings.alertPayloadTemplate;
+    document.getElementById('setClearActionId').value = settings.clearActionId;
+    document.getElementById('setClearPayload').value = settings.clearPayloadTemplate;
+    document.getElementById('setSessionLabel').value = settings.sessionLabel || '';
+    document.getElementById('settingsError').textContent = '';
+    document.getElementById('testConnResult').textContent = '';
+    document.getElementById('testAlertResult').textContent = '';
+  }
+
+  document.getElementById('settingsSaveBtn').addEventListener('click', function(){
+    var err = document.getElementById('settingsError');
+    var pin = document.getElementById('setPin').value.trim();
+    if(!/^\d{4}$/.test(pin)){ err.textContent = 'PIN must be exactly 4 digits.'; return; }
+    try{ JSON.parse(document.getElementById('setAlertPayload').value); }
+    catch(e){ err.textContent = 'Show-alert payload is not valid JSON.'; return; }
+    try{ JSON.parse(document.getElementById('setClearPayload').value); }
+    catch(e){ err.textContent = 'Clear-alert payload is not valid JSON.'; return; }
+    err.textContent = '';
+    settings.staffPin = pin;
+    settings.freeshowHost = document.getElementById('setHost').value.trim() || 'localhost';
+    settings.freeshowPort = document.getElementById('setPort').value.trim() || '5506';
+    settings.messageTemplate = document.getElementById('setMessageTemplate').value;
+    settings.alertAutoClearMinutes = Number(document.getElementById('setAutoClear').value) || 5;
+    settings.alertActionId = document.getElementById('setAlertActionId').value.trim();
+    settings.alertPayloadTemplate = document.getElementById('setAlertPayload').value;
+    settings.clearActionId = document.getElementById('setClearActionId').value.trim();
+    settings.clearPayloadTemplate = document.getElementById('setClearPayload').value;
+    settings.sessionLabel = document.getElementById('setSessionLabel').value.trim();
+    saveSettings();
+    renderHome();
+    show('home');
+  });
+
+  document.getElementById('testConnBtn').addEventListener('click', function(){
+    var host = document.getElementById('setHost').value.trim() || 'localhost';
+    var port = document.getElementById('setPort').value.trim() || '5506';
+    var resultEl = document.getElementById('testConnResult');
+    resultEl.textContent = 'Testing…';
+    freeshowRequestWith({freeshowHost:host, freeshowPort:port}, 'get_output', {}).then(function(){
+      resultEl.textContent = '✅ Connected to FreeShow.';
+    }).catch(function(e){
+      resultEl.textContent = '❌ Could not reach FreeShow: ' + e.message;
+    });
+  });
+
+  document.getElementById('testAlertBtn').addEventListener('click', function(){
+    var resultEl = document.getElementById('testAlertResult');
+    var cfg = {
+      freeshowHost: document.getElementById('setHost').value.trim() || 'localhost',
+      freeshowPort: document.getElementById('setPort').value.trim() || '5506'
+    };
+    var alertActionId = document.getElementById('setAlertActionId').value.trim();
+    var clearActionId = document.getElementById('setClearActionId').value.trim();
+    var messageTemplate = document.getElementById('setMessageTemplate').value;
+    var alertPayloadTemplate = document.getElementById('setAlertPayload').value;
+    var clearPayloadTemplate = document.getElementById('setClearPayload').value;
+
+    resultEl.textContent = 'Sending test alert…';
+    var message = fillTemplatePlain(messageTemplate, {number:'00', name:'Test Alert'});
+    var data;
+    try{ data = JSON.parse(fillTemplateJsonSafe(alertPayloadTemplate, {message:message, number:'00', name:'Test Alert'})); }
+    catch(e){ resultEl.textContent = '❌ Invalid show-alert payload JSON.'; return; }
+
+    freeshowRequestWith(cfg, alertActionId, data).then(function(){
+      resultEl.textContent = '✅ Test alert sent. It will clear in 5 seconds.';
+      setTimeout(function(){
+        var clearData;
+        try{ clearData = JSON.parse(clearPayloadTemplate); }catch(e){ clearData = {}; }
+        freeshowRequestWith(cfg, clearActionId, clearData).catch(function(){});
+      }, 5000);
+    }).catch(function(e){
+      resultEl.textContent = '❌ ' + e.message;
+    });
+  });
+
+  document.getElementById('newSessionBtn').addEventListener('click', function(){
+    var active = activeRecords();
+    var msg = active.length > 0
+      ? (active.length + " child(ren) are still checked in. Starting a new session will archive today's roster but will NOT check them out. A CSV backup will download automatically. Continue?")
+      : "Start a new session? This will archive the current roster and start fresh. A CSV backup will download automatically.";
+    if(!confirm(msg)) return;
+    exportCSV();
+    var history = loadHistory();
+    history.push({ closedAt: Date.now(), label: settings.sessionLabel || '', records: records });
+    saveHistory(history.slice(-20));
+    records = [];
+    saveRecords();
+    settings.sessionLabel = '';
+    saveSettings();
+    document.getElementById('setSessionLabel').value = '';
+    renderHome();
+    alert('New session started. Previous roster exported as CSV.');
+  });
+
+  /* ---------- init ---------- */
+  function init(){
+    var pads = document.querySelectorAll('.keypad');
+    for(var i=0;i<pads.length;i++){ mountKeypad(pads[i]); }
+    renderHome();
+    show('home');
+    checkConnection();
+    setInterval(checkConnection, 30000);
+  }
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
