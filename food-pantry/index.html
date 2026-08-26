@@ -444,7 +444,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'food-pantry Ver-005';
+const APP_VERSION = 'food-pantry Ver-006';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -1187,16 +1187,27 @@ function seleccionarPersonaDonante(id) {
 }
 
 function filtrarOrgDonante() {
-  const q = document.getElementById('doOrgBuscar').value.trim().toLowerCase();
+  const q = document.getElementById('doOrgBuscar').value.trim();
   const contenedor = document.getElementById('sugerenciasOrgDonante');
   if (q.length < 2) { contenedor.style.display = 'none'; return; }
 
-  const coincidencias = cacheOrganizaciones.filter(o => o.nombre.toLowerCase().includes(q)).slice(0, 8);
+  const coincidencias = cacheOrganizaciones.filter(o => o.nombre.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
 
-  contenedor.innerHTML = coincidencias.length
-    ? coincidencias.map(o => `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;" onmousedown="seleccionarOrgDonante('${o.id}')">${o.nombre}</div>`).join('')
-    : '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+  let html = coincidencias.map(o =>
+    `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;" onmousedown="seleccionarOrgDonante('${o.id}')">${o.nombre}</div>`
+  ).join('');
+
+  html += `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem; color: var(--navy); font-weight:600; border-top:${coincidencias.length ? '1px solid var(--border)' : 'none'};" onmousedown="crearOrganizacionDonante('${q.replace(/'/g, "\\'")}')">+ Crear organización "${q}"</div>`;
+
+  contenedor.innerHTML = html;
   contenedor.style.display = 'block';
+}
+
+async function crearOrganizacionDonante(nombre) {
+  const { data, error } = await sbCall(sb.from('organizaciones').insert({ nombre }).select().single());
+  if (error) { alert('Error al crear la organización: ' + error.message); return; }
+  cacheOrganizaciones.push(data);
+  seleccionarOrgDonante(data.id);
 }
 
 function seleccionarOrgDonante(id) {
