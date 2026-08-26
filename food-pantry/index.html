@@ -444,7 +444,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'food-pantry Ver-006';
+const APP_VERSION = 'food-pantry Ver-007';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -530,6 +530,30 @@ function formatoFecha(iso) {
   if (!iso) return '';
   const [y, m, d] = iso.split('-');
   return `${m}/${d}/${y}`;
+}
+
+// ── Creación rápida de persona (compartida entre buscadores) ────────────
+async function crearPersonaRapida(nombreBusqueda) {
+  const partes = nombreBusqueda.trim().split(/\s+/);
+  const nombreSugerido = partes[0] || '';
+  const apellidoSugerido = partes.slice(1).join(' ') || '';
+
+  const nombre = prompt('Nombre:', nombreSugerido);
+  if (!nombre || !nombre.trim()) return null;
+  const apellido = prompt('Apellido:', apellidoSugerido);
+  if (apellido === null) return null;
+
+  const { data, error } = await sbCall(
+    sb.from('personas').insert({ nombre: nombre.trim(), apellido: apellido.trim(), archivado: false }).select().single()
+  );
+
+  if (error) {
+    alert('Error al crear la persona: ' + error.message);
+    return null;
+  }
+
+  cacheDirectorio.push(data);
+  return data.id;
 }
 
 async function mostrarBeneficiarios() {
@@ -619,27 +643,30 @@ function cerrarModalBeneficiario() {
 }
 
 function filtrarPersonaBeneficiario() {
-  const q = document.getElementById('bPersonaBuscar').value.trim().toLowerCase();
+  const q = document.getElementById('bPersonaBuscar').value.trim();
   const contenedor = document.getElementById('sugerenciasPersonaBeneficiario');
 
   if (q.length < 2) { contenedor.style.display = 'none'; return; }
 
   const coincidencias = cacheDirectorio.filter(p =>
-    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q.toLowerCase())
   ).slice(0, 8);
 
-  if (coincidencias.length === 0) {
-    contenedor.innerHTML = '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
-    contenedor.style.display = 'block';
-    return;
-  }
-
-  contenedor.innerHTML = coincidencias.map(p => `
+  let html = coincidencias.map(p => `
     <div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;"
          onmousedown="seleccionarPersonaBeneficiario('${p.id}')">
       ${p.nombre_completo || `${p.nombre} ${p.apellido}`}
     </div>`).join('');
+
+  html += `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem; color: var(--navy); font-weight:600; border-top:${coincidencias.length ? '1px solid var(--border)' : 'none'};" onmousedown="crearPersonaBeneficiario('${q.replace(/'/g, "\\'")}')">+ Agregar persona nueva</div>`;
+
+  contenedor.innerHTML = html;
   contenedor.style.display = 'block';
+}
+
+async function crearPersonaBeneficiario(nombreBusqueda) {
+  const id = await crearPersonaRapida(nombreBusqueda);
+  if (id) seleccionarPersonaBeneficiario(id);
 }
 
 function seleccionarPersonaBeneficiario(id) {
@@ -1165,18 +1192,27 @@ function cerrarModalDonante() {
 }
 
 function filtrarPersonaDonante() {
-  const q = document.getElementById('doPersonaBuscar').value.trim().toLowerCase();
+  const q = document.getElementById('doPersonaBuscar').value.trim();
   const contenedor = document.getElementById('sugerenciasPersonaDonante');
   if (q.length < 2) { contenedor.style.display = 'none'; return; }
 
   const coincidencias = cacheDirectorio.filter(p =>
-    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q.toLowerCase())
   ).slice(0, 8);
 
-  contenedor.innerHTML = coincidencias.length
-    ? coincidencias.map(p => `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;" onmousedown="seleccionarPersonaDonante('${p.id}')">${p.nombre_completo || `${p.nombre} ${p.apellido}`}</div>`).join('')
-    : '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+  let html = coincidencias.map(p =>
+    `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;" onmousedown="seleccionarPersonaDonante('${p.id}')">${p.nombre_completo || `${p.nombre} ${p.apellido}`}</div>`
+  ).join('');
+
+  html += `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem; color: var(--navy); font-weight:600; border-top:${coincidencias.length ? '1px solid var(--border)' : 'none'};" onmousedown="crearPersonaDonante('${q.replace(/'/g, "\\'")}')">+ Agregar persona nueva</div>`;
+
+  contenedor.innerHTML = html;
   contenedor.style.display = 'block';
+}
+
+async function crearPersonaDonante(nombreBusqueda) {
+  const id = await crearPersonaRapida(nombreBusqueda);
+  if (id) seleccionarPersonaDonante(id);
 }
 
 function seleccionarPersonaDonante(id) {
