@@ -1,1 +1,820 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Store — Regreso a Cristo</title>
+<script>const APP_SLUG = 'free_store';</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="../shared/supabase-client.js"></script>
+<script src="../shared/auth.js"></script>
+<style>
+  :root {
+    --navy: #0f2445; --navy-light: #16345f; --gold: #c9a227; --gold-light: #e0c25e;
+    --bg: #f4f6f9; --text: #1c2733; --text-muted: #5a6a7a; --border: #d8dee5;
+    --danger: #b3261e; --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); }
 
+  #pantallaLogin {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(160deg, var(--navy) 0%, var(--navy-light) 100%); padding: 20px;
+  }
+  .tarjetaLogin { background: #fff; border-radius: var(--radius); padding: 40px 36px; width: 100%; max-width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+  .tarjetaLogin h1 { font-size: 1.4rem; margin: 0 0 4px; color: var(--navy); }
+  .tarjetaLogin .subtitulo { margin: 0 0 28px; font-size: 0.9rem; color: var(--text-muted); }
+  .campo { margin-bottom: 16px; }
+  .campo label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); }
+  .campo input { width: 100%; padding: 11px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; }
+  .campo input:focus { outline: 2px solid var(--gold); outline-offset: 1px; border-color: var(--gold); }
+  .btnPrincipal { width: 100%; padding: 12px; background: var(--navy); color: #fff; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 8px; }
+  .btnPrincipal:hover { background: var(--navy-light); }
+  .btnPrincipal:disabled { opacity: 0.6; cursor: default; }
+  .mensajeError { background: #fdeceb; color: var(--danger); border: 1px solid #f3c6c2; border-radius: 8px; padding: 10px 12px; font-size: 0.85rem; margin-bottom: 16px; display: none; }
+
+  #pantallaApp { display: none; min-height: 100vh; }
+  .topbar { background: var(--navy); color: #fff; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar .marca { font-weight: 700; letter-spacing: 0.02em; }
+  .topbar .marca span { color: var(--gold-light); }
+  .topbar .usuarioInfo { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; }
+  .topbar button { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.82rem; }
+  .topbar button:hover { background: rgba(255,255,255,0.1); }
+
+  .contenido { padding: 28px 24px; max-width: 1100px; margin: 0 auto; }
+  .contenido h2 { color: var(--navy); margin-bottom: 4px; }
+  .contenido .fecha { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; }
+
+  .grid-modulos { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  .tarjetaModulo { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: box-shadow 0.15s, transform 0.15s; }
+  .tarjetaModulo:hover { box-shadow: 0 6px 18px rgba(15,36,69,0.12); transform: translateY(-2px); }
+  .tarjetaModulo .icono { font-size: 1.6rem; margin-bottom: 8px; }
+  .tarjetaModulo h3 { margin: 0 0 4px; font-size: 1rem; color: var(--navy); }
+  .tarjetaModulo p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
+  .tarjetaModulo.deshabilitado { opacity: 0.5; cursor: default; }
+
+  .panelEstado { margin-top: 28px; padding: 16px 18px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.85rem; color: var(--text-muted); }
+  .panelEstado strong { color: var(--text); }
+  .puntoEstado { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .puntoEstado.ok { background: #2e8b57; }
+  .puntoEstado.error { background: var(--danger); }
+
+  .btnVolver { background: none; border: none; color: var(--navy); font-size: 0.85rem; font-weight: 600; cursor: pointer; padding: 0; margin-bottom: 14px; display: inline-flex; align-items: center; gap: 4px; }
+  .btnVolver:hover { text-decoration: underline; }
+
+  .estadoCargando, .estadoVacio { padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+
+  .barraAcciones { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .barraAcciones input[type="text"] { flex: 1; min-width: 200px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
+  .btnAccion { background: var(--navy); color: #fff; border: none; padding: 10px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .btnAccion:hover { background: var(--navy-light); }
+
+  .tarjetaSeguimiento { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .tarjetaSeguimiento:hover { box-shadow: 0 4px 14px rgba(15,36,69,0.1); }
+  .tarjetaSeguimiento .nombrePersona { font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+  .tarjetaSeguimiento .metaLinea { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+  .tarjetaSeguimiento .notasPreview { font-size: 0.85rem; color: var(--text); }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+  .badge-tipo { background: var(--bg); color: var(--text-muted); }
+  .badge-estado-Activo { background: #e6f0e9; color: #2e6b47; }
+  .badge-estado-Inactivo { background: #eceff2; color: var(--text-muted); }
+  .badge-estado-Disponible { background: #e6f0e9; color: #2e6b47; }
+  .badge-estado-Reservado { background: #fff3d6; color: #8a6100; }
+  .badge-estado-Entregado { background: #eceff2; color: var(--text-muted); }
+
+  .modalOverlay { display: none; position: fixed; inset: 0; background: rgba(15,36,69,0.5); align-items: center; justify-content: center; padding: 20px; z-index: 100; }
+  .modalOverlay.abierto { display: flex; }
+  .modalCaja { background: #fff; border-radius: var(--radius); padding: 28px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+  .modalCaja h3 { margin: 0 0 20px; color: var(--navy); }
+  .formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .formGrid .full { grid-column: 1 / -1; }
+  .formGrid label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
+  .formGrid input, .formGrid select, .formGrid textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 0.88rem; font-family: inherit; }
+  .formAcciones { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+  .formAcciones .btnPeligro { margin-right: auto; }
+  .btnSecundario { background: #fff; border: 1px solid var(--border); color: var(--text); padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
+  .btnPeligro { background: #fff; border: 1px solid var(--danger); color: var(--danger); padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
+  .btnPrincipal { background: var(--navy); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ PANTALLA DE LOGIN ═══════════════ -->
+<div id="pantallaLogin">
+  <form class="tarjetaLogin" id="formLogin" onsubmit="return manejarLogin(event)">
+    <h1>Free Store</h1>
+    <p class="subtitulo">Iglesia Regreso a Cristo</p>
+    <div class="mensajeError" id="mensajeErrorLogin"></div>
+    <div class="campo">
+      <label for="inputEmail">Correo electrónico</label>
+      <input type="email" id="inputEmail" autocomplete="username" required>
+    </div>
+    <div class="campo">
+      <label for="inputPassword">Contraseña</label>
+      <input type="password" id="inputPassword" autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="btnPrincipal" id="btnLogin">Ingresar</button>
+  </form>
+</div>
+
+<!-- ═══════════════ SHELL PRINCIPAL ═══════════════ -->
+<div id="pantallaApp">
+  <div class="topbar">
+    <div class="marca">Free <span>Store</span></div>
+    <div class="usuarioInfo">
+      <span id="nombreUsuarioTop"></span>
+      <button onclick="manejarLogout()">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="contenido">
+    <!-- ═══ Vista: Dashboard ═══ -->
+    <div id="vistaDashboard">
+      <h2 id="saludoUsuario">Bienvenido</h2>
+      <p class="fecha" id="fechaHoy"></p>
+
+      <div class="grid-modulos">
+        <div class="tarjetaModulo" onclick="mostrarBeneficiarios()"><div class="icono">🧑‍🤝‍🧑</div><h3>Beneficiarios</h3><p>Familias registradas</p></div>
+        <div class="tarjetaModulo" onclick="mostrarArticulos()"><div class="icono">🛍️</div><h3>Artículos</h3><p>Donados y disponibles</p></div>
+        <div class="tarjetaModulo" onclick="mostrarEntregas()"><div class="icono">📤</div><h3>Entregas</h3><p>Registro de entregas</p></div>
+      </div>
+
+      <div class="panelEstado" id="panelEstadoConexion">
+        Verificando conexión con Supabase…
+      </div>
+    </div>
+
+    <!-- ═══ Vista: Beneficiarios ═══ -->
+    <div id="vistaBeneficiarios" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Beneficiarios</h2>
+      <p class="fecha">Familias registradas para recibir artículos</p>
+
+      <div class="barraAcciones">
+        <input type="text" id="buscadorBeneficiarios" placeholder="Buscar por nombre…" oninput="filtrarBeneficiarios()">
+        <button class="btnAccion" onclick="abrirFormBeneficiario()">+ Nuevo Beneficiario</button>
+      </div>
+
+      <div id="listaBeneficiarios"><div class="estadoCargando">Cargando beneficiarios…</div></div>
+    </div>
+
+    <!-- ═══ Vista: Artículos ═══ -->
+    <div id="vistaArticulos" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Artículos</h2>
+      <p class="fecha">Artículos donados disponibles para entrega</p>
+
+      <div class="barraAcciones">
+        <input type="text" id="buscadorArticulos" placeholder="Buscar por descripción o categoría…" oninput="filtrarArticulos()">
+        <button class="btnAccion" onclick="abrirFormArticulo()">+ Nuevo Artículo</button>
+      </div>
+
+      <div id="listaArticulos"><div class="estadoCargando">Cargando artículos…</div></div>
+    </div>
+
+    <!-- ═══ Vista: Entregas ═══ -->
+    <div id="vistaEntregas" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Entregas</h2>
+      <p class="fecha">Registro de artículos entregados a beneficiarios</p>
+
+      <div class="barraAcciones">
+        <input type="text" id="buscadorEntregas" placeholder="Buscar por beneficiario…" oninput="filtrarEntregas()">
+        <button class="btnAccion" onclick="abrirFormEntrega()">+ Nueva Entrega</button>
+      </div>
+
+      <div id="listaEntregas"><div class="estadoCargando">Cargando entregas…</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Beneficiario ═══════════════ -->
+<div class="modalOverlay" id="modalBeneficiario">
+  <div class="modalCaja">
+    <h3 id="modalBeneficiarioTitulo">Nuevo Beneficiario</h3>
+    <form id="formBeneficiario" onsubmit="return guardarBeneficiario(event)">
+      <input type="hidden" id="bBeneficiarioId">
+      <div class="formGrid">
+        <div class="full">
+          <label for="bPersonaBuscar">Persona *</label>
+          <input type="text" id="bPersonaBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarPersonaBeneficiario()">
+          <input type="hidden" id="bPersonaId">
+          <div id="sugerenciasPersonaBeneficiario" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="bPersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+        <div><label for="bFechaRegistro">Fecha de registro</label><input type="date" id="bFechaRegistro"></div>
+        <div>
+          <label for="bActivo">Estado</label>
+          <select id="bActivo">
+            <option value="true" selected>Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarBeneficiario" onclick="eliminarBeneficiario()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalBeneficiario()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Artículo ═══════════════ -->
+<div class="modalOverlay" id="modalArticulo">
+  <div class="modalCaja">
+    <h3 id="modalArticuloTitulo">Nuevo Artículo</h3>
+    <form id="formArticulo" onsubmit="return guardarArticulo(event)">
+      <input type="hidden" id="arArticuloId">
+      <div class="formGrid">
+        <div class="full"><label for="arDescripcion">Descripción *</label><input type="text" id="arDescripcion" required></div>
+        <div><label for="arCategoria">Categoría</label><input type="text" id="arCategoria" placeholder="Ropa, Muebles, Electrónica…"></div>
+        <div>
+          <label for="arEstado">Estado</label>
+          <select id="arEstado">
+            <option value="Disponible" selected>Disponible</option>
+            <option value="Reservado">Reservado</option>
+            <option value="Entregado">Entregado</option>
+          </select>
+        </div>
+        <div class="full">
+          <label for="arDonanteBuscar">Donante (opcional)</label>
+          <input type="text" id="arDonanteBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarDonanteArticulo()">
+          <input type="hidden" id="arDonanteId">
+          <div id="sugerenciasDonanteArticulo" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="arDonanteSeleccionado" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarArticulo" onclick="eliminarArticulo()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalArticulo()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nueva Entrega ═══════════════ -->
+<div class="modalOverlay" id="modalEntrega">
+  <div class="modalCaja">
+    <h3>Nueva Entrega</h3>
+    <form id="formEntrega" onsubmit="return guardarEntrega(event)">
+      <div class="formGrid">
+        <div class="full">
+          <label for="enArticuloSelect">Artículo disponible *</label>
+          <select id="enArticuloSelect" required></select>
+        </div>
+        <div class="full">
+          <label for="enBeneficiarioBuscar">Beneficiario *</label>
+          <input type="text" id="enBeneficiarioBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarBeneficiarioEntrega()">
+          <input type="hidden" id="enBeneficiarioId">
+          <div id="sugerenciasBeneficiarioEntrega" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="enBeneficiarioSeleccionado" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+        <div class="full"><label for="enFecha">Fecha *</label><input type="date" id="enFecha" required></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" onclick="cerrarModalEntrega()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const APP_VERSION = 'free-store Ver-001';
+let cacheDirectorio = [];
+
+// ── Login ──────────────────────────────────────────────────────────────
+async function manejarLogin(evt) {
+  evt.preventDefault();
+  const email = document.getElementById('inputEmail').value.trim();
+  const password = document.getElementById('inputPassword').value;
+  const btn = document.getElementById('btnLogin');
+  const msg = document.getElementById('mensajeErrorLogin');
+
+  msg.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Ingresando…';
+
+  const resultado = await iniciarSesion(email, password);
+
+  if (!resultado.ok) {
+    msg.textContent = resultado.mensaje;
+    msg.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+    return false;
+  }
+
+  mostrarApp();
+  return false;
+}
+
+async function manejarLogout() {
+  await cerrarSesion();
+  document.getElementById('pantallaApp').style.display = 'none';
+  document.getElementById('pantallaLogin').style.display = 'flex';
+  document.getElementById('inputEmail').value = '';
+  document.getElementById('inputPassword').value = '';
+}
+
+function mostrarApp() {
+  const sesion = getSesion();
+  document.getElementById('pantallaLogin').style.display = 'none';
+  document.getElementById('pantallaApp').style.display = 'block';
+
+  const nombre = sesion.usuario?.nombre || sesion.usuario?.correo || 'Usuario';
+  document.getElementById('nombreUsuarioTop').textContent = `${nombre} · ${sesion.rol || ''}`;
+  document.getElementById('saludoUsuario').textContent = `Bienvenido, ${nombre}`;
+  document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-ES', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  verificarConexion();
+}
+
+async function verificarConexion() {
+  const panel = document.getElementById('panelEstadoConexion');
+  const { data, error } = await sbCall(
+    sb.from('free_store_articulos').select('id', { count: 'exact', head: true })
+  );
+
+  if (error) {
+    panel.innerHTML = `<span class="puntoEstado error"></span><strong>Sin conexión a Supabase.</strong> ${error.message}`;
+  } else {
+    panel.innerHTML = `<span class="puntoEstado ok"></span><strong>Conectado a Supabase.</strong> ${APP_VERSION}`;
+  }
+}
+
+function mostrarDashboard() {
+  document.getElementById('vistaBeneficiarios').style.display = 'none';
+  document.getElementById('vistaArticulos').style.display = 'none';
+  document.getElementById('vistaEntregas').style.display = 'none';
+  document.getElementById('vistaDashboard').style.display = 'block';
+}
+
+async function asegurarDirectorio() {
+  if (cacheDirectorio.length === 0) {
+    await sbCall(sb.from('personas').select('*').eq('archivado', false)).then(({ data }) => {
+      if (data) cacheDirectorio = data;
+    });
+  }
+}
+
+function nombrePersonaPorId(id) {
+  const p = cacheDirectorio.find(x => x.id === id);
+  if (!p) return 'Persona no encontrada';
+  return p.nombre_completo || `${p.nombre} ${p.apellido}`;
+}
+
+function formatoFecha(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${m}/${d}/${y}`;
+}
+
+async function crearPersonaRapida(nombreBusqueda) {
+  const partes = nombreBusqueda.trim().split(/\s+/);
+  const nombreSugerido = partes[0] || '';
+  const apellidoSugerido = partes.slice(1).join(' ') || '';
+
+  const nombre = prompt('Nombre:', nombreSugerido);
+  if (!nombre || !nombre.trim()) return null;
+  const apellido = prompt('Apellido:', apellidoSugerido);
+  if (apellido === null) return null;
+
+  const { data, error } = await sbCall(
+    sb.from('personas').insert({ nombre: nombre.trim(), apellido: apellido.trim(), archivado: false }).select().single()
+  );
+
+  if (error) { alert('Error al crear la persona: ' + error.message); return null; }
+  cacheDirectorio.push(data);
+  return data.id;
+}
+
+// ── Beneficiarios ─────────────────────────────────────────────────────────
+let cacheBeneficiarios = [];
+
+async function mostrarBeneficiarios() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaBeneficiarios').style.display = 'block';
+  await asegurarDirectorio();
+  await cargarBeneficiarios();
+}
+
+async function cargarBeneficiarios() {
+  const lista = document.getElementById('listaBeneficiarios');
+  lista.innerHTML = '<div class="estadoCargando">Cargando beneficiarios…</div>';
+
+  const { data, error } = await sbCall(sb.from('free_store_beneficiarios').select('*').order('fecha_registro', { ascending: false }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
+
+  cacheBeneficiarios = data || [];
+  renderBeneficiarios(cacheBeneficiarios);
+}
+
+function renderBeneficiarios(filas) {
+  const lista = document.getElementById('listaBeneficiarios');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay beneficiarios registrados.</div>'; return; }
+  lista.innerHTML = filas.map(b => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormBeneficiario('${b.id}')">
+      <div>
+        <div class="nombrePersona">${nombrePersonaPorId(b.persona_id)}</div>
+        <div class="metaLinea">Registrado: ${formatoFecha(b.fecha_registro)}</div>
+      </div>
+      <span class="badge badge-estado-${b.activo ? 'Activo' : 'Inactivo'}">${b.activo ? 'Activo' : 'Inactivo'}</span>
+    </div>`).join('');
+}
+
+function filtrarBeneficiarios() {
+  const q = document.getElementById('buscadorBeneficiarios').value.trim().toLowerCase();
+  if (!q) { renderBeneficiarios(cacheBeneficiarios); return; }
+  renderBeneficiarios(cacheBeneficiarios.filter(b => nombrePersonaPorId(b.persona_id).toLowerCase().includes(q)));
+}
+
+function abrirFormBeneficiario(id) {
+  document.getElementById('formBeneficiario').reset();
+  document.getElementById('bBeneficiarioId').value = '';
+  document.getElementById('bPersonaId').value = '';
+  document.getElementById('bPersonaBuscar').value = '';
+  document.getElementById('bPersonaSeleccionada').textContent = '';
+  document.getElementById('sugerenciasPersonaBeneficiario').style.display = 'none';
+  document.getElementById('btnEliminarBeneficiario').style.display = 'none';
+  document.getElementById('bFechaRegistro').value = new Date().toISOString().slice(0, 10);
+
+  if (id) {
+    const b = cacheBeneficiarios.find(x => x.id === id);
+    if (b) {
+      document.getElementById('modalBeneficiarioTitulo').textContent = 'Editar Beneficiario';
+      document.getElementById('bBeneficiarioId').value = b.id;
+      document.getElementById('bPersonaId').value = b.persona_id;
+      document.getElementById('bPersonaSeleccionada').textContent = nombrePersonaPorId(b.persona_id);
+      document.getElementById('bFechaRegistro').value = b.fecha_registro || '';
+      document.getElementById('bActivo').value = String(b.activo);
+      document.getElementById('btnEliminarBeneficiario').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalBeneficiarioTitulo').textContent = 'Nuevo Beneficiario';
+  }
+
+  document.getElementById('modalBeneficiario').classList.add('abierto');
+}
+
+function cerrarModalBeneficiario() {
+  document.getElementById('modalBeneficiario').classList.remove('abierto');
+}
+
+function filtrarPersonaBeneficiario() {
+  const q = document.getElementById('bPersonaBuscar').value.trim();
+  const contenedor = document.getElementById('sugerenciasPersonaBeneficiario');
+  if (q.length < 2) { contenedor.style.display = 'none'; return; }
+
+  const coincidencias = cacheDirectorio.filter(p =>
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q.toLowerCase())
+  ).slice(0, 8);
+
+  let html = coincidencias.map(p =>
+    `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;" onmousedown="seleccionarPersonaBeneficiario('${p.id}')">${p.nombre_completo || `${p.nombre} ${p.apellido}`}</div>`
+  ).join('');
+  html += `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem; color: var(--navy); font-weight:600; border-top:${coincidencias.length ? '1px solid var(--border)' : 'none'};" onmousedown="crearPersonaBeneficiario('${q.replace(/'/g, "\\'")}')">+ Agregar persona nueva</div>`;
+
+  contenedor.innerHTML = html;
+  contenedor.style.display = 'block';
+}
+
+async function crearPersonaBeneficiario(nombreBusqueda) {
+  const id = await crearPersonaRapida(nombreBusqueda);
+  if (id) seleccionarPersonaBeneficiario(id);
+}
+
+function seleccionarPersonaBeneficiario(id) {
+  document.getElementById('bPersonaId').value = id;
+  document.getElementById('bPersonaSeleccionada').textContent = nombrePersonaPorId(id);
+  document.getElementById('bPersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersonaBeneficiario').style.display = 'none';
+}
+
+async function guardarBeneficiario(evt) {
+  evt.preventDefault();
+  const personaId = document.getElementById('bPersonaId').value;
+  if (!personaId) { alert('Selecciona una persona de la lista de sugerencias.'); return false; }
+
+  const id = document.getElementById('bBeneficiarioId').value;
+  const persona = cacheDirectorio.find(p => p.id === personaId);
+
+  const payload = {
+    persona_id: personaId,
+    household_id: persona ? persona.household_id : null,
+    fecha_registro: document.getElementById('bFechaRegistro').value || null,
+    activo: document.getElementById('bActivo').value === 'true',
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('free_store_beneficiarios').update(payload).eq('id', id)));
+  } else {
+    ({ error } = await sbCall(sb.from('free_store_beneficiarios').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalBeneficiario();
+  cargarBeneficiarios();
+  return false;
+}
+
+async function eliminarBeneficiario() {
+  const id = document.getElementById('bBeneficiarioId').value;
+  if (!id || !confirm('¿Eliminar este beneficiario?')) return;
+  const { error } = await sbCall(sb.from('free_store_beneficiarios').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalBeneficiario();
+  cargarBeneficiarios();
+}
+
+// ── Artículos ─────────────────────────────────────────────────────────────
+let cacheArticulos = [];
+
+async function mostrarArticulos() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaArticulos').style.display = 'block';
+  await asegurarDirectorio();
+  await cargarArticulos();
+}
+
+async function cargarArticulos() {
+  const lista = document.getElementById('listaArticulos');
+  lista.innerHTML = '<div class="estadoCargando">Cargando artículos…</div>';
+
+  const { data, error } = await sbCall(sb.from('free_store_articulos').select('*').order('creado_en', { ascending: false }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
+
+  cacheArticulos = data || [];
+  renderArticulos(cacheArticulos);
+}
+
+function renderArticulos(filas) {
+  const lista = document.getElementById('listaArticulos');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay artículos registrados.</div>'; return; }
+  lista.innerHTML = filas.map(a => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormArticulo('${a.id}')">
+      <div>
+        <div class="nombrePersona">${a.descripcion}</div>
+        <div class="metaLinea">
+          ${a.categoria ? `<span class="badge badge-tipo">${a.categoria}</span>&nbsp;` : ''}
+          ${a.donante_persona_id ? 'Donado por ' + nombrePersonaPorId(a.donante_persona_id) : ''}
+        </div>
+      </div>
+      <span class="badge badge-estado-${a.estado}">${a.estado}</span>
+    </div>`).join('');
+}
+
+function filtrarArticulos() {
+  const q = document.getElementById('buscadorArticulos').value.trim().toLowerCase();
+  if (!q) { renderArticulos(cacheArticulos); return; }
+  renderArticulos(cacheArticulos.filter(a =>
+    a.descripcion.toLowerCase().includes(q) || (a.categoria || '').toLowerCase().includes(q)
+  ));
+}
+
+function abrirFormArticulo(id) {
+  document.getElementById('formArticulo').reset();
+  document.getElementById('arArticuloId').value = '';
+  document.getElementById('arDonanteId').value = '';
+  document.getElementById('arDonanteBuscar').value = '';
+  document.getElementById('arDonanteSeleccionado').textContent = '';
+  document.getElementById('sugerenciasDonanteArticulo').style.display = 'none';
+  document.getElementById('btnEliminarArticulo').style.display = 'none';
+
+  if (id) {
+    const a = cacheArticulos.find(x => x.id === id);
+    if (a) {
+      document.getElementById('modalArticuloTitulo').textContent = 'Editar Artículo';
+      document.getElementById('arArticuloId').value = a.id;
+      document.getElementById('arDescripcion').value = a.descripcion;
+      document.getElementById('arCategoria').value = a.categoria || '';
+      document.getElementById('arEstado').value = a.estado;
+      if (a.donante_persona_id) {
+        document.getElementById('arDonanteId').value = a.donante_persona_id;
+        document.getElementById('arDonanteSeleccionado').textContent = nombrePersonaPorId(a.donante_persona_id);
+      }
+      document.getElementById('btnEliminarArticulo').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalArticuloTitulo').textContent = 'Nuevo Artículo';
+  }
+
+  document.getElementById('modalArticulo').classList.add('abierto');
+}
+
+function cerrarModalArticulo() {
+  document.getElementById('modalArticulo').classList.remove('abierto');
+}
+
+function filtrarDonanteArticulo() {
+  const q = document.getElementById('arDonanteBuscar').value.trim();
+  const contenedor = document.getElementById('sugerenciasDonanteArticulo');
+  if (q.length < 2) { contenedor.style.display = 'none'; return; }
+
+  const coincidencias = cacheDirectorio.filter(p =>
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q.toLowerCase())
+  ).slice(0, 8);
+
+  let html = coincidencias.map(p =>
+    `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;" onmousedown="seleccionarDonanteArticulo('${p.id}')">${p.nombre_completo || `${p.nombre} ${p.apellido}`}</div>`
+  ).join('');
+  html += `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem; color: var(--navy); font-weight:600; border-top:${coincidencias.length ? '1px solid var(--border)' : 'none'};" onmousedown="crearDonanteArticulo('${q.replace(/'/g, "\\'")}')">+ Agregar persona nueva</div>`;
+
+  contenedor.innerHTML = html;
+  contenedor.style.display = 'block';
+}
+
+async function crearDonanteArticulo(nombreBusqueda) {
+  const id = await crearPersonaRapida(nombreBusqueda);
+  if (id) seleccionarDonanteArticulo(id);
+}
+
+function seleccionarDonanteArticulo(id) {
+  document.getElementById('arDonanteId').value = id;
+  document.getElementById('arDonanteSeleccionado').textContent = nombrePersonaPorId(id);
+  document.getElementById('arDonanteBuscar').value = '';
+  document.getElementById('sugerenciasDonanteArticulo').style.display = 'none';
+}
+
+async function guardarArticulo(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('arArticuloId').value;
+
+  const payload = {
+    descripcion: document.getElementById('arDescripcion').value.trim(),
+    categoria: document.getElementById('arCategoria').value.trim() || null,
+    estado: document.getElementById('arEstado').value,
+    donante_persona_id: document.getElementById('arDonanteId').value || null,
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('free_store_articulos').update(payload).eq('id', id)));
+  } else {
+    ({ error } = await sbCall(sb.from('free_store_articulos').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalArticulo();
+  cargarArticulos();
+  return false;
+}
+
+async function eliminarArticulo() {
+  const id = document.getElementById('arArticuloId').value;
+  if (!id || !confirm('¿Eliminar este artículo?')) return;
+  const { error } = await sbCall(sb.from('free_store_articulos').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalArticulo();
+  cargarArticulos();
+}
+
+// ── Entregas ──────────────────────────────────────────────────────────────
+let cacheEntregas = [];
+
+async function mostrarEntregas() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaEntregas').style.display = 'block';
+  await asegurarDirectorio();
+
+  if (cacheArticulos.length === 0) {
+    await sbCall(sb.from('free_store_articulos').select('*')).then(({ data }) => { if (data) cacheArticulos = data; });
+  }
+  if (cacheBeneficiarios.length === 0) {
+    await sbCall(sb.from('free_store_beneficiarios').select('*')).then(({ data }) => { if (data) cacheBeneficiarios = data; });
+  }
+
+  await cargarEntregas();
+}
+
+async function cargarEntregas() {
+  const lista = document.getElementById('listaEntregas');
+  lista.innerHTML = '<div class="estadoCargando">Cargando entregas…</div>';
+
+  const { data, error } = await sbCall(sb.from('free_store_entregas').select('*').order('fecha', { ascending: false }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
+
+  cacheEntregas = data || [];
+  renderEntregas(cacheEntregas);
+}
+
+function nombreArticuloPorId(id) {
+  const a = cacheArticulos.find(x => x.id === id);
+  return a ? a.descripcion : 'Artículo no encontrado';
+}
+
+function nombreBeneficiarioFSPorId(beneficiarioId) {
+  const b = cacheBeneficiarios.find(x => x.id === beneficiarioId);
+  if (!b) return 'Beneficiario no encontrado';
+  return nombrePersonaPorId(b.persona_id);
+}
+
+function renderEntregas(filas) {
+  const lista = document.getElementById('listaEntregas');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay entregas registradas.</div>'; return; }
+  lista.innerHTML = filas.map(e => `
+    <div class="tarjetaSeguimiento">
+      <div>
+        <div class="nombrePersona">${nombreBeneficiarioFSPorId(e.beneficiario_id)}</div>
+        <div class="metaLinea">${formatoFecha(e.fecha)}</div>
+        <div class="notasPreview">${nombreArticuloPorId(e.articulo_id)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function filtrarEntregas() {
+  const q = document.getElementById('buscadorEntregas').value.trim().toLowerCase();
+  if (!q) { renderEntregas(cacheEntregas); return; }
+  renderEntregas(cacheEntregas.filter(e => nombreBeneficiarioFSPorId(e.beneficiario_id).toLowerCase().includes(q)));
+}
+
+function abrirFormEntrega() {
+  document.getElementById('formEntrega').reset();
+  document.getElementById('enBeneficiarioId').value = '';
+  document.getElementById('enBeneficiarioBuscar').value = '';
+  document.getElementById('enBeneficiarioSeleccionado').textContent = '';
+  document.getElementById('sugerenciasBeneficiarioEntrega').style.display = 'none';
+  document.getElementById('enFecha').value = new Date().toISOString().slice(0, 10);
+
+  const disponibles = cacheArticulos.filter(a => a.estado === 'Disponible');
+  const select = document.getElementById('enArticuloSelect');
+  select.innerHTML = disponibles.length
+    ? disponibles.map(a => `<option value="${a.id}">${a.descripcion}</option>`).join('')
+    : '<option value="">No hay artículos disponibles</option>';
+
+  document.getElementById('modalEntrega').classList.add('abierto');
+}
+
+function cerrarModalEntrega() {
+  document.getElementById('modalEntrega').classList.remove('abierto');
+}
+
+function filtrarBeneficiarioEntrega() {
+  const q = document.getElementById('enBeneficiarioBuscar').value.trim().toLowerCase();
+  const contenedor = document.getElementById('sugerenciasBeneficiarioEntrega');
+  if (q.length < 2) { contenedor.style.display = 'none'; return; }
+
+  const coincidencias = cacheBeneficiarios.filter(b =>
+    nombrePersonaPorId(b.persona_id).toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  contenedor.innerHTML = coincidencias.length
+    ? coincidencias.map(b => `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;" onmousedown="seleccionarBeneficiarioEntrega('${b.id}')">${nombrePersonaPorId(b.persona_id)}</div>`).join('')
+    : '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados. ¿Ya lo registraste en Beneficiarios?</div>';
+  contenedor.style.display = 'block';
+}
+
+function seleccionarBeneficiarioEntrega(id) {
+  document.getElementById('enBeneficiarioId').value = id;
+  document.getElementById('enBeneficiarioSeleccionado').textContent = nombreBeneficiarioFSPorId(id);
+  document.getElementById('enBeneficiarioBuscar').value = '';
+  document.getElementById('sugerenciasBeneficiarioEntrega').style.display = 'none';
+}
+
+async function guardarEntrega(evt) {
+  evt.preventDefault();
+  const articuloId = document.getElementById('enArticuloSelect').value;
+  const beneficiarioId = document.getElementById('enBeneficiarioId').value;
+
+  if (!articuloId) { alert('Selecciona un artículo disponible.'); return false; }
+  if (!beneficiarioId) { alert('Selecciona un beneficiario.'); return false; }
+
+  const sesion = getSesion();
+  const { error } = await sbCall(sb.from('free_store_entregas').insert({
+    articulo_id: articuloId,
+    beneficiario_id: beneficiarioId,
+    fecha: document.getElementById('enFecha').value,
+    creado_por: sesion.usuario?.id || null,
+  }));
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+
+  // Marcar el artículo como Entregado
+  await sbCall(sb.from('free_store_articulos').update({
+    estado: 'Entregado', entregado_en: new Date().toISOString(),
+  }).eq('id', articuloId));
+
+  cerrarModalEntrega();
+  await sbCall(sb.from('free_store_articulos').select('*')).then(({ data }) => { if (data) cacheArticulos = data; });
+  cargarEntregas();
+  return false;
+}
+
+// ── Auto-login si ya hay sesión guardada ─────────────────────────────────
+(async function iniciar() {
+  const resultado = await cargarSesion();
+  if (resultado.ok) {
+    mostrarApp();
+  }
+})();
+</script>
+
+</body>
+</html>
