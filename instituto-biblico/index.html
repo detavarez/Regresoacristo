@@ -1,1 +1,951 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instituto Bíblico — Regreso a Cristo</title>
+<script>const APP_SLUG = 'instituto_biblico';</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="../shared/supabase-client.js"></script>
+<script src="../shared/auth.js"></script>
+<style>
+  :root {
+    --navy: #0f2445; --navy-light: #16345f; --gold: #c9a227; --gold-light: #e0c25e;
+    --bg: #f4f6f9; --text: #1c2733; --text-muted: #5a6a7a; --border: #d8dee5;
+    --danger: #b3261e; --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); }
 
+  #pantallaLogin {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(160deg, var(--navy) 0%, var(--navy-light) 100%); padding: 20px;
+  }
+  .tarjetaLogin { background: #fff; border-radius: var(--radius); padding: 40px 36px; width: 100%; max-width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+  .tarjetaLogin h1 { font-size: 1.4rem; margin: 0 0 4px; color: var(--navy); }
+  .tarjetaLogin .subtitulo { margin: 0 0 28px; font-size: 0.9rem; color: var(--text-muted); }
+  .campo { margin-bottom: 16px; }
+  .campo label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); }
+  .campo input { width: 100%; padding: 11px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; }
+  .campo input:focus { outline: 2px solid var(--gold); outline-offset: 1px; border-color: var(--gold); }
+  .btnPrincipal { width: 100%; padding: 12px; background: var(--navy); color: #fff; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 8px; }
+  .btnPrincipal:hover { background: var(--navy-light); }
+  .btnPrincipal:disabled { opacity: 0.6; cursor: default; }
+  .mensajeError { background: #fdeceb; color: var(--danger); border: 1px solid #f3c6c2; border-radius: 8px; padding: 10px 12px; font-size: 0.85rem; margin-bottom: 16px; display: none; }
+
+  #pantallaApp { display: none; min-height: 100vh; }
+  .topbar { background: var(--navy); color: #fff; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar .marca { font-weight: 700; letter-spacing: 0.02em; }
+  .topbar .marca span { color: var(--gold-light); }
+  .topbar .usuarioInfo { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; }
+  .topbar button { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.82rem; }
+  .topbar button:hover { background: rgba(255,255,255,0.1); }
+
+  .contenido { padding: 28px 24px; max-width: 1100px; margin: 0 auto; }
+  .contenido h2 { color: var(--navy); margin-bottom: 4px; }
+  .contenido .fecha { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; }
+
+  .grid-modulos { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  .tarjetaModulo { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: box-shadow 0.15s, transform 0.15s; }
+  .tarjetaModulo:hover { box-shadow: 0 6px 18px rgba(15,36,69,0.12); transform: translateY(-2px); }
+  .tarjetaModulo .icono { font-size: 1.6rem; margin-bottom: 8px; }
+  .tarjetaModulo h3 { margin: 0 0 4px; font-size: 1rem; color: var(--navy); }
+  .tarjetaModulo p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
+
+  .panelEstado { margin-top: 28px; padding: 16px 18px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.85rem; color: var(--text-muted); }
+  .panelEstado strong { color: var(--text); }
+  .puntoEstado { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .puntoEstado.ok { background: #2e8b57; }
+  .puntoEstado.error { background: var(--danger); }
+
+  .btnVolver { background: none; border: none; color: var(--navy); font-size: 0.85rem; font-weight: 600; cursor: pointer; padding: 0; margin-bottom: 14px; display: inline-flex; align-items: center; gap: 4px; }
+  .btnVolver:hover { text-decoration: underline; }
+
+  .estadoCargando, .estadoVacio { padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+
+  .barraAcciones { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .barraAcciones input[type="text"] { flex: 1; min-width: 200px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
+  .btnAccion { background: var(--navy); color: #fff; border: none; padding: 10px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .btnAccion:hover { background: var(--navy-light); }
+
+  .tarjetaSeguimiento { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .tarjetaSeguimiento:hover { box-shadow: 0 4px 14px rgba(15,36,69,0.1); }
+  .tarjetaSeguimiento .nombrePersona { font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+  .tarjetaSeguimiento .metaLinea { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+  .tarjetaSeguimiento .notasPreview { font-size: 0.85rem; color: var(--text); }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+  .badge-tipo { background: var(--bg); color: var(--text-muted); }
+  .badge-estado-Activo { background: #e6f0e9; color: #2e6b47; }
+  .badge-estado-Inactivo { background: #eceff2; color: var(--text-muted); }
+  .badge-estado-Completado { background: #e2edfa; color: #1d5a9e; }
+  .badge-estado-Retirado { background: #fdeceb; color: var(--danger); }
+
+  .modalOverlay { display: none; position: fixed; inset: 0; background: rgba(15,36,69,0.5); align-items: center; justify-content: center; padding: 20px; z-index: 100; }
+  .modalOverlay.abierto { display: flex; }
+  .modalCaja { background: #fff; border-radius: var(--radius); padding: 28px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+  .modalCaja h3 { margin: 0 0 20px; color: var(--navy); }
+  .formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .formGrid .full { grid-column: 1 / -1; }
+  .formGrid label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
+  .formGrid input, .formGrid select, .formGrid textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 0.88rem; font-family: inherit; }
+  .formAcciones { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+  .formAcciones .btnPeligro { margin-right: auto; }
+  .btnSecundario { background: #fff; border: 1px solid var(--border); color: var(--text); padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
+  .btnPeligro { background: #fff; border: 1px solid var(--danger); color: var(--danger); padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
+
+  .seccionDetalle { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .seccionDetalle h4 { margin: 0 0 10px; font-size: 0.9rem; color: var(--navy); }
+  .filaMini { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  .filaMini:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ PANTALLA DE LOGIN ═══════════════ -->
+<div id="pantallaLogin">
+  <form class="tarjetaLogin" id="formLogin" onsubmit="return manejarLogin(event)">
+    <h1>Instituto Bíblico</h1>
+    <p class="subtitulo">Iglesia Regreso a Cristo</p>
+    <div class="mensajeError" id="mensajeErrorLogin"></div>
+    <div class="campo"><label for="inputEmail">Correo electrónico</label><input type="email" id="inputEmail" autocomplete="username" required></div>
+    <div class="campo"><label for="inputPassword">Contraseña</label><input type="password" id="inputPassword" autocomplete="current-password" required></div>
+    <button type="submit" class="btnPrincipal" id="btnLogin">Ingresar</button>
+  </form>
+</div>
+
+<!-- ═══════════════ SHELL PRINCIPAL ═══════════════ -->
+<div id="pantallaApp">
+  <div class="topbar">
+    <div class="marca">Instituto <span>Bíblico</span></div>
+    <div class="usuarioInfo">
+      <span id="nombreUsuarioTop"></span>
+      <button onclick="manejarLogout()">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="contenido">
+    <!-- ═══ Vista: Dashboard ═══ -->
+    <div id="vistaDashboard">
+      <h2 id="saludoUsuario">Bienvenido</h2>
+      <p class="fecha" id="fechaHoy"></p>
+
+      <div class="grid-modulos">
+        <div class="tarjetaModulo" onclick="mostrarCursos()"><div class="icono">📖</div><h3>Cursos</h3><p>Materias y programas</p></div>
+        <div class="tarjetaModulo" onclick="mostrarMaestros()"><div class="icono">👨‍🏫</div><h3>Maestros</h3><p>Instructores del instituto</p></div>
+        <div class="tarjetaModulo" onclick="mostrarInscripciones()"><div class="icono">🎓</div><h3>Inscripciones</h3><p>Estudiantes, notas y certificados</p></div>
+        <div class="tarjetaModulo" onclick="mostrarMateriales()"><div class="icono">📎</div><h3>Materiales</h3><p>Recursos por curso</p></div>
+      </div>
+
+      <div class="panelEstado" id="panelEstadoConexion">Verificando conexión con Supabase…</div>
+    </div>
+
+    <!-- ═══ Vista: Maestros ═══ -->
+    <div id="vistaMaestros" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Maestros</h2>
+      <p class="fecha">Instructores del Instituto Bíblico</p>
+      <div class="barraAcciones">
+        <input type="text" id="buscadorMaestros" placeholder="Buscar por nombre…" oninput="filtrarMaestros()">
+        <button class="btnAccion" onclick="abrirFormMaestro()">+ Nuevo Maestro</button>
+      </div>
+      <div id="listaMaestros"><div class="estadoCargando">Cargando maestros…</div></div>
+    </div>
+
+    <!-- ═══ Vista: Cursos ═══ -->
+    <div id="vistaCursos" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Cursos</h2>
+      <p class="fecha">Materias y programas del instituto</p>
+      <div class="barraAcciones">
+        <input type="text" id="buscadorCursos" placeholder="Buscar por nombre…" oninput="filtrarCursos()">
+        <button class="btnAccion" onclick="abrirFormCurso()">+ Nuevo Curso</button>
+      </div>
+      <div id="listaCursos"><div class="estadoCargando">Cargando cursos…</div></div>
+    </div>
+
+    <!-- ═══ Vista: Materiales ═══ -->
+    <div id="vistaMateriales" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Materiales</h2>
+      <p class="fecha">Recursos y documentos por curso</p>
+      <div class="barraAcciones">
+        <input type="text" id="buscadorMateriales" placeholder="Buscar por título…" oninput="filtrarMateriales()">
+        <button class="btnAccion" onclick="abrirFormMaterial()">+ Nuevo Material</button>
+      </div>
+      <div id="listaMateriales"><div class="estadoCargando">Cargando materiales…</div></div>
+    </div>
+
+    <!-- ═══ Vista: Inscripciones ═══ -->
+    <div id="vistaInscripciones" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Inscripciones</h2>
+      <p class="fecha">Estudiantes matriculados en cursos</p>
+      <div class="barraAcciones">
+        <input type="text" id="buscadorInscripciones" placeholder="Buscar por nombre o curso…" oninput="filtrarInscripciones()">
+        <button class="btnAccion" onclick="abrirFormInscripcion()">+ Nueva Inscripción</button>
+      </div>
+      <div id="listaInscripciones"><div class="estadoCargando">Cargando inscripciones…</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Maestro ═══════════════ -->
+<div class="modalOverlay" id="modalMaestro">
+  <div class="modalCaja">
+    <h3 id="modalMaestroTitulo">Nuevo Maestro</h3>
+    <form id="formMaestro" onsubmit="return guardarMaestro(event)">
+      <input type="hidden" id="maRegistroId">
+      <div class="formGrid">
+        <div class="full">
+          <label for="maPersonaBuscar">Persona *</label>
+          <input type="text" id="maPersonaBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarPersonaMaestro()">
+          <input type="hidden" id="maPersonaId">
+          <div id="sugerenciasPersonaMaestro" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="maPersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+        <div>
+          <label for="maActivo">Estado</label>
+          <select id="maActivo"><option value="true" selected>Activo</option><option value="false">Inactivo</option></select>
+        </div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarMaestro" onclick="eliminarMaestro()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalMaestro()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Curso ═══════════════ -->
+<div class="modalOverlay" id="modalCurso">
+  <div class="modalCaja">
+    <h3 id="modalCursoTitulo">Nuevo Curso</h3>
+    <form id="formCurso" onsubmit="return guardarCurso(event)">
+      <input type="hidden" id="cuRegistroId">
+      <div class="formGrid">
+        <div class="full"><label for="cuNombre">Nombre del curso *</label><input type="text" id="cuNombre" required></div>
+        <div class="full"><label for="cuDescripcion">Descripción</label><textarea id="cuDescripcion" rows="3"></textarea></div>
+        <div><label for="cuMaestro">Maestro</label><select id="cuMaestro"><option value="">Sin asignar</option></select></div>
+        <div><label for="cuActivo">Estado</label><select id="cuActivo"><option value="true" selected>Activo</option><option value="false">Inactivo</option></select></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarCurso" onclick="eliminarCurso()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalCurso()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Material ═══════════════ -->
+<div class="modalOverlay" id="modalMaterial">
+  <div class="modalCaja">
+    <h3 id="modalMaterialTitulo">Nuevo Material</h3>
+    <form id="formMaterial" onsubmit="return guardarMaterial(event)">
+      <input type="hidden" id="meRegistroId">
+      <div class="formGrid">
+        <div><label for="meCurso">Curso *</label><select id="meCurso" required></select></div>
+        <div class="full"><label for="meTitulo">Título *</label><input type="text" id="meTitulo" required></div>
+        <div class="full"><label for="meArchivoUrl">Enlace del archivo (URL)</label><input type="text" id="meArchivoUrl" placeholder="https://…"></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarMaterial" onclick="eliminarMaterial()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalMaterial()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nueva Inscripción ═══════════════ -->
+<div class="modalOverlay" id="modalInscripcion">
+  <div class="modalCaja">
+    <h3>Nueva Inscripción</h3>
+    <form id="formInscripcion" onsubmit="return guardarInscripcion(event)">
+      <div class="formGrid">
+        <div class="full">
+          <label for="inPersonaBuscar">Estudiante *</label>
+          <input type="text" id="inPersonaBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarPersonaInscripcion()">
+          <input type="hidden" id="inPersonaId">
+          <div id="sugerenciasPersonaInscripcion" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="inPersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+        <div><label for="inCurso">Curso *</label><select id="inCurso" required></select></div>
+        <div><label for="inFecha">Fecha de inscripción</label><input type="date" id="inFecha"></div>
+        <div class="full">
+          <label for="inEstado">Estado</label>
+          <select id="inEstado"><option value="Activo" selected>Activo</option><option value="Completado">Completado</option><option value="Retirado">Retirado</option></select>
+        </div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" onclick="cerrarModalInscripcion()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Detalle de Inscripción (calificaciones + certificado) ═══════════════ -->
+<div class="modalOverlay" id="modalDetalleInscripcion">
+  <div class="modalCaja">
+    <h3 id="modalDetalleInscripcionTitulo">Detalle de inscripción</h3>
+
+    <div class="formGrid">
+      <div><label>Estado</label>
+        <select id="diEstado" onchange="actualizarEstadoInscripcion()">
+          <option value="Activo">Activo</option><option value="Completado">Completado</option><option value="Retirado">Retirado</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="seccionDetalle">
+      <h4>Calificaciones</h4>
+      <div id="listaCalificaciones"></div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <input type="text" id="calEvaluacion" placeholder="Evaluación (ej. Examen 1)" style="flex:2; padding:8px; border:1px solid var(--border); border-radius:7px; font-size:0.85rem;">
+        <input type="number" id="calNota" placeholder="Nota" step="any" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:7px; font-size:0.85rem;">
+        <button type="button" class="btnAccion" onclick="agregarCalificacion()">+ Agregar</button>
+      </div>
+    </div>
+
+    <div class="seccionDetalle">
+      <h4>Certificado</h4>
+      <div id="contenidoCertificado"></div>
+    </div>
+
+    <div class="formAcciones">
+      <button type="button" class="btnPeligro" onclick="eliminarInscripcion()">Eliminar inscripción</button>
+      <button type="button" class="btnSecundario" onclick="cerrarModalDetalleInscripcion()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const APP_VERSION = 'instituto-biblico Ver-001';
+let cacheDirectorio = [];
+
+// ── Login ──────────────────────────────────────────────────────────────
+async function manejarLogin(evt) {
+  evt.preventDefault();
+  const email = document.getElementById('inputEmail').value.trim();
+  const password = document.getElementById('inputPassword').value;
+  const btn = document.getElementById('btnLogin');
+  const msg = document.getElementById('mensajeErrorLogin');
+  msg.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Ingresando…';
+  const resultado = await iniciarSesion(email, password);
+  if (!resultado.ok) {
+    msg.textContent = resultado.mensaje; msg.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Ingresar';
+    return false;
+  }
+  mostrarApp();
+  return false;
+}
+
+async function manejarLogout() {
+  await cerrarSesion();
+  document.getElementById('pantallaApp').style.display = 'none';
+  document.getElementById('pantallaLogin').style.display = 'flex';
+  document.getElementById('inputEmail').value = '';
+  document.getElementById('inputPassword').value = '';
+}
+
+function mostrarApp() {
+  const sesion = getSesion();
+  document.getElementById('pantallaLogin').style.display = 'none';
+  document.getElementById('pantallaApp').style.display = 'block';
+  const nombre = sesion.usuario?.nombre || sesion.usuario?.correo || 'Usuario';
+  document.getElementById('nombreUsuarioTop').textContent = `${nombre} · ${sesion.rol || ''}`;
+  document.getElementById('saludoUsuario').textContent = `Bienvenido, ${nombre}`;
+  document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  verificarConexion();
+}
+
+async function verificarConexion() {
+  const panel = document.getElementById('panelEstadoConexion');
+  const { data, error } = await sbCall(sb.from('instituto_cursos').select('id', { count: 'exact', head: true }));
+  if (error) {
+    panel.innerHTML = `<span class="puntoEstado error"></span><strong>Sin conexión a Supabase.</strong> ${error.message}`;
+  } else {
+    panel.innerHTML = `<span class="puntoEstado ok"></span><strong>Conectado a Supabase.</strong> ${APP_VERSION}`;
+  }
+}
+
+function mostrarDashboard() {
+  document.getElementById('vistaMaestros').style.display = 'none';
+  document.getElementById('vistaCursos').style.display = 'none';
+  document.getElementById('vistaMateriales').style.display = 'none';
+  document.getElementById('vistaInscripciones').style.display = 'none';
+  document.getElementById('vistaDashboard').style.display = 'block';
+}
+
+function formatoFecha(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${m}/${d}/${y}`;
+}
+
+async function asegurarDirectorio() {
+  if (cacheDirectorio.length === 0) {
+    await sbCall(sb.from('personas').select('*').eq('archivado', false)).then(({ data }) => { if (data) cacheDirectorio = data; });
+  }
+}
+
+function nombrePersonaPorId(id) {
+  const p = cacheDirectorio.find(x => x.id === id);
+  if (!p) return 'Persona no encontrada';
+  return p.nombre_completo || `${p.nombre} ${p.apellido}`;
+}
+
+async function crearPersonaRapida(nombreBusqueda) {
+  const partes = nombreBusqueda.trim().split(/\s+/);
+  const nombre = prompt('Nombre:', partes[0] || '');
+  if (!nombre || !nombre.trim()) return null;
+  const apellido = prompt('Apellido:', partes.slice(1).join(' ') || '');
+  if (apellido === null) return null;
+  const { data, error } = await sbCall(sb.from('personas').insert({ nombre: nombre.trim(), apellido: apellido.trim(), archivado: false }).select().single());
+  if (error) { alert('Error al crear la persona: ' + error.message); return null; }
+  cacheDirectorio.push(data);
+  return data.id;
+}
+
+// ══════════════════════ MAESTROS ══════════════════════
+let cacheMaestros = [];
+
+async function mostrarMaestros() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaMaestros').style.display = 'block';
+  await asegurarDirectorio();
+  await cargarMaestros();
+}
+
+async function cargarMaestros() {
+  const lista = document.getElementById('listaMaestros');
+  lista.innerHTML = '<div class="estadoCargando">Cargando maestros…</div>';
+  const { data, error } = await sbCall(sb.from('instituto_maestros').select('*'));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
+  cacheMaestros = data || [];
+  renderMaestros(cacheMaestros);
+}
+
+function renderMaestros(filas) {
+  const lista = document.getElementById('listaMaestros');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay maestros registrados.</div>'; return; }
+  lista.innerHTML = filas.map(m => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormMaestro('${m.id}')">
+      <div class="nombrePersona">${nombrePersonaPorId(m.persona_id)}</div>
+      <span class="badge badge-estado-${m.activo ? 'Activo' : 'Inactivo'}">${m.activo ? 'Activo' : 'Inactivo'}</span>
+    </div>`).join('');
+}
+
+function filtrarMaestros() {
+  const q = document.getElementById('buscadorMaestros').value.trim().toLowerCase();
+  if (!q) { renderMaestros(cacheMaestros); return; }
+  renderMaestros(cacheMaestros.filter(m => nombrePersonaPorId(m.persona_id).toLowerCase().includes(q)));
+}
+
+function abrirFormMaestro(id) {
+  document.getElementById('formMaestro').reset();
+  document.getElementById('maRegistroId').value = '';
+  document.getElementById('maPersonaId').value = '';
+  document.getElementById('maPersonaBuscar').value = '';
+  document.getElementById('maPersonaSeleccionada').textContent = '';
+  document.getElementById('sugerenciasPersonaMaestro').style.display = 'none';
+  document.getElementById('btnEliminarMaestro').style.display = 'none';
+
+  if (id) {
+    const m = cacheMaestros.find(x => x.id === id);
+    if (m) {
+      document.getElementById('modalMaestroTitulo').textContent = 'Editar Maestro';
+      document.getElementById('maRegistroId').value = m.id;
+      document.getElementById('maPersonaId').value = m.persona_id;
+      document.getElementById('maPersonaSeleccionada').textContent = nombrePersonaPorId(m.persona_id);
+      document.getElementById('maActivo').value = String(m.activo);
+      document.getElementById('btnEliminarMaestro').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalMaestroTitulo').textContent = 'Nuevo Maestro';
+  }
+  document.getElementById('modalMaestro').classList.add('abierto');
+}
+
+function cerrarModalMaestro() { document.getElementById('modalMaestro').classList.remove('abierto'); }
+
+function filtrarPersonaMaestro() {
+  const q = document.getElementById('maPersonaBuscar').value.trim();
+  const contenedor = document.getElementById('sugerenciasPersonaMaestro');
+  if (q.length < 2) { contenedor.style.display = 'none'; return; }
+  const coincidencias = cacheDirectorio.filter(p => (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q.toLowerCase())).slice(0, 8);
+  let html = coincidencias.map(p => `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;" onmousedown="seleccionarPersonaMaestro('${p.id}')">${p.nombre_completo || `${p.nombre} ${p.apellido}`}</div>`).join('');
+  html += `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem; color: var(--navy); font-weight:600; border-top:${coincidencias.length ? '1px solid var(--border)' : 'none'};" onmousedown="crearPersonaMaestro('${q.replace(/'/g, "\\'")}')">+ Agregar persona nueva</div>`;
+  contenedor.innerHTML = html;
+  contenedor.style.display = 'block';
+}
+
+async function crearPersonaMaestro(q) { const id = await crearPersonaRapida(q); if (id) seleccionarPersonaMaestro(id); }
+
+function seleccionarPersonaMaestro(id) {
+  document.getElementById('maPersonaId').value = id;
+  document.getElementById('maPersonaSeleccionada').textContent = nombrePersonaPorId(id);
+  document.getElementById('maPersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersonaMaestro').style.display = 'none';
+}
+
+async function guardarMaestro(evt) {
+  evt.preventDefault();
+  const personaId = document.getElementById('maPersonaId').value;
+  if (!personaId) { alert('Selecciona una persona.'); return false; }
+  const id = document.getElementById('maRegistroId').value;
+  const payload = { persona_id: personaId, activo: document.getElementById('maActivo').value === 'true' };
+  let error;
+  if (id) ({ error } = await sbCall(sb.from('instituto_maestros').update(payload).eq('id', id)));
+  else ({ error } = await sbCall(sb.from('instituto_maestros').insert(payload)));
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalMaestro(); cargarMaestros();
+  return false;
+}
+
+async function eliminarMaestro() {
+  const id = document.getElementById('maRegistroId').value;
+  if (!id || !confirm('¿Eliminar este maestro?')) return;
+  const { error } = await sbCall(sb.from('instituto_maestros').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalMaestro(); cargarMaestros();
+}
+
+// ══════════════════════ CURSOS ══════════════════════
+let cacheCursos = [];
+
+async function mostrarCursos() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaCursos').style.display = 'block';
+  await asegurarDirectorio();
+  if (cacheMaestros.length === 0) await sbCall(sb.from('instituto_maestros').select('*')).then(({ data }) => { if (data) cacheMaestros = data; });
+  await cargarCursos();
+}
+
+async function cargarCursos() {
+  const lista = document.getElementById('listaCursos');
+  lista.innerHTML = '<div class="estadoCargando">Cargando cursos…</div>';
+  const { data, error } = await sbCall(sb.from('instituto_cursos').select('*').order('nombre', { ascending: true }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
+  cacheCursos = data || [];
+
+  const select = document.getElementById('cuMaestro');
+  select.innerHTML = '<option value="">Sin asignar</option>' + cacheMaestros.map(m => `<option value="${m.id}">${nombrePersonaPorId(m.persona_id)}</option>`).join('');
+
+  renderCursos(cacheCursos);
+}
+
+function nombreMaestroPorId(maestroId) {
+  const m = cacheMaestros.find(x => x.id === maestroId);
+  return m ? nombrePersonaPorId(m.persona_id) : null;
+}
+
+function renderCursos(filas) {
+  const lista = document.getElementById('listaCursos');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay cursos registrados.</div>'; return; }
+  lista.innerHTML = filas.map(c => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormCurso('${c.id}')">
+      <div>
+        <div class="nombrePersona">${c.nombre}</div>
+        <div class="metaLinea">${nombreMaestroPorId(c.maestro_id) || 'Sin maestro asignado'}</div>
+        ${c.descripcion ? `<div class="notasPreview">${c.descripcion}</div>` : ''}
+      </div>
+      <span class="badge badge-estado-${c.activo ? 'Activo' : 'Inactivo'}">${c.activo ? 'Activo' : 'Inactivo'}</span>
+    </div>`).join('');
+}
+
+function filtrarCursos() {
+  const q = document.getElementById('buscadorCursos').value.trim().toLowerCase();
+  if (!q) { renderCursos(cacheCursos); return; }
+  renderCursos(cacheCursos.filter(c => c.nombre.toLowerCase().includes(q)));
+}
+
+function abrirFormCurso(id) {
+  document.getElementById('formCurso').reset();
+  document.getElementById('cuRegistroId').value = '';
+  document.getElementById('btnEliminarCurso').style.display = 'none';
+
+  if (id) {
+    const c = cacheCursos.find(x => x.id === id);
+    if (c) {
+      document.getElementById('modalCursoTitulo').textContent = 'Editar Curso';
+      document.getElementById('cuRegistroId').value = c.id;
+      document.getElementById('cuNombre').value = c.nombre;
+      document.getElementById('cuDescripcion').value = c.descripcion || '';
+      document.getElementById('cuMaestro').value = c.maestro_id || '';
+      document.getElementById('cuActivo').value = String(c.activo);
+      document.getElementById('btnEliminarCurso').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalCursoTitulo').textContent = 'Nuevo Curso';
+  }
+  document.getElementById('modalCurso').classList.add('abierto');
+}
+
+function cerrarModalCurso() { document.getElementById('modalCurso').classList.remove('abierto'); }
+
+async function guardarCurso(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('cuRegistroId').value;
+  const payload = {
+    nombre: document.getElementById('cuNombre').value.trim(),
+    descripcion: document.getElementById('cuDescripcion').value.trim() || null,
+    maestro_id: document.getElementById('cuMaestro').value || null,
+    activo: document.getElementById('cuActivo').value === 'true',
+  };
+  let error;
+  if (id) ({ error } = await sbCall(sb.from('instituto_cursos').update(payload).eq('id', id)));
+  else ({ error } = await sbCall(sb.from('instituto_cursos').insert(payload)));
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalCurso(); cargarCursos();
+  return false;
+}
+
+async function eliminarCurso() {
+  const id = document.getElementById('cuRegistroId').value;
+  if (!id || !confirm('¿Eliminar este curso?')) return;
+  const { error } = await sbCall(sb.from('instituto_cursos').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalCurso(); cargarCursos();
+}
+
+// ══════════════════════ MATERIALES ══════════════════════
+let cacheMateriales = [];
+
+async function mostrarMateriales() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaMateriales').style.display = 'block';
+  if (cacheCursos.length === 0) await sbCall(sb.from('instituto_cursos').select('*')).then(({ data }) => { if (data) cacheCursos = data; });
+  await cargarMateriales();
+}
+
+async function cargarMateriales() {
+  const lista = document.getElementById('listaMateriales');
+  lista.innerHTML = '<div class="estadoCargando">Cargando materiales…</div>';
+  const { data, error } = await sbCall(sb.from('instituto_materiales').select('*').order('creado_en', { ascending: false }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
+  cacheMateriales = data || [];
+
+  const select = document.getElementById('meCurso');
+  select.innerHTML = cacheCursos.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+
+  renderMateriales(cacheMateriales);
+}
+
+function nombreCursoPorId(id) {
+  const c = cacheCursos.find(x => x.id === id);
+  return c ? c.nombre : 'Curso no encontrado';
+}
+
+function renderMateriales(filas) {
+  const lista = document.getElementById('listaMateriales');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay materiales registrados.</div>'; return; }
+  lista.innerHTML = filas.map(m => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormMaterial('${m.id}')">
+      <div>
+        <div class="nombrePersona">${m.titulo}</div>
+        <div class="metaLinea">${nombreCursoPorId(m.curso_id)}</div>
+      </div>
+      ${m.archivo_url ? `<span class="badge badge-tipo">🔗 Enlace</span>` : ''}
+    </div>`).join('');
+}
+
+function filtrarMateriales() {
+  const q = document.getElementById('buscadorMateriales').value.trim().toLowerCase();
+  if (!q) { renderMateriales(cacheMateriales); return; }
+  renderMateriales(cacheMateriales.filter(m => m.titulo.toLowerCase().includes(q)));
+}
+
+function abrirFormMaterial(id) {
+  document.getElementById('formMaterial').reset();
+  document.getElementById('meRegistroId').value = '';
+  document.getElementById('btnEliminarMaterial').style.display = 'none';
+
+  if (id) {
+    const m = cacheMateriales.find(x => x.id === id);
+    if (m) {
+      document.getElementById('modalMaterialTitulo').textContent = 'Editar Material';
+      document.getElementById('meRegistroId').value = m.id;
+      document.getElementById('meCurso').value = m.curso_id;
+      document.getElementById('meTitulo').value = m.titulo;
+      document.getElementById('meArchivoUrl').value = m.archivo_url || '';
+      document.getElementById('btnEliminarMaterial').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalMaterialTitulo').textContent = 'Nuevo Material';
+  }
+  document.getElementById('modalMaterial').classList.add('abierto');
+}
+
+function cerrarModalMaterial() { document.getElementById('modalMaterial').classList.remove('abierto'); }
+
+async function guardarMaterial(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('meRegistroId').value;
+  const payload = {
+    curso_id: document.getElementById('meCurso').value,
+    titulo: document.getElementById('meTitulo').value.trim(),
+    archivo_url: document.getElementById('meArchivoUrl').value.trim() || null,
+  };
+  let error;
+  if (id) ({ error } = await sbCall(sb.from('instituto_materiales').update(payload).eq('id', id)));
+  else ({ error } = await sbCall(sb.from('instituto_materiales').insert(payload)));
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalMaterial(); cargarMateriales();
+  return false;
+}
+
+async function eliminarMaterial() {
+  const id = document.getElementById('meRegistroId').value;
+  if (!id || !confirm('¿Eliminar este material?')) return;
+  const { error } = await sbCall(sb.from('instituto_materiales').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalMaterial(); cargarMateriales();
+}
+
+// ══════════════════════ INSCRIPCIONES ══════════════════════
+let cacheInscripciones = [];
+let inscripcionDetalleActualId = null;
+let calificacionesActuales = [];
+let certificadoActual = null;
+
+async function mostrarInscripciones() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaInscripciones').style.display = 'block';
+  await asegurarDirectorio();
+  if (cacheCursos.length === 0) await sbCall(sb.from('instituto_cursos').select('*')).then(({ data }) => { if (data) cacheCursos = data; });
+  await cargarInscripciones();
+}
+
+async function cargarInscripciones() {
+  const lista = document.getElementById('listaInscripciones');
+  lista.innerHTML = '<div class="estadoCargando">Cargando inscripciones…</div>';
+  const { data, error } = await sbCall(sb.from('instituto_inscripciones').select('*').order('fecha_inscripcion', { ascending: false }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
+  cacheInscripciones = data || [];
+
+  const select = document.getElementById('inCurso');
+  select.innerHTML = cacheCursos.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+
+  renderInscripciones(cacheInscripciones);
+}
+
+function renderInscripciones(filas) {
+  const lista = document.getElementById('listaInscripciones');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay inscripciones registradas.</div>'; return; }
+  lista.innerHTML = filas.map(i => `
+    <div class="tarjetaSeguimiento" onclick="abrirDetalleInscripcion('${i.id}')">
+      <div>
+        <div class="nombrePersona">${nombrePersonaPorId(i.persona_id)}</div>
+        <div class="metaLinea">${nombreCursoPorId(i.curso_id)} · Desde ${formatoFecha(i.fecha_inscripcion)}</div>
+      </div>
+      <span class="badge badge-estado-${i.estado}">${i.estado}</span>
+    </div>`).join('');
+}
+
+function filtrarInscripciones() {
+  const q = document.getElementById('buscadorInscripciones').value.trim().toLowerCase();
+  if (!q) { renderInscripciones(cacheInscripciones); return; }
+  renderInscripciones(cacheInscripciones.filter(i =>
+    nombrePersonaPorId(i.persona_id).toLowerCase().includes(q) || nombreCursoPorId(i.curso_id).toLowerCase().includes(q)
+  ));
+}
+
+// ── Modal Nueva Inscripción ──────────────────────────────────────────────
+function abrirFormInscripcion() {
+  document.getElementById('formInscripcion').reset();
+  document.getElementById('inPersonaId').value = '';
+  document.getElementById('inPersonaBuscar').value = '';
+  document.getElementById('inPersonaSeleccionada').textContent = '';
+  document.getElementById('sugerenciasPersonaInscripcion').style.display = 'none';
+  document.getElementById('inFecha').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('modalInscripcion').classList.add('abierto');
+}
+
+function cerrarModalInscripcion() { document.getElementById('modalInscripcion').classList.remove('abierto'); }
+
+function filtrarPersonaInscripcion() {
+  const q = document.getElementById('inPersonaBuscar').value.trim();
+  const contenedor = document.getElementById('sugerenciasPersonaInscripcion');
+  if (q.length < 2) { contenedor.style.display = 'none'; return; }
+  const coincidencias = cacheDirectorio.filter(p => (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q.toLowerCase())).slice(0, 8);
+  let html = coincidencias.map(p => `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;" onmousedown="seleccionarPersonaInscripcion('${p.id}')">${p.nombre_completo || `${p.nombre} ${p.apellido}`}</div>`).join('');
+  html += `<div style="padding:8px 12px; cursor:pointer; font-size:0.85rem; color: var(--navy); font-weight:600; border-top:${coincidencias.length ? '1px solid var(--border)' : 'none'};" onmousedown="crearPersonaInscripcion('${q.replace(/'/g, "\\'")}')">+ Agregar persona nueva</div>`;
+  contenedor.innerHTML = html;
+  contenedor.style.display = 'block';
+}
+
+async function crearPersonaInscripcion(q) { const id = await crearPersonaRapida(q); if (id) seleccionarPersonaInscripcion(id); }
+
+function seleccionarPersonaInscripcion(id) {
+  document.getElementById('inPersonaId').value = id;
+  document.getElementById('inPersonaSeleccionada').textContent = nombrePersonaPorId(id);
+  document.getElementById('inPersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersonaInscripcion').style.display = 'none';
+}
+
+async function guardarInscripcion(evt) {
+  evt.preventDefault();
+  const personaId = document.getElementById('inPersonaId').value;
+  if (!personaId) { alert('Selecciona un estudiante.'); return false; }
+
+  const payload = {
+    persona_id: personaId,
+    curso_id: document.getElementById('inCurso').value,
+    fecha_inscripcion: document.getElementById('inFecha').value || null,
+    estado: document.getElementById('inEstado').value,
+  };
+
+  const { error } = await sbCall(sb.from('instituto_inscripciones').insert(payload));
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalInscripcion(); cargarInscripciones();
+  return false;
+}
+
+// ── Modal Detalle Inscripción (calificaciones + certificado) ────────────
+async function abrirDetalleInscripcion(id) {
+  inscripcionDetalleActualId = id;
+  const i = cacheInscripciones.find(x => x.id === id);
+  if (!i) return;
+
+  document.getElementById('modalDetalleInscripcionTitulo').textContent = `${nombrePersonaPorId(i.persona_id)} — ${nombreCursoPorId(i.curso_id)}`;
+  document.getElementById('diEstado').value = i.estado;
+  document.getElementById('listaCalificaciones').innerHTML = '<div class="estadoCargando">Cargando…</div>';
+  document.getElementById('contenidoCertificado').innerHTML = '<div class="estadoCargando">Cargando…</div>';
+  document.getElementById('modalDetalleInscripcion').classList.add('abierto');
+
+  const [{ data: califs }, { data: certs }] = await Promise.all([
+    sbCall(sb.from('instituto_calificaciones').select('*').eq('inscripcion_id', id).order('fecha', { ascending: false })),
+    sbCall(sb.from('instituto_certificados').select('*').eq('inscripcion_id', id)),
+  ]);
+
+  calificacionesActuales = califs || [];
+  certificadoActual = (certs && certs[0]) || null;
+  renderCalificaciones();
+  renderCertificado();
+}
+
+function cerrarModalDetalleInscripcion() {
+  document.getElementById('modalDetalleInscripcion').classList.remove('abierto');
+  inscripcionDetalleActualId = null;
+}
+
+async function actualizarEstadoInscripcion() {
+  const nuevoEstado = document.getElementById('diEstado').value;
+  const { error } = await sbCall(sb.from('instituto_inscripciones').update({ estado: nuevoEstado }).eq('id', inscripcionDetalleActualId));
+  if (error) { alert('Error al actualizar estado: ' + error.message); return; }
+  cargarInscripciones();
+}
+
+function renderCalificaciones() {
+  const cont = document.getElementById('listaCalificaciones');
+  if (calificacionesActuales.length === 0) {
+    cont.innerHTML = '<div class="estadoVacio">Sin calificaciones registradas.</div>';
+    return;
+  }
+  cont.innerHTML = calificacionesActuales.map(c => `
+    <div class="filaMini">
+      <span>${c.evaluacion} ${c.fecha ? '· ' + formatoFecha(c.fecha) : ''}</span>
+      <span style="display:flex; align-items:center; gap:8px;">
+        <strong>${c.nota}</strong>
+        <button type="button" class="btnPeligro" style="padding:3px 8px; font-size:0.72rem;" onclick="eliminarCalificacion('${c.id}')">✕</button>
+      </span>
+    </div>`).join('');
+}
+
+async function agregarCalificacion() {
+  const evaluacion = document.getElementById('calEvaluacion').value.trim();
+  const nota = document.getElementById('calNota').value;
+  if (!evaluacion || nota === '') { alert('Escribe la evaluación y la nota.'); return; }
+
+  const { error } = await sbCall(sb.from('instituto_calificaciones').insert({
+    inscripcion_id: inscripcionDetalleActualId,
+    evaluacion,
+    nota: parseFloat(nota),
+    fecha: new Date().toISOString().slice(0, 10),
+  }));
+  if (error) { alert('Error al guardar: ' + error.message); return; }
+
+  document.getElementById('calEvaluacion').value = '';
+  document.getElementById('calNota').value = '';
+  const { data } = await sbCall(sb.from('instituto_calificaciones').select('*').eq('inscripcion_id', inscripcionDetalleActualId).order('fecha', { ascending: false }));
+  calificacionesActuales = data || [];
+  renderCalificaciones();
+}
+
+async function eliminarCalificacion(id) {
+  if (!confirm('¿Eliminar esta calificación?')) return;
+  const { error } = await sbCall(sb.from('instituto_calificaciones').delete().eq('id', id));
+  if (error) { alert('Error: ' + error.message); return; }
+  calificacionesActuales = calificacionesActuales.filter(c => c.id !== id);
+  renderCalificaciones();
+}
+
+function renderCertificado() {
+  const cont = document.getElementById('contenidoCertificado');
+  if (certificadoActual) {
+    cont.innerHTML = `
+      <div class="filaMini">
+        <span>Emitido: ${formatoFecha(certificadoActual.fecha_emision)}</span>
+        <button type="button" class="btnPeligro" style="padding:3px 8px; font-size:0.72rem;" onclick="eliminarCertificado()">✕</button>
+      </div>
+      ${certificadoActual.archivo_url ? `<div style="margin-top:6px;"><a href="${certificadoActual.archivo_url}" target="_blank" style="color: var(--navy); font-size:0.85rem;">🔗 Ver certificado</a></div>` : ''}
+    `;
+  } else {
+    cont.innerHTML = `
+      <div style="display:flex; gap:8px;">
+        <input type="date" id="certFechaEmision" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:7px; font-size:0.85rem;">
+        <input type="text" id="certArchivoUrl" placeholder="URL del certificado (opcional)" style="flex:2; padding:8px; border:1px solid var(--border); border-radius:7px; font-size:0.85rem;">
+        <button type="button" class="btnAccion" onclick="emitirCertificado()">Emitir</button>
+      </div>`;
+  }
+}
+
+async function emitirCertificado() {
+  const fecha = document.getElementById('certFechaEmision').value || new Date().toISOString().slice(0, 10);
+  const url = document.getElementById('certArchivoUrl').value.trim() || null;
+
+  const { data, error } = await sbCall(sb.from('instituto_certificados').insert({
+    inscripcion_id: inscripcionDetalleActualId,
+    fecha_emision: fecha,
+    archivo_url: url,
+  }).select().single());
+
+  if (error) { alert('Error al emitir certificado: ' + error.message); return; }
+  certificadoActual = data;
+  renderCertificado();
+}
+
+async function eliminarCertificado() {
+  if (!certificadoActual || !confirm('¿Eliminar este certificado?')) return;
+  const { error } = await sbCall(sb.from('instituto_certificados').delete().eq('id', certificadoActual.id));
+  if (error) { alert('Error: ' + error.message); return; }
+  certificadoActual = null;
+  renderCertificado();
+}
+
+async function eliminarInscripcion() {
+  if (!inscripcionDetalleActualId || !confirm('¿Eliminar esta inscripción? Esto también borra sus calificaciones y certificado.')) return;
+  await sbCall(sb.from('instituto_calificaciones').delete().eq('inscripcion_id', inscripcionDetalleActualId));
+  await sbCall(sb.from('instituto_certificados').delete().eq('inscripcion_id', inscripcionDetalleActualId));
+  const { error } = await sbCall(sb.from('instituto_inscripciones').delete().eq('id', inscripcionDetalleActualId));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalDetalleInscripcion();
+  cargarInscripciones();
+}
+
+// ── Auto-login si ya hay sesión guardada ─────────────────────────────────
+(async function iniciar() {
+  const resultado = await cargarSesion();
+  if (resultado.ok) mostrarApp();
+})();
+</script>
+
+</body>
+</html>
