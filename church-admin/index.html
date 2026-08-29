@@ -652,8 +652,12 @@
 
       <!-- Sub-vista: Anuncios -->
       <div id="subvistaAnuncios">
-        <div class="barraAcciones">
+        <div class="barraAcciones" style="align-items:center;">
           <input type="text" id="buscadorAnuncios" placeholder="Buscar por título…" oninput="filtrarAnuncios()">
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; color: var(--text-muted); white-space:nowrap;">
+            <input type="checkbox" id="soloVigentesAnuncios" checked onchange="filtrarAnuncios()">
+            Solo activos y vigentes
+          </label>
           <button class="btnAccion" onclick="abrirFormAnuncio()">+ Nuevo Anuncio</button>
         </div>
         <div id="listaAnuncios">
@@ -663,6 +667,7 @@
 
       <!-- Sub-vista: Mensajes enviados -->
       <div id="subvistaMensajes" style="display:none;">
+        <div class="panelEstado" id="resumenMensajes" style="margin-top:0; margin-bottom:18px;"></div>
         <div class="barraAcciones">
           <input type="text" id="buscadorMensajes" placeholder="Buscar por asunto…" oninput="filtrarMensajes()">
           <button class="btnAccion" onclick="abrirFormMensaje()">+ Registrar Mensaje</button>
@@ -678,6 +683,11 @@
       <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
       <h2>Asistencia</h2>
       <p class="fecha">Registro de asistencia a servicios y reuniones</p>
+
+      <div class="tablaWrap" style="margin-bottom:20px; padding:16px 18px;">
+        <h3 style="padding:0; border:none; margin-bottom:14px;">Tendencia (últimos 6 meses)</h3>
+        <div id="graficoTendenciaAsistencia" style="display:flex; align-items:flex-end; gap:10px; height:120px;"></div>
+      </div>
 
       <div class="barraAcciones">
         <input type="text" id="buscadorAsistencia" placeholder="Buscar por tipo de servicio…" oninput="filtrarAsistencia()">
@@ -703,6 +713,7 @@
       <!-- Sub-vista: Usuarios y Roles -->
       <div id="subvistaUsuarios">
         <p class="fecha" style="margin-bottom:16px;">Para crear una cuenta nueva desde cero, hazlo en Supabase Dashboard → Authentication. Aquí puedes asignar o cambiar el rol de alguien que ya tiene cuenta.</p>
+        <div id="resumenRoles" class="grid-resumen" style="margin-bottom:20px;"></div>
         <div id="listaUsuariosAdmin">
           <div class="estadoCargando">Cargando usuarios…</div>
         </div>
@@ -1078,7 +1089,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-014';
+const APP_VERSION = 'church-admin Ver-017';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -2195,7 +2206,7 @@ async function cargarAnuncios() {
   }
 
   cacheAnuncios = data || [];
-  renderAnuncios(cacheAnuncios);
+  filtrarAnuncios();
 }
 
 function renderAnuncios(filas) {
@@ -2221,8 +2232,18 @@ function renderAnuncios(filas) {
 
 function filtrarAnuncios() {
   const q = document.getElementById('buscadorAnuncios').value.trim().toLowerCase();
-  if (!q) { renderAnuncios(cacheAnuncios); return; }
-  renderAnuncios(cacheAnuncios.filter(a => a.titulo.toLowerCase().includes(q)));
+  const soloVigentes = document.getElementById('soloVigentesAnuncios').checked;
+  const hoy = new Date().toISOString().slice(0, 10);
+
+  let filtrados = cacheAnuncios;
+
+  if (q) filtrados = filtrados.filter(a => a.titulo.toLowerCase().includes(q));
+
+  if (soloVigentes) {
+    filtrados = filtrados.filter(a => a.activo && (!a.fecha_expiracion || a.fecha_expiracion >= hoy));
+  }
+
+  renderAnuncios(filtrados);
 }
 
 function abrirFormAnuncio(id) {
@@ -2306,7 +2327,17 @@ async function cargarMensajes() {
   }
 
   cacheMensajes = data || [];
+  renderResumenMensajes();
   renderMensajes(cacheMensajes);
+}
+
+function renderResumenMensajes() {
+  const hoy = new Date();
+  const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().slice(0, 10);
+  const esteMes = cacheMensajes.filter(m => m.fecha_envio >= primerDiaMes).length;
+
+  document.getElementById('resumenMensajes').innerHTML =
+    `<span class="puntoEstado ok"></span><strong>${esteMes}</strong> mensaje${esteMes === 1 ? '' : 's'} registrado${esteMes === 1 ? '' : 's'} este mes`;
 }
 
 function renderMensajes(filas) {
@@ -2440,7 +2471,47 @@ async function cargarAsistencia() {
   const select = document.getElementById('asTipoServicio');
   select.innerHTML = cacheTiposServicio.map(t => `<option value="${t.id}">${t.nombre}</option>`).join('');
 
+  renderTendenciaAsistencia();
   renderAsistencia(cacheAsistencia);
+}
+
+function renderTendenciaAsistencia() {
+  const cont = document.getElementById('graficoTendenciaAsistencia');
+  const hoy = new Date();
+
+  // Últimos 6 meses, sumando total_asistentes de todos los registros de cada mes
+  const meses = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+    meses.push({ anio: d.getFullYear(), mes: d.getMonth(), etiqueta: NOMBRES_MESES[d.getMonth()].slice(0, 3) });
+  }
+
+  const totales = meses.map(m => {
+    const suma = cacheAsistencia
+      .filter(r => {
+        const [y, mo] = r.fecha.split('-');
+        return parseInt(y, 10) === m.anio && (parseInt(mo, 10) - 1) === m.mes;
+      })
+      .reduce((acc, r) => acc + (Number(r.total_asistentes) || 0), 0);
+    return { ...m, total: suma };
+  });
+
+  const maximo = Math.max(...totales.map(t => t.total), 1);
+
+  if (totales.every(t => t.total === 0)) {
+    cont.innerHTML = '<div class="estadoVacio">Sin datos suficientes para mostrar tendencia.</div>';
+    return;
+  }
+
+  cont.innerHTML = totales.map(t => {
+    const alturaPx = Math.max(4, Math.round((t.total / maximo) * 100));
+    return `
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <div style="font-size:0.72rem; color: var(--text-muted);">${t.total || ''}</div>
+        <div style="width:100%; max-width:36px; height:${alturaPx}px; background:var(--navy); border-radius:4px 4px 0 0;"></div>
+        <div style="font-size:0.72rem; color: var(--text-muted);">${t.etiqueta}</div>
+      </div>`;
+  }).join('');
 }
 
 function renderAsistencia(filas) {
@@ -2632,7 +2703,28 @@ async function cargarUsuariosAdmin() {
 
   cacheUsuariosAdmin = usuarios || [];
   cacheUsuarioApps = apps || [];
+  renderResumenRoles();
   renderUsuariosAdmin();
+}
+
+function renderResumenRoles() {
+  const cont = document.getElementById('resumenRoles');
+  const conteos = {};
+  cacheUsuarioApps.forEach(a => {
+    conteos[a.rol] = (conteos[a.rol] || 0) + 1;
+  });
+
+  const roles = Object.keys(conteos);
+  if (roles.length === 0) {
+    cont.innerHTML = '';
+    return;
+  }
+
+  cont.innerHTML = roles.map(rol => `
+    <div class="tarjetaResumen">
+      <div class="etiqueta">${rol}</div>
+      <div class="monto">${conteos[rol]}</div>
+    </div>`).join('');
 }
 
 function rolDeUsuario(usuarioId) {
@@ -2677,6 +2769,15 @@ async function guardarRolUsuario(evt) {
   const usuarioId = document.getElementById('ruUsuarioId').value;
   const nuevoRol = document.getElementById('ruRol').value;
   const filaExistente = cacheUsuarioApps.find(a => a.usuario_id === usuarioId);
+
+  const sesion = getSesion();
+  const esMiPropioUsuario = sesion.usuario?.id === usuarioId;
+  const meQuitoAdministrador = esMiPropioUsuario && filaExistente?.rol === 'Administrador' && nuevoRol !== 'Administrador';
+
+  if (meQuitoAdministrador) {
+    const confirmado = confirm('⚠️ Estás a punto de quitarte tu propio rol de Administrador. Si continúas, podrías perder acceso a esta sección. ¿Seguro que quieres continuar?');
+    if (!confirmado) return false;
+  }
 
   let error;
   if (!nuevoRol) {
