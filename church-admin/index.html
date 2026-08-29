@@ -523,23 +523,37 @@
       <h2>Finanzas</h2>
       <p class="fecha" id="finanzasSubtitulo"></p>
 
+      <div class="barraAcciones" style="align-items:center;">
+        <select id="finSelectMes" onchange="cargarFinanzas()"></select>
+        <select id="finSelectAnio" onchange="cargarFinanzas()"></select>
+        <div style="flex:1;"></div>
+        <button class="btnSecundario" onclick="exportarFinanzasCSV()">⬇ Exportar CSV</button>
+      </div>
+
       <div class="grid-resumen">
         <div class="tarjetaResumen ingreso">
-          <div class="etiqueta">Ingresos del mes</div>
+          <div class="etiqueta">Ingresos del periodo</div>
           <div class="monto" id="finTotalIngresos">—</div>
         </div>
         <div class="tarjetaResumen egreso">
-          <div class="etiqueta">Egresos del mes</div>
+          <div class="etiqueta">Egresos del periodo</div>
           <div class="monto" id="finTotalEgresos">—</div>
         </div>
         <div class="tarjetaResumen">
-          <div class="etiqueta">Balance del mes</div>
+          <div class="etiqueta">Balance del periodo</div>
           <div class="monto" id="finBalance">—</div>
         </div>
       </div>
 
+      <div class="tablaWrap" style="margin-bottom:20px;">
+        <h3>Desglose por categoría</h3>
+        <div id="finDesgloseCategorias">
+          <div class="estadoCargando">Cargando…</div>
+        </div>
+      </div>
+
       <div class="tablaWrap">
-        <h3>Transacciones recientes</h3>
+        <h3>Transacciones del periodo</h3>
         <div id="finContenidoTabla">
           <div class="estadoCargando">Cargando transacciones…</div>
         </div>
@@ -1046,7 +1060,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-010';
+const APP_VERSION = 'church-admin Ver-011';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -1127,6 +1141,7 @@ function mostrarDashboard() {
 function mostrarFinanzas() {
   document.getElementById('vistaDashboard').style.display = 'none';
   document.getElementById('vistaFinanzas').style.display = 'block';
+  inicializarSelectoresFinanzas();
   cargarFinanzas();
 }
 
@@ -1139,23 +1154,46 @@ function esIngreso(tipo) {
   return (tipo || '').toLowerCase().includes('ingreso');
 }
 
-async function cargarFinanzas() {
-  const hoy = new Date();
-  const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().slice(0, 10);
-  const hoyStr = hoy.toISOString().slice(0, 10);
+const NOMBRES_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+let cacheFilasFinanzasActuales = [];
 
-  document.getElementById('finanzasSubtitulo').textContent = hoy.toLocaleDateString('es-ES', {
-    month: 'long', year: 'numeric'
-  });
+function inicializarSelectoresFinanzas() {
+  const selectMes = document.getElementById('finSelectMes');
+  const selectAnio = document.getElementById('finSelectAnio');
+
+  // Solo poblar una vez — si ya tiene opciones, no lo repetimos
+  if (selectMes.options.length === 0) {
+    const hoy = new Date();
+    selectMes.innerHTML = NOMBRES_MESES.map((nombre, idx) => `<option value="${idx}">${nombre}</option>`).join('');
+    selectMes.value = hoy.getMonth();
+
+    const anioActual = hoy.getFullYear();
+    const anios = [];
+    for (let a = anioActual - 3; a <= anioActual + 1; a++) anios.push(a);
+    selectAnio.innerHTML = anios.map(a => `<option value="${a}">${a}</option>`).join('');
+    selectAnio.value = anioActual;
+  }
+}
+
+async function cargarFinanzas() {
+  const mes = parseInt(document.getElementById('finSelectMes').value, 10);
+  const anio = parseInt(document.getElementById('finSelectAnio').value, 10);
+
+  const primerDia = new Date(anio, mes, 1).toISOString().slice(0, 10);
+  const ultimoDia = new Date(anio, mes + 1, 0).toISOString().slice(0, 10);
+
+  document.getElementById('finanzasSubtitulo').textContent = `${NOMBRES_MESES[mes]} de ${anio}`;
 
   const tablaDiv = document.getElementById('finContenidoTabla');
+  const desgloseDiv = document.getElementById('finDesgloseCategorias');
   tablaDiv.innerHTML = '<div class="estadoCargando">Cargando transacciones…</div>';
+  desgloseDiv.innerHTML = '<div class="estadoCargando">Cargando…</div>';
 
   const { data: transacciones, error } = await sbCall(
     sb.from('transacciones')
       .select('*')
-      .gte('fecha', primerDiaMes)
-      .lte('fecha', hoyStr)
+      .gte('fecha', primerDia)
+      .lte('fecha', ultimoDia)
       .eq('solo_fondo', false)
       .order('fecha', { ascending: false })
       .order('creado_en', { ascending: false })
@@ -1163,15 +1201,18 @@ async function cargarFinanzas() {
 
   if (error) {
     tablaDiv.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+    desgloseDiv.innerHTML = '';
     document.getElementById('finTotalIngresos').textContent = '—';
     document.getElementById('finTotalEgresos').textContent = '—';
     document.getElementById('finBalance').textContent = '—';
+    cacheFilasFinanzasActuales = [];
     return;
   }
 
   const filas = transacciones || [];
+  cacheFilasFinanzasActuales = filas;
 
-  // Totales del mes
+  // Totales del periodo
   let totalIngresos = 0, totalEgresos = 0;
   filas.forEach(t => {
     const monto = Number(t.monto) || 0;
@@ -1183,14 +1224,44 @@ async function cargarFinanzas() {
   document.getElementById('finTotalEgresos').textContent = formatoMoneda(totalEgresos);
   document.getElementById('finBalance').textContent = formatoMoneda(totalIngresos - totalEgresos);
 
-  // Tabla de transacciones recientes (últimas 20)
+  // Desglose por categoría
   if (filas.length === 0) {
-    tablaDiv.innerHTML = '<div class="estadoVacio">No hay transacciones este mes.</div>';
+    desgloseDiv.innerHTML = '<div class="estadoVacio">Sin datos para este periodo.</div>';
+  } else {
+    const porCategoria = {};
+    filas.forEach(t => {
+      const cat = t.categoria || 'Sin categoría';
+      const monto = Number(t.monto) || 0;
+      if (!porCategoria[cat]) porCategoria[cat] = { ingreso: 0, egreso: 0 };
+      if (esIngreso(t.tipo)) porCategoria[cat].ingreso += monto;
+      else porCategoria[cat].egreso += monto;
+    });
+
+    const categorias = Object.keys(porCategoria).sort((a, b) =>
+      (porCategoria[b].ingreso + porCategoria[b].egreso) - (porCategoria[a].ingreso + porCategoria[a].egreso)
+    );
+
+    desgloseDiv.innerHTML = `
+      <table class="tablaTrans">
+        <thead><tr><th>Categoría</th><th>Ingresos</th><th>Egresos</th></tr></thead>
+        <tbody>
+          ${categorias.map(cat => `
+            <tr>
+              <td>${cat}</td>
+              <td class="montoIngreso">${porCategoria[cat].ingreso > 0 ? formatoMoneda(porCategoria[cat].ingreso) : '—'}</td>
+              <td class="montoEgreso">${porCategoria[cat].egreso > 0 ? formatoMoneda(porCategoria[cat].egreso) : '—'}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  // Tabla de transacciones del periodo
+  if (filas.length === 0) {
+    tablaDiv.innerHTML = '<div class="estadoVacio">No hay transacciones en este periodo.</div>';
     return;
   }
 
-  const recientes = filas.slice(0, 20);
-  const filasHtml = recientes.map(t => {
+  const filasHtml = filas.map(t => {
     const claseMonto = esIngreso(t.tipo) ? 'montoIngreso' : 'montoEgreso';
     const signo = esIngreso(t.tipo) ? '+' : '−';
     return `
@@ -1210,6 +1281,39 @@ async function cargarFinanzas() {
       </thead>
       <tbody>${filasHtml}</tbody>
     </table>`;
+}
+
+function exportarFinanzasCSV() {
+  if (cacheFilasFinanzasActuales.length === 0) {
+    alert('No hay transacciones que exportar en este periodo.');
+    return;
+  }
+
+  const encabezados = ['Fecha', 'Descripción', 'Categoría', 'Tipo', 'Método', 'Monto'];
+  const filasCSV = cacheFilasFinanzasActuales.map(t => [
+    t.fecha,
+    (t.descripcion || '').replace(/"/g, '""'),
+    (t.categoria || '').replace(/"/g, '""'),
+    t.tipo || '',
+    t.metodo || '',
+    Number(t.monto) || 0,
+  ]);
+
+  const contenido = [encabezados, ...filasCSV]
+    .map(fila => fila.map(campo => `"${campo}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob(['\uFEFF' + contenido], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const mes = document.getElementById('finSelectMes').value;
+  const anio = document.getElementById('finSelectAnio').value;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `finanzas_${NOMBRES_MESES[mes]}_${anio}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ── Navegación: Secretaría ───────────────────────────────────────────────
