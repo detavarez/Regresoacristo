@@ -1,0 +1,2901 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Church Admin — Regreso a Cristo</title>
+<script>const APP_SLUG = 'church_admin';</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="../shared/supabase-client.js"></script>
+<script src="../shared/auth.js"></script>
+<style>
+  :root {
+    --navy: #0f2445;
+    --navy-light: #16345f;
+    --gold: #c9a227;
+    --gold-light: #e0c25e;
+    --bg: #f4f6f9;
+    --text: #1c2733;
+    --text-muted: #5a6a7a;
+    --border: #d8dee5;
+    --danger: #b3261e;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  /* ── Pantalla de login ────────────────────────────────────────── */
+  #pantallaLogin {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, var(--navy) 0%, var(--navy-light) 100%);
+    padding: 20px;
+  }
+  .tarjetaLogin {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  }
+  .tarjetaLogin h1 {
+    font-size: 1.4rem;
+    margin: 0 0 4px;
+    color: var(--navy);
+  }
+  .tarjetaLogin .subtitulo {
+    margin: 0 0 28px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  .campo { margin-bottom: 16px; }
+  .campo label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+  }
+  .campo input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+  .campo input:focus {
+    outline: 2px solid var(--gold);
+    outline-offset: 1px;
+    border-color: var(--gold);
+  }
+  .btnPrincipal {
+    width: 100%;
+    padding: 12px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .btnPrincipal:hover { background: var(--navy-light); }
+  .btnPrincipal:disabled { opacity: 0.6; cursor: default; }
+  .mensajeError {
+    background: #fdeceb;
+    color: var(--danger);
+    border: 1px solid #f3c6c2;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* ── Shell principal ──────────────────────────────────────────── */
+  #pantallaApp { display: none; min-height: 100vh; }
+  .topbar {
+    background: var(--navy);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topbar .marca {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .topbar .marca span { color: var(--gold-light); }
+  .topbar .usuarioInfo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.85rem;
+  }
+  .topbar button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+  }
+  .topbar button:hover { background: rgba(255,255,255,0.1); }
+
+  .contenido { padding: 28px 24px; max-width: 1100px; margin: 0 auto; }
+  .contenido h2 { color: var(--navy); margin-bottom: 4px; }
+  .contenido .fecha { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; }
+
+  .grid-modulos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .tarjetaModulo {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    cursor: pointer;
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .tarjetaModulo:hover {
+    box-shadow: 0 6px 18px rgba(15,36,69,0.12);
+    transform: translateY(-2px);
+  }
+  .tarjetaModulo .icono { font-size: 1.6rem; margin-bottom: 8px; }
+  .tarjetaModulo h3 { margin: 0 0 4px; font-size: 1rem; color: var(--navy); }
+  .tarjetaModulo p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
+  .tarjetaModulo.deshabilitado { opacity: 0.5; cursor: default; }
+
+  .panelEstado {
+    margin-top: 28px;
+    padding: 16px 18px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .panelEstado strong { color: var(--text); }
+  .puntoEstado {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  .puntoEstado.ok { background: #2e8b57; }
+  .puntoEstado.error { background: var(--danger); }
+
+  /* ── Vista Finanzas ───────────────────────────────────────────── */
+  .btnVolver {
+    background: none;
+    border: none;
+    color: var(--navy);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btnVolver:hover { text-decoration: underline; }
+
+  .grid-resumen {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .tarjetaResumen {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .tarjetaResumen .etiqueta {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 6px;
+  }
+  .tarjetaResumen .monto {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .tarjetaResumen.ingreso .monto { color: #1f7a4d; }
+  .tarjetaResumen.egreso .monto { color: var(--danger); }
+
+  .tablaWrap {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .tablaWrap h3 {
+    margin: 0;
+    padding: 16px 18px;
+    font-size: 0.95rem;
+    color: var(--navy);
+    border-bottom: 1px solid var(--border);
+  }
+  table.tablaTrans { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  table.tablaTrans th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  table.tablaTrans td {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+  }
+  table.tablaTrans td.montoIngreso { color: #1f7a4d; font-weight: 600; }
+  table.tablaTrans td.montoEgreso { color: var(--danger); font-weight: 600; }
+  .estadoCargando, .estadoVacio {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  /* ── Cuidado Pastoral ─────────────────────────────────────────── */
+  .tarjetaSeguimiento {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .tarjetaSeguimiento:hover { box-shadow: 0 4px 14px rgba(15,36,69,0.1); }
+  .tarjetaSeguimiento .nombrePersona { font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+  .tarjetaSeguimiento .metaLinea { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+  .tarjetaSeguimiento .notasPreview { font-size: 0.85rem; color: var(--text); }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-prioridad-Baja { background: #e6f0e9; color: #2e6b47; }
+  .badge-prioridad-Media { background: #fff3d6; color: #8a6100; }
+  .badge-prioridad-Alta { background: #fde3d3; color: #a34d0a; }
+  .badge-prioridad-Urgente { background: #fdeceb; color: var(--danger); }
+  .badge-tipo { background: var(--bg); color: var(--text-muted); }
+  .proximoVencido { color: var(--danger); font-weight: 600; }
+  .badge-estado-Activo { background: #e6f0e9; color: #2e6b47; }
+  .badge-estado-Inactivo { background: #eceff2; color: var(--text-muted); }
+  .badge-categoria-General { background: var(--bg); color: var(--text-muted); }
+  .badge-categoria-Evento { background: #e2edfa; color: #1d5a9e; }
+  .badge-categoria-Urgente { background: #fdeceb; color: var(--danger); }
+  .subtabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .subtab {
+    background: none;
+    border: none;
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .subtab.activa { color: var(--navy); border-bottom-color: var(--gold); }
+
+  .barraAcciones {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .barraAcciones input[type="text"] {
+    flex: 1;
+    min-width: 200px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.88rem;
+  }
+  .btnAccion {
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btnAccion:hover { background: var(--navy-light); }
+  .btnSecundario {
+    background: #fff;
+    color: var(--navy);
+    border: 1px solid var(--border);
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btnSecundario:hover { background: var(--bg); }
+  .btnPeligro { color: var(--danger); border-color: #f3c6c2; }
+  .btnPeligro:hover { background: #fdeceb; }
+
+  .listaPersonas { display: flex; flex-direction: column; gap: 10px; }
+  .cardPersona {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+  .cardPersona:hover { box-shadow: 0 4px 12px rgba(15,36,69,0.08); }
+  .cardPersona .nombre { font-weight: 600; color: var(--navy); font-size: 0.95rem; }
+  .cardPersona .detalle { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+  .cardPersona .flecha { color: var(--text-muted); }
+
+  .gridFamilias {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .cardFamilia {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .cardFamilia h4 { margin: 0 0 4px; color: var(--navy); font-size: 1rem; }
+  .cardFamilia .direccion { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px; }
+  .cardFamilia ul { margin: 0; padding: 0; list-style: none; }
+  .cardFamilia li {
+    padding: 6px 0;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+  .cardFamilia li:first-child { border-top: none; }
+
+  /* ── Modal formulario ─────────────────────────────────────────── */
+  .modalOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,36,69,0.5);
+    z-index: 100;
+    align-items: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 24px 16px;
+  }
+  .modalOverlay.abierto { display: flex; }
+  .modalCaja {
+    background: #fff;
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 560px;
+    padding: 28px 26px;
+  }
+  .modalCaja h3 { margin: 0 0 20px; color: var(--navy); }
+  .formGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .formGrid .full { grid-column: 1 / -1; }
+  .formGrid label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+  .formGrid input, .formGrid select, .formGrid textarea {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 0.88rem;
+    font-family: inherit;
+  }
+  .formGrid textarea { resize: vertical; min-height: 60px; }
+  .formAcciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+  }
+  .formAcciones .btnPeligro { margin-right: auto; }
+  .seccionForm {
+    grid-column: 1 / -1;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .seccionForm:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ PANTALLA DE LOGIN ═══════════════ -->
+<div id="pantallaLogin">
+  <form class="tarjetaLogin" id="formLogin" onsubmit="return manejarLogin(event)">
+    <h1>Church Admin</h1>
+    <p class="subtitulo">Iglesia Regreso a Cristo</p>
+    <div class="mensajeError" id="mensajeErrorLogin"></div>
+    <div class="campo">
+      <label for="inputEmail">Correo electrónico</label>
+      <input type="email" id="inputEmail" autocomplete="username" required>
+    </div>
+    <div class="campo">
+      <label for="inputPassword">Contraseña</label>
+      <input type="password" id="inputPassword" autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="btnPrincipal" id="btnLogin">Ingresar</button>
+  </form>
+</div>
+
+<!-- ═══════════════ SHELL PRINCIPAL ═══════════════ -->
+<div id="pantallaApp">
+  <div class="topbar">
+    <div class="marca">Church <span>Admin</span></div>
+    <div class="usuarioInfo">
+      <span id="nombreUsuarioTop"></span>
+      <button onclick="manejarLogout()">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="contenido">
+    <!-- ═══ Vista: Dashboard (grid de módulos) ═══ -->
+    <div id="vistaDashboard">
+      <h2 id="saludoUsuario">Bienvenido</h2>
+      <p class="fecha" id="fechaHoy"></p>
+
+      <div class="grid-modulos">
+        <div class="tarjetaModulo" onclick="mostrarFinanzas()">
+          <div class="icono">💰</div>
+          <h3>Finanzas</h3>
+          <p>Diezmos, ofrendas, gastos, reportes</p>
+        </div>
+        <div class="tarjetaModulo" onclick="mostrarSecretaria()">
+          <div class="icono">📇</div>
+          <h3>Secretaría</h3>
+          <p>Directorio de miembros y familias</p>
+        </div>
+        <div class="tarjetaModulo" onclick="mostrarPastoral()"><div class="icono">🤝</div><h3>Cuidado Pastoral</h3><p>Seguimientos y visitas</p></div>
+        <div class="tarjetaModulo" onclick="mostrarVoluntarios()"><div class="icono">🙋</div><h3>Voluntarios</h3><p>Ministerios y asignaciones</p></div>
+        <div class="tarjetaModulo" onclick="mostrarComunicaciones()"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Anuncios y mensajes</p></div>
+        <div class="tarjetaModulo" onclick="mostrarAsistencia()"><div class="icono">✅</div><h3>Asistencia</h3><p>Registro de servicios y reuniones</p></div>
+        <div class="tarjetaModulo" onclick="mostrarGrupos()"><div class="icono">👥</div><h3>Grupos Pequeños</h3><p>Células, líderes y miembros</p></div>
+        <div class="tarjetaModulo" onclick="mostrarAdministracion()"><div class="icono">⚙️</div><h3>Administración</h3><p>Usuarios, roles y catálogos</p></div>
+      </div>
+
+      <div class="panelEstado" id="panelEstadoConexion">
+        Verificando conexión con Supabase…
+      </div>
+    </div>
+
+    <!-- ═══ Vista: Finanzas ═══ -->
+    <div id="vistaFinanzas" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Finanzas</h2>
+      <p class="fecha" id="finanzasSubtitulo"></p>
+
+      <div class="barraAcciones" style="align-items:center;">
+        <select id="finSelectMes" onchange="cargarFinanzas()"></select>
+        <select id="finSelectAnio" onchange="cargarFinanzas()"></select>
+        <div style="flex:1;"></div>
+        <button class="btnSecundario" onclick="exportarFinanzasCSV()">⬇ Exportar CSV</button>
+      </div>
+
+      <div class="grid-resumen">
+        <div class="tarjetaResumen ingreso">
+          <div class="etiqueta">Ingresos del periodo</div>
+          <div class="monto" id="finTotalIngresos">—</div>
+        </div>
+        <div class="tarjetaResumen egreso">
+          <div class="etiqueta">Egresos del periodo</div>
+          <div class="monto" id="finTotalEgresos">—</div>
+        </div>
+        <div class="tarjetaResumen">
+          <div class="etiqueta">Balance del periodo</div>
+          <div class="monto" id="finBalance">—</div>
+        </div>
+      </div>
+
+      <div class="tablaWrap" style="margin-bottom:20px;">
+        <h3>Desglose por categoría</h3>
+        <div id="finDesgloseCategorias">
+          <div class="estadoCargando">Cargando…</div>
+        </div>
+      </div>
+
+      <div class="tablaWrap">
+        <h3>Transacciones del periodo</h3>
+        <div id="finContenidoTabla">
+          <div class="estadoCargando">Cargando transacciones…</div>
+        </div>
+      </div>
+    </div>
+    <!-- ═══ Vista: Secretaría ═══ -->
+    <div id="vistaSecretaria" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Secretaría</h2>
+      <p class="fecha">Directorio de miembros y familias</p>
+
+      <div class="subtabs">
+        <button class="subtab activa" id="subtabDirectorioBtn" onclick="cambiarSubtabSecretaria('directorio')">Directorio</button>
+        <button class="subtab" id="subtabFamiliasBtn" onclick="cambiarSubtabSecretaria('familias')">Familias</button>
+      </div>
+
+      <!-- Sub-vista: Directorio -->
+      <div id="subvistaDirectorio">
+        <div class="barraAcciones">
+          <input type="text" id="buscadorPersonas" placeholder="Buscar por nombre, teléfono o correo…" oninput="filtrarDirectorio()">
+          <button class="btnAccion" onclick="abrirFormPersona()">+ Nuevo Miembro</button>
+        </div>
+        <div class="listaPersonas" id="listaPersonas">
+          <div class="estadoCargando">Cargando directorio…</div>
+        </div>
+      </div>
+
+      <!-- Sub-vista: Familias -->
+      <div id="subvistaFamilias" style="display:none;">
+        <div class="gridFamilias" id="gridFamilias">
+          <div class="estadoCargando">Cargando familias…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Vista: Cuidado Pastoral ═══ -->
+    <div id="vistaPastoral" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Cuidado Pastoral</h2>
+      <p class="fecha">Seguimientos, visitas y necesidades pastorales</p>
+
+      <div class="barraAcciones">
+        <input type="text" id="buscadorPastoral" placeholder="Buscar por nombre de persona…" oninput="filtrarSeguimientos()">
+        <button class="btnAccion" onclick="abrirFormSeguimiento()">+ Nuevo Seguimiento</button>
+      </div>
+
+      <div id="listaSeguimientos">
+        <div class="estadoCargando">Cargando seguimientos…</div>
+      </div>
+    </div>
+
+    <!-- ═══ Vista: Voluntarios ═══ -->
+    <div id="vistaVoluntarios" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Voluntarios</h2>
+      <p class="fecha">Ministerios y asignaciones de voluntarios</p>
+
+      <div class="barraAcciones">
+        <input type="text" id="buscadorVoluntarios" placeholder="Buscar por nombre o ministerio…" oninput="filtrarVoluntarios()">
+        <button class="btnAccion" onclick="abrirFormVoluntario()">+ Nueva Asignación</button>
+      </div>
+
+      <div id="listaVoluntarios">
+        <div class="estadoCargando">Cargando voluntarios…</div>
+      </div>
+    </div>
+
+    <!-- ═══ Vista: Comunicaciones ═══ -->
+    <div id="vistaComunicaciones" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Comunicaciones</h2>
+      <p class="fecha">Anuncios y registro de mensajes enviados</p>
+
+      <div class="subtabs">
+        <button class="subtab activa" id="subtabAnunciosBtn" onclick="cambiarSubtabComunicaciones('anuncios')">Anuncios</button>
+        <button class="subtab" id="subtabMensajesBtn" onclick="cambiarSubtabComunicaciones('mensajes')">Mensajes enviados</button>
+      </div>
+
+      <!-- Sub-vista: Anuncios -->
+      <div id="subvistaAnuncios">
+        <div class="barraAcciones">
+          <input type="text" id="buscadorAnuncios" placeholder="Buscar por título…" oninput="filtrarAnuncios()">
+          <button class="btnAccion" onclick="abrirFormAnuncio()">+ Nuevo Anuncio</button>
+        </div>
+        <div id="listaAnuncios">
+          <div class="estadoCargando">Cargando anuncios…</div>
+        </div>
+      </div>
+
+      <!-- Sub-vista: Mensajes enviados -->
+      <div id="subvistaMensajes" style="display:none;">
+        <div class="barraAcciones">
+          <input type="text" id="buscadorMensajes" placeholder="Buscar por asunto…" oninput="filtrarMensajes()">
+          <button class="btnAccion" onclick="abrirFormMensaje()">+ Registrar Mensaje</button>
+        </div>
+        <div id="listaMensajes">
+          <div class="estadoCargando">Cargando mensajes…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Vista: Asistencia ═══ -->
+    <div id="vistaAsistencia" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Asistencia</h2>
+      <p class="fecha">Registro de asistencia a servicios y reuniones</p>
+
+      <div class="barraAcciones">
+        <input type="text" id="buscadorAsistencia" placeholder="Buscar por tipo de servicio…" oninput="filtrarAsistencia()">
+        <button class="btnAccion" onclick="abrirFormAsistencia()">+ Nuevo Registro</button>
+      </div>
+
+      <div id="listaAsistencia">
+        <div class="estadoCargando">Cargando registros…</div>
+      </div>
+    </div>
+
+    <!-- ═══ Vista: Administración ═══ -->
+    <div id="vistaAdministracion" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Administración</h2>
+      <p class="fecha">Usuarios, roles y catálogos del sistema</p>
+
+      <div class="subtabs">
+        <button class="subtab activa" id="subtabUsuariosBtn" onclick="cambiarSubtabAdmin('usuarios')">Usuarios y Roles</button>
+        <button class="subtab" id="subtabCatalogosBtn" onclick="cambiarSubtabAdmin('catalogos')">Catálogos</button>
+      </div>
+
+      <!-- Sub-vista: Usuarios y Roles -->
+      <div id="subvistaUsuarios">
+        <p class="fecha" style="margin-bottom:16px;">Para crear una cuenta nueva desde cero, hazlo en Supabase Dashboard → Authentication. Aquí puedes asignar o cambiar el rol de alguien que ya tiene cuenta.</p>
+        <div id="listaUsuariosAdmin">
+          <div class="estadoCargando">Cargando usuarios…</div>
+        </div>
+      </div>
+
+      <!-- Sub-vista: Catálogos -->
+      <div id="subvistaCatalogos" style="display:none;">
+        <div class="tablaWrap" style="margin-bottom:20px;">
+          <h3>Ministerios</h3>
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
+            <input type="text" id="nuevoMinisterioInput" placeholder="Nombre del nuevo ministerio…" style="flex:1;">
+            <button class="btnAccion" onclick="agregarMinisterio()">+ Agregar</button>
+          </div>
+          <div id="listaCatalogoMinisterios" style="padding:8px 18px;"></div>
+        </div>
+
+        <div class="tablaWrap">
+          <h3>Tipos de Servicio</h3>
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
+            <input type="text" id="nuevoTipoServicioInput" placeholder="Nombre del nuevo tipo de servicio…" style="flex:1;">
+            <button class="btnAccion" onclick="agregarTipoServicio()">+ Agregar</button>
+          </div>
+          <div id="listaCatalogoTiposServicio" style="padding:8px 18px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Vista: Grupos Pequeños ═══ -->
+    <div id="vistaGrupos" style="display:none;">
+      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
+      <h2>Grupos Pequeños</h2>
+      <p class="fecha">Células, líderes y miembros</p>
+
+      <div class="barraAcciones">
+        <input type="text" id="buscadorGrupos" placeholder="Buscar por nombre o líder…" oninput="filtrarGrupos()">
+        <button class="btnAccion" onclick="abrirFormGrupo()">+ Nuevo Grupo</button>
+      </div>
+
+      <div id="listaGrupos">
+        <div class="estadoCargando">Cargando grupos…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Grupo Pequeño ═══════════════ -->
+<div class="modalOverlay" id="modalGrupo">
+  <div class="modalCaja">
+    <h3 id="modalGrupoTitulo">Nuevo Grupo</h3>
+    <form id="formGrupo" onsubmit="return guardarGrupo(event)">
+      <input type="hidden" id="gGrupoId">
+      <div class="formGrid">
+        <div class="full"><label for="gNombre">Nombre del grupo *</label><input type="text" id="gNombre" required></div>
+
+        <div class="full">
+          <label for="gLiderBuscar">Líder</label>
+          <input type="text" id="gLiderBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarLiderGrupo()">
+          <input type="hidden" id="gLiderId">
+          <div id="sugerenciasLiderGrupo" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="gLiderSeleccionado" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+
+        <div><label for="gDiaHorario">Día y horario</label><input type="text" id="gDiaHorario" placeholder="Martes 7:00 PM"></div>
+        <div><label for="gUbicacion">Ubicación</label><input type="text" id="gUbicacion" placeholder="Casa de la familia..., Salón 3…"></div>
+        <div><label for="gCapacidadMaxima">Capacidad máxima</label><input type="number" id="gCapacidadMaxima" min="0"></div>
+        <div>
+          <label for="gActivo">Estado</label>
+          <select id="gActivo">
+            <option value="true" selected>Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+        <div class="full"><label for="gDescripcion">Descripción</label><textarea id="gDescripcion" rows="3"></textarea></div>
+      </div>
+
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarGrupo" onclick="eliminarGrupo()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalGrupo()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Miembros del Grupo ═══════════════ -->
+<div class="modalOverlay" id="modalMiembrosGrupo">
+  <div class="modalCaja">
+    <h3 id="modalMiembrosGrupoTitulo">Miembros del grupo</h3>
+
+    <div style="margin-bottom:14px;">
+      <input type="text" id="mgPersonaBuscar" placeholder="Buscar persona para agregar…" autocomplete="off" oninput="filtrarPersonaMiembroGrupo()">
+      <div id="sugerenciasPersonaMiembroGrupo" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+    </div>
+
+    <div id="listaMiembrosGrupo" style="max-height:280px; overflow-y:auto;">
+      <div class="estadoCargando">Cargando miembros…</div>
+    </div>
+
+    <div class="formAcciones">
+      <button type="button" class="btnSecundario" onclick="cerrarModalMiembrosGrupo()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Editar Rol de Usuario ═══════════════ -->
+<div class="modalOverlay" id="modalRolUsuario">
+  <div class="modalCaja">
+    <h3 id="modalRolUsuarioTitulo">Editar acceso</h3>
+    <form id="formRolUsuario" onsubmit="return guardarRolUsuario(event)">
+      <input type="hidden" id="ruUsuarioId">
+      <div class="formGrid">
+        <div class="full" id="ruNombreUsuario" style="font-weight:600; color: var(--navy);"></div>
+        <div>
+          <label for="ruRol">Rol en Church Admin</label>
+          <select id="ruRol">
+            <option value="">Sin acceso</option>
+            <option value="Administrador">Administrador</option>
+            <option value="Tesorero">Tesorero</option>
+            <option value="Colaborador">Colaborador</option>
+          </select>
+        </div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" onclick="cerrarModalRolUsuario()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Registro de Asistencia ═══════════════ -->
+<div class="modalOverlay" id="modalAsistencia">
+  <div class="modalCaja">
+    <h3 id="modalAsistenciaTitulo">Nuevo Registro</h3>
+    <form id="formAsistencia" onsubmit="return guardarAsistencia(event)">
+      <input type="hidden" id="asRegistroId">
+      <div class="formGrid">
+        <div>
+          <label for="asTipoServicio">Tipo de servicio *</label>
+          <select id="asTipoServicio" required></select>
+        </div>
+        <div><label for="asFecha">Fecha *</label><input type="date" id="asFecha" required></div>
+        <div><label for="asTotal">Total de asistentes *</label><input type="number" id="asTotal" min="0" required></div>
+        <div class="full"><label for="asNotas">Notas</label><textarea id="asNotas" rows="2"></textarea></div>
+      </div>
+
+      <div class="seccionForm" style="margin-top:18px;">
+        <button type="button" class="btnSecundario" style="width:100%; text-align:left;" onclick="toggleChecklistAsistencia()">
+          👥 Marcar personas presentes (opcional) — <span id="contadorPresentes">0 marcadas</span>
+        </button>
+        <div id="checklistAsistenciaWrap" style="display:none; margin-top:10px;">
+          <input type="text" id="buscadorChecklistAsistencia" placeholder="Buscar persona…" oninput="renderChecklistAsistencia()" style="margin-bottom:8px;">
+          <div id="checklistAsistencia" style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
+        </div>
+      </div>
+
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarAsistencia" onclick="eliminarAsistencia()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalAsistencia()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Anuncio ═══════════════ -->
+<div class="modalOverlay" id="modalAnuncio">
+  <div class="modalCaja">
+    <h3 id="modalAnuncioTitulo">Nuevo Anuncio</h3>
+    <form id="formAnuncio" onsubmit="return guardarAnuncio(event)">
+      <input type="hidden" id="aAnuncioId">
+      <div class="formGrid">
+        <div class="full"><label for="aTitulo">Título *</label><input type="text" id="aTitulo" required></div>
+        <div class="full"><label for="aContenido">Contenido *</label><textarea id="aContenido" rows="4" required></textarea></div>
+        <div>
+          <label for="aCategoria">Categoría</label>
+          <select id="aCategoria">
+            <option value="General" selected>General</option>
+            <option value="Evento">Evento</option>
+            <option value="Urgente">Urgente</option>
+          </select>
+        </div>
+        <div><label for="aFechaPublicacion">Fecha de publicación</label><input type="date" id="aFechaPublicacion"></div>
+        <div><label for="aFechaExpiracion">Fecha de expiración</label><input type="date" id="aFechaExpiracion"></div>
+        <div>
+          <label for="aActivo">Estado</label>
+          <select id="aActivo">
+            <option value="true" selected>Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarAnuncio" onclick="eliminarAnuncio()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalAnuncio()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Mensaje Enviado ═══════════════ -->
+<div class="modalOverlay" id="modalMensaje">
+  <div class="modalCaja">
+    <h3 id="modalMensajeTitulo">Registrar Mensaje</h3>
+    <form id="formMensaje" onsubmit="return guardarMensaje(event)">
+      <input type="hidden" id="mMensajeId">
+      <div class="formGrid">
+        <div class="full"><label for="mAsunto">Asunto *</label><input type="text" id="mAsunto" required></div>
+        <div class="full"><label for="mContenido">Contenido *</label><textarea id="mContenido" rows="4" required></textarea></div>
+        <div>
+          <label for="mCanal">Canal</label>
+          <select id="mCanal">
+            <option value="Correo" selected>Correo</option>
+            <option value="SMS">SMS</option>
+            <option value="Ambos">Ambos</option>
+          </select>
+        </div>
+        <div><label for="mFechaEnvio">Fecha de envío</label><input type="date" id="mFechaEnvio"></div>
+        <div class="full"><label for="mDestinatarios">Destinatarios *</label><input type="text" id="mDestinatarios" placeholder="Toda la congregación, Ministerio de Alabanza…" required></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarMensaje" onclick="eliminarMensaje()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalMensaje()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nueva/Editar Asignación de Voluntario ═══════════════ -->
+<div class="modalOverlay" id="modalVoluntario">
+  <div class="modalCaja">
+    <h3 id="modalVoluntarioTitulo">Nueva Asignación</h3>
+    <form id="formVoluntario" onsubmit="return guardarVoluntario(event)">
+      <input type="hidden" id="vAsignacionId">
+      <div class="formGrid">
+        <div class="full">
+          <label for="vPersonaBuscar">Persona *</label>
+          <input type="text" id="vPersonaBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarPersonaVoluntario()">
+          <input type="hidden" id="vPersonaId" required>
+          <div id="sugerenciasPersonaVoluntario" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="vPersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+
+        <div>
+          <label for="vMinisterio">Ministerio *</label>
+          <select id="vMinisterio" required>
+            <option value="">Selecciona…</option>
+          </select>
+        </div>
+        <div><label for="vRol">Rol / función</label><input type="text" id="vRol" placeholder="Líder, Miembro, Ujier principal…"></div>
+        <div><label for="vFechaInicio">Fecha de inicio</label><input type="date" id="vFechaInicio"></div>
+        <div>
+          <label for="vEstado">Estado</label>
+          <select id="vEstado">
+            <option value="Activo" selected>Activo</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
+        </div>
+        <div class="full"><label for="vDisponibilidad">Disponibilidad</label><input type="text" id="vDisponibilidad" placeholder="Domingos AM, Miércoles PM…"></div>
+        <div class="full"><label for="vNotas">Notas</label><textarea id="vNotas" rows="3"></textarea></div>
+      </div>
+
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarVoluntario" onclick="eliminarVoluntario()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalVoluntario()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Seguimiento Pastoral ═══════════════ -->
+<div class="modalOverlay" id="modalSeguimiento">
+  <div class="modalCaja">
+    <h3 id="modalSeguimientoTitulo">Nuevo Seguimiento</h3>
+    <form id="formSeguimiento" onsubmit="return guardarSeguimiento(event)">
+      <input type="hidden" id="seguimientoId">
+      <div class="formGrid">
+        <div class="full">
+          <label for="sPersonaBuscar">Persona *</label>
+          <input type="text" id="sPersonaBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarPersonaSeguimiento()">
+          <input type="hidden" id="sPersonaId" required>
+          <div id="sugerenciasPersona" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+          <div id="sPersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+        </div>
+
+        <div><label for="sFecha">Fecha *</label><input type="date" id="sFecha" required></div>
+        <div>
+          <label for="sTipo">Tipo *</label>
+          <select id="sTipo" required>
+            <option value="Visita">Visita</option>
+            <option value="Llamada">Llamada</option>
+            <option value="Oración">Oración</option>
+            <option value="Hospital">Hospital</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div>
+          <label for="sPrioridad">Prioridad</label>
+          <select id="sPrioridad">
+            <option value="Baja">Baja</option>
+            <option value="Media" selected>Media</option>
+            <option value="Alta">Alta</option>
+            <option value="Urgente">Urgente</option>
+          </select>
+        </div>
+        <div><label for="sProximoSeguimiento">Próximo seguimiento</label><input type="date" id="sProximoSeguimiento"></div>
+        <div class="full"><label for="sNotas">Notas del encuentro</label><textarea id="sNotas" rows="4"></textarea></div>
+      </div>
+
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarSeguimiento" onclick="eliminarSeguimiento()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalSeguimiento()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Agregar/Editar Miembro ═══════════════ -->
+<div class="modalOverlay" id="modalPersona">
+  <div class="modalCaja">
+    <h3 id="modalPersonaTitulo">Nuevo Miembro</h3>
+    <form id="formPersona" onsubmit="return guardarPersona(event)">
+      <input type="hidden" id="personaId">
+      <div class="formGrid">
+        <div class="seccionForm">Datos personales</div>
+        <div><label for="pNombre">Nombre *</label><input type="text" id="pNombre" required></div>
+        <div><label for="pSegundoNombre">Segundo nombre</label><input type="text" id="pSegundoNombre"></div>
+        <div><label for="pApellido">Apellido *</label><input type="text" id="pApellido" required></div>
+        <div><label for="pSegundoApellido">Segundo apellido</label><input type="text" id="pSegundoApellido"></div>
+        <div><label for="pFechaNacimiento">Fecha de nacimiento</label><input type="date" id="pFechaNacimiento"></div>
+        <div><label for="pTelefono">Teléfono</label><input type="tel" id="pTelefono"></div>
+        <div class="full"><label for="pCorreo">Correo</label><input type="email" id="pCorreo"></div>
+
+        <div class="seccionForm">Familia / Hogar</div>
+        <div class="full">
+          <label for="pHousehold">Familia (household)</label>
+          <select id="pHousehold" onchange="alternarNuevaFamilia()">
+            <option value="">Sin asignar</option>
+            <option value="__nueva__">+ Crear nueva familia…</option>
+          </select>
+        </div>
+        <div class="full" id="campoNuevaFamilia" style="display:none;">
+          <label for="pNuevaFamiliaNombre">Nombre de la nueva familia</label>
+          <input type="text" id="pNuevaFamiliaNombre" placeholder="ej. Familia Tavarez">
+        </div>
+        <div><label for="pStreet">Dirección</label><input type="text" id="pStreet"></div>
+        <div><label for="pApartment">Apto/Suite</label><input type="text" id="pApartment"></div>
+        <div><label for="pCity">Ciudad</label><input type="text" id="pCity"></div>
+        <div><label for="pState">Estado</label><input type="text" id="pState"></div>
+        <div><label for="pZip">Código postal</label><input type="text" id="pZip"></div>
+
+        <div class="seccionForm">Contacto de emergencia</div>
+        <div><label for="pEmergenciaNombre">Nombre</label><input type="text" id="pEmergenciaNombre"></div>
+        <div><label for="pEmergenciaTelefono">Teléfono</label><input type="tel" id="pEmergenciaTelefono"></div>
+        <div class="full"><label for="pEmergenciaRelacion">Relación</label><input type="text" id="pEmergenciaRelacion"></div>
+
+        <div class="seccionForm">Notas</div>
+        <div class="full"><textarea id="pNotas" placeholder="Notas internas…"></textarea></div>
+      </div>
+
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario btnPeligro" id="btnArchivarPersona" style="display:none;" onclick="archivarPersonaActual()">Archivar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalPersona()">Cancelar</button>
+        <button type="submit" class="btnAccion">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const APP_VERSION = 'church-admin Ver-011';
+
+// ── Login ──────────────────────────────────────────────────────────────
+async function manejarLogin(evt) {
+  evt.preventDefault();
+  const email = document.getElementById('inputEmail').value.trim();
+  const password = document.getElementById('inputPassword').value;
+  const btn = document.getElementById('btnLogin');
+  const msg = document.getElementById('mensajeErrorLogin');
+
+  msg.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Ingresando…';
+
+  const resultado = await iniciarSesion(email, password);
+
+  if (!resultado.ok) {
+    msg.textContent = resultado.mensaje;
+    msg.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+    return false;
+  }
+
+  mostrarApp();
+  return false;
+}
+
+async function manejarLogout() {
+  await cerrarSesion();
+  document.getElementById('pantallaApp').style.display = 'none';
+  document.getElementById('pantallaLogin').style.display = 'flex';
+  document.getElementById('inputEmail').value = '';
+  document.getElementById('inputPassword').value = '';
+}
+
+function mostrarApp() {
+  const sesion = getSesion();
+  document.getElementById('pantallaLogin').style.display = 'none';
+  document.getElementById('pantallaApp').style.display = 'block';
+
+  const nombre = sesion.usuario?.nombre || sesion.usuario?.correo || 'Usuario';
+  document.getElementById('nombreUsuarioTop').textContent = `${nombre} · ${sesion.rol || ''}`;
+  document.getElementById('saludoUsuario').textContent = `Bienvenido, ${nombre}`;
+  document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-ES', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  verificarConexion();
+}
+
+// ── Verificación de conexión (prueba real a Supabase) ───────────────────
+async function verificarConexion() {
+  const panel = document.getElementById('panelEstadoConexion');
+  const { data, error } = await sbCall(
+    sb.from('personas').select('id', { count: 'exact', head: true })
+  );
+
+  if (error) {
+    panel.innerHTML = `<span class="puntoEstado error"></span><strong>Sin conexión a Supabase.</strong> ${error.message}`;
+  } else {
+    panel.innerHTML = `<span class="puntoEstado ok"></span><strong>Conectado a Supabase.</strong> ${APP_VERSION}`;
+  }
+}
+
+// ── Navegación entre vistas ──────────────────────────────────────────────
+function mostrarDashboard() {
+  document.getElementById('vistaFinanzas').style.display = 'none';
+  document.getElementById('vistaSecretaria').style.display = 'none';
+  document.getElementById('vistaPastoral').style.display = 'none';
+  document.getElementById('vistaVoluntarios').style.display = 'none';
+  document.getElementById('vistaComunicaciones').style.display = 'none';
+  document.getElementById('vistaAsistencia').style.display = 'none';
+  document.getElementById('vistaAdministracion').style.display = 'none';
+  document.getElementById('vistaGrupos').style.display = 'none';
+  document.getElementById('vistaDashboard').style.display = 'block';
+}
+
+function mostrarFinanzas() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaFinanzas').style.display = 'block';
+  inicializarSelectoresFinanzas();
+  cargarFinanzas();
+}
+
+// ── Finanzas: carga real desde Supabase ──────────────────────────────────
+function formatoMoneda(n) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n || 0);
+}
+
+function esIngreso(tipo) {
+  return (tipo || '').toLowerCase().includes('ingreso');
+}
+
+const NOMBRES_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+let cacheFilasFinanzasActuales = [];
+
+function inicializarSelectoresFinanzas() {
+  const selectMes = document.getElementById('finSelectMes');
+  const selectAnio = document.getElementById('finSelectAnio');
+
+  // Solo poblar una vez — si ya tiene opciones, no lo repetimos
+  if (selectMes.options.length === 0) {
+    const hoy = new Date();
+    selectMes.innerHTML = NOMBRES_MESES.map((nombre, idx) => `<option value="${idx}">${nombre}</option>`).join('');
+    selectMes.value = hoy.getMonth();
+
+    const anioActual = hoy.getFullYear();
+    const anios = [];
+    for (let a = anioActual - 3; a <= anioActual + 1; a++) anios.push(a);
+    selectAnio.innerHTML = anios.map(a => `<option value="${a}">${a}</option>`).join('');
+    selectAnio.value = anioActual;
+  }
+}
+
+async function cargarFinanzas() {
+  const mes = parseInt(document.getElementById('finSelectMes').value, 10);
+  const anio = parseInt(document.getElementById('finSelectAnio').value, 10);
+
+  const primerDia = new Date(anio, mes, 1).toISOString().slice(0, 10);
+  const ultimoDia = new Date(anio, mes + 1, 0).toISOString().slice(0, 10);
+
+  document.getElementById('finanzasSubtitulo').textContent = `${NOMBRES_MESES[mes]} de ${anio}`;
+
+  const tablaDiv = document.getElementById('finContenidoTabla');
+  const desgloseDiv = document.getElementById('finDesgloseCategorias');
+  tablaDiv.innerHTML = '<div class="estadoCargando">Cargando transacciones…</div>';
+  desgloseDiv.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+
+  const { data: transacciones, error } = await sbCall(
+    sb.from('transacciones')
+      .select('*')
+      .gte('fecha', primerDia)
+      .lte('fecha', ultimoDia)
+      .eq('solo_fondo', false)
+      .order('fecha', { ascending: false })
+      .order('creado_en', { ascending: false })
+  );
+
+  if (error) {
+    tablaDiv.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+    desgloseDiv.innerHTML = '';
+    document.getElementById('finTotalIngresos').textContent = '—';
+    document.getElementById('finTotalEgresos').textContent = '—';
+    document.getElementById('finBalance').textContent = '—';
+    cacheFilasFinanzasActuales = [];
+    return;
+  }
+
+  const filas = transacciones || [];
+  cacheFilasFinanzasActuales = filas;
+
+  // Totales del periodo
+  let totalIngresos = 0, totalEgresos = 0;
+  filas.forEach(t => {
+    const monto = Number(t.monto) || 0;
+    if (esIngreso(t.tipo)) totalIngresos += monto;
+    else totalEgresos += monto;
+  });
+
+  document.getElementById('finTotalIngresos').textContent = formatoMoneda(totalIngresos);
+  document.getElementById('finTotalEgresos').textContent = formatoMoneda(totalEgresos);
+  document.getElementById('finBalance').textContent = formatoMoneda(totalIngresos - totalEgresos);
+
+  // Desglose por categoría
+  if (filas.length === 0) {
+    desgloseDiv.innerHTML = '<div class="estadoVacio">Sin datos para este periodo.</div>';
+  } else {
+    const porCategoria = {};
+    filas.forEach(t => {
+      const cat = t.categoria || 'Sin categoría';
+      const monto = Number(t.monto) || 0;
+      if (!porCategoria[cat]) porCategoria[cat] = { ingreso: 0, egreso: 0 };
+      if (esIngreso(t.tipo)) porCategoria[cat].ingreso += monto;
+      else porCategoria[cat].egreso += monto;
+    });
+
+    const categorias = Object.keys(porCategoria).sort((a, b) =>
+      (porCategoria[b].ingreso + porCategoria[b].egreso) - (porCategoria[a].ingreso + porCategoria[a].egreso)
+    );
+
+    desgloseDiv.innerHTML = `
+      <table class="tablaTrans">
+        <thead><tr><th>Categoría</th><th>Ingresos</th><th>Egresos</th></tr></thead>
+        <tbody>
+          ${categorias.map(cat => `
+            <tr>
+              <td>${cat}</td>
+              <td class="montoIngreso">${porCategoria[cat].ingreso > 0 ? formatoMoneda(porCategoria[cat].ingreso) : '—'}</td>
+              <td class="montoEgreso">${porCategoria[cat].egreso > 0 ? formatoMoneda(porCategoria[cat].egreso) : '—'}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  // Tabla de transacciones del periodo
+  if (filas.length === 0) {
+    tablaDiv.innerHTML = '<div class="estadoVacio">No hay transacciones en este periodo.</div>';
+    return;
+  }
+
+  const filasHtml = filas.map(t => {
+    const claseMonto = esIngreso(t.tipo) ? 'montoIngreso' : 'montoEgreso';
+    const signo = esIngreso(t.tipo) ? '+' : '−';
+    return `
+      <tr>
+        <td>${t.fecha}</td>
+        <td>${t.descripcion || t.categoria || '—'}</td>
+        <td>${t.categoria || '—'}</td>
+        <td>${t.metodo || '—'}</td>
+        <td class="${claseMonto}">${signo} ${formatoMoneda(Math.abs(Number(t.monto) || 0))}</td>
+      </tr>`;
+  }).join('');
+
+  tablaDiv.innerHTML = `
+    <table class="tablaTrans">
+      <thead>
+        <tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Método</th><th>Monto</th></tr>
+      </thead>
+      <tbody>${filasHtml}</tbody>
+    </table>`;
+}
+
+function exportarFinanzasCSV() {
+  if (cacheFilasFinanzasActuales.length === 0) {
+    alert('No hay transacciones que exportar en este periodo.');
+    return;
+  }
+
+  const encabezados = ['Fecha', 'Descripción', 'Categoría', 'Tipo', 'Método', 'Monto'];
+  const filasCSV = cacheFilasFinanzasActuales.map(t => [
+    t.fecha,
+    (t.descripcion || '').replace(/"/g, '""'),
+    (t.categoria || '').replace(/"/g, '""'),
+    t.tipo || '',
+    t.metodo || '',
+    Number(t.monto) || 0,
+  ]);
+
+  const contenido = [encabezados, ...filasCSV]
+    .map(fila => fila.map(campo => `"${campo}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob(['\uFEFF' + contenido], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const mes = document.getElementById('finSelectMes').value;
+  const anio = document.getElementById('finSelectAnio').value;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `finanzas_${NOMBRES_MESES[mes]}_${anio}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── Navegación: Secretaría ───────────────────────────────────────────────
+let cacheFamiliasCargadas = false;
+
+function mostrarSecretaria() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaSecretaria').style.display = 'block';
+  cambiarSubtabSecretaria('directorio');
+}
+
+function cambiarSubtabSecretaria(tab) {
+  const esDirectorio = tab === 'directorio';
+  document.getElementById('subtabDirectorioBtn').classList.toggle('activa', esDirectorio);
+  document.getElementById('subtabFamiliasBtn').classList.toggle('activa', !esDirectorio);
+  document.getElementById('subvistaDirectorio').style.display = esDirectorio ? 'block' : 'none';
+  document.getElementById('subvistaFamilias').style.display = esDirectorio ? 'none' : 'block';
+
+  if (esDirectorio) {
+    cargarDirectorio();
+  } else {
+    cargarFamilias();
+  }
+}
+
+// ── Directorio ────────────────────────────────────────────────────────────
+let cacheDirectorio = [];
+
+async function cargarDirectorio() {
+  const lista = document.getElementById('listaPersonas');
+  lista.innerHTML = '<div class="estadoCargando">Cargando directorio…</div>';
+
+  const { data, error } = await sbCall(
+    sb.from('personas')
+      .select('*, households(nombre)')
+      .eq('archivado', false)
+      .order('nombre_completo', { ascending: true })
+  );
+
+  if (error) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+    return;
+  }
+
+  cacheDirectorio = data || [];
+  renderDirectorio(cacheDirectorio);
+}
+
+function renderDirectorio(personas) {
+  const lista = document.getElementById('listaPersonas');
+  if (personas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay miembros registrados.</div>';
+    return;
+  }
+
+  lista.innerHTML = personas.map(p => {
+    const detalles = [p.telefono, p.correo, p.households?.nombre].filter(Boolean).join(' · ');
+    return `
+      <div class="cardPersona" onclick="abrirFormPersona('${p.id}')">
+        <div>
+          <div class="nombre">${p.nombre_completo || (p.nombre + ' ' + p.apellido)}</div>
+          <div class="detalle">${detalles || 'Sin datos de contacto'}</div>
+        </div>
+        <div class="flecha">›</div>
+      </div>`;
+  }).join('');
+}
+
+function filtrarDirectorio() {
+  const q = document.getElementById('buscadorPersonas').value.trim().toLowerCase();
+  if (!q) { renderDirectorio(cacheDirectorio); return; }
+  const filtradas = cacheDirectorio.filter(p =>
+    (p.nombre_completo || '').toLowerCase().includes(q) ||
+    (p.telefono || '').toLowerCase().includes(q) ||
+    (p.correo || '').toLowerCase().includes(q)
+  );
+  renderDirectorio(filtradas);
+}
+
+// ── Familias ──────────────────────────────────────────────────────────────
+async function cargarFamilias() {
+  const grid = document.getElementById('gridFamilias');
+  grid.innerHTML = '<div class="estadoCargando">Cargando familias…</div>';
+
+  const [households, personas] = await Promise.all([
+    sbCall(sb.from('households').select('*').order('nombre', { ascending: true })),
+    sbCall(sb.from('personas').select('id, nombre_completo, nombre, apellido, household_id').eq('archivado', false)),
+  ]);
+
+  if (households.error) {
+    grid.innerHTML = `<div class="estadoVacio">Error al cargar: ${households.error.message}</div>`;
+    return;
+  }
+
+  const listaHouseholds = households.data || [];
+  const listaPersonasTodas = personas.data || [];
+
+  if (listaHouseholds.length === 0) {
+    grid.innerHTML = '<div class="estadoVacio">No hay familias registradas todavía.</div>';
+    return;
+  }
+
+  grid.innerHTML = listaHouseholds.map(h => {
+    const miembros = listaPersonasTodas.filter(p => p.household_id === h.id);
+    const direccion = [h.street, h.city, h.state].filter(Boolean).join(', ');
+    const miembrosHtml = miembros.length
+      ? miembros.map(p => `<li>${p.nombre_completo || (p.nombre + ' ' + p.apellido)}</li>`).join('')
+      : '<li style="color:var(--text-muted);">Sin miembros asignados</li>';
+    return `
+      <div class="cardFamilia">
+        <h4>${h.nombre}</h4>
+        <div class="direccion">${direccion || 'Sin dirección registrada'}</div>
+        <ul>${miembrosHtml}</ul>
+      </div>`;
+  }).join('');
+}
+
+// ── Formulario: agregar/editar persona ───────────────────────────────────
+let cacheHouseholds = [];
+let personaEditandoId = null;
+
+async function poblarSelectHouseholds(seleccionarId) {
+  const select = document.getElementById('pHousehold');
+  if (cacheHouseholds.length === 0) {
+    const { data } = await sbCall(sb.from('households').select('id, nombre').order('nombre', { ascending: true }));
+    cacheHouseholds = data || [];
+  }
+  const opcionesExistentes = cacheHouseholds.map(h =>
+    `<option value="${h.id}">${h.nombre}</option>`
+  ).join('');
+  select.innerHTML = `<option value="">Sin asignar</option>${opcionesExistentes}<option value="__nueva__">+ Crear nueva familia…</option>`;
+  select.value = seleccionarId || '';
+}
+
+function alternarNuevaFamilia() {
+  const esNueva = document.getElementById('pHousehold').value === '__nueva__';
+  document.getElementById('campoNuevaFamilia').style.display = esNueva ? 'block' : 'none';
+}
+
+async function abrirFormPersona(id) {
+  personaEditandoId = id || null;
+  document.getElementById('formPersona').reset();
+  document.getElementById('campoNuevaFamilia').style.display = 'none';
+  document.getElementById('btnArchivarPersona').style.display = id ? 'inline-block' : 'none';
+  document.getElementById('modalPersonaTitulo').textContent = id ? 'Editar Miembro' : 'Nuevo Miembro';
+
+  let persona = null;
+  if (id) {
+    persona = cacheDirectorio.find(p => p.id === id);
+  }
+
+  await poblarSelectHouseholds(persona?.household_id);
+
+  if (persona) {
+    document.getElementById('personaId').value = persona.id;
+    document.getElementById('pNombre').value = persona.nombre || '';
+    document.getElementById('pSegundoNombre').value = persona.segundo_nombre || '';
+    document.getElementById('pApellido').value = persona.apellido || '';
+    document.getElementById('pSegundoApellido').value = persona.segundo_apellido || '';
+    document.getElementById('pFechaNacimiento').value = persona.fecha_nacimiento || '';
+    document.getElementById('pTelefono').value = persona.telefono || '';
+    document.getElementById('pCorreo').value = persona.correo || '';
+    document.getElementById('pStreet').value = persona.street || '';
+    document.getElementById('pApartment').value = persona.apartment || '';
+    document.getElementById('pCity').value = persona.city || '';
+    document.getElementById('pState').value = persona.state || '';
+    document.getElementById('pZip').value = persona.zip || '';
+    document.getElementById('pEmergenciaNombre').value = persona.emergency_contact_name || '';
+    document.getElementById('pEmergenciaTelefono').value = persona.emergency_contact_phone || '';
+    document.getElementById('pEmergenciaRelacion').value = persona.emergency_contact_relationship || '';
+    document.getElementById('pNotas').value = persona.notas || '';
+  } else {
+    document.getElementById('personaId').value = '';
+  }
+
+  document.getElementById('modalPersona').classList.add('abierto');
+}
+
+function cerrarModalPersona() {
+  document.getElementById('modalPersona').classList.remove('abierto');
+  personaEditandoId = null;
+}
+
+async function guardarPersona(evt) {
+  evt.preventDefault();
+  const btnGuardar = evt.target.querySelector('button[type="submit"]');
+  btnGuardar.disabled = true;
+  btnGuardar.textContent = 'Guardando…';
+
+  try {
+    let householdId = document.getElementById('pHousehold').value;
+
+    // Crear nueva familia si se seleccionó esa opción
+    if (householdId === '__nueva__') {
+      const nombreNuevaFamilia = document.getElementById('pNuevaFamiliaNombre').value.trim();
+      if (!nombreNuevaFamilia) {
+        alert('Escribe un nombre para la nueva familia.');
+        return false;
+      }
+      const { data: nuevaFamilia, error: errFamilia } = await sbCall(
+        sb.from('households').insert({ nombre: nombreNuevaFamilia }).select().single()
+      );
+      if (errFamilia) {
+        alert('Error al crear la familia: ' + errFamilia.message);
+        return false;
+      }
+      householdId = nuevaFamilia.id;
+      cacheHouseholds = []; // forzar recarga la próxima vez
+    }
+
+    const nombre = document.getElementById('pNombre').value.trim();
+    const apellido = document.getElementById('pApellido').value.trim();
+    const segundoNombre = document.getElementById('pSegundoNombre').value.trim();
+    const segundoApellido = document.getElementById('pSegundoApellido').value.trim();
+
+    const payload = {
+      nombre,
+      segundo_nombre: segundoNombre || null,
+      apellido,
+      segundo_apellido: segundoApellido || null,
+      fecha_nacimiento: document.getElementById('pFechaNacimiento').value || null,
+      telefono: document.getElementById('pTelefono').value.trim() || null,
+      correo: document.getElementById('pCorreo').value.trim() || null,
+      household_id: householdId || null,
+      address_mode: 'own',
+      street: document.getElementById('pStreet').value.trim() || null,
+      apartment: document.getElementById('pApartment').value.trim() || null,
+      city: document.getElementById('pCity').value.trim() || null,
+      state: document.getElementById('pState').value.trim() || null,
+      zip: document.getElementById('pZip').value.trim() || null,
+      emergency_contact_name: document.getElementById('pEmergenciaNombre').value.trim() || null,
+      emergency_contact_phone: document.getElementById('pEmergenciaTelefono').value.trim() || null,
+      emergency_contact_relationship: document.getElementById('pEmergenciaRelacion').value.trim() || null,
+      notas: document.getElementById('pNotas').value.trim() || null,
+    };
+
+    const idActual = document.getElementById('personaId').value;
+    let resultado;
+    if (idActual) {
+      resultado = await sbCall(sb.from('personas').update(payload).eq('id', idActual));
+    } else {
+      resultado = await sbCall(sb.from('personas').insert(payload));
+    }
+
+    if (resultado.error) {
+      alert('Error al guardar: ' + resultado.error.message);
+      return false;
+    }
+
+    cerrarModalPersona();
+    await cargarDirectorio();
+  } finally {
+    btnGuardar.disabled = false;
+    btnGuardar.textContent = 'Guardar';
+  }
+
+  return false;
+}
+
+async function archivarPersonaActual() {
+  const idActual = document.getElementById('personaId').value;
+  if (!idActual) return;
+  if (!confirm('¿Archivar este miembro? No se elimina, solo deja de aparecer en el directorio activo.')) return;
+
+  const { error } = await sbCall(
+    sb.from('personas').update({ archivado: true, archivado_en: new Date().toISOString() }).eq('id', idActual)
+  );
+
+  if (error) {
+    alert('Error al archivar: ' + error.message);
+    return;
+  }
+
+  cerrarModalPersona();
+  await cargarDirectorio();
+}
+
+// ── Cuidado Pastoral ──────────────────────────────────────────────────────
+let cacheSeguimientos = [];
+
+function mostrarPastoral() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaPastoral').style.display = 'block';
+  cargarSeguimientos();
+}
+
+function formatoFecha(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${m}/${d}/${y}`;
+}
+
+function esFechaVencida(iso) {
+  if (!iso) return false;
+  return iso < new Date().toISOString().slice(0, 10);
+}
+
+async function cargarSeguimientos() {
+  const lista = document.getElementById('listaSeguimientos');
+  lista.innerHTML = '<div class="estadoCargando">Cargando seguimientos…</div>';
+
+  // Aseguramos tener el directorio de personas en cache para mostrar nombres y buscar
+  if (cacheDirectorio.length === 0) {
+    await sbCall(sb.from('personas').select('*').eq('archivado', false)).then(({ data }) => {
+      if (data) cacheDirectorio = data;
+    });
+  }
+
+  const { data, error } = await sbCall(
+    sb.from('seguimientos_pastorales')
+      .select('*')
+      .order('fecha', { ascending: false })
+  );
+
+  if (error) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+    return;
+  }
+
+  cacheSeguimientos = data || [];
+  renderSeguimientos(cacheSeguimientos);
+}
+
+function nombrePersonaPorId(id) {
+  const p = cacheDirectorio.find(x => x.id === id);
+  if (!p) return 'Persona no encontrada';
+  return p.nombre_completo || `${p.nombre} ${p.apellido}`;
+}
+
+function renderSeguimientos(filas) {
+  const lista = document.getElementById('listaSeguimientos');
+
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay seguimientos registrados.</div>';
+    return;
+  }
+
+  lista.innerHTML = filas.map(s => {
+    const vencido = esFechaVencida(s.fecha_proximo_seguimiento);
+    const proximoHtml = s.fecha_proximo_seguimiento
+      ? `<span class="${vencido ? 'proximoVencido' : ''}">Próximo: ${formatoFecha(s.fecha_proximo_seguimiento)}${vencido ? ' (vencido)' : ''}</span>`
+      : '';
+    return `
+      <div class="tarjetaSeguimiento" onclick="abrirFormSeguimiento('${s.id}')">
+        <div>
+          <div class="nombrePersona">${nombrePersonaPorId(s.persona_id)}</div>
+          <div class="metaLinea">
+            <span class="badge badge-tipo">${s.tipo}</span>
+            &nbsp;${formatoFecha(s.fecha)}
+            ${proximoHtml ? ' · ' + proximoHtml : ''}
+          </div>
+          ${s.notas ? `<div class="notasPreview">${s.notas.length > 140 ? s.notas.slice(0, 140) + '…' : s.notas}</div>` : ''}
+        </div>
+        <span class="badge badge-prioridad-${s.prioridad}">${s.prioridad}</span>
+      </div>`;
+  }).join('');
+}
+
+function filtrarSeguimientos() {
+  const q = document.getElementById('buscadorPastoral').value.trim().toLowerCase();
+  if (!q) { renderSeguimientos(cacheSeguimientos); return; }
+  const filtrados = cacheSeguimientos.filter(s =>
+    nombrePersonaPorId(s.persona_id).toLowerCase().includes(q)
+  );
+  renderSeguimientos(filtrados);
+}
+
+// ── Modal Seguimiento ────────────────────────────────────────────────────
+function abrirFormSeguimiento(id) {
+  const form = document.getElementById('formSeguimiento');
+  form.reset();
+  document.getElementById('seguimientoId').value = '';
+  document.getElementById('sPersonaId').value = '';
+  document.getElementById('sPersonaBuscar').value = '';
+  document.getElementById('sPersonaSeleccionada').textContent = '';
+  document.getElementById('sugerenciasPersona').style.display = 'none';
+  document.getElementById('btnEliminarSeguimiento').style.display = 'none';
+  document.getElementById('sFecha').value = new Date().toISOString().slice(0, 10);
+
+  if (id) {
+    const s = cacheSeguimientos.find(x => x.id === id);
+    if (s) {
+      document.getElementById('modalSeguimientoTitulo').textContent = 'Editar Seguimiento';
+      document.getElementById('seguimientoId').value = s.id;
+      document.getElementById('sPersonaId').value = s.persona_id;
+      document.getElementById('sPersonaSeleccionada').textContent = nombrePersonaPorId(s.persona_id);
+      document.getElementById('sFecha').value = s.fecha;
+      document.getElementById('sTipo').value = s.tipo;
+      document.getElementById('sPrioridad').value = s.prioridad;
+      document.getElementById('sProximoSeguimiento').value = s.fecha_proximo_seguimiento || '';
+      document.getElementById('sNotas').value = s.notas || '';
+      document.getElementById('btnEliminarSeguimiento').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalSeguimientoTitulo').textContent = 'Nuevo Seguimiento';
+  }
+
+  document.getElementById('modalSeguimiento').classList.add('abierto');
+}
+
+function cerrarModalSeguimiento() {
+  document.getElementById('modalSeguimiento').classList.remove('abierto');
+}
+
+function filtrarPersonaSeguimiento() {
+  const q = document.getElementById('sPersonaBuscar').value.trim().toLowerCase();
+  const contenedor = document.getElementById('sugerenciasPersona');
+
+  if (q.length < 2) {
+    contenedor.style.display = 'none';
+    return;
+  }
+
+  const coincidencias = cacheDirectorio.filter(p =>
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (coincidencias.length === 0) {
+    contenedor.innerHTML = '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+    contenedor.style.display = 'block';
+    return;
+  }
+
+  contenedor.innerHTML = coincidencias.map(p => `
+    <div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;"
+         onmousedown="seleccionarPersonaSeguimiento('${p.id}')">
+      ${p.nombre_completo || `${p.nombre} ${p.apellido}`}
+    </div>`).join('');
+  contenedor.style.display = 'block';
+}
+
+function seleccionarPersonaSeguimiento(id) {
+  document.getElementById('sPersonaId').value = id;
+  document.getElementById('sPersonaSeleccionada').textContent = nombrePersonaPorId(id);
+  document.getElementById('sPersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersona').style.display = 'none';
+}
+
+async function guardarSeguimiento(evt) {
+  evt.preventDefault();
+
+  const personaId = document.getElementById('sPersonaId').value;
+  if (!personaId) {
+    alert('Selecciona una persona de la lista de sugerencias.');
+    return false;
+  }
+
+  const id = document.getElementById('seguimientoId').value;
+  const sesion = getSesion();
+
+  const payload = {
+    persona_id: personaId,
+    fecha: document.getElementById('sFecha').value,
+    tipo: document.getElementById('sTipo').value,
+    prioridad: document.getElementById('sPrioridad').value,
+    fecha_proximo_seguimiento: document.getElementById('sProximoSeguimiento').value || null,
+    notas: document.getElementById('sNotas').value.trim() || null,
+    atendido_por: sesion.usuario?.id || null,
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('seguimientos_pastorales').update(payload).eq('id', id)));
+  } else {
+    payload.creado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('seguimientos_pastorales').insert(payload)));
+  }
+
+  if (error) {
+    alert('Error al guardar: ' + error.message);
+    return false;
+  }
+
+  cerrarModalSeguimiento();
+  cargarSeguimientos();
+  return false;
+}
+
+async function eliminarSeguimiento() {
+  const id = document.getElementById('seguimientoId').value;
+  if (!id) return;
+  if (!confirm('¿Eliminar este seguimiento? Esta acción no se puede deshacer.')) return;
+
+  const { error } = await sbCall(sb.from('seguimientos_pastorales').delete().eq('id', id));
+  if (error) {
+    alert('Error al eliminar: ' + error.message);
+    return;
+  }
+
+  cerrarModalSeguimiento();
+  cargarSeguimientos();
+}
+
+// ── Voluntarios ───────────────────────────────────────────────────────────
+let cacheVoluntarios = [];
+let cacheMinisterios = [];
+
+function mostrarVoluntarios() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaVoluntarios').style.display = 'block';
+  cargarVoluntarios();
+}
+
+function nombreMinisterioPorId(id) {
+  const m = cacheMinisterios.find(x => x.id === id);
+  return m ? m.nombre : 'Ministerio no encontrado';
+}
+
+async function cargarVoluntarios() {
+  const lista = document.getElementById('listaVoluntarios');
+  lista.innerHTML = '<div class="estadoCargando">Cargando voluntarios…</div>';
+
+  if (cacheDirectorio.length === 0) {
+    await sbCall(sb.from('personas').select('*').eq('archivado', false)).then(({ data }) => {
+      if (data) cacheDirectorio = data;
+    });
+  }
+
+  const [{ data: ministerios, error: errMin }, { data: asignaciones, error: errAsig }] = await Promise.all([
+    sbCall(sb.from('ministerios').select('*').order('nombre', { ascending: true })),
+    sbCall(sb.from('voluntarios_asignaciones').select('*').order('creado_en', { ascending: false })),
+  ]);
+
+  if (errMin || errAsig) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${(errMin || errAsig).message}</div>`;
+    return;
+  }
+
+  cacheMinisterios = ministerios || [];
+  cacheVoluntarios = asignaciones || [];
+
+  const selectMinisterio = document.getElementById('vMinisterio');
+  selectMinisterio.innerHTML = '<option value="">Selecciona…</option>' +
+    cacheMinisterios.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+
+  renderVoluntarios(cacheVoluntarios);
+}
+
+function renderVoluntarios(filas) {
+  const lista = document.getElementById('listaVoluntarios');
+
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay asignaciones de voluntarios registradas.</div>';
+    return;
+  }
+
+  lista.innerHTML = filas.map(v => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormVoluntario('${v.id}')">
+      <div>
+        <div class="nombrePersona">${nombrePersonaPorId(v.persona_id)}</div>
+        <div class="metaLinea">
+          <span class="badge badge-tipo">${nombreMinisterioPorId(v.ministerio_id)}</span>
+          ${v.rol ? ' · ' + v.rol : ''}
+          ${v.fecha_inicio ? ' · Desde ' + formatoFecha(v.fecha_inicio) : ''}
+        </div>
+        ${v.disponibilidad ? `<div class="notasPreview">📅 ${v.disponibilidad}</div>` : ''}
+      </div>
+      <span class="badge badge-estado-${v.estado}">${v.estado}</span>
+    </div>`).join('');
+}
+
+function filtrarVoluntarios() {
+  const q = document.getElementById('buscadorVoluntarios').value.trim().toLowerCase();
+  if (!q) { renderVoluntarios(cacheVoluntarios); return; }
+  const filtrados = cacheVoluntarios.filter(v =>
+    nombrePersonaPorId(v.persona_id).toLowerCase().includes(q) ||
+    nombreMinisterioPorId(v.ministerio_id).toLowerCase().includes(q)
+  );
+  renderVoluntarios(filtrados);
+}
+
+// ── Modal Voluntario ─────────────────────────────────────────────────────
+function abrirFormVoluntario(id) {
+  const form = document.getElementById('formVoluntario');
+  form.reset();
+  document.getElementById('vAsignacionId').value = '';
+  document.getElementById('vPersonaId').value = '';
+  document.getElementById('vPersonaBuscar').value = '';
+  document.getElementById('vPersonaSeleccionada').textContent = '';
+  document.getElementById('sugerenciasPersonaVoluntario').style.display = 'none';
+  document.getElementById('btnEliminarVoluntario').style.display = 'none';
+  document.getElementById('vFechaInicio').value = new Date().toISOString().slice(0, 10);
+
+  if (id) {
+    const v = cacheVoluntarios.find(x => x.id === id);
+    if (v) {
+      document.getElementById('modalVoluntarioTitulo').textContent = 'Editar Asignación';
+      document.getElementById('vAsignacionId').value = v.id;
+      document.getElementById('vPersonaId').value = v.persona_id;
+      document.getElementById('vPersonaSeleccionada').textContent = nombrePersonaPorId(v.persona_id);
+      document.getElementById('vMinisterio').value = v.ministerio_id;
+      document.getElementById('vRol').value = v.rol || '';
+      document.getElementById('vFechaInicio').value = v.fecha_inicio || '';
+      document.getElementById('vEstado').value = v.estado;
+      document.getElementById('vDisponibilidad').value = v.disponibilidad || '';
+      document.getElementById('vNotas').value = v.notas || '';
+      document.getElementById('btnEliminarVoluntario').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalVoluntarioTitulo').textContent = 'Nueva Asignación';
+  }
+
+  document.getElementById('modalVoluntario').classList.add('abierto');
+}
+
+function cerrarModalVoluntario() {
+  document.getElementById('modalVoluntario').classList.remove('abierto');
+}
+
+function filtrarPersonaVoluntario() {
+  const q = document.getElementById('vPersonaBuscar').value.trim().toLowerCase();
+  const contenedor = document.getElementById('sugerenciasPersonaVoluntario');
+
+  if (q.length < 2) {
+    contenedor.style.display = 'none';
+    return;
+  }
+
+  const coincidencias = cacheDirectorio.filter(p =>
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (coincidencias.length === 0) {
+    contenedor.innerHTML = '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+    contenedor.style.display = 'block';
+    return;
+  }
+
+  contenedor.innerHTML = coincidencias.map(p => `
+    <div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;"
+         onmousedown="seleccionarPersonaVoluntario('${p.id}')">
+      ${p.nombre_completo || `${p.nombre} ${p.apellido}`}
+    </div>`).join('');
+  contenedor.style.display = 'block';
+}
+
+function seleccionarPersonaVoluntario(id) {
+  document.getElementById('vPersonaId').value = id;
+  document.getElementById('vPersonaSeleccionada').textContent = nombrePersonaPorId(id);
+  document.getElementById('vPersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersonaVoluntario').style.display = 'none';
+}
+
+async function guardarVoluntario(evt) {
+  evt.preventDefault();
+
+  const personaId = document.getElementById('vPersonaId').value;
+  const ministerioId = document.getElementById('vMinisterio').value;
+  if (!personaId) {
+    alert('Selecciona una persona de la lista de sugerencias.');
+    return false;
+  }
+  if (!ministerioId) {
+    alert('Selecciona un ministerio.');
+    return false;
+  }
+
+  const id = document.getElementById('vAsignacionId').value;
+  const sesion = getSesion();
+
+  const payload = {
+    persona_id: personaId,
+    ministerio_id: ministerioId,
+    rol: document.getElementById('vRol').value.trim() || null,
+    fecha_inicio: document.getElementById('vFechaInicio').value || null,
+    estado: document.getElementById('vEstado').value,
+    disponibilidad: document.getElementById('vDisponibilidad').value.trim() || null,
+    notas: document.getElementById('vNotas').value.trim() || null,
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('voluntarios_asignaciones').update(payload).eq('id', id)));
+  } else {
+    payload.creado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('voluntarios_asignaciones').insert(payload)));
+  }
+
+  if (error) {
+    alert('Error al guardar: ' + error.message);
+    return false;
+  }
+
+  cerrarModalVoluntario();
+  cargarVoluntarios();
+  return false;
+}
+
+async function eliminarVoluntario() {
+  const id = document.getElementById('vAsignacionId').value;
+  if (!id) return;
+  if (!confirm('¿Eliminar esta asignación? Esta acción no se puede deshacer.')) return;
+
+  const { error } = await sbCall(sb.from('voluntarios_asignaciones').delete().eq('id', id));
+  if (error) {
+    alert('Error al eliminar: ' + error.message);
+    return;
+  }
+
+  cerrarModalVoluntario();
+  cargarVoluntarios();
+}
+
+// ── Comunicaciones ────────────────────────────────────────────────────────
+let cacheAnuncios = [];
+let cacheMensajes = [];
+
+function mostrarComunicaciones() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaComunicaciones').style.display = 'block';
+  cargarAnuncios();
+  cargarMensajes();
+}
+
+function cambiarSubtabComunicaciones(tab) {
+  const esAnuncios = tab === 'anuncios';
+  document.getElementById('subtabAnunciosBtn').classList.toggle('activa', esAnuncios);
+  document.getElementById('subtabMensajesBtn').classList.toggle('activa', !esAnuncios);
+  document.getElementById('subvistaAnuncios').style.display = esAnuncios ? 'block' : 'none';
+  document.getElementById('subvistaMensajes').style.display = esAnuncios ? 'none' : 'block';
+}
+
+// ── Anuncios ──────────────────────────────────────────────────────────────
+async function cargarAnuncios() {
+  const lista = document.getElementById('listaAnuncios');
+  lista.innerHTML = '<div class="estadoCargando">Cargando anuncios…</div>';
+
+  const { data, error } = await sbCall(
+    sb.from('anuncios').select('*').order('fecha_publicacion', { ascending: false })
+  );
+
+  if (error) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+    return;
+  }
+
+  cacheAnuncios = data || [];
+  renderAnuncios(cacheAnuncios);
+}
+
+function renderAnuncios(filas) {
+  const lista = document.getElementById('listaAnuncios');
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay anuncios registrados.</div>';
+    return;
+  }
+  lista.innerHTML = filas.map(a => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormAnuncio('${a.id}')">
+      <div>
+        <div class="nombrePersona">${a.titulo}</div>
+        <div class="metaLinea">
+          <span class="badge badge-categoria-${a.categoria}">${a.categoria}</span>
+          &nbsp;${formatoFecha(a.fecha_publicacion)}
+          ${a.fecha_expiracion ? ' · Expira ' + formatoFecha(a.fecha_expiracion) : ''}
+        </div>
+        <div class="notasPreview">${a.contenido.length > 140 ? a.contenido.slice(0, 140) + '…' : a.contenido}</div>
+      </div>
+      <span class="badge badge-estado-${a.activo ? 'Activo' : 'Inactivo'}">${a.activo ? 'Activo' : 'Inactivo'}</span>
+    </div>`).join('');
+}
+
+function filtrarAnuncios() {
+  const q = document.getElementById('buscadorAnuncios').value.trim().toLowerCase();
+  if (!q) { renderAnuncios(cacheAnuncios); return; }
+  renderAnuncios(cacheAnuncios.filter(a => a.titulo.toLowerCase().includes(q)));
+}
+
+function abrirFormAnuncio(id) {
+  document.getElementById('formAnuncio').reset();
+  document.getElementById('aAnuncioId').value = '';
+  document.getElementById('btnEliminarAnuncio').style.display = 'none';
+  document.getElementById('aFechaPublicacion').value = new Date().toISOString().slice(0, 10);
+
+  if (id) {
+    const a = cacheAnuncios.find(x => x.id === id);
+    if (a) {
+      document.getElementById('modalAnuncioTitulo').textContent = 'Editar Anuncio';
+      document.getElementById('aAnuncioId').value = a.id;
+      document.getElementById('aTitulo').value = a.titulo;
+      document.getElementById('aContenido').value = a.contenido;
+      document.getElementById('aCategoria').value = a.categoria;
+      document.getElementById('aFechaPublicacion').value = a.fecha_publicacion || '';
+      document.getElementById('aFechaExpiracion').value = a.fecha_expiracion || '';
+      document.getElementById('aActivo').value = String(a.activo);
+      document.getElementById('btnEliminarAnuncio').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalAnuncioTitulo').textContent = 'Nuevo Anuncio';
+  }
+  document.getElementById('modalAnuncio').classList.add('abierto');
+}
+
+function cerrarModalAnuncio() {
+  document.getElementById('modalAnuncio').classList.remove('abierto');
+}
+
+async function guardarAnuncio(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('aAnuncioId').value;
+  const sesion = getSesion();
+
+  const payload = {
+    titulo: document.getElementById('aTitulo').value.trim(),
+    contenido: document.getElementById('aContenido').value.trim(),
+    categoria: document.getElementById('aCategoria').value,
+    fecha_publicacion: document.getElementById('aFechaPublicacion').value || null,
+    fecha_expiracion: document.getElementById('aFechaExpiracion').value || null,
+    activo: document.getElementById('aActivo').value === 'true',
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('anuncios').update(payload).eq('id', id)));
+  } else {
+    payload.creado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('anuncios').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalAnuncio();
+  cargarAnuncios();
+  return false;
+}
+
+async function eliminarAnuncio() {
+  const id = document.getElementById('aAnuncioId').value;
+  if (!id || !confirm('¿Eliminar este anuncio?')) return;
+  const { error } = await sbCall(sb.from('anuncios').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalAnuncio();
+  cargarAnuncios();
+}
+
+// ── Mensajes enviados ─────────────────────────────────────────────────────
+async function cargarMensajes() {
+  const lista = document.getElementById('listaMensajes');
+  lista.innerHTML = '<div class="estadoCargando">Cargando mensajes…</div>';
+
+  const { data, error } = await sbCall(
+    sb.from('mensajes_enviados').select('*').order('fecha_envio', { ascending: false })
+  );
+
+  if (error) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+    return;
+  }
+
+  cacheMensajes = data || [];
+  renderMensajes(cacheMensajes);
+}
+
+function renderMensajes(filas) {
+  const lista = document.getElementById('listaMensajes');
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay mensajes registrados.</div>';
+    return;
+  }
+  lista.innerHTML = filas.map(m => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormMensaje('${m.id}')">
+      <div>
+        <div class="nombrePersona">${m.asunto}</div>
+        <div class="metaLinea">
+          <span class="badge badge-tipo">${m.canal}</span>
+          &nbsp;${formatoFecha(m.fecha_envio)} · A: ${m.destinatarios}
+        </div>
+        <div class="notasPreview">${m.contenido.length > 140 ? m.contenido.slice(0, 140) + '…' : m.contenido}</div>
+      </div>
+    </div>`).join('');
+}
+
+function filtrarMensajes() {
+  const q = document.getElementById('buscadorMensajes').value.trim().toLowerCase();
+  if (!q) { renderMensajes(cacheMensajes); return; }
+  renderMensajes(cacheMensajes.filter(m => m.asunto.toLowerCase().includes(q)));
+}
+
+function abrirFormMensaje(id) {
+  document.getElementById('formMensaje').reset();
+  document.getElementById('mMensajeId').value = '';
+  document.getElementById('btnEliminarMensaje').style.display = 'none';
+  document.getElementById('mFechaEnvio').value = new Date().toISOString().slice(0, 10);
+
+  if (id) {
+    const m = cacheMensajes.find(x => x.id === id);
+    if (m) {
+      document.getElementById('modalMensajeTitulo').textContent = 'Editar Mensaje';
+      document.getElementById('mMensajeId').value = m.id;
+      document.getElementById('mAsunto').value = m.asunto;
+      document.getElementById('mContenido').value = m.contenido;
+      document.getElementById('mCanal').value = m.canal;
+      document.getElementById('mFechaEnvio').value = m.fecha_envio || '';
+      document.getElementById('mDestinatarios').value = m.destinatarios;
+      document.getElementById('btnEliminarMensaje').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalMensajeTitulo').textContent = 'Registrar Mensaje';
+  }
+  document.getElementById('modalMensaje').classList.add('abierto');
+}
+
+function cerrarModalMensaje() {
+  document.getElementById('modalMensaje').classList.remove('abierto');
+}
+
+async function guardarMensaje(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('mMensajeId').value;
+  const sesion = getSesion();
+
+  const payload = {
+    asunto: document.getElementById('mAsunto').value.trim(),
+    contenido: document.getElementById('mContenido').value.trim(),
+    canal: document.getElementById('mCanal').value,
+    fecha_envio: document.getElementById('mFechaEnvio').value || null,
+    destinatarios: document.getElementById('mDestinatarios').value.trim(),
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('mensajes_enviados').update(payload).eq('id', id)));
+  } else {
+    payload.enviado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('mensajes_enviados').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalMensaje();
+  cargarMensajes();
+  return false;
+}
+
+async function eliminarMensaje() {
+  const id = document.getElementById('mMensajeId').value;
+  if (!id || !confirm('¿Eliminar este registro de mensaje?')) return;
+  const { error } = await sbCall(sb.from('mensajes_enviados').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalMensaje();
+  cargarMensajes();
+}
+
+// ── Asistencia ────────────────────────────────────────────────────────────
+let cacheAsistencia = [];
+let cacheTiposServicio = [];
+let presentesSeleccionados = new Set();
+
+function mostrarAsistencia() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaAsistencia').style.display = 'block';
+  cargarAsistencia();
+}
+
+function nombreTipoServicioPorId(id) {
+  const t = cacheTiposServicio.find(x => x.id === id);
+  return t ? t.nombre : 'Tipo no encontrado';
+}
+
+async function cargarAsistencia() {
+  const lista = document.getElementById('listaAsistencia');
+  lista.innerHTML = '<div class="estadoCargando">Cargando registros…</div>';
+
+  if (cacheDirectorio.length === 0) {
+    await sbCall(sb.from('personas').select('*').eq('archivado', false)).then(({ data }) => {
+      if (data) cacheDirectorio = data;
+    });
+  }
+
+  const [{ data: tipos, error: errTipos }, { data: registros, error: errReg }] = await Promise.all([
+    sbCall(sb.from('tipos_servicio').select('*').eq('activo', true).order('nombre', { ascending: true })),
+    sbCall(sb.from('asistencia_registros').select('*').order('fecha', { ascending: false })),
+  ]);
+
+  if (errTipos || errReg) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${(errTipos || errReg).message}</div>`;
+    return;
+  }
+
+  cacheTiposServicio = tipos || [];
+  cacheAsistencia = registros || [];
+
+  const select = document.getElementById('asTipoServicio');
+  select.innerHTML = cacheTiposServicio.map(t => `<option value="${t.id}">${t.nombre}</option>`).join('');
+
+  renderAsistencia(cacheAsistencia);
+}
+
+function renderAsistencia(filas) {
+  const lista = document.getElementById('listaAsistencia');
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay registros de asistencia.</div>';
+    return;
+  }
+  lista.innerHTML = filas.map(r => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormAsistencia('${r.id}')">
+      <div>
+        <div class="nombrePersona">${nombreTipoServicioPorId(r.tipo_servicio_id)}</div>
+        <div class="metaLinea">${formatoFecha(r.fecha)}</div>
+        ${r.notas ? `<div class="notasPreview">${r.notas}</div>` : ''}
+      </div>
+      <span class="badge badge-tipo">${r.total_asistentes} asistentes</span>
+    </div>`).join('');
+}
+
+function filtrarAsistencia() {
+  const q = document.getElementById('buscadorAsistencia').value.trim().toLowerCase();
+  if (!q) { renderAsistencia(cacheAsistencia); return; }
+  renderAsistencia(cacheAsistencia.filter(r => nombreTipoServicioPorId(r.tipo_servicio_id).toLowerCase().includes(q)));
+}
+
+// ── Modal Asistencia ─────────────────────────────────────────────────────
+async function abrirFormAsistencia(id) {
+  document.getElementById('formAsistencia').reset();
+  document.getElementById('asRegistroId').value = '';
+  document.getElementById('btnEliminarAsistencia').style.display = 'none';
+  document.getElementById('asFecha').value = new Date().toISOString().slice(0, 10);
+  presentesSeleccionados = new Set();
+  document.getElementById('checklistAsistenciaWrap').style.display = 'none';
+  document.getElementById('buscadorChecklistAsistencia').value = '';
+
+  if (id) {
+    const r = cacheAsistencia.find(x => x.id === id);
+    if (r) {
+      document.getElementById('modalAsistenciaTitulo').textContent = 'Editar Registro';
+      document.getElementById('asRegistroId').value = r.id;
+      document.getElementById('asTipoServicio').value = r.tipo_servicio_id;
+      document.getElementById('asFecha').value = r.fecha;
+      document.getElementById('asTotal').value = r.total_asistentes;
+      document.getElementById('asNotas').value = r.notas || '';
+      document.getElementById('btnEliminarAsistencia').style.display = 'inline-block';
+
+      const { data: detalle } = await sbCall(
+        sb.from('asistencia_detalle').select('persona_id').eq('registro_id', id)
+      );
+      if (detalle) presentesSeleccionados = new Set(detalle.map(d => d.persona_id));
+    }
+  } else {
+    document.getElementById('modalAsistenciaTitulo').textContent = 'Nuevo Registro';
+  }
+
+  actualizarContadorPresentes();
+  renderChecklistAsistencia();
+  document.getElementById('modalAsistencia').classList.add('abierto');
+}
+
+function cerrarModalAsistencia() {
+  document.getElementById('modalAsistencia').classList.remove('abierto');
+}
+
+function toggleChecklistAsistencia() {
+  const wrap = document.getElementById('checklistAsistenciaWrap');
+  wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+}
+
+function actualizarContadorPresentes() {
+  document.getElementById('contadorPresentes').textContent = `${presentesSeleccionados.size} marcadas`;
+}
+
+function renderChecklistAsistencia() {
+  const q = document.getElementById('buscadorChecklistAsistencia').value.trim().toLowerCase();
+  const contenedor = document.getElementById('checklistAsistencia');
+
+  const personas = q
+    ? cacheDirectorio.filter(p => (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q))
+    : cacheDirectorio.slice(0, 50);
+
+  if (personas.length === 0) {
+    contenedor.innerHTML = '<div style="padding:8px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+    return;
+  }
+
+  contenedor.innerHTML = personas.map(p => {
+    const marcado = presentesSeleccionados.has(p.id);
+    const nombre = p.nombre_completo || `${p.nombre} ${p.apellido}`;
+    return `
+      <label style="display:flex; align-items:center; gap:8px; padding:6px 4px; font-size:0.85rem; cursor:pointer;">
+        <input type="checkbox" ${marcado ? 'checked' : ''} onchange="togglePersonaPresente('${p.id}', this.checked)">
+        ${nombre}
+      </label>`;
+  }).join('');
+}
+
+function togglePersonaPresente(id, marcado) {
+  if (marcado) presentesSeleccionados.add(id);
+  else presentesSeleccionados.delete(id);
+  actualizarContadorPresentes();
+}
+
+async function guardarAsistencia(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('asRegistroId').value;
+  const sesion = getSesion();
+
+  const payload = {
+    tipo_servicio_id: document.getElementById('asTipoServicio').value,
+    fecha: document.getElementById('asFecha').value,
+    total_asistentes: parseInt(document.getElementById('asTotal').value, 10) || 0,
+    notas: document.getElementById('asNotas').value.trim() || null,
+  };
+
+  let registroId = id;
+  let error;
+
+  if (id) {
+    ({ error } = await sbCall(sb.from('asistencia_registros').update(payload).eq('id', id)));
+  } else {
+    payload.creado_por = sesion.usuario?.id || null;
+    const resultado = await sbCall(sb.from('asistencia_registros').insert(payload).select().single());
+    error = resultado.error;
+    if (resultado.data) registroId = resultado.data.id;
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+
+  // Sincronizar detalle: borrar existente y volver a insertar la selección actual
+  await sbCall(sb.from('asistencia_detalle').delete().eq('registro_id', registroId));
+  if (presentesSeleccionados.size > 0) {
+    const filas = Array.from(presentesSeleccionados).map(personaId => ({
+      registro_id: registroId, persona_id: personaId,
+    }));
+    const { error: errDetalle } = await sbCall(sb.from('asistencia_detalle').insert(filas));
+    if (errDetalle) {
+      alert('El registro se guardó, pero hubo un error al guardar las personas marcadas: ' + errDetalle.message);
+    }
+  }
+
+  cerrarModalAsistencia();
+  cargarAsistencia();
+  return false;
+}
+
+async function eliminarAsistencia() {
+  const id = document.getElementById('asRegistroId').value;
+  if (!id || !confirm('¿Eliminar este registro de asistencia? Esto también borra las personas marcadas.')) return;
+  const { error } = await sbCall(sb.from('asistencia_registros').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalAsistencia();
+  cargarAsistencia();
+}
+
+// ── Administración ────────────────────────────────────────────────────────
+let cacheUsuariosAdmin = [];
+let cacheUsuarioApps = [];
+
+function mostrarAdministracion() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaAdministracion').style.display = 'block';
+  cargarUsuariosAdmin();
+  cargarCatalogos();
+}
+
+function cambiarSubtabAdmin(tab) {
+  const esUsuarios = tab === 'usuarios';
+  document.getElementById('subtabUsuariosBtn').classList.toggle('activa', esUsuarios);
+  document.getElementById('subtabCatalogosBtn').classList.toggle('activa', !esUsuarios);
+  document.getElementById('subvistaUsuarios').style.display = esUsuarios ? 'block' : 'none';
+  document.getElementById('subvistaCatalogos').style.display = esUsuarios ? 'none' : 'block';
+}
+
+// ── Usuarios y Roles ──────────────────────────────────────────────────────
+async function cargarUsuariosAdmin() {
+  const lista = document.getElementById('listaUsuariosAdmin');
+  lista.innerHTML = '<div class="estadoCargando">Cargando usuarios…</div>';
+
+  const [{ data: usuarios, error: errU }, { data: apps, error: errA }] = await Promise.all([
+    sbCall(sb.from('usuarios').select('*').order('nombre', { ascending: true })),
+    sbCall(sb.from('usuario_apps').select('*').eq('app', 'church_admin')),
+  ]);
+
+  if (errU || errA) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${(errU || errA).message}</div>`;
+    return;
+  }
+
+  cacheUsuariosAdmin = usuarios || [];
+  cacheUsuarioApps = apps || [];
+  renderUsuariosAdmin();
+}
+
+function rolDeUsuario(usuarioId) {
+  const fila = cacheUsuarioApps.find(a => a.usuario_id === usuarioId);
+  return fila ? fila.rol : null;
+}
+
+function renderUsuariosAdmin() {
+  const lista = document.getElementById('listaUsuariosAdmin');
+  if (cacheUsuariosAdmin.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay usuarios registrados.</div>';
+    return;
+  }
+  lista.innerHTML = cacheUsuariosAdmin.map(u => {
+    const rol = rolDeUsuario(u.id);
+    return `
+      <div class="tarjetaSeguimiento" onclick="abrirModalRolUsuario('${u.id}')">
+        <div>
+          <div class="nombrePersona">${u.nombre || u.correo}</div>
+          <div class="metaLinea">${u.correo}${u.activo === false ? ' · Cuenta inactiva' : ''}</div>
+        </div>
+        ${rol ? `<span class="badge badge-tipo">${rol}</span>` : `<span class="badge badge-estado-Inactivo">Sin acceso</span>`}
+      </div>`;
+  }).join('');
+}
+
+function abrirModalRolUsuario(usuarioId) {
+  const u = cacheUsuariosAdmin.find(x => x.id === usuarioId);
+  if (!u) return;
+  document.getElementById('ruUsuarioId').value = usuarioId;
+  document.getElementById('ruNombreUsuario').textContent = `${u.nombre || u.correo} (${u.correo})`;
+  document.getElementById('ruRol').value = rolDeUsuario(usuarioId) || '';
+  document.getElementById('modalRolUsuario').classList.add('abierto');
+}
+
+function cerrarModalRolUsuario() {
+  document.getElementById('modalRolUsuario').classList.remove('abierto');
+}
+
+async function guardarRolUsuario(evt) {
+  evt.preventDefault();
+  const usuarioId = document.getElementById('ruUsuarioId').value;
+  const nuevoRol = document.getElementById('ruRol').value;
+  const filaExistente = cacheUsuarioApps.find(a => a.usuario_id === usuarioId);
+
+  let error;
+  if (!nuevoRol) {
+    // "Sin acceso" — quitar el registro si existía
+    if (filaExistente) {
+      ({ error } = await sbCall(sb.from('usuario_apps').delete().eq('usuario_id', usuarioId).eq('app', 'church_admin')));
+    }
+  } else if (filaExistente) {
+    ({ error } = await sbCall(
+      sb.from('usuario_apps').update({ rol: nuevoRol }).eq('usuario_id', usuarioId).eq('app', 'church_admin')
+    ));
+  } else {
+    ({ error } = await sbCall(
+      sb.from('usuario_apps').insert({ usuario_id: usuarioId, app: 'church_admin', rol: nuevoRol, permisos: {}, activo: true })
+    ));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalRolUsuario();
+  cargarUsuariosAdmin();
+  return false;
+}
+
+// ── Catálogos: Ministerios y Tipos de Servicio ───────────────────────────
+async function cargarCatalogos() {
+  const [{ data: ministerios }, { data: tipos }] = await Promise.all([
+    sbCall(sb.from('ministerios').select('*').order('nombre', { ascending: true })),
+    sbCall(sb.from('tipos_servicio').select('*').order('nombre', { ascending: true })),
+  ]);
+  cacheMinisterios = ministerios || [];
+  cacheTiposServicio = tipos || [];
+  renderCatalogoMinisterios();
+  renderCatalogoTiposServicio();
+}
+
+function renderCatalogoMinisterios() {
+  const cont = document.getElementById('listaCatalogoMinisterios');
+  if (cacheMinisterios.length === 0) {
+    cont.innerHTML = '<div class="estadoVacio">Sin ministerios registrados.</div>';
+    return;
+  }
+  cont.innerHTML = cacheMinisterios.map(m => `
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
+      <span>${m.nombre}</span>
+      <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="toggleActivoMinisterio('${m.id}', ${!m.activo})">
+        ${m.activo ? 'Activo' : 'Inactivo'}
+      </button>
+    </div>`).join('');
+}
+
+function renderCatalogoTiposServicio() {
+  const cont = document.getElementById('listaCatalogoTiposServicio');
+  if (cacheTiposServicio.length === 0) {
+    cont.innerHTML = '<div class="estadoVacio">Sin tipos de servicio registrados.</div>';
+    return;
+  }
+  cont.innerHTML = cacheTiposServicio.map(t => `
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
+      <span>${t.nombre}</span>
+      <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="toggleActivoTipoServicio('${t.id}', ${!t.activo})">
+        ${t.activo ? 'Activo' : 'Inactivo'}
+      </button>
+    </div>`).join('');
+}
+
+async function agregarMinisterio() {
+  const input = document.getElementById('nuevoMinisterioInput');
+  const nombre = input.value.trim();
+  if (!nombre) return;
+  const { error } = await sbCall(sb.from('ministerios').insert({ nombre, activo: true }));
+  if (error) { alert('Error al agregar: ' + error.message); return; }
+  input.value = '';
+  cargarCatalogos();
+}
+
+async function toggleActivoMinisterio(id, nuevoValor) {
+  const { error } = await sbCall(sb.from('ministerios').update({ activo: nuevoValor }).eq('id', id));
+  if (error) { alert('Error: ' + error.message); return; }
+  cargarCatalogos();
+}
+
+async function agregarTipoServicio() {
+  const input = document.getElementById('nuevoTipoServicioInput');
+  const nombre = input.value.trim();
+  if (!nombre) return;
+  const { error } = await sbCall(sb.from('tipos_servicio').insert({ nombre, activo: true }));
+  if (error) { alert('Error al agregar: ' + error.message); return; }
+  input.value = '';
+  cargarCatalogos();
+}
+
+async function toggleActivoTipoServicio(id, nuevoValor) {
+  const { error } = await sbCall(sb.from('tipos_servicio').update({ activo: nuevoValor }).eq('id', id));
+  if (error) { alert('Error: ' + error.message); return; }
+  cargarCatalogos();
+}
+
+// ── Grupos Pequeños ───────────────────────────────────────────────────────
+let cacheGrupos = [];
+let grupoActualMiembros = [];
+let grupoActualId = null;
+
+function mostrarGrupos() {
+  document.getElementById('vistaDashboard').style.display = 'none';
+  document.getElementById('vistaGrupos').style.display = 'block';
+  cargarGrupos();
+}
+
+async function cargarGrupos() {
+  const lista = document.getElementById('listaGrupos');
+  lista.innerHTML = '<div class="estadoCargando">Cargando grupos…</div>';
+
+  if (cacheDirectorio.length === 0) {
+    await sbCall(sb.from('personas').select('*').eq('archivado', false)).then(({ data }) => {
+      if (data) cacheDirectorio = data;
+    });
+  }
+
+  const { data, error } = await sbCall(
+    sb.from('grupos_pequenos').select('*').order('nombre', { ascending: true })
+  );
+
+  if (error) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+    return;
+  }
+
+  cacheGrupos = data || [];
+  renderGrupos(cacheGrupos);
+}
+
+function renderGrupos(filas) {
+  const lista = document.getElementById('listaGrupos');
+  if (filas.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay grupos pequeños registrados.</div>';
+    return;
+  }
+  lista.innerHTML = filas.map(g => `
+    <div class="tarjetaSeguimiento">
+      <div style="cursor:pointer; flex:1;" onclick="abrirFormGrupo('${g.id}')">
+        <div class="nombrePersona">${g.nombre}</div>
+        <div class="metaLinea">
+          ${g.lider_persona_id ? 'Líder: ' + nombrePersonaPorId(g.lider_persona_id) : 'Sin líder asignado'}
+          ${g.dia_horario ? ' · ' + g.dia_horario : ''}
+          ${g.ubicacion ? ' · ' + g.ubicacion : ''}
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        <span class="badge badge-estado-${g.activo ? 'Activo' : 'Inactivo'}">${g.activo ? 'Activo' : 'Inactivo'}</span>
+        <button class="btnSecundario" style="padding:4px 10px; font-size:0.75rem;" onclick="event.stopPropagation(); abrirModalMiembrosGrupo('${g.id}')">👥 Miembros</button>
+      </div>
+    </div>`).join('');
+}
+
+function filtrarGrupos() {
+  const q = document.getElementById('buscadorGrupos').value.trim().toLowerCase();
+  if (!q) { renderGrupos(cacheGrupos); return; }
+  renderGrupos(cacheGrupos.filter(g =>
+    g.nombre.toLowerCase().includes(q) ||
+    (g.lider_persona_id && nombrePersonaPorId(g.lider_persona_id).toLowerCase().includes(q))
+  ));
+}
+
+// ── Modal Grupo ───────────────────────────────────────────────────────────
+function abrirFormGrupo(id) {
+  document.getElementById('formGrupo').reset();
+  document.getElementById('gGrupoId').value = '';
+  document.getElementById('gLiderId').value = '';
+  document.getElementById('gLiderBuscar').value = '';
+  document.getElementById('gLiderSeleccionado').textContent = '';
+  document.getElementById('sugerenciasLiderGrupo').style.display = 'none';
+  document.getElementById('btnEliminarGrupo').style.display = 'none';
+
+  if (id) {
+    const g = cacheGrupos.find(x => x.id === id);
+    if (g) {
+      document.getElementById('modalGrupoTitulo').textContent = 'Editar Grupo';
+      document.getElementById('gGrupoId').value = g.id;
+      document.getElementById('gNombre').value = g.nombre;
+      if (g.lider_persona_id) {
+        document.getElementById('gLiderId').value = g.lider_persona_id;
+        document.getElementById('gLiderSeleccionado').textContent = nombrePersonaPorId(g.lider_persona_id);
+      }
+      document.getElementById('gDiaHorario').value = g.dia_horario || '';
+      document.getElementById('gUbicacion').value = g.ubicacion || '';
+      document.getElementById('gCapacidadMaxima').value = g.capacidad_maxima ?? '';
+      document.getElementById('gActivo').value = String(g.activo);
+      document.getElementById('gDescripcion').value = g.descripcion || '';
+      document.getElementById('btnEliminarGrupo').style.display = 'inline-block';
+    }
+  } else {
+    document.getElementById('modalGrupoTitulo').textContent = 'Nuevo Grupo';
+  }
+
+  document.getElementById('modalGrupo').classList.add('abierto');
+}
+
+function cerrarModalGrupo() {
+  document.getElementById('modalGrupo').classList.remove('abierto');
+}
+
+function filtrarLiderGrupo() {
+  const q = document.getElementById('gLiderBuscar').value.trim().toLowerCase();
+  const contenedor = document.getElementById('sugerenciasLiderGrupo');
+
+  if (q.length < 2) { contenedor.style.display = 'none'; return; }
+
+  const coincidencias = cacheDirectorio.filter(p =>
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (coincidencias.length === 0) {
+    contenedor.innerHTML = '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+    contenedor.style.display = 'block';
+    return;
+  }
+
+  contenedor.innerHTML = coincidencias.map(p => `
+    <div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;"
+         onmousedown="seleccionarLiderGrupo('${p.id}')">
+      ${p.nombre_completo || `${p.nombre} ${p.apellido}`}
+    </div>`).join('');
+  contenedor.style.display = 'block';
+}
+
+function seleccionarLiderGrupo(id) {
+  document.getElementById('gLiderId').value = id;
+  document.getElementById('gLiderSeleccionado').textContent = nombrePersonaPorId(id);
+  document.getElementById('gLiderBuscar').value = '';
+  document.getElementById('sugerenciasLiderGrupo').style.display = 'none';
+}
+
+async function guardarGrupo(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('gGrupoId').value;
+  const sesion = getSesion();
+  const capacidad = document.getElementById('gCapacidadMaxima').value;
+
+  const payload = {
+    nombre: document.getElementById('gNombre').value.trim(),
+    lider_persona_id: document.getElementById('gLiderId').value || null,
+    dia_horario: document.getElementById('gDiaHorario').value.trim() || null,
+    ubicacion: document.getElementById('gUbicacion').value.trim() || null,
+    capacidad_maxima: capacidad ? parseInt(capacidad, 10) : null,
+    activo: document.getElementById('gActivo').value === 'true',
+    descripcion: document.getElementById('gDescripcion').value.trim() || null,
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await sbCall(sb.from('grupos_pequenos').update(payload).eq('id', id)));
+  } else {
+    payload.creado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('grupos_pequenos').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalGrupo();
+  cargarGrupos();
+  return false;
+}
+
+async function eliminarGrupo() {
+  const id = document.getElementById('gGrupoId').value;
+  if (!id || !confirm('¿Eliminar este grupo? Esto también borra la lista de miembros asignados.')) return;
+  const { error } = await sbCall(sb.from('grupos_pequenos').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalGrupo();
+  cargarGrupos();
+}
+
+// ── Modal Miembros del Grupo ──────────────────────────────────────────────
+async function abrirModalMiembrosGrupo(grupoId) {
+  grupoActualId = grupoId;
+  const g = cacheGrupos.find(x => x.id === grupoId);
+  document.getElementById('modalMiembrosGrupoTitulo').textContent = `Miembros — ${g ? g.nombre : ''}`;
+  document.getElementById('mgPersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersonaMiembroGrupo').style.display = 'none';
+  document.getElementById('listaMiembrosGrupo').innerHTML = '<div class="estadoCargando">Cargando miembros…</div>';
+  document.getElementById('modalMiembrosGrupo').classList.add('abierto');
+
+  const { data, error } = await sbCall(
+    sb.from('grupos_pequenos_miembros').select('*').eq('grupo_id', grupoId)
+  );
+
+  if (error) {
+    document.getElementById('listaMiembrosGrupo').innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`;
+    return;
+  }
+
+  grupoActualMiembros = data || [];
+  renderMiembrosGrupo();
+}
+
+function cerrarModalMiembrosGrupo() {
+  document.getElementById('modalMiembrosGrupo').classList.remove('abierto');
+  grupoActualId = null;
+}
+
+function renderMiembrosGrupo() {
+  const cont = document.getElementById('listaMiembrosGrupo');
+  if (grupoActualMiembros.length === 0) {
+    cont.innerHTML = '<div class="estadoVacio">Aún no hay miembros en este grupo.</div>';
+    return;
+  }
+  cont.innerHTML = grupoActualMiembros.map(m => `
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border);">
+      <span>${nombrePersonaPorId(m.persona_id)}</span>
+      <button class="btnPeligro" style="padding:4px 10px; font-size:0.75rem;" onclick="quitarMiembroGrupo('${m.id}')">Quitar</button>
+    </div>`).join('');
+}
+
+function filtrarPersonaMiembroGrupo() {
+  const q = document.getElementById('mgPersonaBuscar').value.trim().toLowerCase();
+  const contenedor = document.getElementById('sugerenciasPersonaMiembroGrupo');
+
+  if (q.length < 2) { contenedor.style.display = 'none'; return; }
+
+  const yaAsignados = new Set(grupoActualMiembros.map(m => m.persona_id));
+  const coincidencias = cacheDirectorio.filter(p =>
+    !yaAsignados.has(p.id) &&
+    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (coincidencias.length === 0) {
+    contenedor.innerHTML = '<div style="padding:8px 12px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+    contenedor.style.display = 'block';
+    return;
+  }
+
+  contenedor.innerHTML = coincidencias.map(p => `
+    <div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;"
+         onmousedown="agregarMiembroGrupo('${p.id}')">
+      ${p.nombre_completo || `${p.nombre} ${p.apellido}`}
+    </div>`).join('');
+  contenedor.style.display = 'block';
+}
+
+async function agregarMiembroGrupo(personaId) {
+  const { error } = await sbCall(
+    sb.from('grupos_pequenos_miembros').insert({ grupo_id: grupoActualId, persona_id: personaId })
+  );
+  if (error) { alert('Error al agregar: ' + error.message); return; }
+
+  document.getElementById('mgPersonaBuscar').value = '';
+  document.getElementById('sugerenciasPersonaMiembroGrupo').style.display = 'none';
+  await abrirModalMiembrosGrupo(grupoActualId);
+}
+
+async function quitarMiembroGrupo(miembroId) {
+  const { error } = await sbCall(sb.from('grupos_pequenos_miembros').delete().eq('id', miembroId));
+  if (error) { alert('Error al quitar: ' + error.message); return; }
+  await abrirModalMiembrosGrupo(grupoActualId);
+}
+
+// ── Auto-login si ya hay sesión guardada ─────────────────────────────────
+(async function iniciar() {
+  const resultado = await cargarSesion();
+  if (resultado.ok) {
+    mostrarApp();
+  }
+})();
+</script>
+
+</body>
+</html>
