@@ -568,6 +568,7 @@
       <div class="subtabs">
         <button class="subtab activa" id="subtabDirectorioBtn" onclick="cambiarSubtabSecretaria('directorio')">Directorio</button>
         <button class="subtab" id="subtabFamiliasBtn" onclick="cambiarSubtabSecretaria('familias')">Familias</button>
+        <button class="subtab" id="subtabCumpleanosBtn" onclick="cambiarSubtabSecretaria('cumpleanos')">Cumpleaños</button>
       </div>
 
       <!-- Sub-vista: Directorio -->
@@ -575,6 +576,7 @@
         <div class="barraAcciones">
           <input type="text" id="buscadorPersonas" placeholder="Buscar por nombre, teléfono o correo…" oninput="filtrarDirectorio()">
           <button class="btnAccion" onclick="abrirFormPersona()">+ Nuevo Miembro</button>
+          <button class="btnSecundario" onclick="exportarDirectorioCSV()">⬇ Exportar CSV</button>
         </div>
         <div class="listaPersonas" id="listaPersonas">
           <div class="estadoCargando">Cargando directorio…</div>
@@ -587,6 +589,14 @@
           <div class="estadoCargando">Cargando familias…</div>
         </div>
       </div>
+
+      <!-- Sub-vista: Cumpleaños -->
+      <div id="subvistaCumpleanos" style="display:none;">
+        <p class="fecha" style="margin-top:0;">Cumpleaños del mes actual, ordenados por día</p>
+        <div id="listaCumpleanos">
+          <div class="estadoCargando">Cargando…</div>
+        </div>
+      </div>
     </div>
 
     <!-- ═══ Vista: Cuidado Pastoral ═══ -->
@@ -595,8 +605,14 @@
       <h2>Cuidado Pastoral</h2>
       <p class="fecha">Seguimientos, visitas y necesidades pastorales</p>
 
-      <div class="barraAcciones">
+      <div class="panelEstado" id="resumenPastoral" style="margin-top:0; margin-bottom:18px;"></div>
+
+      <div class="barraAcciones" style="align-items:center;">
         <input type="text" id="buscadorPastoral" placeholder="Buscar por nombre de persona…" oninput="filtrarSeguimientos()">
+        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; color: var(--text-muted); white-space:nowrap;">
+          <input type="checkbox" id="soloPendientesPastoral" onchange="filtrarSeguimientos()">
+          Solo pendientes/vencidos
+        </label>
         <button class="btnAccion" onclick="abrirFormSeguimiento()">+ Nuevo Seguimiento</button>
       </div>
 
@@ -610,6 +626,8 @@
       <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
       <h2>Voluntarios</h2>
       <p class="fecha">Ministerios y asignaciones de voluntarios</p>
+
+      <div id="resumenMinisterios" class="grid-resumen" style="margin-bottom:20px;"></div>
 
       <div class="barraAcciones">
         <input type="text" id="buscadorVoluntarios" placeholder="Buscar por nombre o ministerio…" oninput="filtrarVoluntarios()">
@@ -1060,7 +1078,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-011';
+const APP_VERSION = 'church-admin Ver-014';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -1326,17 +1344,16 @@ function mostrarSecretaria() {
 }
 
 function cambiarSubtabSecretaria(tab) {
-  const esDirectorio = tab === 'directorio';
-  document.getElementById('subtabDirectorioBtn').classList.toggle('activa', esDirectorio);
-  document.getElementById('subtabFamiliasBtn').classList.toggle('activa', !esDirectorio);
-  document.getElementById('subvistaDirectorio').style.display = esDirectorio ? 'block' : 'none';
-  document.getElementById('subvistaFamilias').style.display = esDirectorio ? 'none' : 'block';
+  document.getElementById('subtabDirectorioBtn').classList.toggle('activa', tab === 'directorio');
+  document.getElementById('subtabFamiliasBtn').classList.toggle('activa', tab === 'familias');
+  document.getElementById('subtabCumpleanosBtn').classList.toggle('activa', tab === 'cumpleanos');
+  document.getElementById('subvistaDirectorio').style.display = tab === 'directorio' ? 'block' : 'none';
+  document.getElementById('subvistaFamilias').style.display = tab === 'familias' ? 'block' : 'none';
+  document.getElementById('subvistaCumpleanos').style.display = tab === 'cumpleanos' ? 'block' : 'none';
 
-  if (esDirectorio) {
-    cargarDirectorio();
-  } else {
-    cargarFamilias();
-  }
+  if (tab === 'directorio') cargarDirectorio();
+  else if (tab === 'familias') cargarFamilias();
+  else cargarCumpleanos();
 }
 
 // ── Directorio ────────────────────────────────────────────────────────────
@@ -1391,6 +1408,81 @@ function filtrarDirectorio() {
     (p.correo || '').toLowerCase().includes(q)
   );
   renderDirectorio(filtradas);
+}
+
+function exportarDirectorioCSV() {
+  if (cacheDirectorio.length === 0) {
+    alert('No hay miembros que exportar.');
+    return;
+  }
+
+  const encabezados = ['Nombre', 'Teléfono', 'Correo', 'Familia', 'Dirección', 'Ciudad', 'Estado', 'Código Postal'];
+  const filasCSV = cacheDirectorio.map(p => [
+    p.nombre_completo || `${p.nombre} ${p.apellido}`,
+    p.telefono || '',
+    p.correo || '',
+    p.households?.nombre || '',
+    p.street || '',
+    p.city || '',
+    p.state || '',
+    p.zip || '',
+  ]);
+
+  const contenido = [encabezados, ...filasCSV]
+    .map(fila => fila.map(campo => `"${String(campo).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob(['\uFEFF' + contenido], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'directorio_miembros.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── Cumpleaños ────────────────────────────────────────────────────────────
+async function cargarCumpleanos() {
+  const lista = document.getElementById('listaCumpleanos');
+  lista.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+
+  if (cacheDirectorio.length === 0) {
+    const { data } = await sbCall(sb.from('personas').select('*, households(nombre)').eq('archivado', false));
+    if (data) cacheDirectorio = data;
+  }
+
+  const hoy = new Date();
+  const mesActual = hoy.getMonth();
+
+  const cumpleaneros = cacheDirectorio
+    .filter(p => p.fecha_nacimiento)
+    .map(p => {
+      const [, mesStr, diaStr] = p.fecha_nacimiento.split('-');
+      return { persona: p, mes: parseInt(mesStr, 10) - 1, dia: parseInt(diaStr, 10) };
+    })
+    .filter(x => x.mes === mesActual)
+    .sort((a, b) => a.dia - b.dia);
+
+  if (cumpleaneros.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">Nadie cumple años este mes.</div>';
+    return;
+  }
+
+  lista.innerHTML = cumpleaneros.map(x => {
+    const p = x.persona;
+    const nombre = p.nombre_completo || `${p.nombre} ${p.apellido}`;
+    const diaTexto = String(x.dia).padStart(2, '0');
+    const esHoy = x.dia === hoy.getDate();
+    return `
+      <div class="tarjetaSeguimiento">
+        <div>
+          <div class="nombrePersona">🎂 ${nombre}${esHoy ? ' — ¡Hoy!' : ''}</div>
+          <div class="metaLinea">${NOMBRES_MESES[x.mes]} ${diaTexto}${p.telefono ? ' · ' + p.telefono : ''}</div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 // ── Familias ──────────────────────────────────────────────────────────────
@@ -1634,7 +1726,26 @@ async function cargarSeguimientos() {
   }
 
   cacheSeguimientos = data || [];
+  renderResumenPastoral();
   renderSeguimientos(cacheSeguimientos);
+}
+
+function renderResumenPastoral() {
+  const hoy = new Date().toISOString().slice(0, 10);
+  const vencidos = cacheSeguimientos.filter(s => s.fecha_proximo_seguimiento && s.fecha_proximo_seguimiento < hoy).length;
+  const proximos7dias = new Date(); proximos7dias.setDate(proximos7dias.getDate() + 7);
+  const proximos7diasStr = proximos7dias.toISOString().slice(0, 10);
+  const proximos = cacheSeguimientos.filter(s =>
+    s.fecha_proximo_seguimiento && s.fecha_proximo_seguimiento >= hoy && s.fecha_proximo_seguimiento <= proximos7diasStr
+  ).length;
+
+  const panel = document.getElementById('resumenPastoral');
+  if (vencidos === 0 && proximos === 0) {
+    panel.innerHTML = `<span class="puntoEstado ok"></span><strong>Sin pendientes.</strong> No hay seguimientos vencidos ni próximos en 7 días.`;
+  } else {
+    panel.innerHTML = `<span class="puntoEstado ${vencidos > 0 ? 'error' : 'ok'}"></span>
+      <strong>${vencidos} vencido${vencidos === 1 ? '' : 's'}</strong> · ${proximos} próximo${proximos === 1 ? '' : 's'} en 7 días`;
+  }
 }
 
 function nombrePersonaPorId(id) {
@@ -1674,10 +1785,19 @@ function renderSeguimientos(filas) {
 
 function filtrarSeguimientos() {
   const q = document.getElementById('buscadorPastoral').value.trim().toLowerCase();
-  if (!q) { renderSeguimientos(cacheSeguimientos); return; }
-  const filtrados = cacheSeguimientos.filter(s =>
-    nombrePersonaPorId(s.persona_id).toLowerCase().includes(q)
-  );
+  const soloPendientes = document.getElementById('soloPendientesPastoral').checked;
+  const hoy = new Date().toISOString().slice(0, 10);
+
+  let filtrados = cacheSeguimientos;
+
+  if (q) {
+    filtrados = filtrados.filter(s => nombrePersonaPorId(s.persona_id).toLowerCase().includes(q));
+  }
+
+  if (soloPendientes) {
+    filtrados = filtrados.filter(s => s.fecha_proximo_seguimiento && s.fecha_proximo_seguimiento <= hoy);
+  }
+
   renderSeguimientos(filtrados);
 }
 
@@ -1849,7 +1969,31 @@ async function cargarVoluntarios() {
   selectMinisterio.innerHTML = '<option value="">Selecciona…</option>' +
     cacheMinisterios.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
 
+  renderResumenMinisterios();
   renderVoluntarios(cacheVoluntarios);
+}
+
+function renderResumenMinisterios() {
+  const cont = document.getElementById('resumenMinisterios');
+  const activosPorMinisterio = cacheMinisterios
+    .filter(m => m.activo)
+    .map(m => ({
+      nombre: m.nombre,
+      conteo: cacheVoluntarios.filter(v => v.ministerio_id === m.id && v.estado === 'Activo').length,
+    }))
+    .filter(m => m.conteo > 0)
+    .sort((a, b) => b.conteo - a.conteo);
+
+  if (activosPorMinisterio.length === 0) {
+    cont.innerHTML = '';
+    return;
+  }
+
+  cont.innerHTML = activosPorMinisterio.map(m => `
+    <div class="tarjetaResumen">
+      <div class="etiqueta">${m.nombre}</div>
+      <div class="monto">${m.conteo}</div>
+    </div>`).join('');
 }
 
 function renderVoluntarios(filas) {
