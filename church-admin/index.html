@@ -574,7 +574,7 @@
       <!-- Sub-vista: Directorio -->
       <div id="subvistaDirectorio">
         <div class="barraAcciones">
-          <input type="text" id="buscadorPersonas" placeholder="Buscar por nombre, teléfono o correo…" oninput="filtrarDirectorio()">
+          <input type="text" id="buscadorPersonas" placeholder="Buscar por nombre, apodo, teléfono o correo…" oninput="filtrarDirectorio()">
           <button class="btnAccion" onclick="abrirFormPersona()">+ Nuevo Miembro</button>
           <button class="btnSecundario" onclick="exportarDirectorioCSV()">⬇ Exportar CSV</button>
         </div>
@@ -1059,6 +1059,7 @@
         <div><label for="pSegundoNombre">Segundo nombre</label><input type="text" id="pSegundoNombre"></div>
         <div><label for="pApellido">Apellido *</label><input type="text" id="pApellido" required></div>
         <div><label for="pSegundoApellido">Segundo apellido</label><input type="text" id="pSegundoApellido"></div>
+        <div><label for="pApodo">Apodo <span style="font-weight:400; color: var(--text-muted);">(uso diario, no oficial)</span></label><input type="text" id="pApodo" placeholder="Ej. Beto, Nena…"></div>
         <div><label for="pFechaNacimiento">Fecha de nacimiento</label><input type="date" id="pFechaNacimiento"></div>
         <div><label for="pTelefono">Teléfono</label><input type="tel" id="pTelefono"></div>
         <div class="full"><label for="pCorreo">Correo</label><input type="email" id="pCorreo"></div>
@@ -1100,7 +1101,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-020';
+const APP_VERSION = 'church-admin Ver-021';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -1413,7 +1414,7 @@ function renderDirectorio(personas) {
     return `
       <div class="cardPersona" onclick="abrirFormPersona('${p.id}')">
         <div>
-          <div class="nombre">${p.nombre_completo || (p.nombre + ' ' + p.apellido)}</div>
+          <div class="nombre">${nombreMostrar(p)}</div>
           <div class="detalle">${detalles || 'Sin datos de contacto'}</div>
         </div>
         <div class="flecha">›</div>
@@ -1425,7 +1426,7 @@ function filtrarDirectorio() {
   const q = document.getElementById('buscadorPersonas').value.trim().toLowerCase();
   if (!q) { renderDirectorio(cacheDirectorio); return; }
   const filtradas = cacheDirectorio.filter(p =>
-    (p.nombre_completo || '').toLowerCase().includes(q) ||
+    personaTextoBusqueda(p).includes(q) ||
     (p.telefono || '').toLowerCase().includes(q) ||
     (p.correo || '').toLowerCase().includes(q)
   );
@@ -1494,7 +1495,7 @@ async function cargarCumpleanos() {
 
   lista.innerHTML = cumpleaneros.map(x => {
     const p = x.persona;
-    const nombre = p.nombre_completo || `${p.nombre} ${p.apellido}`;
+    const nombre = nombreMostrar(p);
     const diaTexto = String(x.dia).padStart(2, '0');
     const esHoy = x.dia === hoy.getDate();
     return `
@@ -1534,7 +1535,7 @@ async function cargarFamilias() {
     const miembros = listaPersonasTodas.filter(p => p.household_id === h.id);
     const direccion = [h.street, h.city, h.state].filter(Boolean).join(', ');
     const miembrosHtml = miembros.length
-      ? miembros.map(p => `<li>${p.nombre_completo || (p.nombre + ' ' + p.apellido)}</li>`).join('')
+      ? miembros.map(p => `<li>${nombreMostrar(p)}</li>`).join('')
       : '<li style="color:var(--text-muted);">Sin miembros asignados</li>';
     return `
       <div class="cardFamilia">
@@ -1587,6 +1588,7 @@ async function abrirFormPersona(id) {
     document.getElementById('pSegundoNombre').value = persona.segundo_nombre || '';
     document.getElementById('pApellido').value = persona.apellido || '';
     document.getElementById('pSegundoApellido').value = persona.segundo_apellido || '';
+    document.getElementById('pApodo').value = persona.apodo || '';
     document.getElementById('pFechaNacimiento').value = persona.fecha_nacimiento || '';
     document.getElementById('pTelefono').value = persona.telefono || '';
     document.getElementById('pCorreo').value = persona.correo || '';
@@ -1648,6 +1650,7 @@ async function guardarPersona(evt) {
       segundo_nombre: segundoNombre || null,
       apellido,
       segundo_apellido: segundoApellido || null,
+      apodo: document.getElementById('pApodo').value.trim() || null,
       fecha_nacimiento: document.getElementById('pFechaNacimiento').value || null,
       telefono: document.getElementById('pTelefono').value.trim() || null,
       correo: document.getElementById('pCorreo').value.trim() || null,
@@ -1770,10 +1773,24 @@ function renderResumenPastoral() {
   }
 }
 
+// Muestra el apodo si existe (uso diario: búsquedas, listas, checklists).
+// Nunca usar esta función para documentos/exportes oficiales — ahí usar
+// siempre p.nombre_completo directamente.
+function nombreMostrar(p) {
+  if (!p) return 'Persona no encontrada';
+  const formal = p.nombre_completo || `${p.nombre} ${p.apellido}`;
+  return p.apodo ? `${p.apodo} (${formal})` : formal;
+}
+
+function personaTextoBusqueda(p) {
+  const formal = p.nombre_completo || `${p.nombre} ${p.apellido}`;
+  return `${formal} ${p.apodo || ''}`.toLowerCase();
+}
+
 function nombrePersonaPorId(id) {
   const p = cacheDirectorio.find(x => x.id === id);
   if (!p) return 'Persona no encontrada';
-  return p.nombre_completo || `${p.nombre} ${p.apellido}`;
+  return nombreMostrar(p);
 }
 
 function renderSeguimientos(filas) {
@@ -1870,7 +1887,7 @@ function filtrarPersonaSeguimiento() {
   }
 
   const coincidencias = cacheDirectorio.filter(p =>
-    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+    (nombreMostrar(p)).toLowerCase().includes(q)
   ).slice(0, 8);
 
   if (coincidencias.length === 0) {
@@ -1882,7 +1899,7 @@ function filtrarPersonaSeguimiento() {
   contenedor.innerHTML = coincidencias.map(p => `
     <div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;"
          onmousedown="seleccionarPersonaSeguimiento('${p.id}')">
-      ${p.nombre_completo || `${p.nombre} ${p.apellido}`}
+      ${nombreMostrar(p)}
     </div>`).join('');
   contenedor.style.display = 'block';
 }
@@ -2099,7 +2116,7 @@ function filtrarPersonaVoluntario() {
   }
 
   const coincidencias = cacheDirectorio.filter(p =>
-    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+    (nombreMostrar(p)).toLowerCase().includes(q)
   ).slice(0, 8);
 
   if (coincidencias.length === 0) {
@@ -2111,7 +2128,7 @@ function filtrarPersonaVoluntario() {
   contenedor.innerHTML = coincidencias.map(p => `
     <div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;"
          onmousedown="seleccionarPersonaVoluntario('${p.id}')">
-      ${p.nombre_completo || `${p.nombre} ${p.apellido}`}
+      ${nombreMostrar(p)}
     </div>`).join('');
   contenedor.style.display = 'block';
 }
@@ -2641,7 +2658,7 @@ function renderChecklistAsistencia() {
   const contenedor = document.getElementById('checklistAsistencia');
 
   const personas = q
-    ? cacheDirectorio.filter(p => (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q))
+    ? cacheDirectorio.filter(p => (nombreMostrar(p)).toLowerCase().includes(q))
     : cacheDirectorio.slice(0, 50);
 
   if (personas.length === 0) {
@@ -2651,7 +2668,7 @@ function renderChecklistAsistencia() {
 
   contenedor.innerHTML = personas.map(p => {
     const marcado = presentesSeleccionados.has(p.id);
-    const nombre = p.nombre_completo || `${p.nombre} ${p.apellido}`;
+    const nombre = nombreMostrar(p);
     return `
       <label style="display:flex; align-items:center; gap:8px; padding:6px 4px; font-size:0.85rem; cursor:pointer;">
         <input type="checkbox" ${marcado ? 'checked' : ''} onchange="togglePersonaPresente('${p.id}', this.checked)">
@@ -3088,7 +3105,7 @@ function filtrarLiderGrupo() {
   if (q.length < 2) { contenedor.style.display = 'none'; return; }
 
   const coincidencias = cacheDirectorio.filter(p =>
-    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+    (nombreMostrar(p)).toLowerCase().includes(q)
   ).slice(0, 8);
 
   if (coincidencias.length === 0) {
@@ -3100,7 +3117,7 @@ function filtrarLiderGrupo() {
   contenedor.innerHTML = coincidencias.map(p => `
     <div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;"
          onmousedown="seleccionarLiderGrupo('${p.id}')">
-      ${p.nombre_completo || `${p.nombre} ${p.apellido}`}
+      ${nombreMostrar(p)}
     </div>`).join('');
   contenedor.style.display = 'block';
 }
@@ -3201,7 +3218,7 @@ function filtrarPersonaMiembroGrupo() {
   const yaAsignados = new Set(grupoActualMiembros.map(m => m.persona_id));
   const coincidencias = cacheDirectorio.filter(p =>
     !yaAsignados.has(p.id) &&
-    (p.nombre_completo || `${p.nombre} ${p.apellido}`).toLowerCase().includes(q)
+    (nombreMostrar(p)).toLowerCase().includes(q)
   ).slice(0, 8);
 
   if (coincidencias.length === 0) {
@@ -3213,7 +3230,7 @@ function filtrarPersonaMiembroGrupo() {
   contenedor.innerHTML = coincidencias.map(p => `
     <div style="padding:8px 12px; cursor:pointer; font-size:0.85rem;"
          onmousedown="agregarMiembroGrupo('${p.id}')">
-      ${p.nombre_completo || `${p.nombre} ${p.apellido}`}
+      ${nombreMostrar(p)}
     </div>`).join('');
   contenedor.style.display = 'block';
 }
