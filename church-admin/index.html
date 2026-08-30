@@ -856,8 +856,8 @@
           <label for="asTipoServicio">Tipo de servicio *</label>
           <select id="asTipoServicio" required></select>
         </div>
-        <div><label for="asFecha">Fecha *</label><input type="date" id="asFecha" required></div>
-        <div><label for="asTotal">Total de asistentes * <span style="font-weight:400; color: var(--text-muted);">(auto, ajustable)</span></label><input type="number" id="asTotal" min="0" required></div>
+        <div><label for="asFecha">Fecha *</label><input type="date" id="asFecha" required oninput="actualizarTipoServicioDefault()"></div>
+        <div><label for="asTotal">Total de asistentes <span style="font-weight:400; color: var(--text-muted);">(automático)</span></label><input type="number" id="asTotal" readonly style="background: var(--bg); cursor:not-allowed;"></div>
         <div class="full"><label for="asNotas">Notas</label><textarea id="asNotas" rows="2"></textarea></div>
       </div>
 
@@ -1100,7 +1100,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-019';
+const APP_VERSION = 'church-admin Ver-020';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -2583,16 +2583,48 @@ async function abrirFormAsistencia(id) {
     }
   } else {
     document.getElementById('modalAsistenciaTitulo').textContent = 'Nuevo Registro';
+    actualizarTipoServicioDefault();
   }
 
   actualizarContadorPresentes();
   renderChecklistAsistencia();
   renderVisitantes();
+  recalcularTotalAsistencia();
   document.getElementById('modalAsistencia').classList.add('abierto');
 }
 
 function cerrarModalAsistencia() {
   document.getElementById('modalAsistencia').classList.remove('abierto');
+}
+
+function actualizarTipoServicioDefault() {
+  // Solo aplica para registros nuevos (no sobrescribe al editar)
+  if (document.getElementById('asRegistroId').value) return;
+
+  const fechaStr = document.getElementById('asFecha').value;
+  if (!fechaStr) return;
+
+  const [y, m, d] = fechaStr.split('-').map(Number);
+  const diaSemana = new Date(y, m - 1, d).getDay(); // 0=Domingo, 2=Martes, 4=Jueves
+
+  let patron;
+  if (diaSemana === 0) patron = /domingo pm|domingo/i;
+  else if (diaSemana === 2) patron = /martes/i;
+  else if (diaSemana === 4) patron = /jueves/i;
+  else patron = /especial/i;
+
+  // Para domingo, preferimos coincidencia con "PM" específicamente si existe
+  let candidato = null;
+  if (diaSemana === 0) {
+    candidato = cacheTiposServicio.find(t => /domingo pm/i.test(t.nombre)) ||
+                cacheTiposServicio.find(t => /domingo/i.test(t.nombre));
+  } else {
+    candidato = cacheTiposServicio.find(t => patron.test(t.nombre));
+  }
+
+  if (candidato) {
+    document.getElementById('asTipoServicio').value = candidato.id;
+  }
 }
 
 function toggleChecklistAsistencia() {
