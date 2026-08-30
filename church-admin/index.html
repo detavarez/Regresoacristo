@@ -857,7 +857,7 @@
           <select id="asTipoServicio" required></select>
         </div>
         <div><label for="asFecha">Fecha *</label><input type="date" id="asFecha" required></div>
-        <div><label for="asTotal">Total de asistentes *</label><input type="number" id="asTotal" min="0" required></div>
+        <div><label for="asTotal">Total de asistentes * <span style="font-weight:400; color: var(--text-muted);">(auto, ajustable)</span></label><input type="number" id="asTotal" min="0" required></div>
         <div class="full"><label for="asNotas">Notas</label><textarea id="asNotas" rows="2"></textarea></div>
       </div>
 
@@ -869,6 +869,17 @@
           <input type="text" id="buscadorChecklistAsistencia" placeholder="Buscar persona…" oninput="renderChecklistAsistencia()" style="margin-bottom:8px;">
           <div id="checklistAsistencia" style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
         </div>
+      </div>
+
+      <div class="seccionForm" style="margin-top:18px;">
+        <label style="display:block; font-size:0.8rem; font-weight:600; color: var(--text-muted); margin-bottom:8px;">
+          🙋 Visitantes (no son miembros registrados)
+        </label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="nombreVisitanteInput" placeholder="Nombre del visitante…" style="flex:1;">
+          <button type="button" class="btnAccion" onclick="agregarVisitante()">+ Agregar</button>
+        </div>
+        <div id="listaVisitantesAsistencia" style="margin-top:10px;"></div>
       </div>
 
       <div class="formAcciones">
@@ -1089,7 +1100,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-017';
+const APP_VERSION = 'church-admin Ver-019';
 
 // ── Login ──────────────────────────────────────────────────────────────
 async function manejarLogin(evt) {
@@ -2433,6 +2444,7 @@ async function eliminarMensaje() {
 let cacheAsistencia = [];
 let cacheTiposServicio = [];
 let presentesSeleccionados = new Set();
+let visitantesActuales = [];
 
 function mostrarAsistencia() {
   document.getElementById('vistaDashboard').style.display = 'none';
@@ -2520,15 +2532,18 @@ function renderAsistencia(filas) {
     lista.innerHTML = '<div class="estadoVacio">No hay registros de asistencia.</div>';
     return;
   }
-  lista.innerHTML = filas.map(r => `
+  lista.innerHTML = filas.map(r => {
+    const numVisitantes = Array.isArray(r.visitantes) ? r.visitantes.length : 0;
+    return `
     <div class="tarjetaSeguimiento" onclick="abrirFormAsistencia('${r.id}')">
       <div>
         <div class="nombrePersona">${nombreTipoServicioPorId(r.tipo_servicio_id)}</div>
-        <div class="metaLinea">${formatoFecha(r.fecha)}</div>
+        <div class="metaLinea">${formatoFecha(r.fecha)}${numVisitantes > 0 ? ` · 🙋 ${numVisitantes} visitante${numVisitantes === 1 ? '' : 's'}` : ''}</div>
         ${r.notas ? `<div class="notasPreview">${r.notas}</div>` : ''}
       </div>
       <span class="badge badge-tipo">${r.total_asistentes} asistentes</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function filtrarAsistencia() {
@@ -2544,8 +2559,10 @@ async function abrirFormAsistencia(id) {
   document.getElementById('btnEliminarAsistencia').style.display = 'none';
   document.getElementById('asFecha').value = new Date().toISOString().slice(0, 10);
   presentesSeleccionados = new Set();
+  visitantesActuales = [];
   document.getElementById('checklistAsistenciaWrap').style.display = 'none';
   document.getElementById('buscadorChecklistAsistencia').value = '';
+  document.getElementById('nombreVisitanteInput').value = '';
 
   if (id) {
     const r = cacheAsistencia.find(x => x.id === id);
@@ -2557,6 +2574,7 @@ async function abrirFormAsistencia(id) {
       document.getElementById('asTotal').value = r.total_asistentes;
       document.getElementById('asNotas').value = r.notas || '';
       document.getElementById('btnEliminarAsistencia').style.display = 'inline-block';
+      visitantesActuales = Array.isArray(r.visitantes) ? [...r.visitantes] : [];
 
       const { data: detalle } = await sbCall(
         sb.from('asistencia_detalle').select('persona_id').eq('registro_id', id)
@@ -2569,6 +2587,7 @@ async function abrirFormAsistencia(id) {
 
   actualizarContadorPresentes();
   renderChecklistAsistencia();
+  renderVisitantes();
   document.getElementById('modalAsistencia').classList.add('abierto');
 }
 
@@ -2613,6 +2632,41 @@ function togglePersonaPresente(id, marcado) {
   if (marcado) presentesSeleccionados.add(id);
   else presentesSeleccionados.delete(id);
   actualizarContadorPresentes();
+  recalcularTotalAsistencia();
+}
+
+// ── Visitantes ────────────────────────────────────────────────────────────
+function renderVisitantes() {
+  const cont = document.getElementById('listaVisitantesAsistencia');
+  if (visitantesActuales.length === 0) {
+    cont.innerHTML = '';
+    return;
+  }
+  cont.innerHTML = visitantesActuales.map((nombre, idx) => `
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); font-size:0.85rem;">
+      <span>🙋 ${nombre}</span>
+      <button type="button" class="btnPeligro" style="padding:3px 8px; font-size:0.72rem;" onclick="quitarVisitante(${idx})">✕</button>
+    </div>`).join('');
+}
+
+function agregarVisitante() {
+  const input = document.getElementById('nombreVisitanteInput');
+  const nombre = input.value.trim();
+  if (!nombre) return;
+  visitantesActuales.push(nombre);
+  input.value = '';
+  renderVisitantes();
+  recalcularTotalAsistencia();
+}
+
+function quitarVisitante(idx) {
+  visitantesActuales.splice(idx, 1);
+  renderVisitantes();
+  recalcularTotalAsistencia();
+}
+
+function recalcularTotalAsistencia() {
+  document.getElementById('asTotal').value = presentesSeleccionados.size + visitantesActuales.length;
 }
 
 async function guardarAsistencia(evt) {
@@ -2625,6 +2679,7 @@ async function guardarAsistencia(evt) {
     fecha: document.getElementById('asFecha').value,
     total_asistentes: parseInt(document.getElementById('asTotal').value, 10) || 0,
     notas: document.getElementById('asNotas').value.trim() || null,
+    visitantes: visitantesActuales,
   };
 
   let registroId = id;
@@ -2877,6 +2932,7 @@ async function toggleActivoTipoServicio(id, nuevoValor) {
 
 // ── Grupos Pequeños ───────────────────────────────────────────────────────
 let cacheGrupos = [];
+let cacheConteoMiembrosGrupo = {};
 let grupoActualMiembros = [];
 let grupoActualId = null;
 
@@ -2896,16 +2952,22 @@ async function cargarGrupos() {
     });
   }
 
-  const { data, error } = await sbCall(
-    sb.from('grupos_pequenos').select('*').order('nombre', { ascending: true })
-  );
+  const [{ data: grupos, error: errG }, { data: miembros, error: errM }] = await Promise.all([
+    sbCall(sb.from('grupos_pequenos').select('*').order('nombre', { ascending: true })),
+    sbCall(sb.from('grupos_pequenos_miembros').select('grupo_id')),
+  ]);
 
-  if (error) {
-    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
+  if (errG || errM) {
+    lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${(errG || errM).message}</div>`;
     return;
   }
 
-  cacheGrupos = data || [];
+  cacheGrupos = grupos || [];
+  cacheConteoMiembrosGrupo = {};
+  (miembros || []).forEach(m => {
+    cacheConteoMiembrosGrupo[m.grupo_id] = (cacheConteoMiembrosGrupo[m.grupo_id] || 0) + 1;
+  });
+
   renderGrupos(cacheGrupos);
 }
 
@@ -2915,7 +2977,13 @@ function renderGrupos(filas) {
     lista.innerHTML = '<div class="estadoVacio">No hay grupos pequeños registrados.</div>';
     return;
   }
-  lista.innerHTML = filas.map(g => `
+  lista.innerHTML = filas.map(g => {
+    const conteo = cacheConteoMiembrosGrupo[g.id] || 0;
+    const capacidadTexto = g.capacidad_maxima
+      ? `${conteo} / ${g.capacidad_maxima} miembros${conteo >= g.capacidad_maxima ? ' (lleno)' : ''}`
+      : `${conteo} miembro${conteo === 1 ? '' : 's'}`;
+    const claseCapacidad = g.capacidad_maxima && conteo >= g.capacidad_maxima ? 'proximoVencido' : '';
+    return `
     <div class="tarjetaSeguimiento">
       <div style="cursor:pointer; flex:1;" onclick="abrirFormGrupo('${g.id}')">
         <div class="nombrePersona">${g.nombre}</div>
@@ -2924,12 +2992,14 @@ function renderGrupos(filas) {
           ${g.dia_horario ? ' · ' + g.dia_horario : ''}
           ${g.ubicacion ? ' · ' + g.ubicacion : ''}
         </div>
+        <div class="metaLinea ${claseCapacidad}">${capacidadTexto}</div>
       </div>
       <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
         <span class="badge badge-estado-${g.activo ? 'Activo' : 'Inactivo'}">${g.activo ? 'Activo' : 'Inactivo'}</span>
         <button class="btnSecundario" style="padding:4px 10px; font-size:0.75rem;" onclick="event.stopPropagation(); abrirModalMiembrosGrupo('${g.id}')">👥 Miembros</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function filtrarGrupos() {
@@ -3125,12 +3195,14 @@ async function agregarMiembroGrupo(personaId) {
   document.getElementById('mgPersonaBuscar').value = '';
   document.getElementById('sugerenciasPersonaMiembroGrupo').style.display = 'none';
   await abrirModalMiembrosGrupo(grupoActualId);
+  cargarGrupos();
 }
 
 async function quitarMiembroGrupo(miembroId) {
   const { error } = await sbCall(sb.from('grupos_pequenos_miembros').delete().eq('id', miembroId));
   if (error) { alert('Error al quitar: ' + error.message); return; }
   await abrirModalMiembrosGrupo(grupoActualId);
+  cargarGrupos();
 }
 
 // ── Auto-login si ya hay sesión guardada ─────────────────────────────────
