@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lección — Instituto Bíblico Intensivo</title>
+<link rel="stylesheet" href="assets/instituto.css">
+</head>
+<body>
+<script src="data/curriculo.js"></script>
+<script src="assets/core.js"></script>
+
+<main class="env" id="salida"></main>
+<div class="env"><footer class="pie" id="pie"></footer></div>
+
+<script>
+INST.barra('');
+INST.glosarioActivo();
+
+var params = new URLSearchParams(location.search);
+var n = params.get('n');
+var consulta = params.get('modo') === 'consulta';
+var meta = INST.meta(n);
+var salida = document.getElementById('salida');
+
+if (!meta) {
+  salida.innerHTML = '<div class="encabezado"><h1>Esa lección no existe</h1>' +
+    '<p class="sub">El número ' + (n || '(vacío)') + ' no está en el currículo.</p>' +
+    '<p><a class="btn" href="index.html">Volver al índice</a></p></div>';
+} else if ((window.LECCIONES_DISPONIBLES || []).indexOf(String(n)) === -1) {
+  pendiente();
+} else {
+  var s = document.createElement('script');
+  s.src = 'data/lecciones/L' + n + '.js';
+  s.onload = function () { INST.lecciones[String(n)] ? pintar(INST.lecciones[String(n)]) : pendiente(); };
+  s.onerror = pendiente;
+  document.body.appendChild(s);
+}
+
+function cabecera() {
+  return '<div class="encabezado niv niv-' + meta.nivel + '">' +
+    '<p class="ruta">' + meta.nivelNombre + ' · Módulo ' + meta.modulo + ' — ' + meta.moduloTitulo + ' · <b>Lección ' + meta.n + '</b></p>' +
+    '<h1>' + meta.t + '</h1>' +
+    (meta.libros && meta.libros !== '—' ? '<p class="sub">Lectura base: ' + meta.libros + '</p>' : '') +
+    '</div>';
+}
+
+function pendiente() {
+  salida.innerHTML = cabecera() +
+    '<div class="caja-nota"><h4>Esta lección todavía no está escrita</h4>' +
+    '<p>Está definida en el currículo maestro y tiene su lugar reservado. El contenido se produce por etapas, empezando por las lecciones modelo.</p></div>' +
+    pie();
+  document.getElementById('pie').textContent = INST.VERSION;
+  navegacion();
+}
+
+function pintar(L) {
+  INST.registrarVisita(n, !consulta);
+  var html = cabecera();
+
+  if (L.resumen) html += '<p class="sub">' + L.resumen + '</p>';
+
+  if (L.objetivos && L.objetivos.length) {
+    html += '<h2>Al terminar esta lección podrás</h2><ul>' +
+      L.objetivos.map(function (o) { return '<li>' + o + '</li>'; }).join('') + '</ul>';
+  }
+
+  (L.secciones || []).forEach(function (sec) {
+    if (sec.tipo === 'texto') {
+      html += '<h2>' + sec.titulo + '</h2>' + sec.html;
+    } else if (sec.tipo === 'posturas') {
+      html += '<h2>' + sec.titulo + '</h2>' + (sec.intro || '');
+      sec.posturas.forEach(function (p) {
+        html += '<div class="postura"><h4>' + p.nombre + '</h4>' +
+          (p.quien ? '<p class="quien">' + p.quien + '</p>' : '') +
+          '<p>' + p.argumento + '</p>' +
+          (p.fortalezas ? '<p><b>A favor:</b> ' + p.fortalezas + '</p>' : '') +
+          (p.dificultades ? '<p><b>Dificultad:</b> ' + p.dificultades + '</p>' : '') +
+          '</div>';
+      });
+      if (sec.conclusion) html += '<div class="caja-nota"><h4>Conclusión del Instituto</h4><p>' + sec.conclusion + '</p></div>';
+    } else if (sec.tipo === 'errores') {
+      html += '<h2>' + (sec.titulo || 'Errores frecuentes') + '</h2>';
+      sec.items.forEach(function (it) {
+        html += '<div class="postura"><h4>' + it[0] + '</h4><p>' + it[1] + '</p></div>';
+      });
+    } else if (sec.tipo === 'aplicacion') {
+      html += '<h2>' + (sec.titulo || 'Aplicación según tu nivel') + '</h2><table class="datos"><tbody>';
+      sec.filas.forEach(function (f) { html += '<tr><th style="width:30%">' + f[0] + '</th><td>' + f[1] + '</td></tr>'; });
+      html += '</tbody></table>';
+    } else if (sec.tipo === 'nota') {
+      html += '<div class="caja-nota"><h4>' + sec.titulo + '</h4>' + sec.html + '</div>';
+    }
+  });
+
+  if (L.conexiones && L.conexiones.length) {
+    html += '<h2>Conecta con</h2><ul>' + L.conexiones.map(function (c) {
+      var m2 = INST.meta(c.n);
+      return '<li><a href="leccion.html?n=' + c.n + '&modo=consulta">Lección ' + c.n + ' — ' + (m2 ? m2.t : '') + '</a>: ' + c.texto + '</li>';
+    }).join('') + '</ul>';
+  }
+
+  if (L.ejercicios && L.ejercicios.length) {
+    html += '<h2>Ejercicios</h2><ol>' + L.ejercicios.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol>';
+  }
+
+  if (L.transferencia) {
+    html += '<div class="caja-nota"><h4>Antes de seguir</h4><p>' + L.transferencia + '</p></div>';
+  }
+
+  if (L.quiz && L.quiz.length) {
+    html += '<h2 id="examen">Examen de la lección</h2>' +
+      '<p class="sub">' + L.quiz.length + ' preguntas. Se aprueba con ' + CURRICULO.umbralAprobacion + '%. Puedes repetirlo.</p>' +
+      '<form id="quiz">' + L.quiz.map(function (q, i) {
+        return '<div class="qcard" data-i="' + i + '"><p class="qt">' + (i + 1) + '. ' + q.p + '</p>' +
+          q.opciones.map(function (o, j) {
+            return '<label class="opt"><input type="radio" name="q' + i + '" value="' + j + '"><span>' + o + '</span></label>';
+          }).join('') + '<div class="explica" hidden></div></div>';
+      }).join('') +
+      '<div class="acciones"><button type="button" class="btn" id="calificar">Calificar</button>' +
+      '<button type="button" class="btn sec" id="reiniciar" hidden>Intentar otra vez</button></div></form>' +
+      '<div id="marcador" hidden></div>';
+  }
+
+  if (L.fuentes && L.fuentes.length) {
+    html += '<h2>Fuentes consultadas</h2><ul class="sub">' +
+      L.fuentes.map(function (f) { return '<li>' + f + '</li>'; }).join('') + '</ul>';
+  }
+
+  html += pie();
+  salida.innerHTML = html;
+  document.getElementById('pie').textContent = 'Lección ' + meta.n + ' · ' + INST.VERSION +
+    (consulta ? ' · Abierta en modo consulta: no cambia tu lección actual.' : '');
+  navegacion();
+  if (L.quiz && L.quiz.length) armarQuiz(L);
+}
+
+function pie() { return '<div class="pieleccion" id="nav"></div>'; }
+
+function navegacion() {
+  var v = INST.vecinas(n), c = document.getElementById('nav');
+  if (!c) return;
+  c.innerHTML =
+    (v.anterior ? '<a href="leccion.html?n=' + v.anterior.n + '">← ' + v.anterior.n + ' · ' + v.anterior.t + '</a>' : '<span></span>') +
+    (v.siguiente ? '<a href="leccion.html?n=' + v.siguiente.n + '" style="text-align:right">' + v.siguiente.n + ' · ' + v.siguiente.t + ' →</a>' : '<span></span>');
+}
+
+function armarQuiz(L) {
+  var form = document.getElementById('quiz');
+  var marcador = document.getElementById('marcador');
+  var btn = document.getElementById('calificar');
+  var re = document.getElementById('reiniciar');
+
+  btn.onclick = function () {
+    var correctas = 0, falladas = [], faltan = 0;
+    L.quiz.forEach(function (q, i) {
+      var card = form.querySelector('.qcard[data-i="' + i + '"]');
+      var sel = form.querySelector('input[name="q' + i + '"]:checked');
+      card.querySelectorAll('.opt').forEach(function (o) { o.classList.remove('correcta', 'incorrecta'); });
+      var opts = card.querySelectorAll('.opt');
+      opts[q.correcta].classList.add('correcta');
+      if (!sel) { faltan++; falladas.push({ i: i, tema: q.tema }); }
+      else if (parseInt(sel.value, 10) === q.correcta) { correctas++; }
+      else { opts[parseInt(sel.value, 10)].classList.add('incorrecta'); falladas.push({ i: i, tema: q.tema }); }
+      var ex = card.querySelector('.explica');
+      ex.hidden = false;
+      ex.innerHTML = q.explica + (q.tema ? ' <span class="certeza">' + q.tema + '</span>' : '');
+    });
+
+    var intento = INST.registrarExamen(n, { correctas: correctas, total: L.quiz.length, falladas: falladas });
+    var aprobado = intento.pct >= CURRICULO.umbralAprobacion;
+    marcador.hidden = false;
+    marcador.innerHTML = '<div class="pct">' + intento.pct + '%</div>' +
+      '<p>' + correctas + ' de ' + L.quiz.length + ' correctas' + (faltan ? ' · ' + faltan + ' sin responder' : '') + '.</p>' +
+      '<p>' + (aprobado
+        ? 'Lección aprobada. Queda registrada en tu avance.'
+        : 'Por debajo del ' + CURRICULO.umbralAprobacion + '%. Repasa las secciones marcadas abajo y vuelve a intentarlo: cada pregunta fallada indica qué tema conviene releer.') + '</p>' +
+      (falladas.length ? '<p class="sub">Temas para repasar: ' +
+        falladas.map(function (f) { return f.tema || 'general'; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).join(' · ') + '</p>' : '');
+    marcador.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    re.hidden = false;
+  };
+
+  re.onclick = function () {
+    form.reset();
+    form.querySelectorAll('.opt').forEach(function (o) { o.classList.remove('correcta', 'incorrecta'); });
+    form.querySelectorAll('.explica').forEach(function (x) { x.hidden = true; });
+    marcador.hidden = true;
+    document.getElementById('examen').scrollIntoView({ behavior: 'smooth' });
+  };
+}
+</script>
+</body>
+</html>

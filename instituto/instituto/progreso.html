@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi avance — Instituto Bíblico Intensivo</title>
+<link rel="stylesheet" href="assets/instituto.css">
+</head>
+<body>
+<script src="data/curriculo.js"></script>
+<script src="assets/core.js"></script>
+
+<main class="env" id="salida"></main>
+
+<script>
+INST.barra('prog');
+var e = INST.estado, r = INST.resumen();
+var out = '<div class="encabezado"><p class="ruta">Historial académico</p><h1>' +
+  (e.perfil.nombre ? e.perfil.nombre : 'Mi avance') + '</h1>' +
+  '<div class="progreso"><i style="width:' + r.pct + '%"></i></div>' +
+  '<p class="sub">' + r.aprobadas + ' aprobadas · ' + r.enCurso + ' en curso · ' + r.total + ' en el currículo</p></div>';
+
+if (e.diagnostico) {
+  out += '<h2>Diagnóstico inicial</h2><table class="datos"><tbody>' +
+    '<tr><th>Fecha</th><td>' + new Date(e.diagnostico.fecha).toLocaleDateString('es') + '</td></tr>' +
+    '<tr><th>Resultado</th><td>' + e.diagnostico.correctas + ' de ' + e.diagnostico.total + ' (' + e.diagnostico.pctGlobal + '%)</td></tr>' +
+    '<tr><th>Entrada recomendada</th><td>Lección ' + e.diagnostico.recomendada + '</td></tr>' +
+    (e.diagnostico.fortalezas.length ? '<tr><th>Fortalezas</th><td>' + e.diagnostico.fortalezas.join(' · ') + '</td></tr>' : '') +
+    (e.diagnostico.debilidades.length ? '<tr><th>A reforzar</th><td>' + e.diagnostico.debilidades.join(' · ') + '</td></tr>' : '') +
+    '</tbody></table>';
+} else {
+  out += '<div class="caja-nota"><h4>Todavía no tienes diagnóstico</h4><p>El examen de ubicación abre tu historial académico y recomienda una lección concreta de entrada.</p>' +
+    '<p><a class="btn" href="diagnostico.html">Hacer el examen de ubicación</a></p></div>';
+}
+
+var debiles = INST.temasDebiles(8);
+if (debiles.length) {
+  out += '<h2>Temas donde más fallas</h2><table class="datos"><thead><tr><th>Tema</th><th>Preguntas falladas</th></tr></thead><tbody>' +
+    debiles.map(function (d) { return '<tr><td>' + d.tema + '</td><td>' + d.fallos + '</td></tr>'; }).join('') +
+    '</tbody></table><p class="sub">Estos temas son los que conviene repasar antes de avanzar.</p>';
+}
+
+var filas = Object.keys(e.progreso).sort().map(function (k) {
+  var p = e.progreso[k], m = INST.meta(k);
+  if (!m) return '';
+  var ult = p.intentos.length ? p.intentos[p.intentos.length - 1] : null;
+  return '<tr><td><a href="leccion.html?n=' + k + '">' + k + ' — ' + m.t + '</a></td>' +
+    '<td>' + p.estado + '</td>' +
+    '<td>' + (p.mejor !== null ? p.mejor + '%' : '—') + '</td>' +
+    '<td>' + p.intentos.length + '</td>' +
+    '<td>' + (ult ? new Date(ult.fecha).toLocaleDateString('es') : '—') + '</td></tr>';
+}).join('');
+
+out += '<h2>Lecciones</h2>' + (filas
+  ? '<table class="datos"><thead><tr><th>Lección</th><th>Estado</th><th>Mejor</th><th>Intentos</th><th>Último examen</th></tr></thead><tbody>' + filas + '</tbody></table>'
+  : '<p class="sub">Todavía no has abierto ninguna lección.</p>');
+
+if (e.consultadas.length) {
+  out += '<h2>Consultadas sin afectar tu avance</h2><p class="sub">' +
+    e.consultadas.map(function (c) { return '<a href="leccion.html?n=' + c + '">' + c + '</a>'; }).join(' · ') + '</p>';
+}
+
+out += '<div class="acciones"><button class="btn sec" type="button" id="desc">Descargar mi historial</button></div>' +
+  '<p class="sub">El archivo descargado sirve para pasarle tus resultados al maestro o para restaurarlos en otro dispositivo desde Ajustes.</p>' +
+  '<footer class="pie">' + INST.VERSION + '</footer>';
+
+document.getElementById('salida').innerHTML = out;
+document.getElementById('desc').onclick = INST.exportar;
+</script>
+</body>
+</html>
