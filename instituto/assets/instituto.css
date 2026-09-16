@@ -56,8 +56,9 @@ body{
   font-family:var(--sans);
 }
 .barra .env{display:flex;align-items:center;gap:10px;height:52px;position:relative}
-.marca{font-family:var(--serif);font-weight:700;letter-spacing:.01em;text-decoration:none;color:var(--tinta);font-size:1.02rem;white-space:nowrap}
+.marca{font-family:var(--serif);font-weight:700;letter-spacing:.01em;text-decoration:none;color:var(--tinta);font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:44vw;flex:0 0 auto}
 .ctx{font-family:var(--sans);font-size:.78rem;color:var(--tinta-suave);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:360px){.marca{font-size:.86rem;max-width:38vw}.ctx{display:none}}
 .hamb{margin-left:auto;background:none;border:none;font-size:1.35rem;line-height:1;cursor:pointer;color:var(--tinta);padding:6px 4px;flex:0 0 auto}
 .menudrop{
   display:none;flex-direction:column;position:absolute;right:0;top:52px;z-index:50;
@@ -72,6 +73,16 @@ body{
 .menudrop a:hover,.menudrop button:hover{background:var(--papel-2)}
 .menudrop a[aria-current="page"]{color:var(--granate);font-weight:600}
 .ver{font-family:var(--sans);font-size:.72rem;color:var(--tinta-suave);padding:8px 11px;display:block}
+@media (min-width:760px){
+  .marca{max-width:none}
+  .hamb{display:none}
+  .menudrop{
+    display:flex !important;position:static;flex-direction:row;align-items:center;
+    border:none;box-shadow:none;background:none;padding:0;min-width:0;margin-left:auto;gap:2px;
+  }
+  .menudrop a,.menudrop button{padding:8px 10px}
+  .menudrop .ver{padding:3px 8px;border:1px solid var(--arena);border-radius:99px;font-size:.7rem;margin-left:4px}
+}
 
 #panel{
   display:none;position:fixed;inset:0;z-index:60;

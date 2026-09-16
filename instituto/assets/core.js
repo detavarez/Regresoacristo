@@ -202,7 +202,7 @@
   function barra(activo, contexto) {
     var html =
       '<header class="barra"><div class="env">' +
-      '<a class="marca" href="index.html">Instituto Bíblico Intensivo</a>' +
+      '<a class="marca" href="index.html">Instituto Bíblico</a>' +
       (contexto ? '<span class="ctx">' + contexto + '</span>' : '') +
       '<button type="button" id="btnMenu" class="hamb" aria-label="Menú" aria-expanded="false">&#9776;</button>' +
       '<div id="menuDrop" class="menudrop">' +
