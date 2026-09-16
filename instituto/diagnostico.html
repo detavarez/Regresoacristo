@@ -15,7 +15,7 @@
   <div class="encabezado">
     <p class="ruta">Ingreso de estudiantes</p>
     <h1>Examen de ubicación</h1>
-    <p class="sub">No mide si tu fe es buena. Mide qué ya sabes, para que empieces donde realmente te conviene empezar y no repitas lo que dominas. Responde con honestidad; si no sabes algo, déjalo en blanco en lugar de adivinar.</p>
+    <p class="sub">No mide si tu fe es buena. Mide qué ya sabes, para que empieces donde realmente te conviene empezar y no repitas lo que dominas. Responde con honestidad; si no sabes algo, marca "No sé todavía" en lugar de adivinar — adivinar bien te ubicaría en una lección que no te toca.</p>
   </div>
 
   <div class="grupo" style="margin:0 0 26px">
@@ -42,7 +42,9 @@ document.getElementById('examen').innerHTML = P.map(function (q, i) {
   return '<div class="qcard" data-i="' + i + '"><p class="qt">' + (i + 1) + '. ' + q.p + '</p>' +
     q.o.map(function (o, j) {
       return '<label class="opt"><input type="radio" name="d' + i + '" value="' + j + '"><span>' + o + '</span></label>';
-    }).join('') + '<div class="explica" hidden></div></div>';
+    }).join('') +
+    '<label class="opt ns"><input type="radio" name="d' + i + '" value="ns"><span>No sé todavía — prefiero no adivinar</span></label>' +
+    '<div class="explica" hidden></div></div>';
 }).join('');
 
 var PRIMERA_DE_AREA = {};
@@ -58,8 +60,29 @@ function primeraDelNivel(id) {
   return niv.modulos[0].lecciones[0].n;
 }
 
+document.getElementById('examen').addEventListener('change', function (e) {
+  var card = e.target.closest('.qcard');
+  if (card) card.classList.remove('falta');
+});
+
 document.getElementById('calificar').onclick = function () {
-  var porNivel = {}, porArea = {}, falladas = [], correctas = 0;
+  var sinResponder = [];
+  P.forEach(function (q, i) {
+    var card = document.querySelector('.qcard[data-i="' + i + '"]');
+    if (!card.querySelector('input:checked')) sinResponder.push(i);
+  });
+  if (sinResponder.length) {
+    document.querySelectorAll('.qcard.falta').forEach(function (c) { c.classList.remove('falta'); });
+    sinResponder.forEach(function (i) {
+      document.querySelector('.qcard[data-i="' + i + '"]').classList.add('falta');
+    });
+    var primera = document.querySelector('.qcard[data-i="' + sinResponder[0] + '"]');
+    primera.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    alert('Te faltan ' + sinResponder.length + ' pregunta' + (sinResponder.length > 1 ? 's' : '') + ' por responder. Si no sabes alguna, marca "No sé todavía" — no hace falta adivinar.');
+    return;
+  }
+
+  var porNivel = {}, porArea = {}, falladas = [], correctas = 0, noSe = 0;
 
   P.forEach(function (q, i) {
     porNivel[q.nivel] = porNivel[q.nivel] || { ok: 0, total: 0 };
@@ -73,7 +96,10 @@ document.getElementById('calificar').onclick = function () {
     opts.forEach(function (o) { o.classList.remove('correcta', 'incorrecta'); });
     opts[q.c].classList.add('correcta');
 
-    if (sel && parseInt(sel.value, 10) === q.c) {
+    if (sel && sel.value === 'ns') {
+      noSe++;
+      falladas.push({ n: i + 1, area: q.area, nivel: q.nivel, elegida: 'No sé todavía', correcta: q.o[q.c], noSe: true });
+    } else if (sel && parseInt(sel.value, 10) === q.c) {
       correctas++; porNivel[q.nivel].ok++; porArea[q.nivel + '|' + q.area].ok++;
     } else {
       if (sel) opts[parseInt(sel.value, 10)].classList.add('incorrecta');
@@ -133,7 +159,7 @@ document.getElementById('calificar').onclick = function () {
   r.innerHTML = '<h2>Tu ubicación</h2>' +
     '<div id="marcador"><div class="pct">' + pctGlobal + '%</div>' +
     '<p>Empieza en la <b>lección ' + recomendada + '</b> — ' + (INST.meta(recomendada) || {}).t + '</p>' +
-    '<p class="sub">' + razon + '</p></div>' +
+    '<p class="sub">' + razon + (noSe ? ' Marcaste "No sé todavía" en ' + noSe + ' pregunta' + (noSe > 1 ? 's' : '') + '; eso no resta como error de contenido, pero tampoco cuenta como dominado.' : '') + '</p></div>' +
     '<table class="datos" style="margin-top:20px"><tbody>' + detalle + '</tbody></table>' +
     (fuertes.length ? '<p class="sub">Áreas sólidas: ' + fuertes.join(' · ') + '</p>' : '') +
     (falladas.length ? '<h3>Preguntas para repasar</h3><ul class="sub">' + falladas.map(function (f) {

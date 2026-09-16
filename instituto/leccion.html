@@ -14,14 +14,14 @@
 <div class="env"><footer class="pie" id="pie"></footer></div>
 
 <script>
-INST.barra('');
-INST.glosarioActivo();
-
 var params = new URLSearchParams(location.search);
 var n = params.get('n');
 var consulta = params.get('modo') === 'consulta';
 var meta = INST.meta(n);
 var salida = document.getElementById('salida');
+
+INST.barra('', meta ? ('Lección ' + meta.n + ' · Nivel ' + meta.nivel) : '');
+INST.glosarioActivo();
 
 if (!meta) {
   salida.innerHTML = '<div class="encabezado"><h1>Esa lección no existe</h1>' +
