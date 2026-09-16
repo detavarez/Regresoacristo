@@ -1,7 +1,7 @@
 (function (global) {
   'use strict';
 
-  var VERSION = 'Ver-001';
+  var VERSION = 'Ver-002';
   var CLAVE = 'instituto_v1';
 
   var BASE = {
@@ -199,17 +199,19 @@
     return res.slice(0, 25);
   }
 
-  function barra(activo) {
+  function barra(activo, contexto) {
     var html =
       '<header class="barra"><div class="env">' +
-      '<a class="marca" href="index.html">Instituto Bíblico <span>Intensivo</span></a>' +
-      '<nav>' +
+      '<a class="marca" href="index.html">Inst. Bíb.</a>' +
+      (contexto ? '<span class="ctx">' + contexto + '</span>' : '') +
+      '<button type="button" id="btnMenu" class="hamb" aria-label="Menú" aria-expanded="false">&#9776;</button>' +
+      '<div id="menuDrop" class="menudrop">' +
       '<a href="index.html"' + (activo === 'indice' ? ' aria-current="page"' : '') + '>Índice</a>' +
       '<a href="diagnostico.html"' + (activo === 'diag' ? ' aria-current="page"' : '') + '>Ubicación</a>' +
       '<a href="progreso.html"' + (activo === 'prog' ? ' aria-current="page"' : '') + '>Mi avance</a>' +
-      '<button type="button" id="btnPanel" aria-label="Ajustes de lectura">Ajustes</button>' +
+      '<button type="button" id="btnPanel">Ajustes de lectura</button>' +
       '<span class="ver">' + VERSION + '</span>' +
-      '</nav></div></header>' +
+      '</div></div></header>' +
       '<div id="panel"><div class="caja" role="dialog" aria-label="Ajustes de lectura">' +
       '<h3>Ajustes de lectura</h3>' +
       grupo('Tema', 'tema', [['claro', 'Claro'], ['oscuro', 'Oscuro'], ['auto', 'Automático']]) +
@@ -224,7 +226,21 @@
       '</div></div><div id="glosarioPop" role="tooltip"></div>';
     document.body.insertAdjacentHTML('afterbegin', html);
 
-    document.getElementById('btnPanel').onclick = function () { document.getElementById('panel').classList.add('abierto'); };
+    var menu = document.getElementById('menuDrop');
+    var btnMenu = document.getElementById('btnMenu');
+    btnMenu.onclick = function (e) {
+      e.stopPropagation();
+      var abierto = menu.classList.toggle('abierto');
+      btnMenu.setAttribute('aria-expanded', String(abierto));
+    };
+    document.addEventListener('click', function (e) {
+      if (!menu.contains(e.target) && e.target !== btnMenu) menu.classList.remove('abierto');
+    });
+
+    document.getElementById('btnPanel').onclick = function () {
+      menu.classList.remove('abierto');
+      document.getElementById('panel').classList.add('abierto');
+    };
     document.getElementById('btnCerrarPanel').onclick = cerrar;
     document.getElementById('panel').addEventListener('click', function (e) { if (e.target.id === 'panel') cerrar(); });
     document.getElementById('btnExportar').onclick = exportar;
