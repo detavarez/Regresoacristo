@@ -112,14 +112,24 @@ function pintar(L) {
   }
 
   if (L.fuentes && L.fuentes.length) {
-    html += '<h2>Fuentes consultadas</h2><ul class="sub">' +
-      L.fuentes.map(function (f) { return '<li>' + f + '</li>'; }).join('') + '</ul>';
+    html += '<div id="fuentesPop" class="fpop" hidden><div class="fpop-caja"><button type="button" id="fuentesCerrar" aria-label="Cerrar">&times;</button>' +
+      '<h4>Fuentes de esta lección</h4><ul>' + L.fuentes.map(function (f) { return '<li>' + f + '</li>'; }).join('') + '</ul></div></div>';
   }
 
   html += pie();
   salida.innerHTML = html;
-  document.getElementById('pie').textContent = 'Lección ' + meta.n + ' · ' + INST.VERSION +
+  var pieHtml = 'Lección ' + meta.n + ' · ' + INST.VERSION +
     (consulta ? ' · Abierta en modo consulta: no cambia tu lección actual.' : '');
+  if (L.fuentes && L.fuentes.length) {
+    pieHtml += ' · <button type="button" class="fuentes-link" id="abrirFuentes">Fuentes de esta lección</button>';
+  }
+  document.getElementById('pie').innerHTML = pieHtml;
+  if (L.fuentes && L.fuentes.length) {
+    var fpop = document.getElementById('fuentesPop');
+    document.getElementById('abrirFuentes').onclick = function () { fpop.hidden = false; };
+    document.getElementById('fuentesCerrar').onclick = function () { fpop.hidden = true; };
+    fpop.addEventListener('click', function (e) { if (e.target === fpop) fpop.hidden = true; });
+  }
   navegacion();
   if (L.quiz && L.quiz.length) armarQuiz(L);
 }
