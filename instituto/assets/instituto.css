@@ -203,6 +203,16 @@ hr{border:none;border-top:1px solid var(--arena);margin:34px 0}
 .pieleccion a:hover{color:var(--tinta)}
 
 .pie{border-top:1px solid var(--arena);margin:60px 0 0;padding:20px 0 50px;font-family:var(--sans);font-size:.78rem;color:var(--tinta-suave)}
+.fuentes-link{font-family:var(--sans);font-size:.78rem;color:var(--tinta-suave);text-decoration:underline;cursor:pointer;background:none;border:none;padding:0}
+.fuentes-link:hover{color:var(--tinta)}
+.fpop{position:fixed;inset:0;z-index:65;background:rgba(20,18,16,.45);display:flex;align-items:center;justify-content:center;padding:20px}
+.fpop[hidden]{display:none}
+.fpop-caja{background:var(--papel);border:1px solid var(--arena);max-width:480px;width:100%;max-height:80vh;overflow:auto;padding:24px 26px;border-radius:4px;position:relative;font-family:var(--sans);font-size:.88rem;line-height:1.6}
+.fpop-caja h4{font-family:var(--serif);margin:0 0 14px;font-size:1.05rem;color:var(--tinta)}
+.fpop-caja ul{margin:0;padding-left:1.1em}
+.fpop-caja li{margin:0 0 10px}
+#fuentesCerrar{position:absolute;top:10px;right:12px;background:none;border:none;font-size:1.4rem;line-height:1;cursor:pointer;color:var(--tinta-suave)}
+#fuentesCerrar:hover{color:var(--tinta)}
 
 table.datos{width:100%;border-collapse:collapse;font-family:var(--sans);font-size:.88rem;margin:0 0 18px}
 table.datos th,table.datos td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--arena);vertical-align:top}
