@@ -12,7 +12,7 @@ INST.registrarLeccion({
   secciones: [
     { tipo: 'texto', titulo: 'Una biblioteca, no un libro', html:
       '<p>La palabra "Biblia" viene del griego <i>biblía</i>, plural de <i>biblíon</i>: "los libros". El nombre es exacto. Lo que tienes en las manos no es una obra escrita de corrido por un autor, sino una colección de sesenta y seis escritos de géneros distintos: relatos históricos, leyes, poemas, cartas, oráculos proféticos, genealogías, proverbios, visiones.</p>' +
-      '<p>Se divide en dos partes. El <span class="gterm" data-def="Del latín testamentum, que traduce el hebreo berit y el griego diathēkē: pacto o alianza. Hablar de dos Testamentos es hablar de dos etapas de la relación pactual entre Dios y su pueblo, no de dos libros sin relación.">Antiguo Testamento</span> reúne 39 libros escritos antes de Cristo, y el Nuevo Testamento 27, escritos en el primer siglo. Esa numeración corresponde al canon protestante; las Biblias católica y ortodoxa incluyen además otros libros, un asunto que se trata en la lección 122.</p>' +
+      '<p>Se divide en dos partes. El <span class="gterm" data-def="Del latín testamentum, que traduce el hebreo berit y el griego diathēkē: pacto o alianza. Hablar de dos Testamentos es hablar de dos etapas de la relación pactual entre Dios y su pueblo, no de dos libros sin relación.">Antiguo Testamento</span> reúne 39 libros escritos antes de Cristo, y el Nuevo Testamento 27, escritos en el primer siglo. Esa numeración corresponde al <span class="gterm" data-def="Del griego kanon, «regla» o «medida». La lista oficial de libros que una tradición cristiana reconoce como Escritura inspirada, distinta de otros escritos antiguos que existen pero no se incluyen.">canon</span> protestante; las Biblias católica y ortodoxa incluyen además otros libros, un asunto que se trata en la lección 122.</p>' +
       '<p>Las cifras que se repiten sobre autores y siglos —alrededor de cuarenta autores a lo largo de unos mil quinientos años— son aproximaciones tradicionales útiles, no datos exactos: varios libros son anónimos y la fecha de composición de algunos se discute. Lo que no está en discusión es lo esencial del dato: los autores fueron muchos, muy distintos entre sí y separados por siglos. Hubo entre ellos un legislador, un rey, un pastor de ovejas, un copero real, un médico, un recaudador de impuestos, pescadores y un rabino formado en Jerusalén.</p>' },
 
     { tipo: 'texto', titulo: 'Tres idiomas', html:
@@ -56,23 +56,7 @@ INST.registrarLeccion({
       ['Leerla como si fuera un manual científico o un código legal moderno', 'Son géneros que no existían cuando se escribió. Preguntarle al texto cosas que no se propuso responder produce respuestas inventadas.'],
       ['Suponer que el orden de los libros es cronológico', 'Los libros están agrupados por género y tradición, no por fecha. Job probablemente narra hechos muy antiguos y está colocado después de Ester; varias cartas de Pablo se escribieron antes que los evangelios.'],
       ['Confundir "escrita para mí" con "escrita a mí"', 'Toda la Escritura es para el lector cristiano, pero ninguna carta fue dirigida a él. Levítico se le dio a Israel en el desierto; 1 Corintios, a una congregación concreta con problemas concretos. Recuperar el destinatario original es el primer paso para aplicarla bien, no un obstáculo devocional.']
-    ] },
-
-    { tipo: 'aplicacion', titulo: 'Qué hacer con esto según dónde estés', filas: [
-      ['Si empiezas desde cero', 'Abre el índice de tu Biblia y localiza las cinco divisiones del Antiguo Testamento y las cuatro del Nuevo. Saber moverse en el índice es la destreza básica de todo lo demás.'],
-      ['Si ya estudias', 'Cada vez que leas un pasaje, anota antes de interpretarlo: qué libro es, qué género tiene y a quién se dirigió originalmente.'],
-      ['Si enseñas', 'La composición de la Biblia es la primera clase de cualquier curso. Enseñarla con la imagen de la biblioteca evita la mitad de los errores de interpretación que corregirás después.'],
-      ['Si predicas', 'Nombra el género del texto al presentarlo. "Esto es un proverbio, no una promesa" evita en una frase un malentendido que costaría media hora corregir.'],
-      ['Si pastoreas', 'Mucha gente sufre por promesas mal aplicadas de un texto sacado de su contexto. Enseñar qué clase de libro es la Biblia es cuidado pastoral, no solo instrucción académica.']
     ] }
-  ],
-
-  conexiones: [
-    { n: 102, texto: 'cómo está organizada internamente y por qué los libros están en ese orden.' },
-    { n: 103, texto: 'la historia completa que estos sesenta y seis libros cuentan.' },
-    { n: 122, texto: 'por qué hay Biblias con más libros que otras.' },
-    { n: 150, texto: 'las traducciones al español y por qué difieren entre sí.' },
-    { n: 202, texto: 'el tratamiento a fondo de la inspiración, con los textos y las posturas completas.' }
   ],
 
   ejercicios: [
