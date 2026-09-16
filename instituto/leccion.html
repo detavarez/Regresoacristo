@@ -84,21 +84,10 @@ function pintar(L) {
       sec.items.forEach(function (it) {
         html += '<div class="postura"><h4>' + it[0] + '</h4><p>' + it[1] + '</p></div>';
       });
-    } else if (sec.tipo === 'aplicacion') {
-      html += '<h2>' + (sec.titulo || 'Aplicación según tu nivel') + '</h2><table class="datos"><tbody>';
-      sec.filas.forEach(function (f) { html += '<tr><th style="width:30%">' + f[0] + '</th><td>' + f[1] + '</td></tr>'; });
-      html += '</tbody></table>';
     } else if (sec.tipo === 'nota') {
       html += '<div class="caja-nota"><h4>' + sec.titulo + '</h4>' + sec.html + '</div>';
     }
   });
-
-  if (L.conexiones && L.conexiones.length) {
-    html += '<h2>Conecta con</h2><ul>' + L.conexiones.map(function (c) {
-      var m2 = INST.meta(c.n);
-      return '<li><a href="leccion.html?n=' + c.n + '&modo=consulta">Lección ' + c.n + ' — ' + (m2 ? m2.t : '') + '</a>: ' + c.texto + '</li>';
-    }).join('') + '</ul>';
-  }
 
   if (L.ejercicios && L.ejercicios.length) {
     html += '<h2>Ejercicios</h2><ol>' + L.ejercicios.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol>';
