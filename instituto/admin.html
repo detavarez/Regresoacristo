@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administrador — Instituto Bíblico</title>
+<link rel="stylesheet" href="assets/instituto.css">
+<style>
+  .adm-header{border-bottom:1px solid var(--arena);padding:16px 0}
+  .adm-header .env{display:flex;align-items:center;gap:12px}
+  .adm-header a{font-family:var(--sans);font-size:.85rem;color:var(--tinta-suave);text-decoration:none}
+  .adm-header h1{font-size:1.15rem;margin:0}
+  .origen{font-family:var(--sans);font-size:.82rem;background:var(--papel-2);border:1px solid var(--arena);padding:10px 14px;margin:0 0 30px;border-radius:4px}
+  .origen b{color:var(--granate)}
+  fieldset{border:1px solid var(--arena);border-radius:5px;padding:16px 18px 20px;margin:0 0 24px}
+  legend{font-family:var(--sans);font-size:.8rem;color:var(--tinta-suave);padding:0 6px}
+  .fila{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 10px}
+  .fila label{font-family:var(--sans);font-size:.82rem;color:var(--tinta-suave);min-width:110px}
+  .fila input[type=text],.fila input[type=number],.fila select{
+    font-family:var(--sans);font-size:.88rem;padding:8px 10px;border:1px solid var(--arena);
+    background:var(--papel);color:var(--tinta);border-radius:3px;flex:1;min-width:180px;
+  }
+  .btn.peq{padding:8px 14px;font-size:.82rem}
+  .btn.peligro{background:var(--granate);border-color:var(--granate)}
+  table.datos td, table.datos th{font-size:.82rem}
+  #json{width:100%;min-height:260px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;
+    padding:12px;border:1px solid var(--arena);background:var(--papel-2);color:var(--tinta);border-radius:4px;white-space:pre}
+  .aviso{font-family:var(--sans);font-size:.8rem;color:var(--tinta-suave);margin:6px 0 0}
+</style>
+</head>
+<body>
+<script src="data/curriculo.js"></script>
+<script src="assets/core.js"></script>
+
+<header class="adm-header"><div class="env">
+  <a href="index.html">← Índice</a>
+  <h1>Panel de administrador</h1>
+</div></header>
+
+<main class="env" style="padding-top:26px">
+  <div class="origen" id="origenTxt"></div>
+
+  <fieldset>
+    <legend>Origen de los datos</legend>
+    <div class="fila">
+      <button class="btn sec peq" type="button" id="cargarNav">Cargar desde este navegador</button>
+      <label style="min-width:auto">o importar archivo de un estudiante:</label>
+      <input type="file" id="fileCargar" accept="application/json">
+    </div>
+    <p class="aviso">Los cambios de abajo se hacen sobre una copia en memoria. No se guardan hasta que uses uno de los botones de "Guardar" al final.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Identidad</legend>
+    <div class="fila"><label>Nombre</label><input type="text" id="fNombre"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Lección asignada</legend>
+    <div class="fila">
+      <label>Asignar a</label>
+      <select id="fLeccion"></select>
+      <button class="btn peq" type="button" id="asignar">Asignar</button>
+      <button class="btn sec peq" type="button" id="quitarAsignacion">Quitar asignación</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Examen de ubicación</legend>
+    <div class="fila">
+      <button class="btn peligro peq" type="button" id="borrarDiag">Borrar diagnóstico</button>
+      <span class="aviso" id="diagInfo"></span>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Calificar o borrar una lección puntual</legend>
+    <div class="fila">
+      <label>Lección</label>
+      <select id="fLeccionCal"></select>
+      <label style="min-width:auto">Nota %</label>
+      <input type="number" id="fNota" min="0" max="100" style="max-width:90px">
+      <button class="btn peq" type="button" id="marcarAprobada">Marcar aprobada</button>
+      <button class="btn sec peq" type="button" id="borrarProgreso">Borrar su progreso</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Registros completos</legend>
+    <div id="registros"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Reinicio total</legend>
+    <div class="fila">
+      <button class="btn peligro peq" type="button" id="reiniciarTodo">Vaciar todo (empezar de cero)</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Editor avanzado (JSON crudo — control total)</legend>
+    <textarea id="json"></textarea>
+    <div class="fila" style="margin-top:10px">
+      <button class="btn sec peq" type="button" id="aplicarJson">Aplicar este JSON a la copia en memoria</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Guardar</legend>
+    <div class="fila">
+      <button class="btn" type="button" id="guardarNav">Guardar en este navegador</button>
+      <button class="btn sec" type="button" id="descargar">Descargar como archivo para el estudiante</button>
+    </div>
+    <p class="aviso">"Guardar en este navegador" solo tiene efecto si estás en el mismo dispositivo del estudiante. Si trabajaste con un archivo importado, usa "Descargar" y pídele que lo restaure desde Ajustes → Restaurar desde archivo.</p>
+  </fieldset>
+</main>
+
+<script>
+var trabajo = null;
+
+function todasLasLecciones() {
+  return INST.listaPlana();
+}
+
+function llenarSelect(sel) {
+  sel.innerHTML = todasLasLecciones().map(function (l) {
+    return '<option value="' + l.n + '">' + l.n + ' — ' + l.t + '</option>';
+  }).join('');
+}
+llenarSelect(document.getElementById('fLeccion'));
+llenarSelect(document.getElementById('fLeccionCal'));
+
+function cargarDesde(obj, etiqueta) {
+  trabajo = obj;
+  document.getElementById('origenTxt').innerHTML = 'Editando: <b>' + etiqueta + '</b>' +
+    (trabajo.perfil.nombre ? ' — ' + trabajo.perfil.nombre : ' — (sin nombre)');
+  pintarTodo();
+}
+
+document.getElementById('cargarNav').onclick = function () {
+  cargarDesde(JSON.parse(JSON.stringify(INST.estado)), 'datos de este navegador');
+};
+
+document.getElementById('fileCargar').onchange = function (e) {
+  var f = e.target.files[0];
+  if (!f) return;
+  var fr = new FileReader();
+  fr.onload = function () {
+    try {
+      var g = JSON.parse(fr.result);
+      cargarDesde(g, 'archivo importado (' + f.name + ')');
+    } catch (err) { alert('Ese archivo no es un historial válido.'); }
+  };
+  fr.readAsText(f);
+};
+
+function pintarTodo() {
+  if (!trabajo) return;
+  document.getElementById('fNombre').value = trabajo.perfil.nombre || '';
+  var d = trabajo.diagnostico;
+  document.getElementById('diagInfo').textContent = d
+    ? 'Hecho el ' + new Date(d.fecha).toLocaleDateString('es') + ' — recomendó la lección ' + d.recomendada + ' (' + d.pctGlobal + '%).'
+    : 'No tiene diagnóstico registrado.';
+  pintarRegistros();
+  document.getElementById('json').value = JSON.stringify(trabajo, null, 2);
+}
+
+function pintarRegistros() {
+  var filas = Object.keys(trabajo.progreso).sort().map(function (k) {
+    var p = trabajo.progreso[k], m = INST.meta(k);
+    return '<tr><td>' + k + (m ? ' — ' + m.t : '') + '</td><td>' + p.estado + '</td>' +
+      '<td>' + (p.mejor !== null ? p.mejor + '%' : '—') + '</td><td>' + p.intentos.length + '</td>' +
+      '<td>' + (p.ultima ? new Date(p.ultima).toLocaleDateString('es') : '—') + '</td></tr>';
+  }).join('');
+  document.getElementById('registros').innerHTML =
+    '<p class="aviso">Lección actual asignada: <b>' + (trabajo.leccionActual || 'ninguna') + '</b> · Consultadas: ' + (trabajo.consultadas.length || 0) + '</p>' +
+    (filas
+      ? '<table class="datos"><thead><tr><th>Lección</th><th>Estado</th><th>Mejor</th><th>Intentos</th><th>Última</th></tr></thead><tbody>' + filas + '</tbody></table>'
+      : '<p class="aviso">Sin lecciones registradas todavía.</p>');
+}
+
+function requiere() { if (!trabajo) { alert('Primero carga datos: de este navegador o de un archivo.'); return false; } return true; }
+
+document.getElementById('fNombre').addEventListener('change', function () {
+  if (!requiere()) return;
+  trabajo.perfil.nombre = this.value.trim();
+  pintarTodo();
+});
+
+document.getElementById('asignar').onclick = function () {
+  if (!requiere()) return;
+  var n = document.getElementById('fLeccion').value;
+  trabajo.leccionActual = n;
+  if (!trabajo.progreso[n]) trabajo.progreso[n] = { estado: 'en-curso', visitas: 1, intentos: [], mejor: null, primera: new Date().toISOString(), ultima: new Date().toISOString() };
+  pintarTodo();
+};
+document.getElementById('quitarAsignacion').onclick = function () {
+  if (!requiere()) return;
+  trabajo.leccionActual = null;
+  pintarTodo();
+};
+
+document.getElementById('borrarDiag').onclick = function () {
+  if (!requiere()) return;
+  if (!confirm('¿Borrar el diagnóstico de ubicación? Esto no afecta el progreso de lecciones.')) return;
+  trabajo.diagnostico = null;
+  pintarTodo();
+};
+
+document.getElementById('marcarAprobada').onclick = function () {
+  if (!requiere()) return;
+  var n = document.getElementById('fLeccionCal').value;
+  var nota = parseInt(document.getElementById('fNota').value, 10);
+  if (isNaN(nota) || nota < 0 || nota > 100) { alert('Escribe una nota entre 0 y 100.'); return; }
+  var r = trabajo.progreso[n] || { visitas: 1, intentos: [], primera: new Date().toISOString() };
+  r.intentos.push({ fecha: new Date().toISOString(), correctas: null, total: null, pct: nota, falladas: [], nota: 'asignada por administrador' });
+  r.mejor = (r.mejor === null || nota > r.mejor) ? nota : r.mejor;
+  r.estado = nota >= (CURRICULO.umbralAprobacion || 70) ? 'aprobada' : 'repasar';
+  r.ultima = new Date().toISOString();
+  trabajo.progreso[n] = r;
+  pintarTodo();
+};
+document.getElementById('borrarProgreso').onclick = function () {
+  if (!requiere()) return;
+  var n = document.getElementById('fLeccionCal').value;
+  if (!trabajo.progreso[n]) { alert('Esa lección no tiene progreso registrado.'); return; }
+  if (!confirm('¿Borrar todo el progreso de la lección ' + n + '?')) return;
+  delete trabajo.progreso[n];
+  if (trabajo.leccionActual === n) trabajo.leccionActual = null;
+  pintarTodo();
+};
+
+document.getElementById('reiniciarTodo').onclick = function () {
+  if (!requiere()) return;
+  if (!confirm('Esto borra TODO: nombre, diagnóstico, progreso e historial. ¿Continuar?')) return;
+  var nombrePrevio = trabajo.perfil.nombre;
+  trabajo = INST.estadoVacio();
+  pintarTodo();
+  document.getElementById('origenTxt').innerHTML += ' — <b>reiniciado</b>' + (nombrePrevio ? ' (era: ' + nombrePrevio + ')' : '');
+};
+
+document.getElementById('aplicarJson').onclick = function () {
+  try {
+    var g = JSON.parse(document.getElementById('json').value);
+    if (!g.esquema) throw new Error('falta esquema');
+    trabajo = g;
+    pintarTodo();
+    alert('JSON aplicado a la copia en memoria. Falta guardarlo abajo.');
+  } catch (err) { alert('Ese JSON no es válido: ' + err.message); }
+};
+
+document.getElementById('guardarNav').onclick = function () {
+  if (!requiere()) return;
+  INST.reemplazar(trabajo);
+  alert('Guardado en este navegador. Si el estudiante usa este mismo dispositivo, ya ve los cambios al recargar.');
+};
+
+document.getElementById('descargar').onclick = function () {
+  if (!requiere()) return;
+  var blob = new Blob([JSON.stringify(trabajo, null, 2)], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'instituto-historial-' + (trabajo.perfil.nombre || 'estudiante').replace(/\s+/g, '-').toLowerCase() + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+// Carga automática al abrir: los datos de este navegador, si existen.
+cargarDesde(JSON.parse(JSON.stringify(INST.estado)), 'datos de este navegador');
+</script>
+</body>
+</html>
