@@ -7,7 +7,7 @@
   var BASE = {
     esquema: 1,
     perfil: { nombre: '', creado: null },
-    config: { tema: 'auto', tamano: 'b', tipo: 'serif', ancho: 'normal' },
+    config: { tema: 'auto', tamano: 'b', tipo: 'serif', ancho: 'normal', idioma: 'es' },
     diagnostico: null,
     leccionActual: null,
     progreso: {},
@@ -18,20 +18,23 @@
 
   function clonar(o) { return JSON.parse(JSON.stringify(o)); }
 
-  function cargar() {
+  function normalizar(g) {
     var e = clonar(BASE);
+    if (g) {
+      Object.keys(BASE).forEach(function (k) {
+        if (g[k] !== undefined && g[k] !== null) e[k] = g[k];
+      });
+      if (g.config) e.config = Object.assign(clonar(BASE.config), g.config);
+      if (g.perfil) e.perfil = Object.assign(clonar(BASE.perfil), g.perfil);
+    }
+    return e;
+  }
+
+  function cargar() {
     try {
       var crudo = global.localStorage.getItem(CLAVE);
-      if (crudo) {
-        var g = JSON.parse(crudo);
-        Object.keys(BASE).forEach(function (k) {
-          if (g[k] !== undefined && g[k] !== null) e[k] = g[k];
-        });
-        if (g.config) e.config = Object.assign(clonar(BASE.config), g.config);
-        if (g.perfil) e.perfil = Object.assign(clonar(BASE.perfil), g.perfil);
-      }
-    } catch (err) { /* estado por defecto */ }
-    return e;
+      return normalizar(crudo ? JSON.parse(crudo) : null);
+    } catch (err) { return clonar(BASE); }
   }
 
   var estado = cargar();
@@ -52,6 +55,7 @@
     h.setAttribute('data-tamano', estado.config.tamano);
     h.setAttribute('data-tipo', estado.config.tipo);
     h.setAttribute('data-ancho', estado.config.ancho);
+    h.lang = estado.config.idioma;
   }
 
   function setConfig(k, v) { estado.config[k] = v; guardar(); aplicarConfig(); }
@@ -166,6 +170,15 @@
     URL.revokeObjectURL(a.href);
   }
 
+  function reemplazar(g) {
+    estado = normalizar(g);
+    guardar();
+    aplicarConfig();
+    return true;
+  }
+
+  function estadoVacio() { return clonar(BASE); }
+
   function importar(archivo, cb) {
     var fr = new FileReader();
     fr.onload = function () {
@@ -218,12 +231,13 @@
       grupo('Tamaño del texto', 'tamano', [['a', 'A'], ['b', 'A'], ['c', 'A'], ['d', 'A']]) +
       grupo('Tipografía', 'tipo', [['serif', 'Serif'], ['sans', 'Sans']]) +
       grupo('Ancho de lectura', 'ancho', [['angosto', 'Angosto'], ['normal', 'Normal'], ['ancho', 'Ancho']]) +
+      grupo('Idioma de las lecciones · Lesson language', 'idioma', [['es', 'Español'], ['en', 'English']]) +
       '<div class="grupo"><label>Historial</label>' +
       '<button class="btn sec" type="button" id="btnExportar">Descargar mi historial</button></div>' +
       '<div class="grupo"><label>Restaurar desde archivo</label>' +
       '<input type="file" id="fileImportar" accept="application/json"></div>' +
       '<button class="btn" type="button" id="btnCerrarPanel">Cerrar</button>' +
-      '</div></div><div id="glosarioPop" role="tooltip"></div>';
+      '</div></div><div id="glosarioPop" role="tooltip"><button type="button" id="glosarioCerrar" aria-label="Cerrar">&times;</button><div id="glosarioTexto"></div></div>';
     document.body.insertAdjacentHTML('afterbegin', html);
 
     var menu = document.getElementById('menuDrop');
@@ -272,10 +286,13 @@
   function glosarioActivo() {
     var pop = document.getElementById('glosarioPop');
     if (!pop) return;
+    var texto = document.getElementById('glosarioTexto');
+    document.getElementById('glosarioCerrar').onclick = function () { pop.classList.remove('visible'); };
     document.addEventListener('click', function (e) {
+      if (e.target.closest('#glosarioPop') && !e.target.closest('#glosarioCerrar')) return;
       var t = e.target.closest('.gterm');
       if (!t) { pop.classList.remove('visible'); return; }
-      pop.innerHTML = '<b>' + t.textContent + '</b>' + t.dataset.def;
+      texto.innerHTML = '<b>' + t.textContent + '</b>' + t.dataset.def;
       pop.classList.add('visible');
       var r = t.getBoundingClientRect();
       var x = Math.min(r.left + global.scrollX, global.innerWidth - 340);
@@ -299,6 +316,9 @@
     temasDebiles: temasDebiles,
     resumen: resumen,
     exportar: exportar,
+    importar: importar,
+    reemplazar: reemplazar,
+    estadoVacio: estadoVacio,
     buscar: buscar,
     barra: barra,
     glosarioActivo: glosarioActivo,
