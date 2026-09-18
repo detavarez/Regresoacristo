@@ -33,6 +33,7 @@
   var estado = null;      // se llena de forma asíncrona, ver iniciar()
   var sesion = null;      // { user_id, email }
   var esAdmin = false;
+  var tieneFilaEstudiante = false;
   var listoResolve;
   var listo = new Promise(function (res) { listoResolve = res; });
   var LOGIN_PATH = 'login.html';
@@ -60,23 +61,22 @@
     sesion = { user_id: sesionActiva.user.id, email: sesionActiva.user.email };
 
     var fila = await cargarFilaEstudiante(sesion.user_id);
-    if (!fila) {
-      // Tiene sesión pero no fila de estudiante (ni admin puro sin estudiante):
-      // igual lo dejamos entrar si es admin, con estado vacío en memoria.
-      estado = clonar(BASE);
-      estado.perfil = { nombre: '' };
-      estado.leccionActual = null;
-    } else {
+    var admFila = await sb.from('admins').select('user_id, nombre, config').eq('user_id', sesion.user_id).maybeSingle();
+    esAdmin = !!(admFila && admFila.data);
+
+    if (fila) {
+      tieneFilaEstudiante = true;
       estado = normalizar(fila.estado);
       estado.perfil = { nombre: fila.nombre || '' };
       estado.leccionActual = fila.leccion_actual || null;
-    }
-
-    var admFila = await sb.from('admins').select('user_id').eq('user_id', sesion.user_id).maybeSingle();
-    esAdmin = !!(admFila && admFila.data);
-
-    if (!fila && !esAdmin) {
-      // No es estudiante ni admin: no tiene nada que hacer aquí.
+    } else if (esAdmin) {
+      tieneFilaEstudiante = false;
+      estado = clonar(BASE);
+      if (admFila.data.config) estado.config = Object.assign(clonar(BASE.config), admFila.data.config);
+      estado.perfil = { nombre: admFila.data.nombre || '' };
+      estado.leccionActual = null;
+    } else {
+      // Sesión válida pero sin fila de estudiante ni de admin: no pertenece aquí.
       await sb.auth.signOut();
       irALogin();
       listoResolve();
@@ -90,6 +90,10 @@
 
   async function guardar() {
     if (!estado || !sesion) return false;
+    if (esAdmin && !tieneFilaEstudiante) {
+      var ra = await sb.from('admins').update({ config: estado.config }).eq('user_id', sesion.user_id);
+      return !ra.error;
+    }
     var copia = clonar(estado);
     delete copia.perfil;
     delete copia.leccionActual;
