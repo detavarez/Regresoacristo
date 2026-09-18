@@ -8,6 +8,7 @@
 </head>
 <body>
 <script src="data/curriculo.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/core.js"></script>
 
 <main>
@@ -28,11 +29,14 @@
   <div class="env" id="mapa"></div>
 
   <div class="env"><footer class="pie">
-    Instituto Bíblico Intensivo · <span id="verPie"></span> · Tu progreso se guarda solo en este navegador. Descárgalo desde Ajustes para no perderlo.
+    Instituto Bíblico Intensivo · <span id="verPie"></span> · Tu progreso se guarda en tu cuenta y está disponible desde cualquier dispositivo.
   </footer></div>
 </main>
 
 <script>
+INST.listo.then(function () {
+if (!INST.estado) return; // sin sesión, ya redirigido a login.html
+
 INST.barra('indice');
 INST.glosarioActivo();
 document.getElementById('verPie').textContent = INST.VERSION;
@@ -131,6 +135,7 @@ function estadoLeccion(n) {
     }).join('');
   });
 })();
+});
 </script>
 </body>
 </html>

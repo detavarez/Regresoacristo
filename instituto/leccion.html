@@ -8,6 +8,7 @@
 </head>
 <body>
 <script src="data/curriculo.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/core.js"></script>
 
 <main class="env" id="salida"></main>
@@ -45,31 +46,37 @@ var T = {
   }
 };
 
-INST.glosarioActivo();
+var params, n, consulta, meta, salida, lang, t;
 
-var params = new URLSearchParams(location.search);
-var n = params.get('n');
-var consulta = params.get('modo') === 'consulta';
-var meta = INST.meta(n);
-var salida = document.getElementById('salida');
-var lang = (INST.estado.config.idioma === 'en') ? 'en' : 'es';
-var t = T[lang];
+INST.listo.then(function () {
+  if (!INST.estado) return; // sin sesión, ya redirigido a login.html
 
-INST.barra('', meta ? ('Lección ' + meta.n + ' · Nivel ' + meta.nivel) : '');
+  INST.glosarioActivo();
 
-if (!meta) {
-  salida.innerHTML = '<div class="encabezado"><h1>' + t.noExisteTit + '</h1>' +
-    '<p class="sub">' + t.noExisteTxt(n || '(vacío)') + '</p>' +
-    '<p><a class="btn" href="index.html">' + t.volver + '</a></p></div>';
-} else if ((window.LECCIONES_DISPONIBLES || []).indexOf(String(n)) === -1) {
-  pendiente();
-} else {
-  var s = document.createElement('script');
-  s.src = 'data/lecciones/L' + n + '.js';
-  s.onload = function () { INST.lecciones[String(n)] ? pintar(INST.lecciones[String(n)]) : pendiente(); };
-  s.onerror = pendiente;
-  document.body.appendChild(s);
-}
+  params = new URLSearchParams(location.search);
+  n = params.get('n');
+  consulta = params.get('modo') === 'consulta';
+  meta = INST.meta(n);
+  salida = document.getElementById('salida');
+  lang = (INST.estado.config.idioma === 'en') ? 'en' : 'es';
+  t = T[lang];
+
+  INST.barra('', meta ? ('Lección ' + meta.n + ' · Nivel ' + meta.nivel) : '');
+
+  if (!meta) {
+    salida.innerHTML = '<div class="encabezado"><h1>' + t.noExisteTit + '</h1>' +
+      '<p class="sub">' + t.noExisteTxt(n || '(vacío)') + '</p>' +
+      '<p><a class="btn" href="index.html">' + t.volver + '</a></p></div>';
+  } else if ((window.LECCIONES_DISPONIBLES || []).indexOf(String(n)) === -1) {
+    pendiente();
+  } else {
+    var s = document.createElement('script');
+    s.src = 'data/lecciones/L' + n + '.js';
+    s.onload = function () { INST.lecciones[String(n)] ? pintar(INST.lecciones[String(n)]) : pendiente(); };
+    s.onerror = pendiente;
+    document.body.appendChild(s);
+  }
+});
 
 function campo(obj) {
   if (obj === undefined || obj === null) return null;

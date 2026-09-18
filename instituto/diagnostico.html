@@ -9,6 +9,7 @@
 <body>
 <script src="data/curriculo.js"></script>
 <script src="data/diagnostico.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/core.js"></script>
 
 <main class="env">
@@ -19,7 +20,7 @@
   </div>
 
   <div class="grupo" style="margin:0 0 26px">
-    <label class="sub" for="nombre">Tu nombre (se guarda solo en este dispositivo)</label><br>
+    <label class="sub" for="nombre">Tu nombre</label><br>
     <input id="nombre" type="text" style="font-family:var(--sans);padding:10px 12px;border:1px solid var(--arena);background:var(--papel);color:var(--tinta);width:min(340px,100%);margin-top:6px">
   </div>
 
@@ -33,6 +34,9 @@
 </main>
 
 <script>
+INST.listo.then(function () {
+if (!INST.estado) return; // sin sesión, ya redirigido a login.html
+
 INST.barra('diag');
 document.getElementById('pie').textContent = INST.VERSION;
 document.getElementById('nombre').value = INST.estado.perfil.nombre || '';
@@ -170,6 +174,8 @@ document.getElementById('calificar').onclick = function () {
     '<p class="sub">Esta recomendación es orientativa. Si enseñas a un grupo, el maestro puede ubicarte en otro punto para que avancen juntos.</p>';
   r.scrollIntoView({ behavior: 'smooth' });
 };
+
+}); // fin INST.listo.then
 
 function nivelNombre(id) {
   var n = CURRICULO.niveles.filter(function (x) { return x.id === id; })[0];

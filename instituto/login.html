@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar — Instituto Bíblico</title>
+<link rel="stylesheet" href="assets/instituto.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .caja-login{max-width:340px;margin:16vh auto 0;padding:0 20px}
+  .caja-login h1{font-size:1.4rem;margin:0 0 6px}
+  .caja-login p{color:var(--tinta-suave);font-size:.92rem;margin:0 0 26px}
+  .caja-login input{
+    width:100%;font-family:var(--sans);font-size:.95rem;padding:12px 13px;
+    border:1px solid var(--arena);background:var(--papel);color:var(--tinta);border-radius:4px;margin:0 0 10px;
+  }
+  #err{color:var(--granate);font-family:var(--sans);font-size:.85rem;min-height:1.2em;margin:2px 0 10px}
+  #entrar{width:100%}
+</style>
+</head>
+<body>
+<main class="caja-login">
+  <h1>Instituto Bíblico</h1>
+  <p>Entra con el correo y la contraseña que te dio el administrador.</p>
+  <input type="email" id="email" placeholder="Correo" autocomplete="username">
+  <input type="password" id="pass" placeholder="Contraseña" autocomplete="current-password">
+  <div id="err"></div>
+  <button class="btn" type="button" id="entrar">Entrar</button>
+</main>
+
+<script>
+var SUPABASE_URL = 'https://zkmrwmondbmboxqvrdto.supabase.co';
+var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprbXJ3bW9uZGJtYm94cXZyZHRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MzUwOTMsImV4cCI6MjEwNTIxMTA5M30.JbPL9fb1oDFOcEi7aFuv84QdV53_ndUVEQObIoHO0hs';
+var sb = supabase.createClient(SUPABASE_URL, ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+
+var email = document.getElementById('email');
+var pass = document.getElementById('pass');
+var btn = document.getElementById('entrar');
+var err = document.getElementById('err');
+
+sb.auth.getSession().then(function (r) {
+  if (r.data && r.data.session) irAdentro();
+});
+
+function irAdentro() {
+  var params = new URLSearchParams(location.search);
+  location.href = params.get('volver') || 'index.html';
+}
+
+pass.addEventListener('keydown', function (e) { if (e.key === 'Enter') intentar(); });
+btn.onclick = intentar;
+
+async function intentar() {
+  err.textContent = '';
+  if (!email.value.trim() || !pass.value) { err.textContent = 'Escribe tu correo y contraseña.'; return; }
+  btn.disabled = true;
+  btn.textContent = 'Entrando…';
+  var r = await sb.auth.signInWithPassword({ email: email.value.trim(), password: pass.value });
+  if (r.error) {
+    err.textContent = 'Correo o contraseña incorrectos.';
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+    return;
+  }
+  irAdentro();
+}
+</script>
+</body>
+</html>

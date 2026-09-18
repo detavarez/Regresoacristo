@@ -447,4 +447,4 @@ window.CURRICULO = {
   ]
 };
 
-window.LECCIONES_DISPONIBLES = ['101'];
+window.LECCIONES_DISPONIBLES = ['101','102'];

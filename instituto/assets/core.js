@@ -1,19 +1,20 @@
 (function (global) {
   'use strict';
 
-  var VERSION = 'Ver-002';
-  var CLAVE = 'instituto_v1';
+  var VERSION = 'Ver-003';
+  var SUPABASE_URL = 'https://zkmrwmondbmboxqvrdto.supabase.co';
+  var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprbXJ3bW9uZGJtYm94cXZyZHRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MzUwOTMsImV4cCI6MjEwNTIxMTA5M30.JbPL9fb1oDFOcEi7aFuv84QdV53_ndUVEQObIoHO0hs';
+
+  var sb = global.supabase.createClient(SUPABASE_URL, ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true }
+  });
 
   var BASE = {
-    esquema: 1,
-    perfil: { nombre: '', creado: null },
-    config: { tema: 'auto', tamano: 'b', tipo: 'serif', ancho: 'normal', idioma: 'es' },
-    diagnostico: null,
-    leccionActual: null,
     progreso: {},
     consultadas: [],
     errores: {},
-    actualizado: null
+    diagnostico: null,
+    config: { tema: 'auto', tamano: 'b', tipo: 'serif', ancho: 'normal', idioma: 'es' }
   };
 
   function clonar(o) { return JSON.parse(JSON.stringify(o)); }
@@ -25,37 +26,93 @@
         if (g[k] !== undefined && g[k] !== null) e[k] = g[k];
       });
       if (g.config) e.config = Object.assign(clonar(BASE.config), g.config);
-      if (g.perfil) e.perfil = Object.assign(clonar(BASE.perfil), g.perfil);
     }
     return e;
   }
 
-  function cargar() {
-    try {
-      var crudo = global.localStorage.getItem(CLAVE);
-      return normalizar(crudo ? JSON.parse(crudo) : null);
-    } catch (err) { return clonar(BASE); }
+  var estado = null;      // se llena de forma asíncrona, ver iniciar()
+  var sesion = null;      // { user_id, email }
+  var esAdmin = false;
+  var listoResolve;
+  var listo = new Promise(function (res) { listoResolve = res; });
+  var LOGIN_PATH = 'login.html';
+
+  function enLogin() { return /(^|\/)login\.html$/.test(location.pathname); }
+
+  function irALogin() {
+    if (enLogin()) return;
+    location.href = LOGIN_PATH + '?volver=' + encodeURIComponent(location.pathname + location.search);
   }
 
-  var estado = cargar();
+  async function cargarFilaEstudiante(uid) {
+    var r = await sb.from('estudiantes').select('*').eq('user_id', uid).maybeSingle();
+    return r.data || null;
+  }
 
-  function guardar() {
-    estado.actualizado = new Date().toISOString();
-    try { global.localStorage.setItem(CLAVE, JSON.stringify(estado)); return true; }
-    catch (err) { return false; }
+  async function iniciar() {
+    var s = await sb.auth.getSession();
+    var sesionActiva = s && s.data && s.data.session;
+    if (!sesionActiva) {
+      if (!enLogin()) irALogin();
+      listoResolve();
+      return;
+    }
+    sesion = { user_id: sesionActiva.user.id, email: sesionActiva.user.email };
+
+    var fila = await cargarFilaEstudiante(sesion.user_id);
+    if (!fila) {
+      // Tiene sesión pero no fila de estudiante (ni admin puro sin estudiante):
+      // igual lo dejamos entrar si es admin, con estado vacío en memoria.
+      estado = clonar(BASE);
+      estado.perfil = { nombre: '' };
+      estado.leccionActual = null;
+    } else {
+      estado = normalizar(fila.estado);
+      estado.perfil = { nombre: fila.nombre || '' };
+      estado.leccionActual = fila.leccion_actual || null;
+    }
+
+    var admFila = await sb.from('admins').select('user_id').eq('user_id', sesion.user_id).maybeSingle();
+    esAdmin = !!(admFila && admFila.data);
+
+    if (!fila && !esAdmin) {
+      // No es estudiante ni admin: no tiene nada que hacer aquí.
+      await sb.auth.signOut();
+      irALogin();
+      listoResolve();
+      return;
+    }
+
+    aplicarConfig();
+    listoResolve();
+  }
+  iniciar();
+
+  async function guardar() {
+    if (!estado || !sesion) return false;
+    var copia = clonar(estado);
+    delete copia.perfil;
+    delete copia.leccionActual;
+    var r = await sb.from('estudiantes').update({
+      estado: copia,
+      leccion_actual: estado.leccionActual || null,
+      nombre: (estado.perfil && estado.perfil.nombre) || null
+    }).eq('user_id', sesion.user_id);
+    return !r.error;
   }
 
   function aplicarConfig() {
     var h = document.documentElement;
-    var t = estado.config.tema;
+    var conf = estado ? estado.config : BASE.config;
+    var t = conf.tema;
     if (t === 'auto') {
       t = global.matchMedia && global.matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
     }
     h.setAttribute('data-tema', t);
-    h.setAttribute('data-tamano', estado.config.tamano);
-    h.setAttribute('data-tipo', estado.config.tipo);
-    h.setAttribute('data-ancho', estado.config.ancho);
-    h.lang = estado.config.idioma;
+    h.setAttribute('data-tamano', conf.tamano);
+    h.setAttribute('data-tipo', conf.tipo);
+    h.setAttribute('data-ancho', conf.ancho);
+    h.lang = conf.idioma;
   }
 
   function setConfig(k, v) { estado.config[k] = v; guardar(); aplicarConfig(); }
@@ -170,28 +227,6 @@
     URL.revokeObjectURL(a.href);
   }
 
-  function reemplazar(g) {
-    estado = normalizar(g);
-    guardar();
-    aplicarConfig();
-    return true;
-  }
-
-  function estadoVacio() { return clonar(BASE); }
-
-  function importar(archivo, cb) {
-    var fr = new FileReader();
-    fr.onload = function () {
-      try {
-        var g = JSON.parse(fr.result);
-        if (!g.esquema) throw new Error('formato');
-        estado = Object.assign(clonar(BASE), g);
-        guardar(); aplicarConfig(); cb(null);
-      } catch (e) { cb(e); }
-    };
-    fr.readAsText(archivo);
-  }
-
   function buscar(q) {
     q = (q || '').trim().toLowerCase();
     if (q.length < 2) return [];
@@ -212,6 +247,11 @@
     return res.slice(0, 25);
   }
 
+  async function cerrarSesion() {
+    await sb.auth.signOut();
+    location.href = LOGIN_PATH;
+  }
+
   function barra(activo, contexto) {
     var html =
       '<header class="barra"><div class="env">' +
@@ -222,7 +262,9 @@
       '<a href="index.html"' + (activo === 'indice' ? ' aria-current="page"' : '') + '>Índice</a>' +
       '<a href="diagnostico.html"' + (activo === 'diag' ? ' aria-current="page"' : '') + '>Ubicación</a>' +
       '<a href="progreso.html"' + (activo === 'prog' ? ' aria-current="page"' : '') + '>Mi avance</a>' +
+      (esAdmin ? '<a href="admin.html"' + (activo === 'admin' ? ' aria-current="page"' : '') + '>Administrador</a>' : '') +
       '<button type="button" id="btnPanel">Ajustes de lectura</button>' +
+      '<button type="button" id="btnSalir">Cerrar sesión</button>' +
       '<span class="ver">' + VERSION + '</span>' +
       '</div></div></header>' +
       '<div id="panel"><div class="caja" role="dialog" aria-label="Ajustes de lectura">' +
@@ -234,8 +276,6 @@
       grupo('Idioma de las lecciones · Lesson language', 'idioma', [['es', 'Español'], ['en', 'English']]) +
       '<div class="grupo"><label>Historial</label>' +
       '<button class="btn sec" type="button" id="btnExportar">Descargar mi historial</button></div>' +
-      '<div class="grupo"><label>Restaurar desde archivo</label>' +
-      '<input type="file" id="fileImportar" accept="application/json"></div>' +
       '<button class="btn" type="button" id="btnCerrarPanel">Cerrar</button>' +
       '</div></div><div id="glosarioPop" role="tooltip"><button type="button" id="glosarioCerrar" aria-label="Cerrar">&times;</button><div id="glosarioTexto"></div></div>';
     document.body.insertAdjacentHTML('afterbegin', html);
@@ -258,13 +298,7 @@
     document.getElementById('btnCerrarPanel').onclick = cerrar;
     document.getElementById('panel').addEventListener('click', function (e) { if (e.target.id === 'panel') cerrar(); });
     document.getElementById('btnExportar').onclick = exportar;
-    document.getElementById('fileImportar').onchange = function (e) {
-      if (!e.target.files[0]) return;
-      importar(e.target.files[0], function (err) {
-        alert(err ? 'Ese archivo no es un historial del Instituto.' : 'Historial restaurado.');
-        if (!err) location.reload();
-      });
-    };
+    document.getElementById('btnSalir').onclick = cerrarSesion;
     document.querySelectorAll('#panel .chips button').forEach(function (b) {
       b.onclick = function () {
         setConfig(b.dataset.k, b.dataset.v);
@@ -303,7 +337,11 @@
 
   global.INST = {
     VERSION: VERSION,
+    sb: sb,
+    listo: listo,
     get estado() { return estado; },
+    get sesion() { return sesion; },
+    get esAdmin() { return esAdmin; },
     guardar: guardar,
     aplicarConfig: aplicarConfig,
     setConfig: setConfig,
@@ -316,15 +354,11 @@
     temasDebiles: temasDebiles,
     resumen: resumen,
     exportar: exportar,
-    importar: importar,
-    reemplazar: reemplazar,
-    estadoVacio: estadoVacio,
     buscar: buscar,
     barra: barra,
     glosarioActivo: glosarioActivo,
+    cerrarSesion: cerrarSesion,
     lecciones: {},
     registrarLeccion: function (obj) { global.INST.lecciones[String(obj.n)] = obj; }
   };
-
-  aplicarConfig();
 })(window);

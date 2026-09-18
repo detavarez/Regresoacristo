@@ -8,11 +8,15 @@
 </head>
 <body>
 <script src="data/curriculo.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/core.js"></script>
 
 <main class="env" id="salida"></main>
 
 <script>
+INST.listo.then(function () {
+if (!INST.estado) return; // sin sesión, ya redirigido a login.html
+
 INST.barra('prog');
 var e = INST.estado, r = INST.resumen();
 var out = '<div class="encabezado"><p class="ruta">Historial académico</p><h1>' +
@@ -61,11 +65,13 @@ if (e.consultadas.length) {
 }
 
 out += '<div class="acciones"><button class="btn sec" type="button" id="desc">Descargar mi historial</button></div>' +
-  '<p class="sub">El archivo descargado sirve para pasarle tus resultados al maestro o para restaurarlos en otro dispositivo desde Ajustes.</p>' +
+  '<p class="sub">El archivo descargado sirve como respaldo o para pasarle tus resultados al maestro.</p>' +
   '<footer class="pie">' + INST.VERSION + '</footer>';
 
 document.getElementById('salida').innerHTML = out;
 document.getElementById('desc').onclick = INST.exportar;
+
+});
 </script>
 </body>
 </html>
