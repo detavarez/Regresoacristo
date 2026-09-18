@@ -7,9 +7,9 @@
 <link rel="stylesheet" href="assets/instituto.css">
 </head>
 <body>
-<script src="data/curriculo.js?v=5"></script>
+<script src="data/curriculo.js?v=6"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/core.js?v=5"></script>
+<script src="assets/core.js?v=6"></script>
 
 <main class="env" id="salida"></main>
 <div class="env"><footer class="pie" id="pie"></footer></div>
@@ -51,8 +51,6 @@ var params, n, consulta, meta, salida, lang, t;
 INST.listo.then(function () {
   if (!INST.estado) return; // sin sesión, ya redirigido a login.html
 
-  INST.glosarioActivo();
-
   params = new URLSearchParams(location.search);
   n = params.get('n');
   consulta = params.get('modo') === 'consulta';
@@ -62,6 +60,7 @@ INST.listo.then(function () {
   t = T[lang];
 
   INST.barra('', meta ? ('Lección ' + meta.n + ' · Nivel ' + meta.nivel) : '');
+  INST.glosarioActivo();
 
   if (!meta) {
     salida.innerHTML = '<div class="encabezado"><h1>' + t.noExisteTit + '</h1>' +
