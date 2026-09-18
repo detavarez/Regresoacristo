@@ -275,7 +275,6 @@
       '<a href="index.html"' + (activo === 'indice' ? ' aria-current="page"' : '') + '>Índice</a>' +
       '<a href="diagnostico.html"' + (activo === 'diag' ? ' aria-current="page"' : '') + '>Ubicación</a>' +
       '<a href="progreso.html"' + (activo === 'prog' ? ' aria-current="page"' : '') + '>Mi avance</a>' +
-      (esAdmin ? '<a href="admin.html"' + (activo === 'admin' ? ' aria-current="page"' : '') + '>Administrador</a>' : '') +
       '<button type="button" id="btnPanel">Ajustes de lectura</button>' +
       '<button type="button" id="btnSalir">Cerrar sesión</button>' +
       '<span class="ver">' + VERSION + '</span>' +

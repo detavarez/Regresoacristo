@@ -29,9 +29,9 @@
 </style>
 </head>
 <body>
-<script src="data/curriculo.js?v=4"></script>
+<script src="data/curriculo.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/core.js?v=4"></script>
+<script src="assets/core.js?v=5"></script>
 
 <main class="env" id="salida" style="padding-top:20px"><p class="sub">Cargando…</p></main>
 
@@ -49,6 +49,8 @@ INST.listo.then(function () {
   INST.barra('admin');
   iniciarPanel();
 });
+
+var SUPABASE_URL = 'https://zkmrwmondbmboxqvrdto.supabase.co';
 
 function iniciarPanel() {
   var sb = INST.sb;
@@ -99,7 +101,7 @@ function iniciarPanel() {
     try {
       var s = await sb.auth.getSession();
       var token = s.data.session.access_token;
-      var resp = await fetch(sb.supabaseUrl + '/functions/v1/admin-estudiantes', {
+      var resp = await fetch(SUPABASE_URL + '/functions/v1/admin-estudiantes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify(cuerpo)

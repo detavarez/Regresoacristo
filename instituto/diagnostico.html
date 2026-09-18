@@ -7,47 +7,101 @@
 <link rel="stylesheet" href="assets/instituto.css">
 </head>
 <body>
-<script src="data/curriculo.js?v=4"></script>
-<script src="data/diagnostico.js"></script>
+<script src="data/curriculo.js?v=5"></script>
+<script src="data/diagnostico.js?v=2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/core.js?v=4"></script>
+<script src="assets/core.js?v=5"></script>
 
 <main class="env">
   <div class="encabezado">
-    <p class="ruta">Ingreso de estudiantes</p>
-    <h1>Examen de ubicación</h1>
-    <p class="sub">No mide si tu fe es buena. Mide qué ya sabes, para que empieces donde realmente te conviene empezar y no repitas lo que dominas. Responde con honestidad; si no sabes algo, marca "No sé todavía" en lugar de adivinar — adivinar bien te ubicaría en una lección que no te toca.</p>
+    <p class="ruta" id="ruta"></p>
+    <h1 id="h1"></h1>
+    <p class="sub" id="intro"></p>
   </div>
 
   <div class="grupo" style="margin:0 0 26px">
-    <label class="sub" for="nombre">Tu nombre</label><br>
+    <label class="sub" id="labelNombre" for="nombre"></label><br>
     <input id="nombre" type="text" style="font-family:var(--sans);padding:10px 12px;border:1px solid var(--arena);background:var(--papel);color:var(--tinta);width:min(340px,100%);margin-top:6px">
   </div>
 
   <form id="examen"></form>
   <div class="acciones">
-    <button type="button" class="btn" id="calificar">Ver mi ubicación</button>
-    <a class="btn sec" href="index.html">Volver al índice</a>
+    <button type="button" class="btn" id="calificar"></button>
+    <a class="btn sec" href="index.html" id="volver"></a>
   </div>
   <div id="resultado" hidden></div>
   <footer class="pie" id="pie"></footer>
 </main>
 
 <script>
+var T = {
+  es: {
+    ruta: 'Ingreso de estudiantes', h1: 'Examen de ubicación',
+    intro: 'No mide si tu fe es buena. Mide qué ya sabes, para que empieces donde realmente te conviene empezar y no repitas lo que dominas. Responde con honestidad; si no sabes algo, marca "No sé todavía" en lugar de adivinar — adivinar bien te ubicaría en una lección que no te toca.',
+    labelNombre: 'Tu nombre', noSeOpcion: 'No sé todavía — prefiero no adivinar',
+    calificar: 'Ver mi ubicación', volver: 'Volver al índice',
+    faltan: function (n) { return 'Te faltan ' + n + ' pregunta' + (n > 1 ? 's' : '') + ' por responder. Si no sabes alguna, marca "No sé todavía" — no hace falta adivinar.'; },
+    tuUbicacion: 'Tu ubicación', empieza: function (n, t) { return 'Empieza en la <b>lección ' + n + '</b> — ' + t; },
+    noSeNota: function (n) { return ' Marcaste "No sé todavía" en ' + n + ' pregunta' + (n > 1 ? 's' : '') + '; eso no resta como error de contenido, pero tampoco cuenta como dominado.'; },
+    areasSolidas: 'Áreas sólidas: ', preguntasRepaso: 'Preguntas para repasar',
+    pregunta: function (n, area, elegida, correcta) { return 'Pregunta ' + n + ' (' + area + '): elegiste "' + elegida + '"; la respuesta es "' + correcta + '".'; },
+    abrirLeccion: function (n) { return 'Abrir la lección ' + n; }, verCurriculo: 'Ver el currículo completo',
+    notaFinal: 'Esta recomendación es orientativa. Si enseñas a un grupo, el maestro puede ubicarte en otro punto para que avancen juntos.',
+    debiles: function (niv, areas) { return 'Tus respuestas del ' + niv + ' muestran vacíos en ' + areas + '. Conviene entrar por ahí en lugar de empezar desde cero.'; },
+    fuerte: function (niv) { return 'Respondiste bien todo lo anterior, así que el punto de entrada natural es el inicio del ' + niv + '.'; },
+    sinResponder: '(sin responder)', y: ' y '
+  },
+  en: {
+    ruta: 'New student intake', h1: 'Placement exam',
+    intro: "This doesn't measure how good your faith is. It measures what you already know, so you can start where it actually makes sense and skip what you've mastered. Answer honestly; if you don't know something, mark \"I don't know yet\" instead of guessing — a lucky guess would place you in the wrong lesson.",
+    labelNombre: 'Your name', noSeOpcion: "I don't know yet — I'd rather not guess",
+    calificar: 'See my placement', volver: 'Back to the index',
+    faltan: function (n) { return n + ' question' + (n > 1 ? 's' : '') + ' still need an answer. If you don\'t know one, mark "I don\'t know yet" — no need to guess.'; },
+    tuUbicacion: 'Your placement', empieza: function (n, t) { return 'Start at <b>lesson ' + n + '</b> — ' + t; },
+    noSeNota: function (n) { return ' You marked "I don\'t know yet" on ' + n + ' question' + (n > 1 ? 's' : '') + '; that doesn\'t count as a content error, but it doesn\'t count as mastered either.'; },
+    areasSolidas: 'Solid areas: ', preguntasRepaso: 'Questions to review',
+    pregunta: function (n, area, elegida, correcta) { return 'Question ' + n + ' (' + area + '): you chose "' + elegida + '"; the answer is "' + correcta + '".'; },
+    abrirLeccion: function (n) { return 'Open lesson ' + n; }, verCurriculo: 'View the full curriculum',
+    notaFinal: 'This recommendation is a starting guide. If you teach a group, the teacher may place you elsewhere so everyone moves together.',
+    debiles: function (niv, areas) { return 'Your ' + niv + ' answers show gaps in ' + areas + '. It makes sense to enter there instead of starting from zero.'; },
+    fuerte: function (niv) { return "You did well on everything above, so the natural entry point is the start of " + niv + '.'; },
+    sinResponder: '(unanswered)', y: ' and '
+  }
+};
+
 INST.listo.then(function () {
 if (!INST.estado) return; // sin sesión, ya redirigido a login.html
 
+var lang = (INST.estado.config.idioma === 'en') ? 'en' : 'es';
+var t = T[lang];
+
 INST.barra('diag');
+document.getElementById('ruta').textContent = t.ruta;
+document.getElementById('h1').textContent = t.h1;
+document.getElementById('intro').textContent = t.intro;
+document.getElementById('labelNombre').textContent = t.labelNombre;
+document.getElementById('calificar').textContent = t.calificar;
+document.getElementById('volver').textContent = t.volver;
 document.getElementById('pie').textContent = INST.VERSION;
 document.getElementById('nombre').value = INST.estado.perfil.nombre || '';
 
+function preg(q) { return lang === 'en' ? q.pEn : q.p; }
+function opts(q) { return lang === 'en' ? q.oEn : q.o; }
+function expl(q) { return lang === 'en' ? q.eEn : q.e; }
+function areaQ(q) { return lang === 'en' ? q.areaEn : q.area; }
+function nombreNivel(id) {
+  var n = CURRICULO.niveles.filter(function (x) { return x.id === id; })[0];
+  if (!n) return (lang === 'en' ? 'Level ' : 'Nivel ') + id;
+  return (lang === 'en' && n.nombreEn) ? n.nombreEn : n.nombre;
+}
+
 var P = DIAGNOSTICO.preguntas;
 document.getElementById('examen').innerHTML = P.map(function (q, i) {
-  return '<div class="qcard" data-i="' + i + '"><p class="qt">' + (i + 1) + '. ' + q.p + '</p>' +
-    q.o.map(function (o, j) {
+  return '<div class="qcard" data-i="' + i + '"><p class="qt">' + (i + 1) + '. ' + preg(q) + '</p>' +
+    opts(q).map(function (o, j) {
       return '<label class="opt"><input type="radio" name="d' + i + '" value="' + j + '"><span>' + o + '</span></label>';
     }).join('') +
-    '<label class="opt ns"><input type="radio" name="d' + i + '" value="ns"><span>No sé todavía — prefiero no adivinar</span></label>' +
+    '<label class="opt ns"><input type="radio" name="d' + i + '" value="ns"><span>' + t.noSeOpcion + '</span></label>' +
     '<div class="explica" hidden></div></div>';
 }).join('');
 
@@ -82,7 +136,7 @@ document.getElementById('calificar').onclick = function () {
     });
     var primera = document.querySelector('.qcard[data-i="' + sinResponder[0] + '"]');
     primera.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    alert('Te faltan ' + sinResponder.length + ' pregunta' + (sinResponder.length > 1 ? 's' : '') + ' por responder. Si no sabes alguna, marca "No sé todavía" — no hace falta adivinar.');
+    alert(t.faltan(sinResponder.length));
     return;
   }
 
@@ -90,31 +144,32 @@ document.getElementById('calificar').onclick = function () {
 
   P.forEach(function (q, i) {
     porNivel[q.nivel] = porNivel[q.nivel] || { ok: 0, total: 0 };
-    porArea[q.nivel + '|' + q.area] = porArea[q.nivel + '|' + q.area] || { ok: 0, total: 0, area: q.area, nivel: q.nivel };
+    porArea[q.nivel + '|' + q.area] = porArea[q.nivel + '|' + q.area] || { ok: 0, total: 0, area: q.area, areaEn: q.areaEn, nivel: q.nivel };
     porNivel[q.nivel].total++;
     porArea[q.nivel + '|' + q.area].total++;
 
     var card = document.querySelector('.qcard[data-i="' + i + '"]');
     var sel = card.querySelector('input:checked');
-    var opts = card.querySelectorAll('.opt');
-    opts.forEach(function (o) { o.classList.remove('correcta', 'incorrecta'); });
-    opts[q.c].classList.add('correcta');
+    var opciones = card.querySelectorAll('.opt');
+    opciones.forEach(function (o) { o.classList.remove('correcta', 'incorrecta'); });
+    opciones[q.c].classList.add('correcta');
 
+    var listaOpts = opts(q);
     if (sel && sel.value === 'ns') {
       noSe++;
-      falladas.push({ n: i + 1, area: q.area, nivel: q.nivel, elegida: 'No sé todavía', correcta: q.o[q.c], noSe: true });
+      falladas.push({ n: i + 1, area: areaQ(q), elegida: t.noSeOpcion, correcta: listaOpts[q.c], noSe: true });
     } else if (sel && parseInt(sel.value, 10) === q.c) {
       correctas++; porNivel[q.nivel].ok++; porArea[q.nivel + '|' + q.area].ok++;
     } else {
-      if (sel) opts[parseInt(sel.value, 10)].classList.add('incorrecta');
-      falladas.push({ n: i + 1, area: q.area, nivel: q.nivel, elegida: sel ? q.o[parseInt(sel.value, 10)] : '(sin responder)', correcta: q.o[q.c] });
+      if (sel) opciones[parseInt(sel.value, 10)].classList.add('incorrecta');
+      falladas.push({ n: i + 1, area: areaQ(q), elegida: sel ? listaOpts[parseInt(sel.value, 10)] : t.sinResponder, correcta: listaOpts[q.c] });
     }
     var ex = card.querySelector('.explica');
     ex.hidden = false;
-    ex.innerHTML = q.e;
+    ex.innerHTML = expl(q);
   });
 
-  var nivelDestino = 1, razonNivel = '';
+  var nivelDestino = 1;
   for (var k = 1; k <= 4; k++) {
     var b = porNivel[k];
     var pct = b ? Math.round(b.ok / b.total * 100) : 0;
@@ -125,62 +180,58 @@ document.getElementById('calificar').onclick = function () {
   var debiles = Object.keys(porArea).map(function (k2) { return porArea[k2]; })
     .filter(function (a) { return a.nivel === nivelDestino && a.ok < a.total; });
   var fuertes = Object.keys(porArea).map(function (k2) { return porArea[k2]; })
-    .filter(function (a) { return a.ok === a.total; }).map(function (a) { return a.area; });
+    .filter(function (a) { return a.ok === a.total; }).map(function (a) { return lang === 'en' ? a.areaEn : a.area; });
   fuertes = fuertes.filter(function (v, i, a) { return a.indexOf(v) === i; });
 
   var recomendada, razon;
   if (debiles.length) {
     var areaDebil = debiles[0];
     recomendada = PRIMERA_DE_AREA[areaDebil.nivel + '|' + areaDebil.area] || primeraDelNivel(nivelDestino);
-    razon = 'Tus respuestas del ' + nivelNombre(nivelDestino) + ' muestran vacíos en ' +
-            debiles.map(function (d) { return d.area.toLowerCase(); }).join(' y ') +
-            '. Conviene entrar por ahí en lugar de empezar desde cero.';
+    var nombresDebiles = debiles.map(function (d) { return ((lang === 'en' ? d.areaEn : d.area) || '').toLowerCase(); }).join(t.y);
+    razon = t.debiles(nombreNivel(nivelDestino), nombresDebiles);
   } else {
     recomendada = primeraDelNivel(nivelDestino);
-    razon = 'Respondiste bien todo lo anterior, así que el punto de entrada natural es el inicio del ' + nivelNombre(nivelDestino) + '.';
+    razon = t.fuerte(nombreNivel(nivelDestino));
   }
 
   var pctGlobal = Math.round(correctas / P.length * 100);
   var nombre = document.getElementById('nombre').value.trim();
   INST.estado.perfil.nombre = nombre;
-  if (!INST.estado.perfil.creado) INST.estado.perfil.creado = new Date().toISOString();
   INST.estado.diagnostico = {
     fecha: new Date().toISOString(),
     pctGlobal: pctGlobal, correctas: correctas, total: P.length,
     porNivel: porNivel, porArea: porArea,
-    fortalezas: fuertes, debilidades: debiles.map(function (d) { return d.area; }),
+    fortalezas: fuertes, debilidades: debiles.map(function (d) { return lang === 'en' ? d.areaEn : d.area; }),
     falladas: falladas, nivelRecomendado: nivelDestino, recomendada: recomendada, razon: razon
   };
   INST.guardar();
 
   var detalle = [1, 2, 3, 4].map(function (k3) {
     var b2 = porNivel[k3];
-    return '<tr><th>' + nivelNombre(k3) + '</th><td>' + (b2 ? b2.ok + ' de ' + b2.total : '—') + '</td></tr>';
+    return '<tr><th>' + nombreNivel(k3) + '</th><td>' + (b2 ? b2.ok + ' / ' + b2.total : '—') + '</td></tr>';
   }).join('');
+
+  var metaRec = INST.meta(recomendada) || {};
+  var tituloRec = (lang === 'en' && metaRec.ten) ? metaRec.ten : metaRec.t;
 
   var r = document.getElementById('resultado');
   r.hidden = false;
-  r.innerHTML = '<h2>Tu ubicación</h2>' +
+  r.innerHTML = '<h2>' + t.tuUbicacion + '</h2>' +
     '<div id="marcador"><div class="pct">' + pctGlobal + '%</div>' +
-    '<p>Empieza en la <b>lección ' + recomendada + '</b> — ' + (INST.meta(recomendada) || {}).t + '</p>' +
-    '<p class="sub">' + razon + (noSe ? ' Marcaste "No sé todavía" en ' + noSe + ' pregunta' + (noSe > 1 ? 's' : '') + '; eso no resta como error de contenido, pero tampoco cuenta como dominado.' : '') + '</p></div>' +
+    '<p>' + t.empieza(recomendada, tituloRec) + '</p>' +
+    '<p class="sub">' + razon + (noSe ? t.noSeNota(noSe) : '') + '</p></div>' +
     '<table class="datos" style="margin-top:20px"><tbody>' + detalle + '</tbody></table>' +
-    (fuertes.length ? '<p class="sub">Áreas sólidas: ' + fuertes.join(' · ') + '</p>' : '') +
-    (falladas.length ? '<h3>Preguntas para repasar</h3><ul class="sub">' + falladas.map(function (f) {
-      return '<li>Pregunta ' + f.n + ' (' + f.area + '): elegiste "' + f.elegida + '"; la respuesta es "' + f.correcta + '".</li>';
+    (fuertes.length ? '<p class="sub">' + t.areasSolidas + fuertes.join(' · ') + '</p>' : '') +
+    (falladas.length ? '<h3>' + t.preguntasRepaso + '</h3><ul class="sub">' + falladas.map(function (f) {
+      return '<li>' + t.pregunta(f.n, f.area, f.elegida, f.correcta) + '</li>';
     }).join('') + '</ul>' : '') +
-    '<div class="acciones"><a class="btn" href="leccion.html?n=' + recomendada + '">Abrir la lección ' + recomendada + '</a>' +
-    '<a class="btn sec" href="index.html">Ver el currículo completo</a></div>' +
-    '<p class="sub">Esta recomendación es orientativa. Si enseñas a un grupo, el maestro puede ubicarte en otro punto para que avancen juntos.</p>';
+    '<div class="acciones"><a class="btn" href="leccion.html?n=' + recomendada + '">' + t.abrirLeccion(recomendada) + '</a>' +
+    '<a class="btn sec" href="index.html">' + t.verCurriculo + '</a></div>' +
+    '<p class="sub">' + t.notaFinal + '</p>';
   r.scrollIntoView({ behavior: 'smooth' });
 };
 
-}); // fin INST.listo.then
-
-function nivelNombre(id) {
-  var n = CURRICULO.niveles.filter(function (x) { return x.id === id; })[0];
-  return n ? n.nombre : 'Nivel ' + id;
-}
+});
 </script>
 </body>
 </html>

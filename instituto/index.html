@@ -7,20 +7,20 @@
 <link rel="stylesheet" href="assets/instituto.css">
 </head>
 <body>
-<script src="data/curriculo.js?v=4"></script>
+<script src="data/curriculo.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/core.js?v=4"></script>
+<script src="assets/core.js?v=5"></script>
 
 <main>
   <section class="hero">
     <div class="env">
       <p class="estado" id="estadoLinea"></p>
       <h1 class="grande" id="titular">Instituto Bíblico Intensivo</h1>
-      <p class="sub" id="bajada">Un programa completo de formación bíblica: desde quien nunca ha abierto una Biblia hasta quien prepara a otros para enseñar y predicar.</p>
+      <p class="sub" id="bajada"></p>
       <div class="progreso" id="barraProg" hidden><i style="width:0%"></i></div>
       <div class="acciones" id="acciones"></div>
       <div class="buscador">
-        <input type="search" id="q" placeholder="Buscar una lección, un libro o un tema" aria-label="Buscar en el Instituto">
+        <input type="search" id="q" aria-label="Buscar">
         <div id="resultados"></div>
       </div>
     </div>
@@ -28,29 +28,65 @@
 
   <div class="env" id="mapa"></div>
 
-  <div class="env"><footer class="pie">
-    Instituto Bíblico Intensivo · <span id="verPie"></span> · Tu progreso se guarda en tu cuenta y está disponible desde cualquier dispositivo.
-  </footer></div>
+  <div class="env"><footer class="pie" id="pieFinal"></footer></div>
 </main>
 
 <script>
+var T = {
+  es: {
+    tagline: 'Un programa completo de formación bíblica: desde quien nunca ha abierto una Biblia hasta quien prepara a otros para enseñar y predicar.',
+    buscar: 'Buscar una lección, un libro o un tema', sinResultados: 'Sin resultados.',
+    modulo: 'Módulo', nivel: 'Nivel', leccion: 'Lección', continuar: 'Continuar', verAvance: 'Ver mi avance',
+    ubicacionCompleta: 'Ubicación completada', empiezaEn: function (n) { return 'Empieza en la lección ' + n; },
+    abrirLeccion: function (n) { return 'Abrir la lección ' + n; }, repetirUbicacion: 'Repetir la ubicación',
+    nuevoAqui: 'Nuevo aquí', hacerExamen: 'Hacer el examen de ubicación', empezarEn101: 'Empezar en la 101',
+    aprobadas: function (a, t) { return a + ' de ' + t + ' lecciones aprobadas.'; },
+    aprobadasDe: function (h, t) { return h + ' de ' + t + ' aprobadas'; },
+    porEscribir: 'por escribir', estAprobada: function (p) { return 'aprobada ' + p + '%'; }, estRepasar: 'repasar', estEnCurso: 'en curso',
+    pie: function (v) { return 'Instituto Bíblico Intensivo · ' + v + ' · Tu progreso se guarda en tu cuenta y está disponible desde cualquier dispositivo.'; }
+  },
+  en: {
+    tagline: 'A complete Bible training program: from someone who has never opened a Bible to someone preparing to teach and preach.',
+    buscar: 'Search a lesson, a book, or a topic', sinResultados: 'No results.',
+    modulo: 'Module', nivel: 'Level', leccion: 'Lesson', continuar: 'Continue', verAvance: 'View my progress',
+    ubicacionCompleta: 'Placement completed', empiezaEn: function (n) { return 'Start at lesson ' + n; },
+    abrirLeccion: function (n) { return 'Open lesson ' + n; }, repetirUbicacion: 'Retake the placement exam',
+    nuevoAqui: 'New here', hacerExamen: 'Take the placement exam', empezarEn101: 'Start at 101',
+    aprobadas: function (a, t) { return a + ' of ' + t + ' lessons passed.'; },
+    aprobadasDe: function (h, t) { return h + ' of ' + t + ' passed'; },
+    porEscribir: 'not yet written', estAprobada: function (p) { return 'passed ' + p + '%'; }, estRepasar: 'needs review', estEnCurso: 'in progress',
+    pie: function (v) { return 'Instituto Bíblico Intensivo · ' + v + ' · Your progress is saved to your account and available on any device.'; }
+  }
+};
+
 INST.listo.then(function () {
 if (!INST.estado) return; // sin sesión, ya redirigido a login.html
 
+var lang = (INST.estado.config.idioma === 'en') ? 'en' : 'es';
+var t = T[lang];
+
 INST.barra('indice');
 INST.glosarioActivo();
-document.getElementById('verPie').textContent = INST.VERSION;
+document.getElementById('bajada').textContent = t.tagline;
+document.getElementById('q').placeholder = t.buscar;
+document.getElementById('pieFinal').innerHTML = t.pie(INST.VERSION);
 
 var disp = window.LECCIONES_DISPONIBLES || [];
 var r = INST.resumen();
 var e = INST.estado;
 
+function tit(l) { return (lang === 'en' && l.ten) ? l.ten : l.t; }
+function nombreNivel(niv) { return (lang === 'en' && niv.nombreEn) ? niv.nombreEn : niv.nombre; }
+function lemaNivel(niv) { return (lang === 'en' && niv.lemaEn) ? niv.lemaEn : niv.lema; }
+function areaMod(m) { return (lang === 'en' && m.areaEn) ? m.areaEn : m.area; }
+function tituloMod(m) { return (lang === 'en' && m.tituloEn) ? m.tituloEn : m.titulo; }
+
 function estadoLeccion(n) {
   var p = e.progreso[String(n)];
   if (!p) return '';
-  if (p.estado === 'aprobada') return 'aprobada ' + p.mejor + '%';
-  if (p.estado === 'repasar') return 'repasar';
-  if (p.estado === 'en-curso') return 'en curso';
+  if (p.estado === 'aprobada') return t.estAprobada(p.mejor);
+  if (p.estado === 'repasar') return t.estRepasar;
+  if (p.estado === 'en-curso') return t.estEnCurso;
   return '';
 }
 
@@ -63,23 +99,23 @@ function estadoLeccion(n) {
 
   if (e.leccionActual) {
     var m = INST.meta(e.leccionActual);
-    linea.textContent = m.nivelNombre + ' · Módulo ' + m.modulo + ' · ' + m.area;
-    titular.textContent = 'Lección ' + m.n + ' — ' + m.t;
-    bajada.textContent = r.aprobadas + ' de ' + r.total + ' lecciones aprobadas.';
+    linea.textContent = (lang === 'en' && m.nivelNombreEn ? m.nivelNombreEn : m.nivelNombre) + ' · ' + t.modulo + ' ' + m.modulo + ' · ' + (lang === 'en' && m.areaEn ? m.areaEn : m.area);
+    titular.textContent = t.leccion + ' ' + m.n + ' — ' + ((lang === 'en' && m.ten) ? m.ten : m.t);
+    bajada.textContent = t.aprobadas(r.aprobadas, r.total);
     barra.hidden = false;
     barra.querySelector('i').style.width = r.pct + '%';
-    acc.innerHTML = '<a class="btn" href="leccion.html?n=' + m.n + '">Continuar</a>' +
-                    '<a class="btn sec" href="progreso.html">Ver mi avance</a>';
+    acc.innerHTML = '<a class="btn" href="leccion.html?n=' + m.n + '">' + t.continuar + '</a>' +
+                    '<a class="btn sec" href="progreso.html">' + t.verAvance + '</a>';
   } else if (e.diagnostico) {
-    linea.textContent = 'Ubicación completada';
-    titular.textContent = 'Empieza en la lección ' + e.diagnostico.recomendada;
+    linea.textContent = t.ubicacionCompleta;
+    titular.textContent = t.empiezaEn(e.diagnostico.recomendada);
     bajada.textContent = e.diagnostico.razon;
-    acc.innerHTML = '<a class="btn" href="leccion.html?n=' + e.diagnostico.recomendada + '">Abrir la lección ' + e.diagnostico.recomendada + '</a>' +
-                    '<a class="btn sec" href="diagnostico.html">Repetir la ubicación</a>';
+    acc.innerHTML = '<a class="btn" href="leccion.html?n=' + e.diagnostico.recomendada + '">' + t.abrirLeccion(e.diagnostico.recomendada) + '</a>' +
+                    '<a class="btn sec" href="diagnostico.html">' + t.repetirUbicacion + '</a>';
   } else {
-    linea.textContent = 'Nuevo aquí';
-    acc.innerHTML = '<a class="btn" href="diagnostico.html">Hacer el examen de ubicación</a>' +
-                    '<a class="btn sec" href="leccion.html?n=101">Empezar en la 101</a>';
+    linea.textContent = t.nuevoAqui;
+    acc.innerHTML = '<a class="btn" href="diagnostico.html">' + t.hacerExamen + '</a>' +
+                    '<a class="btn sec" href="leccion.html?n=101">' + t.empezarEn101 + '</a>';
   }
 })();
 
@@ -94,9 +130,9 @@ function estadoLeccion(n) {
     }); });
 
     out += '<section class="niv niv-' + niv.id + '" style="margin:44px 0 0">' +
-           '<h2 class="pt-' + niv.id + '" style="margin:0 0 4px">' + niv.nombre + '</h2>' +
-           '<p class="sub" style="margin:0 0 6px">' + niv.lema + '</p>' +
-           '<p class="sub" style="font-size:.85rem;margin:0 0 10px">' + hechas + ' de ' + todas.length + ' aprobadas</p>' +
+           '<h2 class="pt-' + niv.id + '" style="margin:0 0 4px">' + nombreNivel(niv) + '</h2>' +
+           '<p class="sub" style="margin:0 0 6px">' + lemaNivel(niv) + '</p>' +
+           '<p class="sub" style="font-size:.85rem;margin:0 0 10px">' + t.aprobadasDe(hechas, todas.length) + '</p>' +
            '<div class="progreso"><i style="width:' + Math.round(hechas / todas.length * 100) + '%"></i></div>';
 
     niv.modulos.forEach(function (m) {
@@ -104,15 +140,14 @@ function estadoLeccion(n) {
         var hay = disp.indexOf(String(l.n)) !== -1;
         var p = e.progreso[String(l.n)];
         var cls = p && p.estado === 'aprobada' ? 'hecha' : (hay ? '' : 'pendiente');
-        var titulo = hay ? '<a href="leccion.html?n=' + l.n + '">' + l.t + '</a>'
-                         : '<a href="leccion.html?n=' + l.n + '">' + l.t + '</a>';
+        var titulo = '<a href="leccion.html?n=' + l.n + '">' + tit(l) + '</a>';
         return '<li class="' + cls + '"><span class="num">' + l.n + '</span>' + titulo +
-               '<span class="marca-est">' + (estadoLeccion(l.n) || (hay ? '' : 'por escribir')) + '</span></li>';
+               '<span class="marca-est">' + (estadoLeccion(l.n) || (hay ? '' : t.porEscribir)) + '</span></li>';
       }).join('');
       out += '<details class="modulo" id="m' + m.id + '"><summary>' +
              '<span class="num" style="color:var(--tinta-suave);font-family:var(--sans);font-size:.8rem">' + m.id + '</span>' +
-             '<span class="mt">' + m.titulo + '</span>' +
-             '<span class="mc">' + m.area + ' · ' + m.lecciones.length + '</span>' +
+             '<span class="mt">' + tituloMod(m) + '</span>' +
+             '<span class="mc">' + areaMod(m) + ' · ' + m.lecciones.length + '</span>' +
              '</summary><ul class="lecciones">' + lis + '</ul></details>';
     });
     out += '</section>';
@@ -129,7 +164,7 @@ function estadoLeccion(n) {
   var q = document.getElementById('q'), caja = document.getElementById('resultados');
   q.addEventListener('input', function () {
     var res = INST.buscar(q.value);
-    if (!res.length) { caja.innerHTML = q.value.length > 1 ? '<p class="sub" style="padding:10px 0">Sin resultados.</p>' : ''; return; }
+    if (!res.length) { caja.innerHTML = q.value.length > 1 ? '<p class="sub" style="padding:10px 0">' + t.sinResultados + '</p>' : ''; return; }
     caja.innerHTML = res.map(function (x) {
       return '<a href="' + x.url + '"><span class="n">' + x.tipo + (x.n ? ' ' + x.n : '') + '</span><br>' + x.texto + '</a>';
     }).join('');
