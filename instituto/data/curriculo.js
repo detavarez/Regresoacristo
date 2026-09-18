@@ -5,14 +5,15 @@ window.CURRICULO = {
     {
       id: 1,
       nombre: 'Nivel 1 — Fundamental',
+      nombreEn: 'Level 1 — Foundational',
       lema: 'Conocer la Biblia: qué es, qué contiene, qué historia cuenta y cómo empezar a leerla bien.',
       capacidad: 'Al terminar, el estudiante reconoce, identifica y recuerda: puede ubicar cualquier libro, personaje o acontecimiento dentro de la historia bíblica y explicar el evangelio con sus propias palabras.',
       modulos: [
         {
-          id: '1.1', area: 'Panorama bíblico', titulo: 'La historia completa de la Biblia',
+          id: '1.1', area: 'Panorama bíblico', areaEn: 'Bible overview', titulo: 'La historia completa de la Biblia', tituloEn: 'The whole story of the Bible',
           lecciones: [
-            { n: 101, t: '¿Qué es la Biblia? Composición, autores, idiomas y unidad', libros: '2 Ti 3:16-17; 2 P 1:20-21', tipo: 'doctrinal' },
-            { n: 102, t: 'Cómo está organizada: Antiguo y Nuevo Testamento, secciones y géneros', libros: 'Lc 24:44', tipo: 'panorama' },
+            { n: 101, t: '¿Qué es la Biblia? Composición, autores, idiomas y unidad', ten: 'What is the Bible? Composition, authors, languages, and unity', libros: '2 Ti 3:16-17; 2 P 1:20-21', tipo: 'doctrinal' },
+            { n: 102, t: 'Cómo está organizada: Antiguo y Nuevo Testamento, secciones y géneros', ten: 'How it is organized: Old and New Testament, sections, and genres', libros: 'Lc 24:44', tipo: 'panorama' },
             { n: 103, t: 'La historia bíblica en seis actos: el mapa completo', libros: 'Gn 1–3; Gn 12; Lc 24; Ap 21–22', tipo: 'panorama' },
             { n: 104, t: 'Acto 1 — Creación: un mundo bueno y un ser humano con encargo', libros: 'Gn 1–2', tipo: 'narrativa' },
             { n: 105, t: 'Acto 2 — Caída: qué se rompió y hasta dónde llegó la ruptura', libros: 'Gn 3; Ro 5:12-21', tipo: 'narrativa' },

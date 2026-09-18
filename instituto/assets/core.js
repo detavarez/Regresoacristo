@@ -136,9 +136,10 @@
       niv.modulos.forEach(function (mod) {
         mod.lecciones.forEach(function (l) {
           if (String(l.n) === String(n)) {
-            r = { n: l.n, t: l.t, tipo: l.tipo || '', libros: l.libros || '',
-                  nivel: niv.id, nivelNombre: niv.nombre, area: mod.area,
-                  modulo: mod.id, moduloTitulo: mod.titulo };
+            r = { n: l.n, t: l.t, ten: l.ten || null, tipo: l.tipo || '', libros: l.libros || '',
+                  nivel: niv.id, nivelNombre: niv.nombre, nivelNombreEn: niv.nombreEn || null,
+                  area: mod.area, areaEn: mod.areaEn || null,
+                  modulo: mod.id, moduloTitulo: mod.titulo, moduloTituloEn: mod.tituloEn || null };
           }
         });
       });
@@ -152,7 +153,7 @@
     global.CURRICULO.niveles.forEach(function (niv) {
       niv.modulos.forEach(function (mod) {
         mod.lecciones.forEach(function (l) {
-          out.push({ n: l.n, t: l.t, nivel: niv.id, modulo: mod.id, area: mod.area, libros: l.libros || '' });
+          out.push({ n: l.n, t: l.t, ten: l.ten || null, nivel: niv.id, modulo: mod.id, area: mod.area, libros: l.libros || '' });
         });
       });
     });

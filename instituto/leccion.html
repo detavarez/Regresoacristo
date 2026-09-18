@@ -87,9 +87,12 @@ function campo(obj) {
 }
 
 function cabecera() {
+  var titulo = (lang === 'en' && meta.ten) ? meta.ten : meta.t;
+  var nivelNombre = (lang === 'en' && meta.nivelNombreEn) ? meta.nivelNombreEn : meta.nivelNombre;
+  var moduloTitulo = (lang === 'en' && meta.moduloTituloEn) ? meta.moduloTituloEn : meta.moduloTitulo;
   return '<div class="encabezado niv niv-' + meta.nivel + '">' +
-    '<p class="ruta">' + meta.nivelNombre + ' · Módulo ' + meta.modulo + ' — ' + meta.moduloTitulo + ' · <b>Lección ' + meta.n + '</b></p>' +
-    '<h1>' + meta.t + '</h1>' +
+    '<p class="ruta">' + nivelNombre + ' · ' + (lang === 'en' ? 'Module' : 'Módulo') + ' ' + meta.modulo + ' — ' + moduloTitulo + ' · <b>' + (lang === 'en' ? 'Lesson' : 'Lección') + ' ' + meta.n + '</b></p>' +
+    '<h1>' + titulo + '</h1>' +
     (meta.libros && meta.libros !== '—' ? '<p class="sub">' + t.lectura + ' ' + meta.libros + '</p>' : '') +
     '</div>';
 }
@@ -194,9 +197,11 @@ function pie() { return '<div class="pieleccion" id="nav"></div>'; }
 function navegacion() {
   var v = INST.vecinas(n), c = document.getElementById('nav');
   if (!c) return;
+  var ta = v.anterior ? ((lang === 'en' && v.anterior.ten) ? v.anterior.ten : v.anterior.t) : '';
+  var ts = v.siguiente ? ((lang === 'en' && v.siguiente.ten) ? v.siguiente.ten : v.siguiente.t) : '';
   c.innerHTML =
-    (v.anterior ? '<a href="leccion.html?n=' + v.anterior.n + '">← ' + v.anterior.n + ' · ' + v.anterior.t + '</a>' : '<span></span>') +
-    (v.siguiente ? '<a href="leccion.html?n=' + v.siguiente.n + '" style="text-align:right">' + v.siguiente.n + ' · ' + v.siguiente.t + ' →</a>' : '<span></span>');
+    (v.anterior ? '<a href="leccion.html?n=' + v.anterior.n + '">← ' + v.anterior.n + ' · ' + ta + '</a>' : '<span></span>') +
+    (v.siguiente ? '<a href="leccion.html?n=' + v.siguiente.n + '" style="text-align:right">' + v.siguiente.n + ' · ' + ts + ' →</a>' : '<span></span>');
 }
 
 function armarQuiz(quiz) {
