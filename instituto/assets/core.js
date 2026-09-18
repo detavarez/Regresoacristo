@@ -115,7 +115,15 @@
     h.lang = conf.idioma;
   }
 
-  function setConfig(k, v) { estado.config[k] = v; guardar(); aplicarConfig(); }
+  function setConfig(k, v) {
+    estado.config[k] = v;
+    aplicarConfig();
+    if (k === 'idioma') {
+      guardar().then(function () { location.reload(); });
+    } else {
+      guardar();
+    }
+  }
 
   function meta(n) {
     var r = null;
