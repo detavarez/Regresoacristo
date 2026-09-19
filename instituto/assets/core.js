@@ -34,15 +34,23 @@
   var sesion = null;      // { user_id, email }
   var esAdmin = false;
   var tieneFilaEstudiante = false;
+  var debeCambiarPassword = false;
   var listoResolve;
   var listo = new Promise(function (res) { listoResolve = res; });
   var LOGIN_PATH = 'login.html';
+  var CUENTA_PATH = 'cuenta.html';
 
   function enLogin() { return /(^|\/)login\.html$/.test(location.pathname); }
+  function enCuenta() { return /(^|\/)cuenta\.html$/.test(location.pathname); }
 
   function irALogin() {
     if (enLogin()) return;
     location.href = LOGIN_PATH + '?volver=' + encodeURIComponent(location.pathname + location.search);
+  }
+
+  function irACuenta() {
+    if (enCuenta()) return;
+    location.href = CUENTA_PATH + '?obligatorio=1';
   }
 
   async function cargarFilaEstudiante(uid) {
@@ -69,6 +77,7 @@
       estado = normalizar(fila.estado);
       estado.perfil = { nombre: fila.nombre || '' };
       estado.leccionActual = fila.leccion_actual || null;
+      debeCambiarPassword = !!fila.debe_cambiar_password;
     } else if (esAdmin) {
       tieneFilaEstudiante = false;
       estado = normalizar(admFila.data.estado);
@@ -82,10 +91,18 @@
       return;
     }
 
+    if (debeCambiarPassword && !enCuenta()) { irACuenta(); listoResolve(); return; }
+
     aplicarConfig();
     listoResolve();
   }
   iniciar();
+
+  async function marcarPasswordCambiada() {
+    if (!sesion || !tieneFilaEstudiante) return;
+    debeCambiarPassword = false;
+    await sb.from('estudiantes').update({ debe_cambiar_password: false }).eq('user_id', sesion.user_id);
+  }
 
   async function guardar() {
     if (!estado || !sesion) return false;
@@ -270,14 +287,16 @@
 
   function barra(activo, contexto) {
     var html =
-      '<header class="barra"><div class="env">' +
+      '<header class="barra' + (esAdmin ? ' modo-admin' : '') + '"><div class="env">' +
       '<a class="marca" href="index.html">Instituto Bíblico</a>' +
+      (esAdmin ? '<span class="rol-badge">Administrador</span>' : '') +
       (contexto ? '<span class="ctx">' + contexto + '</span>' : '') +
       '<button type="button" id="btnMenu" class="hamb" aria-label="Menú" aria-expanded="false">&#9776;</button>' +
       '<div id="menuDrop" class="menudrop">' +
       '<a href="index.html"' + (activo === 'indice' ? ' aria-current="page"' : '') + '>Índice</a>' +
       '<a href="diagnostico.html"' + (activo === 'diag' ? ' aria-current="page"' : '') + '>Ubicación</a>' +
       '<a href="progreso.html"' + (activo === 'prog' ? ' aria-current="page"' : '') + '>Mi avance</a>' +
+      '<a href="cuenta.html"' + (activo === 'cuenta' ? ' aria-current="page"' : '') + '>Mi cuenta</a>' +
       '<button type="button" id="btnPanel">Ajustes de lectura</button>' +
       '<button type="button" id="btnSalir">Cerrar sesión</button>' +
       '<span class="ver">' + VERSION + '</span>' +
@@ -357,6 +376,8 @@
     get estado() { return estado; },
     get sesion() { return sesion; },
     get esAdmin() { return esAdmin; },
+    get debeCambiarPassword() { return debeCambiarPassword; },
+    marcarPasswordCambiada: marcarPasswordCambiada,
     guardar: guardar,
     aplicarConfig: aplicarConfig,
     setConfig: setConfig,

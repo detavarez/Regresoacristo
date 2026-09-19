@@ -6,6 +6,7 @@
 <title>Administrador — Instituto Bíblico</title>
 <link rel="stylesheet" href="assets/instituto.css">
 <style>
+  body{border-top:5px solid var(--pizarra)}
   fieldset{border:1px solid var(--arena);border-radius:5px;padding:16px 18px 20px;margin:0 0 24px}
   legend{font-family:var(--sans);font-size:.8rem;color:var(--tinta-suave);padding:0 6px}
   .fila{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 10px}
@@ -31,7 +32,7 @@
 <body>
 <script src="data/curriculo.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/core.js?v=7"></script>
+<script src="assets/core.js?v=8"></script>
 
 <main class="env" id="salida" style="padding-top:20px"><p class="sub">Cargando…</p></main>
 
@@ -87,7 +88,7 @@ function iniciarPanel() {
     var password = document.getElementById('nPass').value;
     var r = await llamarAdmin({ accion: 'crear', nombre: nombre, email: email, password: password });
     if (r.ok) {
-      msg('ok', 'Estudiante creado. Contraseña: <b>' + password + '</b> — compártela con ' + nombre + '.');
+      msg('ok', 'Estudiante creado. Contraseña temporal: <b>' + password + '</b> — compártela con ' + nombre + '; se le pedirá cambiarla al entrar.');
       document.getElementById('nNombre').value = '';
       document.getElementById('nEmail').value = '';
       document.getElementById('nPass').value = '';
@@ -127,10 +128,11 @@ function iniciarPanel() {
       var aprobadas = p.filter(function (x) { return x.estado === 'aprobada'; }).length;
       return '<tr data-uid="' + e.user_id + '"><td>' + (e.nombre || '(sin nombre)') + '</td>' +
         '<td>' + (e.leccion_actual || '—') + '</td><td>' + aprobadas + '</td>' +
+        '<td>' + (e.debe_cambiar_password ? '<span style="color:var(--granate)">pendiente</span>' : '<span style="color:var(--oliva)">cambiada</span>') + '</td>' +
         '<td>' + new Date(e.creado_en).toLocaleDateString('es') + '</td></tr>';
     }).join('');
     document.getElementById('listaEstudiantes').innerHTML = estudiantes.length
-      ? '<table class="datos"><thead><tr><th>Nombre</th><th>Lección actual</th><th>Aprobadas</th><th>Creado</th></tr></thead><tbody>' + filas + '</tbody></table>'
+      ? '<table class="datos"><thead><tr><th>Nombre</th><th>Lección actual</th><th>Aprobadas</th><th>Contraseña</th><th>Creado</th></tr></thead><tbody>' + filas + '</tbody></table>'
       : '<p class="sub">Todavía no hay estudiantes.</p>';
     document.querySelectorAll('#listaEstudiantes tr[data-uid]').forEach(function (tr) {
       tr.onclick = function () { seleccionar(tr.dataset.uid); };
@@ -168,6 +170,8 @@ function iniciarPanel() {
       '<button class="btn sec peq" type="button" id="guardarNombre">Guardar</button></div>' +
 
       '<div class="fila"><label>Contraseña</label>' +
+      '<span class="sub">' + (e.debe_cambiar_password ? 'Sigue con la temporal — aún no la ha cambiado.' : 'Ya eligió su propia contraseña.') + '</span></div>' +
+      '<div class="fila"><label></label>' +
       '<button class="btn sec peq" type="button" id="cambiarPin">Restablecer contraseña</button></div>' +
 
       '<div class="fila"><label>Lección asignada</label><select id="dLeccion"></select>' +
@@ -208,7 +212,7 @@ function iniciarPanel() {
       for (var i = 0; i < 10; i++) nueva += chars[Math.floor(Math.random() * chars.length)];
       if (!confirm('Se generará una contraseña nueva para ' + e.nombre + ' y tendrás que compartírsela. ¿Continuar?')) return;
       var r = await llamarAdmin({ accion: 'cambiar_password', user_id: e.user_id, password: nueva });
-      if (r.ok) msg('ok', 'Contraseña nueva para ' + e.nombre + ': <b>' + nueva + '</b>');
+      if (r.ok) msg('ok', 'Contraseña temporal nueva para ' + e.nombre + ': <b>' + nueva + '</b> — se le pedirá cambiarla al entrar.');
     };
 
     document.getElementById('asignar').onclick = function () {

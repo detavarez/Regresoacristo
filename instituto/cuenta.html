@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi cuenta — Instituto Bíblico</title>
+<link rel="stylesheet" href="assets/instituto.css">
+<style>
+  .caja{max-width:420px;margin:0 auto}
+  .caja input{
+    width:100%;font-family:var(--sans);font-size:.92rem;padding:11px 12px;
+    border:1px solid var(--arena);background:var(--papel);color:var(--tinta);border-radius:4px;margin:0 0 10px;
+  }
+  .msg{font-family:var(--sans);font-size:.85rem;padding:10px 12px;border-radius:4px;margin:0 0 14px}
+  .msg.ok{background:color-mix(in srgb,var(--oliva) 14%,transparent);color:var(--oliva)}
+  .msg.err{background:color-mix(in srgb,var(--granate) 12%,transparent);color:var(--granate)}
+  .obligatorio{background:color-mix(in srgb,var(--oro) 16%,transparent);border-left:3px solid var(--oro);padding:12px 14px;margin:0 0 22px;font-family:var(--sans);font-size:.9rem}
+</style>
+</head>
+<body>
+<script src="data/curriculo.js?v=7"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/core.js?v=8"></script>
+
+<main class="env" id="salida" style="padding-top:26px"><p class="sub">Cargando…</p></main>
+
+<script>
+var T = {
+  es: { tit: 'Mi cuenta', ruta: 'Tu cuenta', obligatorioMsg: 'Tu contraseña es temporal. Elige una nueva antes de continuar — no podrás usar el resto del sitio hasta hacerlo.',
+    nombre: 'Nombre', guardarNombre: 'Guardar nombre', cambiarPassTit: 'Cambiar contraseña',
+    nueva: 'Contraseña nueva', confirmar: 'Confirmar contraseña', cambiar: 'Cambiar contraseña',
+    corta: 'La contraseña debe tener al menos 8 caracteres.', noCoincide: 'Las contraseñas no coinciden.',
+    okNombre: 'Nombre guardado.', okPass: 'Contraseña actualizada.', errPass: 'No se pudo cambiar la contraseña: ',
+    volver: 'Ir al índice', correo: 'Correo' },
+  en: { tit: 'My account', ruta: 'Your account', obligatorioMsg: "Your password is temporary. Choose a new one before continuing — you won't be able to use the rest of the site until you do.",
+    nombre: 'Name', guardarNombre: 'Save name', cambiarPassTit: 'Change password',
+    nueva: 'New password', confirmar: 'Confirm password', cambiar: 'Change password',
+    corta: 'Password must be at least 8 characters.', noCoincide: 'Passwords do not match.',
+    okNombre: 'Name saved.', okPass: 'Password updated.', errPass: "Couldn't change the password: ",
+    volver: 'Go to the index', correo: 'Email' }
+};
+
+INST.listo.then(function () {
+  // Nota: esta página se excluye a propósito de la redirección obligatoria de INST,
+  // así que INST.estado puede venir null si no hay sesión real.
+  if (!INST.sesion) { location.href = 'login.html'; return; }
+  pintar();
+});
+
+function pintar() {
+  var lang = (INST.estado && INST.estado.config.idioma === 'en') ? 'en' : 'es';
+  var t = T[lang];
+  var obligatorio = new URLSearchParams(location.search).get('obligatorio') === '1' || INST.debeCambiarPassword;
+
+  if (!obligatorio) INST.barra('cuenta');
+
+  var html = '<div class="caja">' +
+    '<div class="encabezado"><p class="ruta">' + t.ruta + '</p><h1>' + t.tit + '</h1></div>' +
+    '<div id="msg"></div>' +
+    (obligatorio ? '<div class="obligatorio">' + t.obligatorioMsg + '</div>' : '');
+
+  if (!obligatorio && INST.estado) {
+    html += '<p class="sub">' + t.correo + ': ' + (INST.sesion ? INST.sesion.email : '') + '</p>' +
+      '<label class="sub">' + t.nombre + '</label>' +
+      '<input type="text" id="nombre" value="' + (INST.estado.perfil.nombre || '') + '">' +
+      '<button class="btn sec" type="button" id="guardarNombre" style="margin:0 0 24px">' + t.guardarNombre + '</button><hr>';
+  }
+
+  html += '<h2 style="font-size:1.05rem">' + t.cambiarPassTit + '</h2>' +
+    '<input type="password" id="nueva" placeholder="' + t.nueva + '" autocomplete="new-password">' +
+    '<input type="password" id="confirmar" placeholder="' + t.confirmar + '" autocomplete="new-password">' +
+    '<button class="btn" type="button" id="cambiar" style="width:100%">' + t.cambiar + '</button>';
+
+  if (!obligatorio) html += '<p class="sub" style="margin-top:20px"><a href="index.html">' + t.volver + '</a></p>';
+
+  html += '</div>';
+  document.getElementById('salida').innerHTML = html;
+
+  function msg(tipo, texto) { document.getElementById('msg').innerHTML = '<div class="msg ' + tipo + '">' + texto + '</div>'; }
+
+  if (!obligatorio && INST.estado) {
+    document.getElementById('guardarNombre').onclick = function () {
+      INST.estado.perfil.nombre = document.getElementById('nombre').value.trim();
+      INST.guardar();
+      msg('ok', t.okNombre);
+    };
+  }
+
+  document.getElementById('cambiar').onclick = async function () {
+    var nueva = document.getElementById('nueva').value;
+    var confirmar = document.getElementById('confirmar').value;
+    if (nueva.length < 8) { msg('err', t.corta); return; }
+    if (nueva !== confirmar) { msg('err', t.noCoincide); return; }
+    var r = await INST.sb.auth.updateUser({ password: nueva });
+    if (r.error) { msg('err', t.errPass + r.error.message); return; }
+    if (INST.debeCambiarPassword) { await INST.marcarPasswordCambiada(); }
+    msg('ok', t.okPass);
+    setTimeout(function () { location.href = 'index.html'; }, 900);
+  };
+}
+</script>
+</body>
+</html>

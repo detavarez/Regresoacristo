@@ -26,6 +26,7 @@
   <input type="password" id="pass" placeholder="Contraseña" autocomplete="current-password">
   <div id="err"></div>
   <button class="btn" type="button" id="entrar">Entrar</button>
+  <p style="text-align:center;margin:16px 0 0"><button type="button" id="olvide" style="background:none;border:none;font-family:var(--sans);font-size:.8rem;color:var(--tinta-suave);text-decoration:underline;cursor:pointer">¿Olvidaste tu contraseña?</button></p>
 </main>
 
 <script>
@@ -64,6 +65,16 @@ async function intentar() {
   }
   irAdentro();
 }
+
+document.getElementById('olvide').onclick = async function () {
+  var correo = prompt('¿A qué correo te enviamos el enlace para restablecer tu contraseña?', email.value.trim());
+  if (!correo) return;
+  err.textContent = '';
+  var destino = location.href.replace('login.html', 'cuenta.html').split('?')[0];
+  var r = await sb.auth.resetPasswordForEmail(correo.trim(), { redirectTo: destino });
+  if (r.error) { err.textContent = 'No se pudo enviar el correo: ' + r.error.message; return; }
+  alert('Si ese correo tiene una cuenta, te llegará un enlace para restablecer tu contraseña.');
+};
 </script>
 </body>
 </html>

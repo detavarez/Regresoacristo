@@ -59,6 +59,9 @@ body{
 .marca{font-family:var(--serif);font-weight:700;letter-spacing:.01em;text-decoration:none;color:var(--tinta);font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:44vw;flex:0 0 auto}
 .ctx{font-family:var(--sans);font-size:.78rem;color:var(--tinta-suave);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:360px){.marca{font-size:.86rem;max-width:38vw}.ctx{display:none}}
+.rol-badge{font-family:var(--sans);font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:var(--pizarra);padding:3px 9px;border-radius:99px;flex:0 0 auto}
+.barra.modo-admin{border-bottom:2px solid var(--pizarra)}
+.barra.modo-admin .env{background:color-mix(in srgb, var(--pizarra) 6%, transparent)}
 .hamb{margin-left:auto;background:none;border:none;font-size:1.35rem;line-height:1;cursor:pointer;color:var(--tinta);padding:6px 4px;flex:0 0 auto}
 .menudrop{
   display:none;flex-direction:column;position:absolute;right:0;top:52px;z-index:50;
