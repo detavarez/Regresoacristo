@@ -61,7 +61,7 @@
     sesion = { user_id: sesionActiva.user.id, email: sesionActiva.user.email };
 
     var fila = await cargarFilaEstudiante(sesion.user_id);
-    var admFila = await sb.from('admins').select('user_id, nombre, config').eq('user_id', sesion.user_id).maybeSingle();
+    var admFila = await sb.from('admins').select('user_id, nombre, estado, leccion_actual').eq('user_id', sesion.user_id).maybeSingle();
     esAdmin = !!(admFila && admFila.data);
 
     if (fila) {
@@ -71,10 +71,9 @@
       estado.leccionActual = fila.leccion_actual || null;
     } else if (esAdmin) {
       tieneFilaEstudiante = false;
-      estado = clonar(BASE);
-      if (admFila.data.config) estado.config = Object.assign(clonar(BASE.config), admFila.data.config);
+      estado = normalizar(admFila.data.estado);
       estado.perfil = { nombre: admFila.data.nombre || '' };
-      estado.leccionActual = null;
+      estado.leccionActual = admFila.data.leccion_actual || null;
     } else {
       // Sesión válida pero sin fila de estudiante ni de admin: no pertenece aquí.
       await sb.auth.signOut();
@@ -90,13 +89,17 @@
 
   async function guardar() {
     if (!estado || !sesion) return false;
-    if (esAdmin && !tieneFilaEstudiante) {
-      var ra = await sb.from('admins').update({ config: estado.config }).eq('user_id', sesion.user_id);
-      return !ra.error;
-    }
     var copia = clonar(estado);
     delete copia.perfil;
     delete copia.leccionActual;
+    if (esAdmin && !tieneFilaEstudiante) {
+      var ra = await sb.from('admins').update({
+        estado: copia,
+        leccion_actual: estado.leccionActual || null,
+        nombre: (estado.perfil && estado.perfil.nombre) || null
+      }).eq('user_id', sesion.user_id);
+      return !ra.error;
+    }
     var r = await sb.from('estudiantes').update({
       estado: copia,
       leccion_actual: estado.leccionActual || null,
