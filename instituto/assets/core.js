@@ -33,7 +33,8 @@
   var estado = null;      // se llena de forma asíncrona, ver iniciar()
   var sesion = null;      // { user_id, email }
   var esAdmin = false;
-  var tieneFilaEstudiante = false;
+  var esMaestro = false;
+  var tablaPersonal = null; // 'estudiantes' | 'admins' | 'maestros'
   var debeCambiarPassword = false;
   var listoResolve;
   var listo = new Promise(function (res) { listoResolve = res; });
@@ -69,22 +70,31 @@
     sesion = { user_id: sesionActiva.user.id, email: sesionActiva.user.email };
 
     var fila = await cargarFilaEstudiante(sesion.user_id);
-    var admFila = await sb.from('admins').select('user_id, nombre, estado, leccion_actual').eq('user_id', sesion.user_id).maybeSingle();
+    var admFila = await sb.from('admins').select('user_id, nombre, estado, leccion_actual, debe_cambiar_password').eq('user_id', sesion.user_id).maybeSingle();
+    var maeFila = await sb.from('maestros').select('user_id, nombre, estado, leccion_actual, debe_cambiar_password').eq('user_id', sesion.user_id).maybeSingle();
     esAdmin = !!(admFila && admFila.data);
+    esMaestro = !!(maeFila && maeFila.data);
 
     if (fila) {
-      tieneFilaEstudiante = true;
+      tablaPersonal = 'estudiantes';
       estado = normalizar(fila.estado);
       estado.perfil = { nombre: fila.nombre || '' };
       estado.leccionActual = fila.leccion_actual || null;
       debeCambiarPassword = !!fila.debe_cambiar_password;
     } else if (esAdmin) {
-      tieneFilaEstudiante = false;
+      tablaPersonal = 'admins';
       estado = normalizar(admFila.data.estado);
       estado.perfil = { nombre: admFila.data.nombre || '' };
       estado.leccionActual = admFila.data.leccion_actual || null;
+      debeCambiarPassword = !!admFila.data.debe_cambiar_password;
+    } else if (esMaestro) {
+      tablaPersonal = 'maestros';
+      estado = normalizar(maeFila.data.estado);
+      estado.perfil = { nombre: maeFila.data.nombre || '' };
+      estado.leccionActual = maeFila.data.leccion_actual || null;
+      debeCambiarPassword = !!maeFila.data.debe_cambiar_password;
     } else {
-      // Sesión válida pero sin fila de estudiante ni de admin: no pertenece aquí.
+      // Sesión válida pero sin fila en ningún rol: no pertenece aquí.
       await sb.auth.signOut();
       irALogin();
       listoResolve();
@@ -99,25 +109,17 @@
   iniciar();
 
   async function marcarPasswordCambiada() {
-    if (!sesion || !tieneFilaEstudiante) return;
+    if (!sesion || !tablaPersonal) return;
     debeCambiarPassword = false;
-    await sb.from('estudiantes').update({ debe_cambiar_password: false }).eq('user_id', sesion.user_id);
+    await sb.from(tablaPersonal).update({ debe_cambiar_password: false }).eq('user_id', sesion.user_id);
   }
 
   async function guardar() {
-    if (!estado || !sesion) return false;
+    if (!estado || !sesion || !tablaPersonal) return false;
     var copia = clonar(estado);
     delete copia.perfil;
     delete copia.leccionActual;
-    if (esAdmin && !tieneFilaEstudiante) {
-      var ra = await sb.from('admins').update({
-        estado: copia,
-        leccion_actual: estado.leccionActual || null,
-        nombre: (estado.perfil && estado.perfil.nombre) || null
-      }).eq('user_id', sesion.user_id);
-      return !ra.error;
-    }
-    var r = await sb.from('estudiantes').update({
+    var r = await sb.from(tablaPersonal).update({
       estado: copia,
       leccion_actual: estado.leccionActual || null,
       nombre: (estado.perfil && estado.perfil.nombre) || null
@@ -287,9 +289,9 @@
 
   function barra(activo, contexto) {
     var html =
-      '<header class="barra' + (esAdmin ? ' modo-admin' : '') + '"><div class="env">' +
+      '<header class="barra' + (esAdmin ? ' modo-admin' : (esMaestro ? ' modo-maestro' : '')) + '"><div class="env">' +
       '<a class="marca" href="index.html">Instituto Bíblico</a>' +
-      (esAdmin ? '<span class="rol-badge">Administrador</span>' : '') +
+      (esAdmin ? '<span class="rol-badge">Administrador</span>' : (esMaestro ? '<span class="rol-badge rol-maestro">Maestro</span>' : '')) +
       (contexto ? '<span class="ctx">' + contexto + '</span>' : '') +
       '<button type="button" id="btnMenu" class="hamb" aria-label="Menú" aria-expanded="false">&#9776;</button>' +
       '<div id="menuDrop" class="menudrop">' +
@@ -297,6 +299,8 @@
       '<a href="diagnostico.html"' + (activo === 'diag' ? ' aria-current="page"' : '') + '>Ubicación</a>' +
       '<a href="progreso.html"' + (activo === 'prog' ? ' aria-current="page"' : '') + '>Mi avance</a>' +
       '<a href="cuenta.html"' + (activo === 'cuenta' ? ' aria-current="page"' : '') + '>Mi cuenta</a>' +
+      (esAdmin ? '<a href="admin.html"' + (activo === 'admin' ? ' aria-current="page"' : '') + '>Panel de administrador</a>' : '') +
+      (esMaestro ? '<a href="maestro.html"' + (activo === 'maestro' ? ' aria-current="page"' : '') + '>Panel de maestro</a>' : '') +
       '<button type="button" id="btnPanel">Ajustes de lectura</button>' +
       '<button type="button" id="btnSalir">Cerrar sesión</button>' +
       '<span class="ver">' + VERSION + '</span>' +
@@ -376,6 +380,7 @@
     get estado() { return estado; },
     get sesion() { return sesion; },
     get esAdmin() { return esAdmin; },
+    get esMaestro() { return esMaestro; },
     get debeCambiarPassword() { return debeCambiarPassword; },
     marcarPasswordCambiada: marcarPasswordCambiada,
     guardar: guardar,

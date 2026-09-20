@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maestro — Instituto Bíblico</title>
+<link rel="stylesheet" href="assets/instituto.css">
+<style>
+  body{border-top:5px solid var(--oliva)}
+  fieldset{border:1px solid var(--arena);border-radius:5px;padding:16px 18px 20px;margin:0 0 24px}
+  legend{font-family:var(--sans);font-size:.8rem;color:var(--tinta-suave);padding:0 6px}
+  .fila{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 10px}
+  .fila label{font-family:var(--sans);font-size:.82rem;color:var(--tinta-suave);min-width:110px}
+  .fila input[type=text],.fila input[type=email]{
+    font-family:var(--sans);font-size:.88rem;padding:8px 10px;border:1px solid var(--arena);
+    background:var(--papel);color:var(--tinta);border-radius:3px;flex:1;min-width:180px;
+  }
+  .btn.peq{padding:8px 14px;font-size:.82rem}
+  table.datos td, table.datos th{font-size:.82rem}
+  table.datos tr{cursor:pointer}
+  table.datos tr:hover{background:var(--papel-2)}
+  table.datos tr.sel{background:var(--papel-2);font-weight:600}
+  .aviso{font-family:var(--sans);font-size:.8rem;color:var(--tinta-suave);margin:6px 0 0}
+  .msg{font-family:var(--sans);font-size:.85rem;padding:10px 12px;border-radius:4px;margin:0 0 14px}
+  .msg.ok{background:color-mix(in srgb,var(--oliva) 14%,transparent);color:var(--oliva)}
+  .msg.err{background:color-mix(in srgb,var(--granate) 12%,transparent);color:var(--granate)}
+</style>
+</head>
+<body>
+<script src="data/curriculo.js?v=9"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/core.js?v=9"></script>
+
+<main class="env" id="salida" style="padding-top:26px"><p class="sub">Cargando…</p></main>
+
+<script>
+var SUPABASE_URL = 'https://zkmrwmondbmboxqvrdto.supabase.co';
+var seleccionado = null;
+var estudiantes = [];
+
+INST.listo.then(function () {
+  if (!INST.estado) return;
+
+  if (!INST.esMaestro && !INST.esAdmin) {
+    document.getElementById('salida').innerHTML =
+      '<div class="encabezado"><h1>Sin acceso</h1><p class="sub">Esta cuenta no tiene permisos de maestro.</p>' +
+      '<p><a class="btn" href="index.html">Volver al índice</a></p></div>';
+    return;
+  }
+
+  INST.barra('maestro');
+  pintar();
+});
+
+async function llamar(cuerpo) {
+  try {
+    var s = await INST.sb.auth.getSession();
+    var token = s.data.session.access_token;
+    var resp = await fetch(SUPABASE_URL + '/functions/v1/admin-estudiantes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(cuerpo)
+    });
+    var data = await resp.json();
+    if (!resp.ok || data.error) return { ok: false, error: data.error || 'Error desconocido' };
+    return data;
+  } catch (e) {
+    return { ok: false, error: 'No se pudo conectar: ' + e.message };
+  }
+}
+
+function generarClave() {
+  var chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  var out = '';
+  for (var i = 0; i < 10; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+
+function msg(tipo, texto) { document.getElementById('msg').innerHTML = '<div class="msg ' + tipo + '">' + texto + '</div>'; }
+
+function pintar() {
+  document.getElementById('salida').innerHTML =
+    '<div class="encabezado"><p class="ruta">Panel de maestro</p><h1>Estudiantes</h1></div>' +
+    '<div id="msg"></div>' +
+    '<fieldset><legend>Dar de alta un estudiante nuevo</legend>' +
+    '<div class="fila"><label>Nombre</label><input type="text" id="nNombre"></div>' +
+    '<div class="fila"><label>Correo</label><input type="email" id="nEmail"></div>' +
+    '<div class="fila"><label>Contraseña</label><input type="text" id="nPass" style="max-width:220px">' +
+    '<button class="btn sec peq" type="button" id="generarPass">Generar</button></div>' +
+    '<div class="fila"><button class="btn peq" type="button" id="crear">Crear estudiante</button></div>' +
+    '<p class="aviso">Es una contraseña TEMPORAL — se le pedirá cambiarla en su primer ingreso.</p>' +
+    '</fieldset>' +
+    '<fieldset><legend>Estudiantes y sus notas</legend><div id="listaEstudiantes"><p class="sub">Cargando…</p></div></fieldset>' +
+    '<div id="detalle"></div>';
+
+  document.getElementById('generarPass').onclick = function () { document.getElementById('nPass').value = generarClave(); };
+
+  document.getElementById('crear').onclick = async function () {
+    var nombre = document.getElementById('nNombre').value.trim();
+    var email = document.getElementById('nEmail').value.trim();
+    var password = document.getElementById('nPass').value;
+    var r = await llamar({ accion: 'crear', nombre: nombre, email: email, password: password });
+    if (r.ok) {
+      msg('ok', 'Estudiante creado. Contraseña temporal: <b>' + password + '</b> — compártela con ' + nombre + '; se le pedirá cambiarla al entrar.');
+      document.getElementById('nNombre').value = '';
+      document.getElementById('nEmail').value = '';
+      document.getElementById('nPass').value = '';
+      cargarEstudiantes();
+    } else msg('err', r.error);
+  };
+
+  cargarEstudiantes();
+}
+
+async function cargarEstudiantes() {
+  var r = await INST.sb.from('estudiantes').select('*').order('creado_en', { ascending: false });
+  estudiantes = r.data || [];
+  var filas = estudiantes.map(function (e) {
+    var p = e.estado && e.estado.progreso ? Object.values(e.estado.progreso) : [];
+    var aprobadas = p.filter(function (x) { return x.estado === 'aprobada'; }).length;
+    return '<tr data-uid="' + e.user_id + '"><td>' + (e.nombre || '(sin nombre)') + '</td>' +
+      '<td>' + (e.leccion_actual || '—') + '</td><td>' + aprobadas + '</td>' +
+      '<td>' + (e.debe_cambiar_password ? '<span style="color:var(--granate)">pendiente</span>' : '<span style="color:var(--oliva)">cambiada</span>') + '</td></tr>';
+  }).join('');
+  document.getElementById('listaEstudiantes').innerHTML = estudiantes.length
+    ? '<table class="datos"><thead><tr><th>Nombre</th><th>Lección actual</th><th>Aprobadas</th><th>Contraseña</th></tr></thead><tbody>' + filas + '</tbody></table>'
+    : '<p class="sub">Todavía no hay estudiantes.</p>';
+  document.querySelectorAll('#listaEstudiantes tr[data-uid]').forEach(function (tr) {
+    tr.onclick = function () { seleccionar(tr.dataset.uid); };
+  });
+}
+
+function seleccionar(uid) {
+  seleccionado = estudiantes.filter(function (e) { return e.user_id === uid; })[0];
+  if (!seleccionado) return;
+  document.querySelectorAll('#listaEstudiantes tr').forEach(function (tr) { tr.classList.toggle('sel', tr.dataset.uid === uid); });
+  pintarDetalle();
+}
+
+function pintarDetalle() {
+  var e = seleccionado;
+  var progreso = (e.estado && e.estado.progreso) || {};
+  var diag = e.estado && e.estado.diagnostico;
+
+  var filasProgreso = Object.keys(progreso).sort().map(function (k) {
+    var p = progreso[k], m = INST.meta(k);
+    return '<tr><td>' + k + (m ? ' — ' + m.t : '') + '</td><td>' + p.estado + '</td>' +
+      '<td>' + (p.mejor !== null ? p.mejor + '%' : '—') + '</td><td>' + (p.intentos ? p.intentos.length : 0) + '</td></tr>';
+  }).join('');
+
+  document.getElementById('detalle').innerHTML =
+    '<fieldset><legend>' + e.nombre + ' — solo lectura</legend>' +
+    '<p class="sub">' + (diag ? ('Diagnóstico hecho el ' + new Date(diag.fecha).toLocaleDateString('es') + ', recomendó la lección ' + diag.recomendada + '.') : 'Sin diagnóstico.') + '</p>' +
+    (filasProgreso
+      ? '<table class="datos"><thead><tr><th>Lección</th><th>Estado</th><th>Mejor</th><th>Intentos</th></tr></thead><tbody>' + filasProgreso + '</tbody></table>'
+      : '<p class="sub">Sin lecciones registradas.</p>') +
+    '<div class="fila" style="margin-top:16px"><label>Contraseña</label>' +
+    '<span class="sub">' + (e.debe_cambiar_password ? 'Sigue con la temporal.' : 'Ya eligió su propia contraseña.') + '</span></div>' +
+    '<div class="fila"><label></label><button class="btn sec peq" type="button" id="cambiarPass">Restablecer contraseña</button></div>' +
+    '</fieldset>';
+
+  document.getElementById('cambiarPass').onclick = async function () {
+    var nueva = generarClave();
+    if (!confirm('Se generará una contraseña TEMPORAL nueva para ' + e.nombre + ' y tendrás que compartírsela. ¿Continuar?')) return;
+    var r = await llamar({ accion: 'cambiar_password', user_id: e.user_id, password: nueva });
+    if (r.ok) { msg('ok', 'Contraseña temporal nueva para ' + e.nombre + ': <b>' + nueva + '</b>'); cargarEstudiantes(); }
+    else msg('err', r.error);
+  };
+}
+</script>
+</body>
+</html>

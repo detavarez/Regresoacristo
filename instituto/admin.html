@@ -27,16 +27,27 @@
   .msg{font-family:var(--sans);font-size:.85rem;padding:10px 12px;border-radius:4px;margin:0 0 14px}
   .msg.ok{background:color-mix(in srgb,var(--oliva) 14%,transparent);color:var(--oliva)}
   .msg.err{background:color-mix(in srgb,var(--granate) 12%,transparent);color:var(--granate)}
+  .tarjetas{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 30px}
+  .tarjeta{
+    flex:1;min-width:200px;border:1px solid var(--arena);border-radius:6px;padding:20px;
+    background:var(--papel);cursor:pointer;text-align:left;font-family:inherit;
+  }
+  .tarjeta:hover{background:var(--papel-2);border-color:var(--pizarra)}
+  .tarjeta h3{margin:0 0 6px;font-size:1.05rem}
+  .tarjeta p{margin:0;color:var(--tinta-suave);font-size:.85rem}
+  .volverPanel{font-family:var(--sans);font-size:.82rem;color:var(--tinta-suave);background:none;border:none;cursor:pointer;text-decoration:underline;margin:0 0 20px;padding:0}
 </style>
 </head>
 <body>
-<script src="data/curriculo.js?v=5"></script>
+<script src="data/curriculo.js?v=9"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/core.js?v=8"></script>
+<script src="assets/core.js?v=9"></script>
 
-<main class="env" id="salida" style="padding-top:20px"><p class="sub">Cargando…</p></main>
+<main class="env" id="salida" style="padding-top:26px"><p class="sub">Cargando…</p></main>
 
 <script>
+var SUPABASE_URL = 'https://zkmrwmondbmboxqvrdto.supabase.co';
+
 INST.listo.then(function () {
   if (!INST.estado) return; // sin sesión
 
@@ -48,80 +59,86 @@ INST.listo.then(function () {
   }
 
   INST.barra('admin');
-  iniciarPanel();
+  mostrarPanel();
 });
 
-var SUPABASE_URL = 'https://zkmrwmondbmboxqvrdto.supabase.co';
+async function llamar(fn, cuerpo) {
+  try {
+    var s = await INST.sb.auth.getSession();
+    var token = s.data.session.access_token;
+    var resp = await fetch(SUPABASE_URL + '/functions/v1/' + fn, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(cuerpo)
+    });
+    var data = await resp.json();
+    if (!resp.ok || data.error) return { ok: false, error: data.error || 'Error desconocido' };
+    return data;
+  } catch (e) {
+    return { ok: false, error: 'No se pudo conectar: ' + e.message };
+  }
+}
 
-function iniciarPanel() {
-  var sb = INST.sb;
-  var seleccionado = null; // fila de estudiante actualmente elegida
+function mostrarPanel() {
+  document.getElementById('salida').innerHTML =
+    '<div class="encabezado"><p class="ruta">Panel de administrador</p><h1>¿Qué quieres hacer?</h1></div>' +
+    '<div class="tarjetas">' +
+    '<button class="tarjeta" id="irEstudiantes"><h3>Estudiantes</h3><p>Dar de alta, asignar lecciones, calificar, ver progreso.</p></button>' +
+    '<button class="tarjeta" id="irMaestros"><h3>Maestros</h3><p>Dar de alta maestros: pueden crear estudiantes, ver notas y restablecer contraseñas.</p></button>' +
+    '<button class="tarjeta" id="irAdmins"><h3>Administradores</h3><p>Dar de alta otros administradores con control total.</p></button>' +
+    '</div>';
+  document.getElementById('irEstudiantes').onclick = panelEstudiantes;
+  document.getElementById('irMaestros').onclick = function () { panelPersonal('maestro', 'maestros', 'Maestros'); };
+  document.getElementById('irAdmins').onclick = function () { panelPersonal('admin', 'admins', 'Administradores'); };
+}
+
+function botonVolver() {
+  return '<button type="button" class="volverPanel" id="volver">← Volver al panel</button>';
+}
+function ligarVolver() { document.getElementById('volver').onclick = mostrarPanel; }
+
+/* ===================== ESTUDIANTES ===================== */
+function panelEstudiantes() {
+  var seleccionado = null;
   var estudiantes = [];
 
-  document.getElementById('salida').innerHTML =
-    '<div class="encabezado"><p class="ruta">Panel de administrador</p><h1>Estudiantes</h1></div>' +
+  document.getElementById('salida').innerHTML = botonVolver() +
+    '<div class="encabezado"><h1>Estudiantes</h1></div>' +
     '<div id="msg"></div>' +
-
     '<fieldset><legend>Dar de alta un estudiante nuevo</legend>' +
     '<div class="fila"><label>Nombre</label><input type="text" id="nNombre"></div>' +
     '<div class="fila"><label>Correo</label><input type="email" id="nEmail"></div>' +
     '<div class="fila"><label>Contraseña</label><input type="text" id="nPass" style="max-width:220px">' +
     '<button class="btn sec peq" type="button" id="generarPass">Generar</button></div>' +
     '<div class="fila"><button class="btn peq" type="button" id="crear">Crear estudiante</button></div>' +
-    '<p class="aviso">Comparte tú mismo la contraseña con el estudiante — el correo solo identifica la cuenta.</p>' +
+    '<p class="aviso">Es una contraseña TEMPORAL — se le pedirá cambiarla en su primer ingreso.</p>' +
     '</fieldset>' +
-
     '<fieldset><legend>Estudiantes existentes</legend><div id="listaEstudiantes"><p class="sub">Cargando…</p></div></fieldset>' +
-
     '<div id="detalle"></div>';
+  ligarVolver();
 
-  document.getElementById('generarPass').onclick = function () {
-    var chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-    var out = '';
-    for (var i = 0; i < 10; i++) out += chars[Math.floor(Math.random() * chars.length)];
-    document.getElementById('nPass').value = out;
-  };
+  document.getElementById('generarPass').onclick = function () { document.getElementById('nPass').value = generarClave(); };
 
   document.getElementById('crear').onclick = async function () {
     var nombre = document.getElementById('nNombre').value.trim();
     var email = document.getElementById('nEmail').value.trim();
     var password = document.getElementById('nPass').value;
-    var r = await llamarAdmin({ accion: 'crear', nombre: nombre, email: email, password: password });
+    var r = await llamar('admin-estudiantes', { accion: 'crear', nombre: nombre, email: email, password: password });
     if (r.ok) {
       msg('ok', 'Estudiante creado. Contraseña temporal: <b>' + password + '</b> — compártela con ' + nombre + '; se le pedirá cambiarla al entrar.');
       document.getElementById('nNombre').value = '';
       document.getElementById('nEmail').value = '';
       document.getElementById('nPass').value = '';
       cargarEstudiantes();
-    }
+    } else msg('err', r.error);
   };
 
   cargarEstudiantes();
 
-  async function llamarAdmin(cuerpo) {
-    try {
-      var s = await sb.auth.getSession();
-      var token = s.data.session.access_token;
-      var resp = await fetch(SUPABASE_URL + '/functions/v1/admin-estudiantes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify(cuerpo)
-      });
-      var data = await resp.json();
-      if (!resp.ok || data.error) { msg('err', data.error || 'Error desconocido'); return { ok: false }; }
-      return data;
-    } catch (e) {
-      msg('err', 'No se pudo conectar: ' + e.message);
-      return { ok: false };
-    }
-  }
-
-  function msg(tipo, texto) {
-    document.getElementById('msg').innerHTML = '<div class="msg ' + tipo + '">' + texto + '</div>';
-  }
+  function msg(tipo, texto) { document.getElementById('msg').innerHTML = '<div class="msg ' + tipo + '">' + texto + '</div>'; }
 
   async function cargarEstudiantes() {
-    var r = await sb.from('estudiantes').select('*').order('creado_en', { ascending: false });
+    var r = await INST.sb.from('estudiantes').select('*').order('creado_en', { ascending: false });
     estudiantes = r.data || [];
     var filas = estudiantes.map(function (e) {
       var p = e.estado && e.estado.progreso ? Object.values(e.estado.progreso) : [];
@@ -165,35 +182,27 @@ function iniciarPanel() {
 
     document.getElementById('detalle').innerHTML =
       '<fieldset><legend>' + e.nombre + '</legend>' +
-
       '<div class="fila"><label>Nombre</label><input type="text" id="dNombre" value="' + (e.nombre || '') + '">' +
       '<button class="btn sec peq" type="button" id="guardarNombre">Guardar</button></div>' +
-
       '<div class="fila"><label>Contraseña</label>' +
       '<span class="sub">' + (e.debe_cambiar_password ? 'Sigue con la temporal — aún no la ha cambiado.' : 'Ya eligió su propia contraseña.') + '</span></div>' +
       '<div class="fila"><label></label>' +
       '<button class="btn sec peq" type="button" id="cambiarPin">Restablecer contraseña</button></div>' +
-
       '<div class="fila"><label>Lección asignada</label><select id="dLeccion"></select>' +
       '<button class="btn peq" type="button" id="asignar">Asignar</button>' +
       '<button class="btn sec peq" type="button" id="quitar">Quitar</button></div>' +
-
       '<div class="fila"><button class="btn peligro peq" type="button" id="borrarDiag">Borrar diagnóstico</button>' +
       '<span class="aviso">' + (diag ? ('Hecho el ' + new Date(diag.fecha).toLocaleDateString('es') + ', recomendó la ' + diag.recomendada) : 'Sin diagnóstico') + '</span></div>' +
-
       '<h3 style="font-size:.95rem">Progreso por lección</h3>' +
       (filasProgreso
         ? '<table class="datos"><thead><tr><th>Lección</th><th>Estado</th><th>Mejor</th><th>Intentos</th></tr></thead><tbody>' + filasProgreso + '</tbody></table>'
         : '<p class="sub">Sin lecciones registradas.</p>') +
-
       '<div class="fila" style="margin-top:14px"><label>Lección</label><select id="dLeccionCal"></select>' +
       '<label style="min-width:auto">Nota %</label><input type="number" id="dNota" min="0" max="100" style="max-width:90px">' +
       '<button class="btn peq" type="button" id="marcarAprobada">Marcar aprobada</button>' +
       '<button class="btn sec peq" type="button" id="borrarProgLeccion">Borrar su progreso</button></div>' +
-
       '<div class="fila" style="margin-top:14px"><button class="btn peligro peq" type="button" id="reiniciarTodo">Vaciar todo el progreso</button>' +
       '<button class="btn peligro peq" type="button" id="eliminarEstudiante">Eliminar estudiante por completo</button></div>' +
-
       '<h3 style="font-size:.95rem">Editor avanzado (JSON crudo)</h3>' +
       '<textarea id="json">' + JSON.stringify(e.estado, null, 2) + '</textarea>' +
       '<div class="fila" style="margin-top:10px"><button class="btn sec peq" type="button" id="guardarJson">Guardar este JSON</button></div>' +
@@ -207,12 +216,11 @@ function iniciarPanel() {
     };
 
     document.getElementById('cambiarPin').onclick = async function () {
-      var chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-      var nueva = '';
-      for (var i = 0; i < 10; i++) nueva += chars[Math.floor(Math.random() * chars.length)];
-      if (!confirm('Se generará una contraseña nueva para ' + e.nombre + ' y tendrás que compartírsela. ¿Continuar?')) return;
-      var r = await llamarAdmin({ accion: 'cambiar_password', user_id: e.user_id, password: nueva });
+      var nueva = generarClave();
+      if (!confirm('Se generará una contraseña TEMPORAL nueva para ' + e.nombre + ' y tendrás que compartírsela. ¿Continuar?')) return;
+      var r = await llamar('admin-estudiantes', { accion: 'cambiar_password', user_id: e.user_id, password: nueva });
       if (r.ok) msg('ok', 'Contraseña temporal nueva para ' + e.nombre + ': <b>' + nueva + '</b> — se le pedirá cambiarla al entrar.');
+      else msg('err', r.error);
     };
 
     document.getElementById('asignar').onclick = function () {
@@ -248,7 +256,7 @@ function iniciarPanel() {
     document.getElementById('borrarProgLeccion').onclick = function () {
       var n = document.getElementById('dLeccionCal').value;
       var estadoCopia = e.estado || {};
-      if (!estadoCopia.progreso || !estadoCopia.progreso[n]) { alert('Esa lección no tiene progreso.'); return; }
+      if (!estadoCopia.progreso || !estadoCopia.progreso[n]) { alert('Esa lección no tiene progreso registrado.'); return; }
       if (!confirm('¿Borrar el progreso de la lección ' + n + '?')) return;
       delete estadoCopia.progreso[n];
       var cambios = { estado: estadoCopia };
@@ -257,14 +265,15 @@ function iniciarPanel() {
     };
 
     document.getElementById('reiniciarTodo').onclick = function () {
-      if (!confirm('Esto borra TODO el progreso de ' + e.nombre + ' (diagnóstico, lecciones, historial). ¿Continuar?')) return;
+      if (!confirm('Esto borra TODO: nombre, diagnóstico, progreso e historial de ' + e.nombre + '. ¿Continuar?')) return;
       actualizarFila({ estado: {}, leccion_actual: null });
     };
 
     document.getElementById('eliminarEstudiante').onclick = async function () {
       if (!confirm('Esto elimina la cuenta de ' + e.nombre + ' por completo, incluido su acceso. No se puede deshacer. ¿Continuar?')) return;
-      var r = await llamarAdmin({ accion: 'eliminar', user_id: e.user_id });
+      var r = await llamar('admin-estudiantes', { accion: 'eliminar', user_id: e.user_id });
       if (r.ok) { msg('ok', 'Estudiante eliminado.'); seleccionado = null; document.getElementById('detalle').innerHTML = ''; cargarEstudiantes(); }
+      else msg('err', r.error);
     };
 
     document.getElementById('guardarJson').onclick = function () {
@@ -276,12 +285,90 @@ function iniciarPanel() {
   }
 
   async function actualizarFila(cambios) {
-    var r = await sb.from('estudiantes').update(cambios).eq('user_id', seleccionado.user_id);
+    var r = await INST.sb.from('estudiantes').update(cambios).eq('user_id', seleccionado.user_id);
     if (r.error) { msg('err', r.error.message); return; }
     msg('ok', 'Guardado.');
     await cargarEstudiantes();
     seleccionar(seleccionado.user_id);
   }
+}
+
+/* ===================== MAESTROS / ADMINISTRADORES ===================== */
+function panelPersonal(rol, tabla, titulo) {
+  var personas = [];
+
+  document.getElementById('salida').innerHTML = botonVolver() +
+    '<div class="encabezado"><h1>' + titulo + '</h1></div>' +
+    '<div id="msg"></div>' +
+    '<fieldset><legend>Dar de alta</legend>' +
+    '<div class="fila"><label>Nombre</label><input type="text" id="nNombre"></div>' +
+    '<div class="fila"><label>Correo</label><input type="email" id="nEmail"></div>' +
+    '<div class="fila"><label>Contraseña</label><input type="text" id="nPass" style="max-width:220px">' +
+    '<button class="btn sec peq" type="button" id="generarPass">Generar</button></div>' +
+    '<div class="fila"><button class="btn peq" type="button" id="crear">Crear</button></div>' +
+    '<p class="aviso">Contraseña TEMPORAL — se le pedirá cambiarla en su primer ingreso.</p>' +
+    '</fieldset>' +
+    '<fieldset><legend>Lista</legend><div id="lista"><p class="sub">Cargando…</p></div></fieldset>';
+  ligarVolver();
+
+  function msg(tipo, texto) { document.getElementById('msg').innerHTML = '<div class="msg ' + tipo + '">' + texto + '</div>'; }
+  document.getElementById('generarPass').onclick = function () { document.getElementById('nPass').value = generarClave(); };
+
+  document.getElementById('crear').onclick = async function () {
+    var nombre = document.getElementById('nNombre').value.trim();
+    var email = document.getElementById('nEmail').value.trim();
+    var password = document.getElementById('nPass').value;
+    var r = await llamar('admin-personal', { accion: 'crear', rol: rol, nombre: nombre, email: email, password: password });
+    if (r.ok) {
+      msg('ok', titulo.slice(0, -1) + ' creado. Contraseña temporal: <b>' + password + '</b> — compártela con ' + nombre + '.');
+      document.getElementById('nNombre').value = '';
+      document.getElementById('nEmail').value = '';
+      document.getElementById('nPass').value = '';
+      cargar();
+    } else msg('err', r.error);
+  };
+
+  cargar();
+
+  async function cargar() {
+    var r = await INST.sb.from(tabla).select('*').order('creado_en', { ascending: false });
+    personas = r.data || [];
+    var filas = personas.map(function (p) {
+      return '<tr><td>' + (p.nombre || '(sin nombre)') + '</td>' +
+        '<td>' + (p.debe_cambiar_password ? '<span style="color:var(--granate)">pendiente</span>' : '<span style="color:var(--oliva)">cambiada</span>') + '</td>' +
+        '<td>' + new Date(p.creado_en).toLocaleDateString('es') + '</td>' +
+        '<td><button class="btn sec peq" type="button" data-uid="' + p.user_id + '" data-accion="reset">Restablecer contraseña</button> ' +
+        '<button class="btn peligro peq" type="button" data-uid="' + p.user_id + '" data-accion="borrar">Eliminar</button></td></tr>';
+    }).join('');
+    document.getElementById('lista').innerHTML = personas.length
+      ? '<table class="datos"><thead><tr><th>Nombre</th><th>Contraseña</th><th>Creado</th><th></th></tr></thead><tbody>' + filas + '</tbody></table>'
+      : '<p class="sub">Todavía no hay nadie en esta lista.</p>';
+
+    document.querySelectorAll('[data-accion="reset"]').forEach(function (b) {
+      b.onclick = async function () {
+        var nueva = generarClave();
+        if (!confirm('¿Restablecer con una contraseña temporal nueva?')) return;
+        var r = await llamar('admin-personal', { accion: 'cambiar_password', rol: rol, user_id: b.dataset.uid, password: nueva });
+        if (r.ok) msg('ok', 'Contraseña temporal nueva: <b>' + nueva + '</b>');
+        else msg('err', r.error);
+      };
+    });
+    document.querySelectorAll('[data-accion="borrar"]').forEach(function (b) {
+      b.onclick = async function () {
+        if (!confirm('¿Eliminar esta cuenta por completo? No se puede deshacer.')) return;
+        var r = await llamar('admin-personal', { accion: 'eliminar', rol: rol, user_id: b.dataset.uid });
+        if (r.ok) { msg('ok', 'Eliminado.'); cargar(); }
+        else msg('err', r.error);
+      };
+    });
+  }
+}
+
+function generarClave() {
+  var chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  var out = '';
+  for (var i = 0; i < 10; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
 }
 </script>
 </body>
