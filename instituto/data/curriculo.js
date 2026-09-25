@@ -455,4 +455,4 @@ window.CURRICULO = {
   ]
 };
 
-window.LECCIONES_DISPONIBLES = ['101','102','103'];
+window.LECCIONES_DISPONIBLES = ['101','102','103','104','105','106','107','108'];
