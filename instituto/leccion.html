@@ -70,7 +70,7 @@ INST.listo.then(function () {
     pendiente();
   } else {
     var s = document.createElement('script');
-    s.src = 'data/lecciones/L' + n + '.js?v=10';
+    s.src = 'data/lecciones/L' + n + '.js?v=11';
     s.onload = function () { INST.lecciones[String(n)] ? pintar(INST.lecciones[String(n)]) : pendiente(); };
     s.onerror = pendiente;
     document.body.appendChild(s);
