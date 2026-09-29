@@ -1318,7 +1318,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-024';
+const APP_VERSION = 'church-admin Ver-023';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -1468,7 +1468,7 @@ function formatoMoneda(n) {
 }
 
 function esIngreso(tipo) {
-  return tipo === 'Ingreso';
+  return (tipo || '').toLowerCase().includes('ingreso');
 }
 
 const NOMBRES_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -1512,7 +1512,6 @@ async function cargarFinanzas() {
       .gte('fecha', primerDia)
       .lte('fecha', ultimoDia)
       .eq('solo_fondo', false)
-      .neq('tipo', 'Transferencia')
       .order('fecha', { ascending: false })
       .order('creado_en', { ascending: false })
   );
@@ -2038,7 +2037,7 @@ async function generarRecurrenteAhora(id) {
       fecha: r.proxima_fecha,
       descripcion: r.descripcion,
       categoria: r.categoria || r.descripcion,
-      tipo: r.tipo === 'Ingreso' ? 'Ingreso' : 'Egreso',
+      tipo: r.tipo,
       tipo_origen: 'recurrente',
       metodo: r.metodo || null,
       monto: r.monto,
