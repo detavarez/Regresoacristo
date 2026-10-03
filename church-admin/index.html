@@ -542,6 +542,10 @@
         <button class="subtab" id="subtabFinDepositosBtn" onclick="cambiarSubtabFinanzas('depositos')">Depósitos</button>
         <button class="subtab" id="subtabFinCuentasBtn" onclick="cambiarSubtabFinanzas('cuentas')">Cuentas</button>
         <button class="subtab" id="subtabFinRecurrentesBtn" onclick="cambiarSubtabFinanzas('recurrentes')">Recurrentes</button>
+        <button class="subtab" id="subtabFinDiezmosBtn" onclick="cambiarSubtabFinanzas('diezmos')">Diezmos</button>
+        <button class="subtab" id="subtabFinOfrendasBtn" onclick="cambiarSubtabFinanzas('ofrendas')">Ofrendas</button>
+        <button class="subtab" id="subtabFinDonacionesBtn" onclick="cambiarSubtabFinanzas('donaciones')">Donaciones</button>
+        <button class="subtab" id="subtabFinGastosBtn" onclick="cambiarSubtabFinanzas('gastos')">Gastos</button>
       </div>
 
       <!-- Sub-vista: Resumen -->
@@ -607,6 +611,45 @@
           <button class="btnAccion" onclick="abrirFormRecurrente()">+ Nueva Plantilla</button>
         </div>
         <div id="listaRecurrentes"><div class="estadoCargando">Cargando plantillas…</div></div>
+      </div>
+
+      <!-- Sub-vista: Diezmos -->
+      <div id="subvistaFinDiezmos" style="display:none;">
+        <div class="grid-resumen" id="resumenDiezmos" style="margin-bottom:20px;"></div>
+        <div class="barraAcciones">
+          <input type="text" id="buscadorDiezmos" placeholder="Buscar por miembro…" oninput="filtrarDiezmos()">
+          <button class="btnAccion" onclick="abrirFormDiezmo()">+ Nuevo Diezmo</button>
+        </div>
+        <div id="listaDiezmos"><div class="estadoCargando">Cargando diezmos…</div></div>
+      </div>
+
+      <!-- Sub-vista: Ofrendas -->
+      <div id="subvistaFinOfrendas" style="display:none;">
+        <div class="grid-resumen" id="resumenOfrendas" style="margin-bottom:20px;"></div>
+        <div class="barraAcciones">
+          <button class="btnAccion" onclick="abrirFormOfrenda()">+ Nueva Ofrenda</button>
+        </div>
+        <div id="listaOfrendas"><div class="estadoCargando">Cargando ofrendas…</div></div>
+      </div>
+
+      <!-- Sub-vista: Donaciones -->
+      <div id="subvistaFinDonaciones" style="display:none;">
+        <div class="grid-resumen" id="resumenDonaciones" style="margin-bottom:20px;"></div>
+        <div class="barraAcciones">
+          <input type="text" id="buscadorDonaciones" placeholder="Buscar por donante…" oninput="filtrarDonaciones()">
+          <button class="btnAccion" onclick="abrirFormDonacion()">+ Nueva Donación</button>
+        </div>
+        <div id="listaDonaciones"><div class="estadoCargando">Cargando donaciones…</div></div>
+      </div>
+
+      <!-- Sub-vista: Gastos -->
+      <div id="subvistaFinGastos" style="display:none;">
+        <div class="grid-resumen" id="resumenGastos" style="margin-bottom:20px;"></div>
+        <div class="barraAcciones">
+          <input type="text" id="buscadorGastos" placeholder="Buscar por descripción…" oninput="filtrarGastos()">
+          <button class="btnAccion" onclick="abrirFormGasto()">+ Nuevo Gasto</button>
+        </div>
+        <div id="listaGastos"><div class="estadoCargando">Cargando gastos…</div></div>
       </div>
     </div>
 
@@ -1036,6 +1079,103 @@
   </div>
 </div>
 
+<!-- ═══════════════ MODAL: Nuevo/Editar Diezmo ═══════════════ -->
+<div class="modalOverlay" id="modalDiezmo">
+  <div class="modalCaja">
+    <h3 id="modalDiezmoTitulo">Nuevo Diezmo</h3>
+    <form id="formDiezmo" onsubmit="return guardarDiezmo(event)">
+      <div class="formGrid">
+        <div><label for="dzFecha">Fecha *</label><input type="date" id="dzFecha" required></div>
+        <div><label for="dzMonto">Monto *</label><input type="number" id="dzMonto" step="0.01" min="0" required></div>
+        <div class="full"><label for="dzPersona">Miembro *</label><select id="dzPersona" required></select></div>
+        <div><label for="dzMetodo">Método</label><select id="dzMetodo"></select></div>
+        <div><label for="dzFondo">Fondo</label><select id="dzFondo"></select></div>
+        <div><label for="dzEstado">Estado</label><select id="dzEstado"></select></div>
+        <div><label for="dzReferencia">Ref / # Cheque</label><input type="text" id="dzReferencia" placeholder="CHQ-001"></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarDiezmo" onclick="eliminarDiezmo()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalDiezmo()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nueva/Editar Ofrenda ═══════════════ -->
+<div class="modalOverlay" id="modalOfrenda">
+  <div class="modalCaja">
+    <h3 id="modalOfrendaTitulo">Nueva Ofrenda</h3>
+    <form id="formOfrenda" onsubmit="return guardarOfrenda(event)">
+      <div class="formGrid">
+        <div><label for="ofFecha">Fecha *</label><input type="date" id="ofFecha" required></div>
+        <div><label for="ofMonto">Monto *</label><input type="number" id="ofMonto" step="0.01" min="0" required></div>
+        <div class="full"><label for="ofTipo">Tipo de ofrenda *</label>
+          <select id="ofTipo" required></select>
+        </div>
+        <div><label for="ofMetodo">Método</label><select id="ofMetodo"></select></div>
+        <div><label for="ofFondo">Fondo</label><select id="ofFondo"></select></div>
+        <div><label for="ofEstado">Estado</label><select id="ofEstado"></select></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarOfrenda" onclick="eliminarOfrenda()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalOfrenda()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nueva/Editar Donación ═══════════════ -->
+<div class="modalOverlay" id="modalDonacion">
+  <div class="modalCaja">
+    <h3 id="modalDonacionTitulo">Nueva Donación</h3>
+    <form id="formDonacion" onsubmit="return guardarDonacion(event)">
+      <div class="formGrid">
+        <div><label for="dnFecha">Fecha *</label><input type="date" id="dnFecha" required></div>
+        <div><label for="dnMonto">Monto *</label><input type="number" id="dnMonto" step="0.01" min="0" required></div>
+        <div class="full"><label for="dnPersona">Donante *</label><select id="dnPersona" required></select></div>
+        <div><label for="dnProposito">Propósito</label>
+          <select id="dnProposito"></select>
+        </div>
+        <div><label for="dnMetodo">Método</label><select id="dnMetodo"></select></div>
+        <div><label for="dnFondo">Fondo</label><select id="dnFondo"></select></div>
+        <div><label for="dnEstado">Estado</label><select id="dnEstado"></select></div>
+        <div><label for="dnReferencia">No. Recibo / Ref.</label><input type="text" id="dnReferencia" placeholder="R-2026-000"></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarDonacion" onclick="eliminarDonacion()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalDonacion()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Gasto ═══════════════ -->
+<div class="modalOverlay" id="modalGasto">
+  <div class="modalCaja">
+    <h3 id="modalGastoTitulo">Nuevo Gasto</h3>
+    <form id="formGasto" onsubmit="return guardarGasto(event)">
+      <div class="formGrid">
+        <div><label for="gsFecha">Fecha *</label><input type="date" id="gsFecha" required></div>
+        <div><label for="gsMonto">Monto *</label><input type="number" id="gsMonto" step="0.01" min="0" required></div>
+        <div class="full"><label for="gsDescripcion">Descripción *</label><input type="text" id="gsDescripcion" placeholder="Descripción del gasto" required></div>
+        <div><label for="gsCategoria">Categoría</label><select id="gsCategoria"></select></div>
+        <div><label for="gsOrganizacion">Proveedor / Organización</label><select id="gsOrganizacion"></select></div>
+        <div><label for="gsMetodo">Método</label><select id="gsMetodo"></select></div>
+        <div><label for="gsFondo">Fondo</label><select id="gsFondo"></select></div>
+        <div><label for="gsEstado">Estado</label><select id="gsEstado"></select></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarGasto" onclick="eliminarGasto()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalGasto()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ═══════════════ MODAL: Editar Rol de Usuario ═══════════════ -->
 <div class="modalOverlay" id="modalRolUsuario">
   <div class="modalCaja">
@@ -1318,7 +1458,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-023';
+const APP_VERSION = 'church-admin Ver-026';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -1451,15 +1591,27 @@ function cambiarSubtabFinanzas(tab) {
   document.getElementById('subtabFinDepositosBtn').classList.toggle('activa', tab === 'depositos');
   document.getElementById('subtabFinCuentasBtn').classList.toggle('activa', tab === 'cuentas');
   document.getElementById('subtabFinRecurrentesBtn').classList.toggle('activa', tab === 'recurrentes');
+  document.getElementById('subtabFinDiezmosBtn').classList.toggle('activa', tab === 'diezmos');
+  document.getElementById('subtabFinOfrendasBtn').classList.toggle('activa', tab === 'ofrendas');
+  document.getElementById('subtabFinDonacionesBtn').classList.toggle('activa', tab === 'donaciones');
+  document.getElementById('subtabFinGastosBtn').classList.toggle('activa', tab === 'gastos');
   document.getElementById('subvistaFinResumen').style.display = tab === 'resumen' ? 'block' : 'none';
   document.getElementById('subvistaFinDepositos').style.display = tab === 'depositos' ? 'block' : 'none';
   document.getElementById('subvistaFinCuentas').style.display = tab === 'cuentas' ? 'block' : 'none';
   document.getElementById('subvistaFinRecurrentes').style.display = tab === 'recurrentes' ? 'block' : 'none';
+  document.getElementById('subvistaFinDiezmos').style.display = tab === 'diezmos' ? 'block' : 'none';
+  document.getElementById('subvistaFinOfrendas').style.display = tab === 'ofrendas' ? 'block' : 'none';
+  document.getElementById('subvistaFinDonaciones').style.display = tab === 'donaciones' ? 'block' : 'none';
+  document.getElementById('subvistaFinGastos').style.display = tab === 'gastos' ? 'block' : 'none';
 
   if (tab === 'resumen') { inicializarSelectoresFinanzas(); cargarFinanzas(); }
   else if (tab === 'depositos') cargarDepositos();
   else if (tab === 'cuentas') cargarCuentas();
-  else cargarRecurrentes();
+  else if (tab === 'recurrentes') cargarRecurrentes();
+  else if (tab === 'diezmos') cargarDiezmos();
+  else if (tab === 'ofrendas') cargarOfrendas();
+  else if (tab === 'donaciones') cargarDonaciones();
+  else if (tab === 'gastos') cargarGastos();
 }
 
 // ── Finanzas: carga real desde Supabase ──────────────────────────────────
@@ -1468,7 +1620,7 @@ function formatoMoneda(n) {
 }
 
 function esIngreso(tipo) {
-  return (tipo || '').toLowerCase().includes('ingreso');
+  return tipo === 'Ingreso';
 }
 
 const NOMBRES_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -1512,6 +1664,7 @@ async function cargarFinanzas() {
       .gte('fecha', primerDia)
       .lte('fecha', ultimoDia)
       .eq('solo_fondo', false)
+      .neq('tipo', 'Transferencia')
       .order('fecha', { ascending: false })
       .order('creado_en', { ascending: false })
   );
@@ -2037,7 +2190,7 @@ async function generarRecurrenteAhora(id) {
       fecha: r.proxima_fecha,
       descripcion: r.descripcion,
       categoria: r.categoria || r.descripcion,
-      tipo: r.tipo,
+      tipo: r.tipo === 'Ingreso' ? 'Ingreso' : 'Egreso',
       tipo_origen: 'recurrente',
       metodo: r.metodo || null,
       monto: r.monto,
@@ -2058,6 +2211,668 @@ async function generarRecurrenteAhora(id) {
 
   alert(`✔ Movimiento generado. Próxima fecha: ${formatoFecha(nuevaFecha)}`);
   cargarRecurrentes();
+}
+
+// ══════════════════════ DIEZMOS / OFRENDAS / DONACIONES / GASTOS ══════════════════════
+let cacheDiezmos = [];
+let cacheOfrendas = [];
+let cacheDonaciones = [];
+let cacheGastos = [];
+let cacheFondos = [];
+const METODOS_PAGO = ['Efectivo', 'Electrónico', 'Tarjeta', 'CashApp', 'Cheque', 'Otro'];
+const ESTADOS_FIN = ['Completado', 'Pendiente', 'Cancelado'];
+const OFRENDA_TIPOS = ['Ofrenda General', 'Misiones', 'Construcción', 'Especial', 'Bebés y Niños', 'Jóvenes'];
+const OFRENDA_TIPO_CUENTA = { 'Misiones': '4006', 'Construcción': '4007' };
+const DONACION_PROPOSITOS = ['Fondo General', 'Fondo de Misiones', 'Construcción', 'Educación', 'Ayuda Social'];
+
+async function asegurarFondosFinanzas() {
+  if (cacheFondos.length === 0) {
+    const { data } = await sbCall(sb.from('fondos').select('*').eq('activo', true).order('nombre'));
+    if (data) cacheFondos = data;
+  }
+}
+
+function cuentaIdPorCodigo(codigo) {
+  const c = cacheCuentas.find(x => x.codigo === codigo);
+  return c ? c.id : null;
+}
+
+function poblarSelectFondos(selectId, valorActual) {
+  const select = document.getElementById(selectId);
+  select.innerHTML = cacheFondos.map(f => `<option value="${f.id}">${f.nombre}</option>`).join('');
+  if (valorActual) select.value = valorActual;
+}
+
+function poblarSelectMetodo(selectId, valorActual) {
+  const select = document.getElementById(selectId);
+  select.innerHTML = METODOS_PAGO.map(m => `<option value="${m}">${m}</option>`).join('');
+  select.value = valorActual || 'Efectivo';
+}
+
+function poblarSelectEstado(selectId, valorActual) {
+  const select = document.getElementById(selectId);
+  select.innerHTML = ESTADOS_FIN.map(s => `<option value="${s}">${s}</option>`).join('');
+  select.value = valorActual || 'Completado';
+}
+
+function poblarSelectOfrendaTipo(selectId, valorActual) {
+  const select = document.getElementById(selectId);
+  select.innerHTML = OFRENDA_TIPOS.map(t => `<option value="${t}">${t}</option>`).join('');
+  select.value = valorActual || 'Ofrenda General';
+}
+
+function poblarSelectProposito(selectId, valorActual) {
+  const select = document.getElementById(selectId);
+  select.innerHTML = DONACION_PROPOSITOS.map(p => `<option value="${p}">${p}</option>`).join('');
+  select.value = valorActual || 'Fondo General';
+}
+
+function poblarSelectPersonas(selectId, valorActual) {
+  const select = document.getElementById(selectId);
+  select.innerHTML = '<option value="">Selecciona…</option>' +
+    cacheDirectorio.map(p => `<option value="${p.id}">${nombreMostrar(p)}</option>`).join('');
+  if (valorActual) select.value = valorActual;
+}
+
+// ── DIEZMOS ──
+async function cargarDiezmos() {
+  const lista = document.getElementById('listaDiezmos');
+  lista.innerHTML = '<div class="estadoCargando">Cargando diezmos…</div>';
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  await asegurarDirectorioFinanzas();
+  await asegurarFondosFinanzas();
+
+  const { data, error } = await sbCall(sb.from('diezmos').select('*').order('fecha', { ascending: false }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
+
+  cacheDiezmos = data || [];
+  renderResumenDiezmos();
+  renderDiezmos(cacheDiezmos);
+}
+
+function renderResumenDiezmos() {
+  const total = cacheDiezmos.reduce((acc, d) => acc + (Number(d.monto) || 0), 0);
+  const contribuyentes = new Set(cacheDiezmos.map(d => d.persona_id).filter(Boolean)).size;
+  document.getElementById('resumenDiezmos').innerHTML = `
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Total registrado</div><div class="monto">${formatoMoneda(total)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Contribuyentes</div><div class="monto">${contribuyentes}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${cacheDiezmos.length}</div></div>`;
+}
+
+function renderDiezmos(filas) {
+  const lista = document.getElementById('listaDiezmos');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay diezmos registrados.</div>'; return; }
+  lista.innerHTML = filas.map(d => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormDiezmo('${d.id}')">
+      <div>
+        <div class="nombrePersona">${nombrePersonaPorId(d.persona_id)}</div>
+        <div class="metaLinea">${formatoFecha(d.fecha)} · ${d.metodo || '—'}${d.referencia ? ' · ' + d.referencia : ''} · ${d.estado || ''}</div>
+      </div>
+      <span class="badge badge-tipo">${formatoMoneda(d.monto)}</span>
+    </div>`).join('');
+}
+
+function filtrarDiezmos() {
+  const q = document.getElementById('buscadorDiezmos').value.trim().toLowerCase();
+  if (!q) { renderDiezmos(cacheDiezmos); return; }
+  renderDiezmos(cacheDiezmos.filter(d => nombrePersonaPorId(d.persona_id).toLowerCase().includes(q)));
+}
+
+function abrirFormDiezmo(id) {
+  document.getElementById('formDiezmo').reset();
+  document.getElementById('btnEliminarDiezmo').style.display = 'none';
+  document.getElementById('dzFecha').value = new Date().toISOString().slice(0, 10);
+  poblarSelectPersonas('dzPersona');
+  poblarSelectMetodo('dzMetodo');
+  poblarSelectEstado('dzEstado');
+  poblarSelectFondos('dzFondo');
+
+  const form = document.getElementById('formDiezmo');
+  form.dataset.editId = '';
+  document.getElementById('modalDiezmoTitulo').textContent = 'Nuevo Diezmo';
+
+  if (id) {
+    const d = cacheDiezmos.find(x => x.id === id);
+    if (d) {
+      form.dataset.editId = d.id;
+      document.getElementById('modalDiezmoTitulo').textContent = 'Editar Diezmo';
+      document.getElementById('dzFecha').value = d.fecha;
+      document.getElementById('dzMonto').value = d.monto;
+      document.getElementById('dzPersona').value = d.persona_id || '';
+      poblarSelectMetodo('dzMetodo', d.metodo);
+      poblarSelectEstado('dzEstado', d.estado);
+      document.getElementById('dzReferencia').value = d.referencia || '';
+      document.getElementById('btnEliminarDiezmo').style.display = 'inline-block';
+    }
+  }
+  document.getElementById('modalDiezmo').classList.add('abierto');
+}
+
+function cerrarModalDiezmo() { document.getElementById('modalDiezmo').classList.remove('abierto'); }
+
+async function guardarDiezmo(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('formDiezmo').dataset.editId;
+  const sesion = getSesion();
+  const personaId = document.getElementById('dzPersona').value;
+  if (!personaId) { alert('Selecciona un miembro.'); return false; }
+
+  const payload = {
+    fecha: document.getElementById('dzFecha').value,
+    monto: parseFloat(document.getElementById('dzMonto').value) || 0,
+    persona_id: personaId,
+    metodo: document.getElementById('dzMetodo').value,
+    referencia: document.getElementById('dzReferencia').value.trim() || null,
+    estado: document.getElementById('dzEstado').value,
+  };
+  const nombrePersona = nombrePersonaPorId(personaId);
+  const fondoId = document.getElementById('dzFondo').value || null;
+
+  let error;
+  if (id) {
+    const d = cacheDiezmos.find(x => x.id === id);
+    ({ error } = await sbCall(sb.from('diezmos').update(payload).eq('id', id)));
+    if (!error && d?.transaccion_id) {
+      await sbCall(sb.from('transacciones').update({
+        fecha: payload.fecha, monto: payload.monto, metodo: payload.metodo,
+        referencia: payload.referencia, estado: payload.estado, fondo_id: fondoId,
+        descripcion: `Diezmo — ${nombrePersona}`,
+      }).eq('id', d.transaccion_id));
+    }
+  } else {
+    const { data: trans, error: errTrans } = await sbCall(
+      sb.from('transacciones').insert({
+        fecha: payload.fecha,
+        descripcion: `Diezmo — ${nombrePersona}`,
+        categoria: 'Diezmos',
+        tipo: 'Ingreso',
+        tipo_origen: 'Diezmo',
+        metodo: payload.metodo,
+        monto: payload.monto,
+        referencia: payload.referencia,
+        estado: payload.estado,
+        fondo_id: fondoId,
+        cuenta_cr: cuentaIdPorCodigo('4001'),
+        solo_fondo: false,
+        creado_por: sesion.usuario?.id || null,
+      }).select().single()
+    );
+    if (errTrans) { alert('Error al crear la transacción vinculada: ' + errTrans.message); return false; }
+    payload.transaccion_id = trans.id;
+    payload.creado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('diezmos').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalDiezmo();
+  cargarDiezmos();
+  return false;
+}
+
+async function eliminarDiezmo() {
+  const id = document.getElementById('formDiezmo').dataset.editId;
+  if (!id || !confirm('¿Eliminar este diezmo? Esto también borra la transacción vinculada.')) return;
+  const d = cacheDiezmos.find(x => x.id === id);
+  const { error } = await sbCall(sb.from('diezmos').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  if (d?.transaccion_id) await sbCall(sb.from('transacciones').delete().eq('id', d.transaccion_id));
+  cerrarModalDiezmo();
+  cargarDiezmos();
+}
+
+// ── OFRENDAS ──
+async function cargarOfrendas() {
+  const lista = document.getElementById('listaOfrendas');
+  lista.innerHTML = '<div class="estadoCargando">Cargando ofrendas…</div>';
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  await asegurarFondosFinanzas();
+
+  const { data, error } = await sbCall(sb.from('ofrendas').select('*').order('fecha', { ascending: false }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
+
+  cacheOfrendas = data || [];
+  renderResumenOfrendas();
+  renderOfrendas(cacheOfrendas);
+}
+
+function renderResumenOfrendas() {
+  const total = cacheOfrendas.reduce((acc, o) => acc + (Number(o.monto) || 0), 0);
+  document.getElementById('resumenOfrendas').innerHTML = `
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Total registrado</div><div class="monto">${formatoMoneda(total)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Tipos usados</div><div class="monto">${new Set(cacheOfrendas.map(o => o.tipo)).size}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${cacheOfrendas.length}</div></div>`;
+}
+
+function renderOfrendas(filas) {
+  const lista = document.getElementById('listaOfrendas');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay ofrendas registradas.</div>'; return; }
+  lista.innerHTML = filas.map(o => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormOfrenda('${o.id}')">
+      <div>
+        <div class="nombrePersona">${o.tipo || 'Ofrenda'}</div>
+        <div class="metaLinea">${formatoFecha(o.fecha)} · ${o.metodo || '—'} · ${o.estado || ''}</div>
+      </div>
+      <span class="badge badge-tipo">${formatoMoneda(o.monto)}</span>
+    </div>`).join('');
+}
+
+function abrirFormOfrenda(id) {
+  document.getElementById('formOfrenda').reset();
+  document.getElementById('btnEliminarOfrenda').style.display = 'none';
+  document.getElementById('ofFecha').value = new Date().toISOString().slice(0, 10);
+  poblarSelectOfrendaTipo('ofTipo');
+  poblarSelectMetodo('ofMetodo');
+  poblarSelectEstado('ofEstado');
+  poblarSelectFondos('ofFondo');
+
+  const form = document.getElementById('formOfrenda');
+  form.dataset.editId = '';
+  document.getElementById('modalOfrendaTitulo').textContent = 'Nueva Ofrenda';
+
+  if (id) {
+    const o = cacheOfrendas.find(x => x.id === id);
+    if (o) {
+      form.dataset.editId = o.id;
+      document.getElementById('modalOfrendaTitulo').textContent = 'Editar Ofrenda';
+      document.getElementById('ofFecha').value = o.fecha;
+      document.getElementById('ofMonto').value = o.monto;
+      document.getElementById('ofTipo').value = o.tipo || 'Ofrenda General';
+      poblarSelectMetodo('ofMetodo', o.metodo);
+      poblarSelectEstado('ofEstado', o.estado);
+      document.getElementById('btnEliminarOfrenda').style.display = 'inline-block';
+    }
+  }
+  document.getElementById('modalOfrenda').classList.add('abierto');
+}
+
+function cerrarModalOfrenda() { document.getElementById('modalOfrenda').classList.remove('abierto'); }
+
+async function guardarOfrenda(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('formOfrenda').dataset.editId;
+  const sesion = getSesion();
+  const tipo = document.getElementById('ofTipo').value;
+
+  const payload = {
+    fecha: document.getElementById('ofFecha').value,
+    monto: parseFloat(document.getElementById('ofMonto').value) || 0,
+    tipo,
+    metodo: document.getElementById('ofMetodo').value,
+    estado: document.getElementById('ofEstado').value,
+  };
+  const fondoId = document.getElementById('ofFondo').value || null;
+  const cuentaCr = cuentaIdPorCodigo(OFRENDA_TIPO_CUENTA[tipo] || '4002');
+
+  let error;
+  if (id) {
+    const o = cacheOfrendas.find(x => x.id === id);
+    ({ error } = await sbCall(sb.from('ofrendas').update(payload).eq('id', id)));
+    if (!error && o?.transaccion_id) {
+      await sbCall(sb.from('transacciones').update({
+        fecha: payload.fecha, monto: payload.monto, metodo: payload.metodo,
+        estado: payload.estado, fondo_id: fondoId, cuenta_cr: cuentaCr,
+        descripcion: `Ofrenda — ${tipo}`, categoria: tipo,
+      }).eq('id', o.transaccion_id));
+    }
+  } else {
+    const { data: trans, error: errTrans } = await sbCall(
+      sb.from('transacciones').insert({
+        fecha: payload.fecha,
+        descripcion: `Ofrenda — ${tipo}`,
+        categoria: tipo,
+        tipo: 'Ingreso',
+        tipo_origen: 'Ofrenda',
+        metodo: payload.metodo,
+        monto: payload.monto,
+        estado: payload.estado,
+        fondo_id: fondoId,
+        cuenta_cr: cuentaCr,
+        solo_fondo: false,
+        creado_por: sesion.usuario?.id || null,
+      }).select().single()
+    );
+    if (errTrans) { alert('Error al crear la transacción vinculada: ' + errTrans.message); return false; }
+    payload.transaccion_id = trans.id;
+    payload.creado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('ofrendas').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalOfrenda();
+  cargarOfrendas();
+  return false;
+}
+
+async function eliminarOfrenda() {
+  const id = document.getElementById('formOfrenda').dataset.editId;
+  if (!id || !confirm('¿Eliminar esta ofrenda? Esto también borra la transacción vinculada.')) return;
+  const o = cacheOfrendas.find(x => x.id === id);
+  const { error } = await sbCall(sb.from('ofrendas').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  if (o?.transaccion_id) await sbCall(sb.from('transacciones').delete().eq('id', o.transaccion_id));
+  cerrarModalOfrenda();
+  cargarOfrendas();
+}
+
+// ── DONACIONES ──
+async function cargarDonaciones() {
+  const lista = document.getElementById('listaDonaciones');
+  lista.innerHTML = '<div class="estadoCargando">Cargando donaciones…</div>';
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  await asegurarDirectorioFinanzas();
+  await asegurarFondosFinanzas();
+
+  const { data, error } = await sbCall(sb.from('donaciones').select('*').order('fecha', { ascending: false }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
+
+  cacheDonaciones = data || [];
+  renderResumenDonaciones();
+  renderDonaciones(cacheDonaciones);
+}
+
+function renderResumenDonaciones() {
+  const total = cacheDonaciones.reduce((acc, d) => acc + (Number(d.monto) || 0), 0);
+  const donantes = new Set(cacheDonaciones.map(d => d.persona_id).filter(Boolean)).size;
+  document.getElementById('resumenDonaciones').innerHTML = `
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Total registrado</div><div class="monto">${formatoMoneda(total)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Donantes únicos</div><div class="monto">${donantes}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${cacheDonaciones.length}</div></div>`;
+}
+
+function renderDonaciones(filas) {
+  const lista = document.getElementById('listaDonaciones');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay donaciones registradas.</div>'; return; }
+  lista.innerHTML = filas.map(d => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormDonacion('${d.id}')">
+      <div>
+        <div class="nombrePersona">${nombrePersonaPorId(d.persona_id)}</div>
+        <div class="metaLinea">${formatoFecha(d.fecha)} · ${d.metodo || '—'}${d.referencia ? ' · ' + d.referencia : ''} · ${d.estado || ''}</div>
+      </div>
+      <span class="badge badge-tipo">${formatoMoneda(d.monto)}</span>
+    </div>`).join('');
+}
+
+function filtrarDonaciones() {
+  const q = document.getElementById('buscadorDonaciones').value.trim().toLowerCase();
+  if (!q) { renderDonaciones(cacheDonaciones); return; }
+  renderDonaciones(cacheDonaciones.filter(d => nombrePersonaPorId(d.persona_id).toLowerCase().includes(q)));
+}
+
+async function abrirFormDonacion(id) {
+  document.getElementById('formDonacion').reset();
+  document.getElementById('btnEliminarDonacion').style.display = 'none';
+  document.getElementById('dnFecha').value = new Date().toISOString().slice(0, 10);
+  poblarSelectPersonas('dnPersona');
+  poblarSelectProposito('dnProposito');
+  poblarSelectMetodo('dnMetodo');
+  poblarSelectEstado('dnEstado');
+  poblarSelectFondos('dnFondo');
+
+  const form = document.getElementById('formDonacion');
+  form.dataset.editId = '';
+  document.getElementById('modalDonacionTitulo').textContent = 'Nueva Donación';
+
+  if (id) {
+    const d = cacheDonaciones.find(x => x.id === id);
+    if (d) {
+      form.dataset.editId = d.id;
+      document.getElementById('modalDonacionTitulo').textContent = 'Editar Donación';
+      document.getElementById('dnFecha').value = d.fecha;
+      document.getElementById('dnMonto').value = d.monto;
+      document.getElementById('dnPersona').value = d.persona_id || '';
+      poblarSelectMetodo('dnMetodo', d.metodo);
+      poblarSelectEstado('dnEstado', d.estado);
+      document.getElementById('dnReferencia').value = d.referencia || '';
+      document.getElementById('btnEliminarDonacion').style.display = 'inline-block';
+      if (d.transaccion_id) {
+        const { data: t } = await sbCall(sb.from('transacciones').select('categoria').eq('id', d.transaccion_id).single());
+        if (t?.categoria) poblarSelectProposito('dnProposito', t.categoria);
+      }
+    }
+  }
+  document.getElementById('modalDonacion').classList.add('abierto');
+}
+
+function cerrarModalDonacion() { document.getElementById('modalDonacion').classList.remove('abierto'); }
+
+async function guardarDonacion(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('formDonacion').dataset.editId;
+  const sesion = getSesion();
+  const personaId = document.getElementById('dnPersona').value;
+  if (!personaId) { alert('Selecciona un donante.'); return false; }
+  const proposito = document.getElementById('dnProposito').value;
+
+  const payload = {
+    fecha: document.getElementById('dnFecha').value,
+    monto: parseFloat(document.getElementById('dnMonto').value) || 0,
+    persona_id: personaId,
+    metodo: document.getElementById('dnMetodo').value,
+    referencia: document.getElementById('dnReferencia').value.trim() || null,
+    estado: document.getElementById('dnEstado').value,
+  };
+  const nombrePersona = nombrePersonaPorId(personaId);
+  const fondoId = document.getElementById('dnFondo').value || null;
+
+  let error;
+  if (id) {
+    const d = cacheDonaciones.find(x => x.id === id);
+    ({ error } = await sbCall(sb.from('donaciones').update(payload).eq('id', id)));
+    if (!error && d?.transaccion_id) {
+      await sbCall(sb.from('transacciones').update({
+        fecha: payload.fecha, monto: payload.monto, metodo: payload.metodo,
+        referencia: payload.referencia, estado: payload.estado, fondo_id: fondoId,
+        descripcion: `Donación — ${nombrePersona}`, categoria: proposito,
+      }).eq('id', d.transaccion_id));
+    }
+  } else {
+    const { data: trans, error: errTrans } = await sbCall(
+      sb.from('transacciones').insert({
+        fecha: payload.fecha,
+        descripcion: `Donación — ${nombrePersona}`,
+        categoria: proposito,
+        tipo: 'Ingreso',
+        tipo_origen: 'Donación',
+        metodo: payload.metodo,
+        monto: payload.monto,
+        referencia: payload.referencia,
+        estado: payload.estado,
+        fondo_id: fondoId,
+        cuenta_cr: cuentaIdPorCodigo('4003'),
+        solo_fondo: false,
+        creado_por: sesion.usuario?.id || null,
+      }).select().single()
+    );
+    if (errTrans) { alert('Error al crear la transacción vinculada: ' + errTrans.message); return false; }
+    payload.transaccion_id = trans.id;
+    payload.creado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('donaciones').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalDonacion();
+  cargarDonaciones();
+  return false;
+}
+
+async function eliminarDonacion() {
+  const id = document.getElementById('formDonacion').dataset.editId;
+  if (!id || !confirm('¿Eliminar esta donación? Esto también borra la transacción vinculada.')) return;
+  const d = cacheDonaciones.find(x => x.id === id);
+  const { error } = await sbCall(sb.from('donaciones').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  if (d?.transaccion_id) await sbCall(sb.from('transacciones').delete().eq('id', d.transaccion_id));
+  cerrarModalDonacion();
+  cargarDonaciones();
+}
+
+// ── GASTOS ──
+async function cargarGastos() {
+  const lista = document.getElementById('listaGastos');
+  lista.innerHTML = '<div class="estadoCargando">Cargando gastos…</div>';
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  await asegurarFondosFinanzas();
+  if (cacheOrganizacionesFinanzas.length === 0) {
+    await sbCall(sb.from('organizaciones').select('*').eq('archivado', false)).then(({ data }) => {
+      if (data) cacheOrganizacionesFinanzas = data;
+    });
+  }
+
+  const { data, error } = await sbCall(sb.from('gastos').select('*').order('fecha', { ascending: false }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
+
+  cacheGastos = data || [];
+  renderResumenGastos();
+  renderGastos(cacheGastos);
+}
+
+function renderResumenGastos() {
+  const total = cacheGastos.reduce((acc, g) => acc + (Number(g.monto) || 0), 0);
+  document.getElementById('resumenGastos').innerHTML = `
+    <div class="tarjetaResumen egreso"><div class="etiqueta">Total registrado</div><div class="monto">${formatoMoneda(total)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Categorías usadas</div><div class="monto">${new Set(cacheGastos.map(g => g.categoria)).size}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${cacheGastos.length}</div></div>`;
+}
+
+function nombreOrgPorId(id) {
+  const o = cacheOrganizacionesFinanzas.find(x => x.id === id);
+  return o ? o.nombre : null;
+}
+
+function renderGastos(filas) {
+  const lista = document.getElementById('listaGastos');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay gastos registrados.</div>'; return; }
+  lista.innerHTML = filas.map(g => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormGasto('${g.id}')">
+      <div>
+        <div class="nombrePersona">${g.descripcion || '—'}</div>
+        <div class="metaLinea">${formatoFecha(g.fecha)} · ${g.categoria || '—'}${nombreOrgPorId(g.organizacion_id) ? ' · ' + nombreOrgPorId(g.organizacion_id) : ''} · ${g.metodo || '—'} · ${g.estado || ''}</div>
+      </div>
+      <span class="badge badge-tipo">${formatoMoneda(g.monto)}</span>
+    </div>`).join('');
+}
+
+function filtrarGastos() {
+  const q = document.getElementById('buscadorGastos').value.trim().toLowerCase();
+  if (!q) { renderGastos(cacheGastos); return; }
+  renderGastos(cacheGastos.filter(g => (g.descripcion || '').toLowerCase().includes(q)));
+}
+
+function poblarSelectCategoriaGasto(selectId, valorActual) {
+  const select = document.getElementById(selectId);
+  const cuentasGasto = cacheCuentas.filter(c => c.tipo === 'Gasto');
+  select.innerHTML = cuentasGasto.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+  if (valorActual) select.value = valorActual;
+}
+
+function poblarSelectOrganizacion(selectId, valorActual) {
+  const select = document.getElementById(selectId);
+  select.innerHTML = '<option value="">Ninguna</option>' +
+    cacheOrganizacionesFinanzas.map(o => `<option value="${o.id}">${o.nombre}</option>`).join('');
+  if (valorActual) select.value = valorActual;
+}
+
+function abrirFormGasto(id) {
+  document.getElementById('formGasto').reset();
+  document.getElementById('btnEliminarGasto').style.display = 'none';
+  document.getElementById('gsFecha').value = new Date().toISOString().slice(0, 10);
+  poblarSelectCategoriaGasto('gsCategoria');
+  poblarSelectOrganizacion('gsOrganizacion');
+  poblarSelectMetodo('gsMetodo');
+  poblarSelectEstado('gsEstado');
+  poblarSelectFondos('gsFondo');
+
+  const form = document.getElementById('formGasto');
+  form.dataset.editId = '';
+  document.getElementById('modalGastoTitulo').textContent = 'Nuevo Gasto';
+
+  if (id) {
+    const g = cacheGastos.find(x => x.id === id);
+    if (g) {
+      form.dataset.editId = g.id;
+      document.getElementById('modalGastoTitulo').textContent = 'Editar Gasto';
+      document.getElementById('gsFecha').value = g.fecha;
+      document.getElementById('gsMonto').value = g.monto;
+      document.getElementById('gsDescripcion').value = g.descripcion || '';
+      poblarSelectCategoriaGasto('gsCategoria', g.categoria);
+      poblarSelectOrganizacion('gsOrganizacion', g.organizacion_id);
+      poblarSelectMetodo('gsMetodo', g.metodo);
+      poblarSelectEstado('gsEstado', g.estado);
+      document.getElementById('btnEliminarGasto').style.display = 'inline-block';
+    }
+  }
+  document.getElementById('modalGasto').classList.add('abierto');
+}
+
+function cerrarModalGasto() { document.getElementById('modalGasto').classList.remove('abierto'); }
+
+async function guardarGasto(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('formGasto').dataset.editId;
+  const sesion = getSesion();
+  const categoria = document.getElementById('gsCategoria').value;
+
+  const payload = {
+    fecha: document.getElementById('gsFecha').value,
+    monto: parseFloat(document.getElementById('gsMonto').value) || 0,
+    descripcion: document.getElementById('gsDescripcion').value.trim(),
+    categoria,
+    organizacion_id: document.getElementById('gsOrganizacion').value || null,
+    metodo: document.getElementById('gsMetodo').value,
+    estado: document.getElementById('gsEstado').value,
+  };
+  const fondoId = document.getElementById('gsFondo').value || null;
+  const cuentaGasto = cacheCuentas.find(c => c.tipo === 'Gasto' && c.nombre === categoria);
+
+  let error;
+  if (id) {
+    const g = cacheGastos.find(x => x.id === id);
+    ({ error } = await sbCall(sb.from('gastos').update(payload).eq('id', id)));
+    if (!error && g?.transaccion_id) {
+      await sbCall(sb.from('transacciones').update({
+        fecha: payload.fecha, monto: payload.monto, metodo: payload.metodo,
+        estado: payload.estado, fondo_id: fondoId, categoria,
+        descripcion: payload.descripcion, cuenta_dr: cuentaGasto ? cuentaGasto.id : null,
+      }).eq('id', g.transaccion_id));
+    }
+  } else {
+    const { data: trans, error: errTrans } = await sbCall(
+      sb.from('transacciones').insert({
+        fecha: payload.fecha,
+        descripcion: payload.descripcion,
+        categoria,
+        tipo: 'Egreso',
+        tipo_origen: 'Gasto',
+        metodo: payload.metodo,
+        monto: payload.monto,
+        estado: payload.estado,
+        fondo_id: fondoId,
+        cuenta_dr: cuentaGasto ? cuentaGasto.id : null,
+        solo_fondo: false,
+        creado_por: sesion.usuario?.id || null,
+      }).select().single()
+    );
+    if (errTrans) { alert('Error al crear la transacción vinculada: ' + errTrans.message); return false; }
+    payload.transaccion_id = trans.id;
+    payload.creado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from('gastos').insert(payload)));
+  }
+
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalGasto();
+  cargarGastos();
+  return false;
+}
+
+async function eliminarGasto() {
+  const id = document.getElementById('formGasto').dataset.editId;
+  if (!id || !confirm('¿Eliminar este gasto? Esto también borra la transacción vinculada.')) return;
+  const g = cacheGastos.find(x => x.id === id);
+  const { error } = await sbCall(sb.from('gastos').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  if (g?.transaccion_id) await sbCall(sb.from('transacciones').delete().eq('id', g.transaccion_id));
+  cerrarModalGasto();
+  cargarGastos();
 }
 
 // ── Navegación: Secretaría ───────────────────────────────────────────────
