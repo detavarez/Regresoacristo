@@ -493,7 +493,7 @@
 <!-- ═══════════════ SHELL PRINCIPAL ═══════════════ -->
 <div id="pantallaApp">
   <div class="topbar">
-    <div class="marca">Church <span>Admin</span></div>
+    <div class="marca">Church <span>Admin</span> <span style="font-size:0.7rem; font-weight:600; opacity:0.85; margin-left:6px;" id="versionTopbar"></span></div>
     <div class="usuarioInfo">
       <span id="nombreUsuarioTop"></span>
       <button onclick="manejarLogout()">Cerrar sesión</button>
@@ -546,6 +546,9 @@
         <button class="subtab" id="subtabFinOfrendasBtn" onclick="cambiarSubtabFinanzas('ofrendas')">Ofrendas</button>
         <button class="subtab" id="subtabFinDonacionesBtn" onclick="cambiarSubtabFinanzas('donaciones')">Donaciones</button>
         <button class="subtab" id="subtabFinGastosBtn" onclick="cambiarSubtabFinanzas('gastos')">Gastos</button>
+        <button class="subtab" id="subtabFinFondosBtn" onclick="cambiarSubtabFinanzas('fondos')">Fondos</button>
+        <button class="subtab" id="subtabFinPresupuestoBtn" onclick="cambiarSubtabFinanzas('presupuesto')">Presupuesto</button>
+        <button class="subtab" id="subtabFinReportesBtn" onclick="cambiarSubtabFinanzas('reportes')">Reportes</button>
       </div>
 
       <!-- Sub-vista: Resumen -->
@@ -650,6 +653,54 @@
           <button class="btnAccion" onclick="abrirFormGasto()">+ Nuevo Gasto</button>
         </div>
         <div id="listaGastos"><div class="estadoCargando">Cargando gastos…</div></div>
+      </div>
+
+      <!-- Sub-vista: Fondos -->
+      <div id="subvistaFinFondos" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <select id="fonSelectAnio" onchange="cargarFondos()"></select>
+          <div style="flex:1;"></div>
+          <button class="btnAccion" onclick="abrirFormFondo()">+ Nuevo Fondo</button>
+        </div>
+        <div class="grid-resumen" id="resumenFondos" style="margin-bottom:20px;"></div>
+        <div id="listaFondos"><div class="estadoCargando">Cargando fondos…</div></div>
+      </div>
+
+      <!-- Sub-vista: Presupuesto -->
+      <div id="subvistaFinPresupuesto" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <select id="presSelectAnio" onchange="cargarPresupuesto()"></select>
+          <div style="flex:1;"></div>
+          <button class="btnAccion" onclick="abrirFormPresupuesto()">+ Nueva Línea</button>
+        </div>
+        <div class="grid-resumen" id="resumenPresupuesto" style="margin-bottom:20px;"></div>
+        <div id="listaPresupuesto"><div class="estadoCargando">Cargando presupuesto…</div></div>
+      </div>
+
+      <!-- Sub-vista: Reportes -->
+      <div id="subvistaFinReportes" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="repDesde" onchange="cargarReporteResultados()"></label>
+          <label style="font-size:0.8rem; color: var(--text-muted);">Hasta <input type="date" id="repHasta" onchange="cargarReporteResultados()"></label>
+          <select id="repAtajo" onchange="aplicarAtajoReporte()">
+            <option value="">Atajos…</option>
+            <option value="mes">Este mes</option>
+            <option value="trimestre">Este trimestre</option>
+            <option value="anio" selected>Este año</option>
+            <option value="anioAnterior">Año anterior</option>
+          </select>
+          <div style="flex:1;"></div>
+          <button class="btnSecundario" onclick="exportarReporteCSV()">⬇ Exportar CSV</button>
+        </div>
+        <div class="grid-resumen" id="resumenReporte"></div>
+        <div class="tablaWrap" style="margin-bottom:20px;">
+          <h3>Estado de Resultados por categoría</h3>
+          <div id="repResultados"><div class="estadoCargando">Cargando…</div></div>
+        </div>
+        <div class="tablaWrap">
+          <h3>Ingresos y egresos por mes</h3>
+          <div id="repPorMes"><div class="estadoCargando">Cargando…</div></div>
+        </div>
       </div>
     </div>
 
@@ -975,6 +1026,50 @@
     <div class="formAcciones">
       <button type="button" class="btnSecundario" onclick="cerrarModalMiembrosGrupo()">Cerrar</button>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nuevo/Editar Fondo ═══════════════ -->
+<div class="modalOverlay" id="modalFondo">
+  <div class="modalCaja">
+    <h3 id="modalFondoTitulo">Nuevo Fondo</h3>
+    <form id="formFondo" onsubmit="return guardarFondo(event)">
+      <input type="hidden" id="fnFondoId">
+      <div class="formGrid">
+        <div class="full"><label for="fnNombre">Nombre *</label><input type="text" id="fnNombre" required></div>
+        <div class="full"><label for="fnDescripcion">Descripción</label><input type="text" id="fnDescripcion"></div>
+        <div>
+          <label for="fnActivo">Estado</label>
+          <select id="fnActivo"><option value="true" selected>Activo</option><option value="false">Inactivo</option></select>
+        </div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" onclick="cerrarModalFondo()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Nueva/Editar Línea de Presupuesto ═══════════════ -->
+<div class="modalOverlay" id="modalPresupuesto">
+  <div class="modalCaja">
+    <h3 id="modalPresupuestoTitulo">Nueva Línea de Presupuesto</h3>
+    <form id="formPresupuesto" onsubmit="return guardarPresupuesto(event)">
+      <input type="hidden" id="prLineaId">
+      <div class="formGrid">
+        <div><label for="prAnio">Año *</label><input type="number" id="prAnio" min="2000" max="2100" required></div>
+        <div><label for="prMonto">Monto anual *</label><input type="number" id="prMonto" step="0.01" min="0" required></div>
+        <div class="full"><label for="prCategoria">Categoría *</label><input type="text" id="prCategoria" list="prCategoriasLista" required>
+          <datalist id="prCategoriasLista"></datalist>
+        </div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarPresupuesto" onclick="eliminarPresupuesto()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalPresupuesto()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -1458,7 +1553,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-026';
+const APP_VERSION = 'church-admin Ver-027';
+document.getElementById('versionTopbar').textContent = 'Ver-027';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -1603,6 +1699,12 @@ function cambiarSubtabFinanzas(tab) {
   document.getElementById('subvistaFinOfrendas').style.display = tab === 'ofrendas' ? 'block' : 'none';
   document.getElementById('subvistaFinDonaciones').style.display = tab === 'donaciones' ? 'block' : 'none';
   document.getElementById('subvistaFinGastos').style.display = tab === 'gastos' ? 'block' : 'none';
+  document.getElementById('subtabFinFondosBtn').classList.toggle('activa', tab === 'fondos');
+  document.getElementById('subtabFinPresupuestoBtn').classList.toggle('activa', tab === 'presupuesto');
+  document.getElementById('subtabFinReportesBtn').classList.toggle('activa', tab === 'reportes');
+  document.getElementById('subvistaFinFondos').style.display = tab === 'fondos' ? 'block' : 'none';
+  document.getElementById('subvistaFinPresupuesto').style.display = tab === 'presupuesto' ? 'block' : 'none';
+  document.getElementById('subvistaFinReportes').style.display = tab === 'reportes' ? 'block' : 'none';
 
   if (tab === 'resumen') { inicializarSelectoresFinanzas(); cargarFinanzas(); }
   else if (tab === 'depositos') cargarDepositos();
@@ -1612,6 +1714,9 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'ofrendas') cargarOfrendas();
   else if (tab === 'donaciones') cargarDonaciones();
   else if (tab === 'gastos') cargarGastos();
+  else if (tab === 'fondos') { poblarSelectorAnio('fonSelectAnio'); cargarFondos(); }
+  else if (tab === 'presupuesto') { poblarSelectorAnio('presSelectAnio'); cargarPresupuesto(); }
+  else if (tab === 'reportes') { inicializarReporte(); cargarReporteResultados(); }
 }
 
 // ── Finanzas: carga real desde Supabase ──────────────────────────────────
@@ -2343,6 +2448,7 @@ function abrirFormDiezmo(id) {
       poblarSelectEstado('dzEstado', d.estado);
       document.getElementById('dzReferencia').value = d.referencia || '';
       document.getElementById('btnEliminarDiezmo').style.display = 'inline-block';
+      restaurarFondoDesdeTransaccion('dzFondo', d.transaccion_id);
     }
   }
   document.getElementById('modalDiezmo').classList.add('abierto');
@@ -2480,6 +2586,7 @@ function abrirFormOfrenda(id) {
       poblarSelectMetodo('ofMetodo', o.metodo);
       poblarSelectEstado('ofEstado', o.estado);
       document.getElementById('btnEliminarOfrenda').style.display = 'inline-block';
+      restaurarFondoDesdeTransaccion('ofFondo', o.transaccion_id);
     }
   }
   document.getElementById('modalOfrenda').classList.add('abierto');
@@ -2624,6 +2731,7 @@ async function abrirFormDonacion(id) {
       poblarSelectEstado('dnEstado', d.estado);
       document.getElementById('dnReferencia').value = d.referencia || '';
       document.getElementById('btnEliminarDonacion').style.display = 'inline-block';
+      restaurarFondoDesdeTransaccion('dnFondo', d.transaccion_id);
       if (d.transaccion_id) {
         const { data: t } = await sbCall(sb.from('transacciones').select('categoria').eq('id', d.transaccion_id).single());
         if (t?.categoria) poblarSelectProposito('dnProposito', t.categoria);
@@ -2799,6 +2907,7 @@ function abrirFormGasto(id) {
       poblarSelectMetodo('gsMetodo', g.metodo);
       poblarSelectEstado('gsEstado', g.estado);
       document.getElementById('btnEliminarGasto').style.display = 'inline-block';
+      restaurarFondoDesdeTransaccion('gsFondo', g.transaccion_id);
     }
   }
   document.getElementById('modalGasto').classList.add('abierto');
@@ -2873,6 +2982,339 @@ async function eliminarGasto() {
   if (g?.transaccion_id) await sbCall(sb.from('transacciones').delete().eq('id', g.transaccion_id));
   cerrarModalGasto();
   cargarGastos();
+}
+
+// ══════════════════════ FONDOS / PRESUPUESTO / REPORTES ══════════════════════
+function poblarSelectorAnio(selectId) {
+  const select = document.getElementById(selectId);
+  if (select.options.length > 0) return;
+  const anioActual = new Date().getFullYear();
+  let html = '';
+  for (let a = anioActual - 5; a <= anioActual + 1; a++) html += `<option value="${a}">${a}</option>`;
+  select.innerHTML = html;
+  select.value = anioActual;
+}
+
+async function restaurarFondoDesdeTransaccion(selectId, transaccionId) {
+  if (!transaccionId) return;
+  await asegurarFondosFinanzas();
+  const { data } = await sbCall(sb.from('transacciones').select('fondo_id').eq('id', transaccionId).single());
+  if (data?.fondo_id) document.getElementById(selectId).value = data.fondo_id;
+}
+
+// ── FONDOS ──
+let cacheFondosAdmin = [];
+
+async function cargarFondos() {
+  const lista = document.getElementById('listaFondos');
+  lista.innerHTML = '<div class="estadoCargando">Cargando fondos…</div>';
+  const anio = parseInt(document.getElementById('fonSelectAnio').value, 10);
+  const inicioAnio = `${anio}-01-01`;
+  const finAnio = `${anio}-12-31`;
+
+  const [{ data: fondos, error: errF }, { data: trans, error: errT }] = await Promise.all([
+    sbCall(sb.from('fondos').select('*').order('nombre', { ascending: true })),
+    sbCall(sb.from('transacciones').select('fondo_id, tipo, monto, fecha').in('tipo', ['Ingreso', 'Egreso']).lte('fecha', finAnio).range(0, 9999)),
+  ]);
+
+  if (errF || errT) { lista.innerHTML = `<div class="estadoVacio">Error: ${(errF || errT).message}</div>`; return; }
+
+  cacheFondosAdmin = fondos || [];
+  const acum = {};
+  const asegurar = (k) => { if (!acum[k]) acum[k] = { ingAnio: 0, egrAnio: 0, saldo: 0 }; return acum[k]; };
+  (trans || []).forEach(t => {
+    const k = t.fondo_id || '__sin__';
+    const monto = Number(t.monto) || 0;
+    const signo = esIngreso(t.tipo) ? 1 : -1;
+    const a = asegurar(k);
+    a.saldo += signo * monto;
+    if (t.fecha >= inicioAnio) {
+      if (signo === 1) a.ingAnio += monto; else a.egrAnio += monto;
+    }
+  });
+
+  const filas = cacheFondosAdmin.map(f => ({ id: f.id, nombre: f.nombre, descripcion: f.descripcion, activo: f.activo, ...(acum[f.id] || { ingAnio: 0, egrAnio: 0, saldo: 0 }) }));
+  if (acum['__sin__']) filas.push({ id: null, nombre: 'Sin fondo asignado', descripcion: null, activo: true, ...acum['__sin__'] });
+
+  const saldoTotal = filas.reduce((s, f) => s + f.saldo, 0);
+  document.getElementById('resumenFondos').innerHTML = `
+    <div class="tarjetaResumen"><div class="etiqueta">Saldo total (acumulado a ${anio})</div><div class="monto">${formatoMoneda(saldoTotal)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Fondos</div><div class="monto">${cacheFondosAdmin.length}</div></div>`;
+
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay fondos registrados.</div>'; return; }
+
+  lista.innerHTML = filas.map(f => `
+    <div class="tarjetaSeguimiento" ${f.id ? `onclick="abrirFormFondo('${f.id}')"` : ''}>
+      <div>
+        <div class="nombrePersona">${f.nombre}</div>
+        <div class="metaLinea">${f.descripcion ? f.descripcion + ' · ' : ''}${anio}: <span style="color:#1f7a4d;">+${formatoMoneda(f.ingAnio)}</span> / <span style="color:var(--danger);">−${formatoMoneda(f.egrAnio)}</span></div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        <span class="badge badge-tipo">Saldo ${formatoMoneda(f.saldo)}</span>
+        ${f.id ? `<span class="badge badge-estado-${f.activo ? 'Activo' : 'Inactivo'}">${f.activo ? 'Activo' : 'Inactivo'}</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function abrirFormFondo(id) {
+  document.getElementById('formFondo').reset();
+  document.getElementById('fnFondoId').value = '';
+  document.getElementById('modalFondoTitulo').textContent = 'Nuevo Fondo';
+  if (id) {
+    const f = cacheFondosAdmin.find(x => x.id === id);
+    if (f) {
+      document.getElementById('modalFondoTitulo').textContent = 'Editar Fondo';
+      document.getElementById('fnFondoId').value = f.id;
+      document.getElementById('fnNombre').value = f.nombre;
+      document.getElementById('fnDescripcion').value = f.descripcion || '';
+      document.getElementById('fnActivo').value = String(f.activo);
+    }
+  }
+  document.getElementById('modalFondo').classList.add('abierto');
+}
+
+function cerrarModalFondo() { document.getElementById('modalFondo').classList.remove('abierto'); }
+
+async function guardarFondo(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('fnFondoId').value;
+  const payload = {
+    nombre: document.getElementById('fnNombre').value.trim(),
+    descripcion: document.getElementById('fnDescripcion').value.trim() || null,
+    activo: document.getElementById('fnActivo').value === 'true',
+  };
+  let error;
+  if (id) ({ error } = await sbCall(sb.from('fondos').update(payload).eq('id', id)));
+  else ({ error } = await sbCall(sb.from('fondos').insert(payload)));
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cacheFondos = [];
+  cerrarModalFondo();
+  cargarFondos();
+  return false;
+}
+
+// ── PRESUPUESTO ──
+let cachePresupuesto = [];
+
+async function cargarPresupuesto() {
+  const lista = document.getElementById('listaPresupuesto');
+  lista.innerHTML = '<div class="estadoCargando">Cargando presupuesto…</div>';
+  const anio = parseInt(document.getElementById('presSelectAnio').value, 10);
+
+  const [{ data: lineas, error: errP }, { data: trans, error: errT }] = await Promise.all([
+    sbCall(sb.from('presupuesto').select('*').eq('anio', anio).order('categoria', { ascending: true })),
+    sbCall(sb.from('transacciones').select('categoria, monto').eq('tipo', 'Egreso').eq('solo_fondo', false).gte('fecha', `${anio}-01-01`).lte('fecha', `${anio}-12-31`).range(0, 9999)),
+  ]);
+
+  if (errP || errT) { lista.innerHTML = `<div class="estadoVacio">Error: ${(errP || errT).message}</div>`; return; }
+
+  cachePresupuesto = lineas || [];
+  const clave = (s) => (s || '').trim().toLowerCase();
+  const realPorCat = {};
+  const nombrePorClave = {};
+  (trans || []).forEach(t => {
+    const k = clave(t.categoria) || 'sin categoría';
+    realPorCat[k] = (realPorCat[k] || 0) + (Number(t.monto) || 0);
+    if (!nombrePorClave[k]) nombrePorClave[k] = t.categoria || 'Sin categoría';
+  });
+
+  const usadas = new Set();
+  const filas = cachePresupuesto.map(l => {
+    const k = clave(l.categoria);
+    usadas.add(k);
+    return { id: l.id, categoria: l.categoria, presupuesto: Number(l.monto_anual) || 0, real: realPorCat[k] || 0 };
+  });
+  const sinPresupuesto = Object.keys(realPorCat).filter(k => !usadas.has(k)).map(k => ({ id: null, categoria: nombrePorClave[k], presupuesto: 0, real: realPorCat[k] }));
+
+  const totalPres = filas.reduce((s, f) => s + f.presupuesto, 0);
+  const totalReal = filas.reduce((s, f) => s + f.real, 0) + sinPresupuesto.reduce((s, f) => s + f.real, 0);
+
+  document.getElementById('resumenPresupuesto').innerHTML = `
+    <div class="tarjetaResumen"><div class="etiqueta">Presupuesto ${anio}</div><div class="monto">${formatoMoneda(totalPres)}</div></div>
+    <div class="tarjetaResumen egreso"><div class="etiqueta">Gastado ${anio}</div><div class="monto">${formatoMoneda(totalReal)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Disponible</div><div class="monto">${formatoMoneda(totalPres - totalReal)}</div></div>`;
+
+  const todas = [...filas, ...sinPresupuesto];
+  if (todas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay presupuesto ni gastos para este año.</div>'; return; }
+
+  lista.innerHTML = todas.map(f => {
+    const pct = f.presupuesto > 0 ? Math.round((f.real / f.presupuesto) * 100) : null;
+    const excedido = f.presupuesto > 0 && f.real > f.presupuesto;
+    const ancho = pct === null ? 0 : Math.min(pct, 100);
+    return `
+    <div class="tarjetaSeguimiento" ${f.id ? `onclick="abrirFormPresupuesto('${f.id}')"` : ''}>
+      <div style="flex:1;">
+        <div class="nombrePersona">${f.categoria}${f.id ? '' : ' <span style="font-weight:400; color:var(--text-muted); font-size:0.78rem;">(sin presupuesto)</span>'}</div>
+        <div class="metaLinea">Gastado ${formatoMoneda(f.real)}${f.presupuesto > 0 ? ' de ' + formatoMoneda(f.presupuesto) + ' · ' + pct + '%' : ''}</div>
+        ${f.presupuesto > 0 ? `<div style="height:6px; background:var(--bg); border-radius:3px; overflow:hidden; margin-top:4px;"><div style="height:100%; width:${ancho}%; background:${excedido ? 'var(--danger)' : 'var(--navy)'};"></div></div>` : ''}
+      </div>
+      <span class="badge ${excedido ? 'badge-prioridad-Urgente' : 'badge-tipo'}">${f.presupuesto > 0 ? (excedido ? 'Excedido ' : 'Resta ') + formatoMoneda(Math.abs(f.presupuesto - f.real)) : formatoMoneda(f.real)}</span>
+    </div>`;
+  }).join('');
+}
+
+async function abrirFormPresupuesto(id) {
+  document.getElementById('formPresupuesto').reset();
+  document.getElementById('prLineaId').value = '';
+  document.getElementById('btnEliminarPresupuesto').style.display = 'none';
+  document.getElementById('modalPresupuestoTitulo').textContent = 'Nueva Línea de Presupuesto';
+  document.getElementById('prAnio').value = document.getElementById('presSelectAnio').value;
+
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  document.getElementById('prCategoriasLista').innerHTML = cacheCuentas
+    .filter(c => c.tipo === 'Gasto').map(c => `<option value="${c.nombre}"></option>`).join('');
+
+  if (id) {
+    const l = cachePresupuesto.find(x => x.id === id);
+    if (l) {
+      document.getElementById('modalPresupuestoTitulo').textContent = 'Editar Línea de Presupuesto';
+      document.getElementById('prLineaId').value = l.id;
+      document.getElementById('prAnio').value = l.anio;
+      document.getElementById('prCategoria').value = l.categoria;
+      document.getElementById('prMonto').value = l.monto_anual;
+      document.getElementById('btnEliminarPresupuesto').style.display = 'inline-block';
+    }
+  }
+  document.getElementById('modalPresupuesto').classList.add('abierto');
+}
+
+function cerrarModalPresupuesto() { document.getElementById('modalPresupuesto').classList.remove('abierto'); }
+
+async function guardarPresupuesto(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('prLineaId').value;
+  const payload = {
+    anio: parseInt(document.getElementById('prAnio').value, 10),
+    categoria: document.getElementById('prCategoria').value.trim(),
+    monto_anual: parseFloat(document.getElementById('prMonto').value) || 0,
+  };
+  let error;
+  if (id) ({ error } = await sbCall(sb.from('presupuesto').update(payload).eq('id', id)));
+  else ({ error } = await sbCall(sb.from('presupuesto').insert(payload)));
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalPresupuesto();
+  document.getElementById('presSelectAnio').value = payload.anio;
+  cargarPresupuesto();
+  return false;
+}
+
+async function eliminarPresupuesto() {
+  const id = document.getElementById('prLineaId').value;
+  if (!id || !confirm('¿Eliminar esta línea de presupuesto?')) return;
+  const { error } = await sbCall(sb.from('presupuesto').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalPresupuesto();
+  cargarPresupuesto();
+}
+
+// ── REPORTES (Estado de Resultados) ──
+let cacheFilasReporte = [];
+
+function inicializarReporte() {
+  if (document.getElementById('repDesde').value) return;
+  aplicarAtajoReporte('anio');
+}
+
+function aplicarAtajoReporte(forzado) {
+  const atajo = typeof forzado === 'string' ? forzado : document.getElementById('repAtajo').value;
+  if (!atajo) return;
+  const hoy = new Date();
+  const y = hoy.getFullYear(), m = hoy.getMonth();
+  const pad = (n) => String(n).padStart(2, '0');
+  const ultimo = (yy, mm) => new Date(yy, mm + 1, 0).getDate();
+  let desde, hasta;
+  if (atajo === 'mes') { desde = `${y}-${pad(m + 1)}-01`; hasta = `${y}-${pad(m + 1)}-${pad(ultimo(y, m))}`; }
+  else if (atajo === 'trimestre') { const q = Math.floor(m / 3) * 3; desde = `${y}-${pad(q + 1)}-01`; hasta = `${y}-${pad(q + 3)}-${pad(ultimo(y, q + 2))}`; }
+  else if (atajo === 'anioAnterior') { desde = `${y - 1}-01-01`; hasta = `${y - 1}-12-31`; }
+  else { desde = `${y}-01-01`; hasta = `${y}-12-31`; }
+  document.getElementById('repDesde').value = desde;
+  document.getElementById('repHasta').value = hasta;
+  if (typeof forzado !== 'string') cargarReporteResultados();
+}
+
+async function cargarReporteResultados() {
+  const desde = document.getElementById('repDesde').value;
+  const hasta = document.getElementById('repHasta').value;
+  const cont = document.getElementById('repResultados');
+  const contMes = document.getElementById('repPorMes');
+  if (!desde || !hasta) return;
+  cont.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+  contMes.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+
+  const { data, error } = await sbCall(
+    sb.from('transacciones').select('fecha, categoria, tipo, monto')
+      .in('tipo', ['Ingreso', 'Egreso']).eq('solo_fondo', false)
+      .gte('fecha', desde).lte('fecha', hasta).range(0, 9999)
+  );
+  if (error) { cont.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; contMes.innerHTML = ''; return; }
+
+  const filas = data || [];
+  cacheFilasReporte = [];
+  let totIng = 0, totEgr = 0;
+  const ing = {}, egr = {}, meses = {};
+  filas.forEach(t => {
+    const monto = Number(t.monto) || 0;
+    const cat = t.categoria || 'Sin categoría';
+    const mes = (t.fecha || '').slice(0, 7);
+    if (!meses[mes]) meses[mes] = { ing: 0, egr: 0 };
+    if (esIngreso(t.tipo)) { ing[cat] = (ing[cat] || 0) + monto; totIng += monto; meses[mes].ing += monto; }
+    else { egr[cat] = (egr[cat] || 0) + monto; totEgr += monto; meses[mes].egr += monto; }
+  });
+
+  document.getElementById('resumenReporte').innerHTML = `
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Ingresos</div><div class="monto">${formatoMoneda(totIng)}</div></div>
+    <div class="tarjetaResumen egreso"><div class="etiqueta">Egresos</div><div class="monto">${formatoMoneda(totEgr)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Resultado neto</div><div class="monto">${formatoMoneda(totIng - totEgr)}</div></div>`;
+
+  if (filas.length === 0) {
+    cont.innerHTML = '<div class="estadoVacio">Sin movimientos en este rango.</div>';
+    contMes.innerHTML = '<div class="estadoVacio">Sin movimientos en este rango.</div>';
+    return;
+  }
+
+  const ordenar = (obj) => Object.keys(obj).sort((a, b) => obj[b] - obj[a]);
+  const catsIng = ordenar(ing), catsEgr = ordenar(egr);
+  catsIng.forEach(c => cacheFilasReporte.push(['Ingreso', c, ing[c]]));
+  catsEgr.forEach(c => cacheFilasReporte.push(['Egreso', c, egr[c]]));
+
+  const filaCat = (c, v, clase) => `<tr><td>${c}</td><td class="${clase}">${formatoMoneda(v)}</td></tr>`;
+  cont.innerHTML = `
+    <table class="tablaTrans"><thead><tr><th>Concepto</th><th>Monto</th></tr></thead><tbody>
+      <tr><td colspan="2" style="font-weight:700; color:var(--navy);">Ingresos</td></tr>
+      ${catsIng.map(c => filaCat(c, ing[c], 'montoIngreso')).join('') || '<tr><td colspan="2" style="color:var(--text-muted);">—</td></tr>'}
+      <tr><td style="font-weight:700;">Total ingresos</td><td class="montoIngreso">${formatoMoneda(totIng)}</td></tr>
+      <tr><td colspan="2" style="font-weight:700; color:var(--navy);">Egresos</td></tr>
+      ${catsEgr.map(c => filaCat(c, egr[c], 'montoEgreso')).join('') || '<tr><td colspan="2" style="color:var(--text-muted);">—</td></tr>'}
+      <tr><td style="font-weight:700;">Total egresos</td><td class="montoEgreso">${formatoMoneda(totEgr)}</td></tr>
+      <tr><td style="font-weight:700;">Resultado neto</td><td style="font-weight:700;">${formatoMoneda(totIng - totEgr)}</td></tr>
+    </tbody></table>`;
+
+  const clavesMes = Object.keys(meses).sort();
+  contMes.innerHTML = `
+    <table class="tablaTrans"><thead><tr><th>Mes</th><th>Ingresos</th><th>Egresos</th><th>Neto</th></tr></thead><tbody>
+      ${clavesMes.map(k => {
+        const [yy, mm] = k.split('-');
+        const v = meses[k];
+        return `<tr><td>${NOMBRES_MESES[parseInt(mm, 10) - 1]} ${yy}</td><td class="montoIngreso">${formatoMoneda(v.ing)}</td><td class="montoEgreso">${formatoMoneda(v.egr)}</td><td>${formatoMoneda(v.ing - v.egr)}</td></tr>`;
+      }).join('')}
+    </tbody></table>`;
+}
+
+function exportarReporteCSV() {
+  if (cacheFilasReporte.length === 0) { alert('No hay datos que exportar en este rango.'); return; }
+  const desde = document.getElementById('repDesde').value;
+  const hasta = document.getElementById('repHasta').value;
+  const contenido = [['Tipo', 'Categoría', 'Monto'], ...cacheFilasReporte]
+    .map(f => f.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿' + contenido], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `estado_resultados_${desde}_a_${hasta}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ── Navegación: Secretaría ───────────────────────────────────────────────
