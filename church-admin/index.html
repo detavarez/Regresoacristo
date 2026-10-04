@@ -352,6 +352,11 @@
   }
   .btnSecundario:hover { background: var(--bg); }
   .btnPeligro { color: var(--danger); border-color: #f3c6c2; }
+  #printHostDeclaracion { display: none; }
+  @media print {
+    body.imprimiendoDeclaracion > *:not(#printHostDeclaracion) { display: none !important; }
+    body.imprimiendoDeclaracion #printHostDeclaracion { display: block !important; }
+  }
   .btnPeligro:hover { background: #fdeceb; }
 
   .listaPersonas { display: flex; flex-direction: column; gap: 10px; }
@@ -549,6 +554,9 @@
         <button class="subtab" id="subtabFinFondosBtn" onclick="cambiarSubtabFinanzas('fondos')">Fondos</button>
         <button class="subtab" id="subtabFinPresupuestoBtn" onclick="cambiarSubtabFinanzas('presupuesto')">Presupuesto</button>
         <button class="subtab" id="subtabFinReportesBtn" onclick="cambiarSubtabFinanzas('reportes')">Reportes</button>
+        <button class="subtab" id="subtabFinConciliacionBtn" onclick="cambiarSubtabFinanzas('conciliacion')">Conciliación</button>
+        <button class="subtab" id="subtabFinCampanasBtn" onclick="cambiarSubtabFinanzas('campanas')">Campañas</button>
+        <button class="subtab" id="subtabFinDeclaracionesBtn" onclick="cambiarSubtabFinanzas('declaraciones')">Declaraciones</button>
       </div>
 
       <!-- Sub-vista: Resumen -->
@@ -701,6 +709,47 @@
           <h3>Ingresos y egresos por mes</h3>
           <div id="repPorMes"><div class="estadoCargando">Cargando…</div></div>
         </div>
+      </div>
+
+      <!-- Sub-vista: Conciliación -->
+      <div id="subvistaFinConciliacion" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <select id="cnFiltroBanco" onchange="renderConciliaciones()"><option value="">Todos los bancos</option></select>
+          <div style="flex:1;"></div>
+          <button class="btnAccion" onclick="abrirFormConciliacion()">+ Nueva Conciliación</button>
+        </div>
+        <div class="grid-resumen" id="resumenConciliacion" style="margin-bottom:20px;"></div>
+        <div id="listaConciliacion"><div class="estadoCargando">Cargando conciliaciones…</div></div>
+      </div>
+
+      <!-- Sub-vista: Campañas / Promesas -->
+      <div id="subvistaFinCampanas" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <label style="font-size:0.85rem; color: var(--text-muted);"><input type="checkbox" id="cpSoloActivas" checked onchange="renderCampanas()"> Solo activas</label>
+          <div style="flex:1;"></div>
+          <button class="btnAccion" onclick="abrirFormCampana()">+ Nueva Campaña</button>
+        </div>
+        <div class="grid-resumen" id="resumenCampanas" style="margin-bottom:20px;"></div>
+        <div id="listaCampanas"><div class="estadoCargando">Cargando campañas…</div></div>
+      </div>
+
+      <!-- Sub-vista: Declaraciones de Donación -->
+      <div id="subvistaFinDeclaraciones" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <select id="dcSelectAnio" onchange="cargarDeclaraciones()"></select>
+          <input type="text" id="dcBuscador" placeholder="Buscar donante…" oninput="renderDeclaraciones()">
+          <div style="flex:1;"></div>
+          <button class="btnSecundario" onclick="exportarDeclaracionesCSV()">⬇ Exportar CSV</button>
+        </div>
+        <div class="tablaWrap" style="margin-bottom:20px;">
+          <h3>Datos de la iglesia para la declaración</h3>
+          <div class="formGrid" style="padding:0 16px 16px;">
+            <div class="full"><label for="dcIglesiaNombre">Nombre de la iglesia</label><input type="text" id="dcIglesiaNombre" oninput="guardarDatosIglesiaDeclaracion()"></div>
+            <div class="full"><label for="dcIglesiaDireccion">Dirección y EIN (opcional)</label><input type="text" id="dcIglesiaDireccion" oninput="guardarDatosIglesiaDeclaracion()" placeholder="Dirección · EIN"></div>
+          </div>
+        </div>
+        <div class="grid-resumen" id="resumenDeclaraciones" style="margin-bottom:20px;"></div>
+        <div id="listaDeclaraciones"><div class="estadoCargando">Cargando declaraciones…</div></div>
       </div>
     </div>
 
@@ -1070,6 +1119,111 @@
         <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Conciliación ═══════════════ -->
+<div class="modalOverlay" id="modalConciliacion">
+  <div class="modalCaja">
+    <h3 id="modalConciliacionTitulo">Nueva Conciliación</h3>
+    <form id="formConciliacion" onsubmit="return guardarConciliacion(event)">
+      <input type="hidden" id="cnId">
+      <div class="formGrid">
+        <div><label for="cnBanco">Banco / Cuenta *</label><select id="cnBanco" required></select></div>
+        <div><label for="cnFecha">Fecha del estado de cuenta *</label><input type="date" id="cnFecha" required onchange="actualizarDiferenciaConciliacion()"></div>
+        <div><label for="cnSaldoEstado">Saldo según estado de cuenta *</label><input type="number" id="cnSaldoEstado" step="0.01" required oninput="actualizarDiferenciaConciliacion()"></div>
+        <div><label for="cnSaldoSistema">Saldo según el sistema *</label><input type="number" id="cnSaldoSistema" step="0.01" required oninput="actualizarDiferenciaConciliacion()"></div>
+        <div class="full">
+          <button type="button" class="btnSecundario" onclick="sugerirSaldoSistema()">Calcular saldo sugerido</button>
+          <div id="cnSugerenciaInfo" style="font-size:0.78rem; color:var(--text-muted); margin-top:6px;">Sugerido = ingresos menos egresos completados que no son en efectivo, hasta la fecha. No incluye saldo inicial ni separa por banco; ajústalo si hace falta.</div>
+        </div>
+        <div class="full"><label>Diferencia (estado de cuenta − sistema)</label><div id="cnDiferencia" style="font-weight:600; font-size:1.1rem;">—</div></div>
+        <div class="full"><label for="cnNotas">Notas</label><input type="text" id="cnNotas" placeholder="Cheques en tránsito, depósitos pendientes…"></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarConciliacion" onclick="eliminarConciliacion()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalConciliacion()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Campaña ═══════════════ -->
+<div class="modalOverlay" id="modalCampana">
+  <div class="modalCaja">
+    <h3 id="modalCampanaTitulo">Nueva Campaña</h3>
+    <form id="formCampana" onsubmit="return guardarCampana(event)">
+      <input type="hidden" id="cmId">
+      <div class="formGrid">
+        <div class="full"><label for="cmNombre">Nombre *</label><input type="text" id="cmNombre" required></div>
+        <div><label for="cmInicio">Inicio</label><input type="date" id="cmInicio"></div>
+        <div><label for="cmFin">Fin</label><input type="date" id="cmFin"></div>
+        <div><label for="cmMeta">Meta ($)</label><input type="number" id="cmMeta" step="0.01" min="0"></div>
+        <div><label for="cmActivo">Estado</label>
+          <select id="cmActivo"><option value="true" selected>Activa</option><option value="false">Inactiva</option></select>
+        </div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarCampana" onclick="eliminarCampana()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalCampana()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Promesas de una campaña ═══════════════ -->
+<div class="modalOverlay" id="modalPromesas">
+  <div class="modalCaja" style="max-width:720px;">
+    <h3 id="modalPromesasTitulo">Promesas</h3>
+    <div id="promesasResumen" style="font-size:0.88rem; color:var(--text-muted); margin-bottom:14px;"></div>
+    <form id="formPromesa" onsubmit="return guardarPromesa(event)" style="margin-bottom:18px;">
+      <input type="hidden" id="prmId">
+      <div class="formGrid">
+        <div class="full"><label for="prmPersona">Persona *</label><select id="prmPersona" required></select></div>
+        <div><label for="prmMonto">Monto prometido *</label><input type="number" id="prmMonto" step="0.01" min="0" required></div>
+        <div><label for="prmFecha">Fecha</label><input type="date" id="prmFecha"></div>
+        <div class="full"><label for="prmNotas">Notas</label><input type="text" id="prmNotas"></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" id="btnCancelarEdicionPromesa" onclick="resetFormPromesa()" style="display:none;">Cancelar edición</button>
+        <button type="submit" class="btnPrincipal" id="btnGuardarPromesa" style="width:auto;">Agregar promesa</button>
+      </div>
+    </form>
+    <div id="listaPromesas"></div>
+    <div class="formAcciones"><button type="button" class="btnSecundario" onclick="cerrarModalPromesas()">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Pago de promesa ═══════════════ -->
+<div class="modalOverlay" id="modalPagoPromesa">
+  <div class="modalCaja">
+    <h3 id="modalPagoPromesaTitulo">Registrar pago</h3>
+    <form id="formPagoPromesa" onsubmit="return guardarPagoPromesa(event)">
+      <input type="hidden" id="pgPromesaId">
+      <div class="formGrid">
+        <div><label for="pgFecha">Fecha *</label><input type="date" id="pgFecha" required></div>
+        <div><label for="pgMonto">Monto *</label><input type="number" id="pgMonto" step="0.01" min="0.01" required></div>
+        <div><label for="pgMetodo">Método</label><select id="pgMetodo"></select></div>
+        <div><label for="pgFondo">Fondo</label><select id="pgFondo"></select></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" onclick="cerrarModalPagoPromesa()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar pago</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Declaración de donación ═══════════════ -->
+<div class="modalOverlay" id="modalDeclaracion">
+  <div class="modalCaja" style="max-width:760px;">
+    <div id="declaracionContenido"></div>
+    <div class="formAcciones">
+      <button type="button" class="btnSecundario" onclick="cerrarModalDeclaracion()">Cerrar</button>
+      <button type="button" class="btnPrincipal" style="width:auto;" onclick="imprimirDeclaracion()">Imprimir / Guardar PDF</button>
+    </div>
   </div>
 </div>
 
@@ -1553,8 +1707,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-027';
-document.getElementById('versionTopbar').textContent = 'Ver-027';
+const APP_VERSION = 'church-admin Ver-028';
+document.getElementById('versionTopbar').textContent = 'Ver-028';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -1705,6 +1859,12 @@ function cambiarSubtabFinanzas(tab) {
   document.getElementById('subvistaFinFondos').style.display = tab === 'fondos' ? 'block' : 'none';
   document.getElementById('subvistaFinPresupuesto').style.display = tab === 'presupuesto' ? 'block' : 'none';
   document.getElementById('subvistaFinReportes').style.display = tab === 'reportes' ? 'block' : 'none';
+  document.getElementById('subtabFinConciliacionBtn').classList.toggle('activa', tab === 'conciliacion');
+  document.getElementById('subtabFinCampanasBtn').classList.toggle('activa', tab === 'campanas');
+  document.getElementById('subtabFinDeclaracionesBtn').classList.toggle('activa', tab === 'declaraciones');
+  document.getElementById('subvistaFinConciliacion').style.display = tab === 'conciliacion' ? 'block' : 'none';
+  document.getElementById('subvistaFinCampanas').style.display = tab === 'campanas' ? 'block' : 'none';
+  document.getElementById('subvistaFinDeclaraciones').style.display = tab === 'declaraciones' ? 'block' : 'none';
 
   if (tab === 'resumen') { inicializarSelectoresFinanzas(); cargarFinanzas(); }
   else if (tab === 'depositos') cargarDepositos();
@@ -1717,6 +1877,9 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'fondos') { poblarSelectorAnio('fonSelectAnio'); cargarFondos(); }
   else if (tab === 'presupuesto') { poblarSelectorAnio('presSelectAnio'); cargarPresupuesto(); }
   else if (tab === 'reportes') { inicializarReporte(); cargarReporteResultados(); }
+  else if (tab === 'conciliacion') cargarConciliacion();
+  else if (tab === 'campanas') cargarCampanas();
+  else if (tab === 'declaraciones') cargarDeclaraciones();
 }
 
 // ── Finanzas: carga real desde Supabase ──────────────────────────────────
@@ -1885,6 +2048,657 @@ function exportarFinanzasCSV() {
   const a = document.createElement('a');
   a.href = url;
   a.download = `finanzas_${NOMBRES_MESES[mes]}_${anio}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ══════════════════════ VER-028: CONCILIACIÓN / CAMPAÑAS / DECLARACIONES ══════════════════════
+function escV28(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ── CONCILIACIÓN ──
+let cacheBancos = [];
+let cacheConciliaciones = [];
+
+function nombreBancoPorId(id) {
+  const b = cacheBancos.find(x => x.id === id);
+  return b ? b.nombre : 'Banco no encontrado';
+}
+
+async function cargarConciliacion() {
+  const lista = document.getElementById('listaConciliacion');
+  lista.innerHTML = '<div class="estadoCargando">Cargando conciliaciones…</div>';
+  const [rb, rc] = await Promise.all([
+    sbCall(sb.from('bancos').select('*').order('nombre', { ascending: true })),
+    sbCall(sb.from('reconciliaciones').select('*').order('fecha', { ascending: false }).range(0, 9999)),
+  ]);
+  if (rb.error || rc.error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28((rb.error || rc.error).message)}</div>`; return; }
+  cacheBancos = rb.data || [];
+  cacheConciliaciones = rc.data || [];
+  const sel = document.getElementById('cnFiltroBanco');
+  const actual = sel.value;
+  sel.innerHTML = '<option value="">Todos los bancos</option>' + cacheBancos.map(b => `<option value="${b.id}">${escV28(b.nombre)}</option>`).join('');
+  sel.value = actual;
+  renderConciliaciones();
+}
+
+function renderConciliaciones() {
+  const lista = document.getElementById('listaConciliacion');
+  const filtro = document.getElementById('cnFiltroBanco').value;
+  const filas = cacheConciliaciones.filter(r => !filtro || r.banco_id === filtro);
+
+  const cuadra = (r) => Math.abs(Number(r.diferencia) || 0) < 0.005;
+  const ultimaPorBanco = {};
+  cacheConciliaciones.forEach(r => { if (!ultimaPorBanco[r.banco_id]) ultimaPorBanco[r.banco_id] = r; });
+  const tarjetasBanco = Object.keys(ultimaPorBanco).map(bid => {
+    const r = ultimaPorBanco[bid];
+    return `<div class="tarjetaResumen ${cuadra(r) ? 'ingreso' : 'egreso'}">
+      <div class="etiqueta">${escV28(nombreBancoPorId(bid))} · ${formatoFecha(r.fecha)}</div>
+      <div class="monto">${cuadra(r) ? 'Cuadrada' : formatoMoneda(r.diferencia)}</div></div>`;
+  }).join('');
+  document.getElementById('resumenConciliacion').innerHTML = `
+    <div class="tarjetaResumen"><div class="etiqueta">Conciliaciones</div><div class="monto">${cacheConciliaciones.length}</div></div>
+    <div class="tarjetaResumen ${cacheConciliaciones.some(r => !cuadra(r)) ? 'egreso' : 'ingreso'}"><div class="etiqueta">Con diferencia</div><div class="monto">${cacheConciliaciones.filter(r => !cuadra(r)).length}</div></div>
+    ${tarjetasBanco}`;
+
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay conciliaciones registradas.</div>'; return; }
+  lista.innerHTML = filas.map(r => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormConciliacion('${r.id}')">
+      <div>
+        <div class="nombrePersona">${escV28(nombreBancoPorId(r.banco_id))} — ${formatoFecha(r.fecha)}</div>
+        <div class="metaLinea">Estado de cuenta ${formatoMoneda(r.saldo_estado_cuenta)} · Sistema ${formatoMoneda(r.saldo_sistema)}${r.notas ? ' · ' + escV28(r.notas) : ''}</div>
+      </div>
+      <span class="badge ${cuadra(r) ? 'badge-tipo' : 'badge-prioridad-Urgente'}">${cuadra(r) ? 'Cuadrada' : 'Dif. ' + formatoMoneda(r.diferencia)}</span>
+    </div>`).join('');
+}
+
+function abrirFormConciliacion(id) {
+  document.getElementById('formConciliacion').reset();
+  document.getElementById('cnId').value = '';
+  document.getElementById('btnEliminarConciliacion').style.display = 'none';
+  document.getElementById('modalConciliacionTitulo').textContent = 'Nueva Conciliación';
+  const bancosActivos = cacheBancos.filter(b => b.activo !== false);
+  document.getElementById('cnBanco').innerHTML = '<option value="">Selecciona…</option>' +
+    bancosActivos.map(b => `<option value="${b.id}">${escV28(b.nombre)}</option>`).join('');
+  document.getElementById('cnFecha').value = new Date().toISOString().slice(0, 10);
+
+  if (id) {
+    const r = cacheConciliaciones.find(x => x.id === id);
+    if (r) {
+      if (!bancosActivos.some(b => b.id === r.banco_id)) {
+        document.getElementById('cnBanco').insertAdjacentHTML('beforeend', `<option value="${r.banco_id}">${escV28(nombreBancoPorId(r.banco_id))}</option>`);
+      }
+      document.getElementById('modalConciliacionTitulo').textContent = 'Editar Conciliación';
+      document.getElementById('cnId').value = r.id;
+      document.getElementById('cnBanco').value = r.banco_id || '';
+      document.getElementById('cnFecha').value = r.fecha;
+      document.getElementById('cnSaldoEstado').value = r.saldo_estado_cuenta ?? '';
+      document.getElementById('cnSaldoSistema').value = r.saldo_sistema ?? '';
+      document.getElementById('cnNotas').value = r.notas || '';
+      document.getElementById('btnEliminarConciliacion').style.display = 'inline-block';
+    }
+  } else if (bancosActivos.length === 1) {
+    document.getElementById('cnBanco').value = bancosActivos[0].id;
+  }
+  actualizarDiferenciaConciliacion();
+  document.getElementById('modalConciliacion').classList.add('abierto');
+}
+
+function cerrarModalConciliacion() { document.getElementById('modalConciliacion').classList.remove('abierto'); }
+
+function actualizarDiferenciaConciliacion() {
+  const e = parseFloat(document.getElementById('cnSaldoEstado').value);
+  const s = parseFloat(document.getElementById('cnSaldoSistema').value);
+  const el = document.getElementById('cnDiferencia');
+  if (isNaN(e) || isNaN(s)) { el.textContent = '—'; el.style.color = ''; return; }
+  const dif = Math.round((e - s) * 100) / 100;
+  el.textContent = Math.abs(dif) < 0.005 ? 'Cuadrada ($0.00)' : formatoMoneda(dif);
+  el.style.color = Math.abs(dif) < 0.005 ? 'green' : 'var(--danger)';
+}
+
+async function sugerirSaldoSistema() {
+  const hasta = document.getElementById('cnFecha').value;
+  if (!hasta) { alert('Indica primero la fecha del estado de cuenta.'); return; }
+  const info = document.getElementById('cnSugerenciaInfo');
+  info.textContent = 'Calculando…';
+  const { data, error } = await sbCall(
+    sb.from('transacciones').select('tipo, monto').in('tipo', ['Ingreso', 'Egreso'])
+      .eq('estado', 'Completado').eq('solo_fondo', false).neq('metodo', 'Efectivo').lte('fecha', hasta).range(0, 9999)
+  );
+  if (error) { info.textContent = 'Error al calcular: ' + error.message; return; }
+  const neto = (data || []).reduce((acc, t) => acc + (t.tipo === 'Ingreso' ? 1 : -1) * (Number(t.monto) || 0), 0);
+  document.getElementById('cnSaldoSistema').value = (Math.round(neto * 100) / 100).toFixed(2);
+  info.textContent = `Sugerido con ${data.length} movimientos no en efectivo hasta ${formatoFecha(hasta)}. No incluye saldo inicial ni separa por banco; ajústalo si hace falta.`;
+  actualizarDiferenciaConciliacion();
+}
+
+async function guardarConciliacion(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('cnId').value;
+  const e = parseFloat(document.getElementById('cnSaldoEstado').value);
+  const s = parseFloat(document.getElementById('cnSaldoSistema').value);
+  if (isNaN(e) || isNaN(s)) { alert('Completa ambos saldos.'); return false; }
+  const payload = {
+    banco_id: document.getElementById('cnBanco').value || null,
+    fecha: document.getElementById('cnFecha').value,
+    saldo_estado_cuenta: e,
+    saldo_sistema: s,
+    diferencia: Math.round((e - s) * 100) / 100,
+    notas: document.getElementById('cnNotas').value.trim() || null,
+  };
+  if (!payload.banco_id) { alert('Selecciona un banco.'); return false; }
+  let error;
+  if (id) ({ error } = await sbCall(sb.from('reconciliaciones').update(payload).eq('id', id)));
+  else {
+    payload.creado_por = getSesion().usuario?.id || null;
+    ({ error } = await sbCall(sb.from('reconciliaciones').insert(payload)));
+  }
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalConciliacion();
+  cargarConciliacion();
+  return false;
+}
+
+async function eliminarConciliacion() {
+  const id = document.getElementById('cnId').value;
+  if (!id || !confirm('¿Eliminar esta conciliación?')) return;
+  const { error } = await sbCall(sb.from('reconciliaciones').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalConciliacion();
+  cargarConciliacion();
+}
+
+// ── CAMPAÑAS / PROMESAS ──
+let cacheCampanas = [];
+let cachePromesas = [];
+let cachePagosPromesa = [];
+let campanaActualId = null;
+
+function pagadoDePromesa(promesaId) {
+  return cachePagosPromesa.filter(p => p.promesa_id === promesaId).reduce((s, p) => s + (Number(p.monto) || 0), 0);
+}
+
+function totalesCampana(campanaId) {
+  const proms = cachePromesas.filter(p => p.campana_id === campanaId);
+  const ids = new Set(proms.map(p => p.id));
+  return {
+    n: proms.length,
+    prometido: proms.reduce((s, p) => s + (Number(p.monto_prometido) || 0), 0),
+    recibido: cachePagosPromesa.filter(p => ids.has(p.promesa_id)).reduce((s, p) => s + (Number(p.monto) || 0), 0),
+  };
+}
+
+async function cargarCampanas() {
+  const lista = document.getElementById('listaCampanas');
+  lista.innerHTML = '<div class="estadoCargando">Cargando campañas…</div>';
+  const [rc, rp, rg] = await Promise.all([
+    sbCall(sb.from('campanas').select('*').order('creado_en', { ascending: false })),
+    sbCall(sb.from('promesas').select('*').range(0, 9999)),
+    sbCall(sb.from('pagos_promesa').select('*').order('fecha', { ascending: false }).range(0, 9999)),
+  ]);
+  const err = rc.error || rp.error || rg.error;
+  if (err) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(err.message)}</div>`; return; }
+  cacheCampanas = rc.data || [];
+  cachePromesas = rp.data || [];
+  cachePagosPromesa = rg.data || [];
+  renderCampanas();
+}
+
+function renderCampanas() {
+  const lista = document.getElementById('listaCampanas');
+  const soloActivas = document.getElementById('cpSoloActivas').checked;
+  const filas = cacheCampanas.filter(c => !soloActivas || c.activo);
+
+  const tot = cacheCampanas.reduce((a, c) => { const t = totalesCampana(c.id); a.prometido += t.prometido; a.recibido += t.recibido; return a; }, { prometido: 0, recibido: 0 });
+  document.getElementById('resumenCampanas').innerHTML = `
+    <div class="tarjetaResumen"><div class="etiqueta">Campañas activas</div><div class="monto">${cacheCampanas.filter(c => c.activo).length}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Total prometido</div><div class="monto">${formatoMoneda(tot.prometido)}</div></div>
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Total recibido</div><div class="monto">${formatoMoneda(tot.recibido)}</div></div>`;
+
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay campañas para mostrar.</div>'; return; }
+  lista.innerHTML = filas.map(c => {
+    const t = totalesCampana(c.id);
+    const base = Number(c.meta) > 0 ? Number(c.meta) : t.prometido;
+    const pct = base > 0 ? Math.round((t.recibido / base) * 100) : 0;
+    const fechas = [c.fecha_inicio ? formatoFecha(c.fecha_inicio) : null, c.fecha_fin ? formatoFecha(c.fecha_fin) : null].filter(Boolean).join(' → ');
+    return `
+    <div class="tarjetaSeguimiento" onclick="abrirModalPromesas('${c.id}')">
+      <div style="flex:1;">
+        <div class="nombrePersona">${escV28(c.nombre)}${c.activo ? '' : ' <span style="font-weight:400; color:var(--text-muted); font-size:0.78rem;">(inactiva)</span>'}</div>
+        <div class="metaLinea">${fechas ? fechas + ' · ' : ''}${t.n} promesa${t.n === 1 ? '' : 's'} · Prometido ${formatoMoneda(t.prometido)} · Recibido ${formatoMoneda(t.recibido)}${Number(c.meta) > 0 ? ' · Meta ' + formatoMoneda(c.meta) : ''}</div>
+        <div style="height:6px; background:var(--bg); border-radius:3px; overflow:hidden; margin-top:4px;"><div style="height:100%; width:${Math.min(pct, 100)}%; background:var(--navy);"></div></div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        <span class="badge badge-tipo">${pct}%</span>
+        <button class="btnSecundario" style="padding:2px 10px; font-size:0.78rem;" onclick="event.stopPropagation(); abrirFormCampana('${c.id}')">Editar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirFormCampana(id) {
+  document.getElementById('formCampana').reset();
+  document.getElementById('cmId').value = '';
+  document.getElementById('btnEliminarCampana').style.display = 'none';
+  document.getElementById('modalCampanaTitulo').textContent = 'Nueva Campaña';
+  if (id) {
+    const c = cacheCampanas.find(x => x.id === id);
+    if (c) {
+      document.getElementById('modalCampanaTitulo').textContent = 'Editar Campaña';
+      document.getElementById('cmId').value = c.id;
+      document.getElementById('cmNombre').value = c.nombre;
+      document.getElementById('cmInicio').value = c.fecha_inicio || '';
+      document.getElementById('cmFin').value = c.fecha_fin || '';
+      document.getElementById('cmMeta').value = c.meta ?? '';
+      document.getElementById('cmActivo').value = c.activo ? 'true' : 'false';
+      document.getElementById('btnEliminarCampana').style.display = 'inline-block';
+    }
+  }
+  document.getElementById('modalCampana').classList.add('abierto');
+}
+
+function cerrarModalCampana() { document.getElementById('modalCampana').classList.remove('abierto'); }
+
+async function guardarCampana(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('cmId').value;
+  const metaTxt = document.getElementById('cmMeta').value;
+  const payload = {
+    nombre: document.getElementById('cmNombre').value.trim(),
+    fecha_inicio: document.getElementById('cmInicio').value || null,
+    fecha_fin: document.getElementById('cmFin').value || null,
+    meta: metaTxt === '' ? null : parseFloat(metaTxt),
+    activo: document.getElementById('cmActivo').value === 'true',
+  };
+  let error;
+  if (id) ({ error } = await sbCall(sb.from('campanas').update(payload).eq('id', id)));
+  else ({ error } = await sbCall(sb.from('campanas').insert(payload)));
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalCampana();
+  cargarCampanas();
+  return false;
+}
+
+async function eliminarCampana() {
+  const id = document.getElementById('cmId').value;
+  if (!id) return;
+  if (cachePromesas.some(p => p.campana_id === id)) {
+    alert('Esta campaña tiene promesas. Elimina primero sus promesas (o márcala como inactiva).');
+    return;
+  }
+  if (!confirm('¿Eliminar esta campaña?')) return;
+  const { error } = await sbCall(sb.from('campanas').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  cerrarModalCampana();
+  cargarCampanas();
+}
+
+async function abrirModalPromesas(campanaId) {
+  campanaActualId = campanaId;
+  await asegurarDirectorioFinanzas();
+  poblarSelectPersonas('prmPersona');
+  resetFormPromesa();
+  renderPromesas();
+  document.getElementById('modalPromesas').classList.add('abierto');
+}
+
+function cerrarModalPromesas() {
+  document.getElementById('modalPromesas').classList.remove('abierto');
+  cargarCampanas();
+}
+
+function resetFormPromesa() {
+  document.getElementById('formPromesa').reset();
+  document.getElementById('prmId').value = '';
+  document.getElementById('prmFecha').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('btnGuardarPromesa').textContent = 'Agregar promesa';
+  document.getElementById('btnCancelarEdicionPromesa').style.display = 'none';
+}
+
+function renderPromesas() {
+  const c = cacheCampanas.find(x => x.id === campanaActualId);
+  if (!c) return;
+  document.getElementById('modalPromesasTitulo').textContent = c.nombre;
+  const t = totalesCampana(c.id);
+  document.getElementById('promesasResumen').textContent =
+    `${t.n} promesa${t.n === 1 ? '' : 's'} · Prometido ${formatoMoneda(t.prometido)} · Recibido ${formatoMoneda(t.recibido)} · Pendiente ${formatoMoneda(Math.max(t.prometido - t.recibido, 0))}`;
+
+  const proms = cachePromesas.filter(p => p.campana_id === c.id)
+    .sort((a, b) => nombrePersonaPorId(a.persona_id).localeCompare(nombrePersonaPorId(b.persona_id)));
+  const cont = document.getElementById('listaPromesas');
+  if (proms.length === 0) { cont.innerHTML = '<div class="estadoVacio">Aún no hay promesas en esta campaña.</div>'; return; }
+  cont.innerHTML = proms.map(p => {
+    const pagado = pagadoDePromesa(p.id);
+    const prometido = Number(p.monto_prometido) || 0;
+    const estado = pagado <= 0 ? 'Sin pagos' : (pagado >= prometido ? 'Cumplida' : 'Parcial');
+    const pagos = cachePagosPromesa.filter(g => g.promesa_id === p.id);
+    return `
+    <div style="border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; margin-bottom:10px; background:#fff;">
+      <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start;">
+        <div>
+          <div class="nombrePersona">${escV28(nombrePersonaPorId(p.persona_id))}</div>
+          <div class="metaLinea">Prometido ${formatoMoneda(prometido)} · Pagado ${formatoMoneda(pagado)} · Pendiente ${formatoMoneda(Math.max(prometido - pagado, 0))}${p.notas ? ' · ' + escV28(p.notas) : ''}</div>
+        </div>
+        <span class="badge ${estado === 'Cumplida' ? 'badge-tipo' : (estado === 'Parcial' ? 'badge-tipo' : 'badge-prioridad-Urgente')}">${estado}</span>
+      </div>
+      ${pagos.map(g => `<div class="metaLinea" style="margin:2px 0 0 8px;">• ${formatoFecha(g.fecha)} · ${formatoMoneda(g.monto)} · ${escV28(g.metodo || '—')} <a href="#" style="color:var(--danger); text-decoration:none;" onclick="eliminarPagoPromesa('${g.id}'); return false;">✕</a></div>`).join('')}
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="btnAccion" style="padding:4px 12px; font-size:0.8rem;" onclick="abrirFormPagoPromesa('${p.id}')">+ Pago</button>
+        <button class="btnSecundario" style="padding:4px 12px; font-size:0.8rem;" onclick="editarPromesa('${p.id}')">Editar</button>
+        <button class="btnSecundario btnPeligro" style="padding:4px 12px; font-size:0.8rem;" onclick="eliminarPromesa('${p.id}')">Eliminar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editarPromesa(id) {
+  const p = cachePromesas.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('prmId').value = p.id;
+  document.getElementById('prmPersona').value = p.persona_id || '';
+  document.getElementById('prmMonto').value = p.monto_prometido;
+  document.getElementById('prmFecha').value = p.fecha || '';
+  document.getElementById('prmNotas').value = p.notas || '';
+  document.getElementById('btnGuardarPromesa').textContent = 'Guardar cambios';
+  document.getElementById('btnCancelarEdicionPromesa').style.display = 'inline-block';
+  document.getElementById('prmMonto').focus();
+}
+
+async function guardarPromesa(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('prmId').value;
+  const payload = {
+    campana_id: campanaActualId,
+    persona_id: document.getElementById('prmPersona').value || null,
+    monto_prometido: parseFloat(document.getElementById('prmMonto').value) || 0,
+    fecha: document.getElementById('prmFecha').value || null,
+    notas: document.getElementById('prmNotas').value.trim() || null,
+  };
+  if (!payload.persona_id) { alert('Selecciona una persona.'); return false; }
+  let error;
+  if (id) ({ error } = await sbCall(sb.from('promesas').update(payload).eq('id', id)));
+  else ({ error } = await sbCall(sb.from('promesas').insert(payload)));
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  await recargarPromesasYPagos();
+  resetFormPromesa();
+  renderPromesas();
+  return false;
+}
+
+async function recargarPromesasYPagos() {
+  const [rp, rg] = await Promise.all([
+    sbCall(sb.from('promesas').select('*').range(0, 9999)),
+    sbCall(sb.from('pagos_promesa').select('*').order('fecha', { ascending: false }).range(0, 9999)),
+  ]);
+  if (rp.data) cachePromesas = rp.data;
+  if (rg.data) cachePagosPromesa = rg.data;
+}
+
+async function eliminarPromesa(id) {
+  const pagos = cachePagosPromesa.filter(g => g.promesa_id === id);
+  const msg = pagos.length
+    ? `Esta promesa tiene ${pagos.length} pago(s) registrado(s). Eliminarla también borra esos pagos y sus transacciones. ¿Continuar?`
+    : '¿Eliminar esta promesa?';
+  if (!confirm(msg)) return;
+  for (const g of pagos) {
+    const { error: eg } = await sbCall(sb.from('pagos_promesa').delete().eq('id', g.id));
+    if (eg) { alert('Error al eliminar un pago: ' + eg.message); await recargarPromesasYPagos(); renderPromesas(); return; }
+    if (g.transaccion_id) await sbCall(sb.from('transacciones').delete().eq('id', g.transaccion_id));
+  }
+  const { error } = await sbCall(sb.from('promesas').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); }
+  await recargarPromesasYPagos();
+  renderPromesas();
+}
+
+async function abrirFormPagoPromesa(promesaId) {
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  await asegurarFondosFinanzas();
+  document.getElementById('formPagoPromesa').reset();
+  document.getElementById('pgPromesaId').value = promesaId;
+  document.getElementById('pgFecha').value = new Date().toISOString().slice(0, 10);
+  poblarSelectMetodo('pgMetodo');
+  poblarSelectFondos('pgFondo');
+  const p = cachePromesas.find(x => x.id === promesaId);
+  const resta = p ? Math.max((Number(p.monto_prometido) || 0) - pagadoDePromesa(p.id), 0) : 0;
+  if (resta > 0) document.getElementById('pgMonto').value = resta.toFixed(2);
+  document.getElementById('modalPagoPromesaTitulo').textContent = 'Registrar pago — ' + (p ? nombrePersonaPorId(p.persona_id) : '');
+  document.getElementById('modalPagoPromesa').classList.add('abierto');
+}
+
+function cerrarModalPagoPromesa() { document.getElementById('modalPagoPromesa').classList.remove('abierto'); }
+
+async function guardarPagoPromesa(evt) {
+  evt.preventDefault();
+  const promesaId = document.getElementById('pgPromesaId').value;
+  const p = cachePromesas.find(x => x.id === promesaId);
+  const c = p ? cacheCampanas.find(x => x.id === p.campana_id) : null;
+  const fecha = document.getElementById('pgFecha').value;
+  const monto = parseFloat(document.getElementById('pgMonto').value) || 0;
+  const metodo = document.getElementById('pgMetodo').value;
+  const fondoId = document.getElementById('pgFondo').value || null;
+  if (monto <= 0) { alert('El monto debe ser mayor que 0.'); return false; }
+
+  const { data: trans, error: errT } = await sbCall(
+    sb.from('transacciones').insert({
+      fecha,
+      descripcion: `Promesa — ${nombrePersonaPorId(p?.persona_id)}${c ? ' — ' + c.nombre : ''}`,
+      categoria: c ? c.nombre : 'Fondo General',
+      tipo: 'Ingreso',
+      tipo_origen: 'Donación',
+      metodo,
+      monto,
+      estado: 'Completado',
+      fondo_id: fondoId,
+      cuenta_cr: cuentaIdPorCodigo('4003'),
+      solo_fondo: false,
+      creado_por: getSesion().usuario?.id || null,
+    }).select().single()
+  );
+  if (errT) { alert('Error al crear la transacción vinculada: ' + errT.message); return false; }
+
+  const { error } = await sbCall(sb.from('pagos_promesa').insert({ promesa_id: promesaId, fecha, monto, metodo, transaccion_id: trans.id }));
+  if (error) {
+    await sbCall(sb.from('transacciones').delete().eq('id', trans.id));
+    alert('Error al guardar el pago: ' + error.message);
+    return false;
+  }
+  cerrarModalPagoPromesa();
+  await recargarPromesasYPagos();
+  renderPromesas();
+  return false;
+}
+
+async function eliminarPagoPromesa(id) {
+  if (!confirm('¿Eliminar este pago? También borra la transacción vinculada.')) return;
+  const g = cachePagosPromesa.find(x => x.id === id);
+  const { error } = await sbCall(sb.from('pagos_promesa').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  if (g?.transaccion_id) await sbCall(sb.from('transacciones').delete().eq('id', g.transaccion_id));
+  await recargarPromesasYPagos();
+  renderPromesas();
+}
+
+// ── DECLARACIONES DE DONACIÓN ──
+let cacheDeclaraciones = [];
+let dcSinPersona = { n: 0, monto: 0 };
+let dcAnioActual = null;
+const DC_IGLESIA_POR_DEFECTO = 'Iglesia Cristiana Evangélica Regreso a Cristo';
+
+function cargarDatosIglesiaDeclaracion() {
+  let nombre = DC_IGLESIA_POR_DEFECTO, dir = '';
+  try {
+    nombre = localStorage.getItem('dcIglesiaNombre') || nombre;
+    dir = localStorage.getItem('dcIglesiaDireccion') || '';
+  } catch (e) { /* sin almacenamiento: se usan los valores por defecto */ }
+  if (!document.getElementById('dcIglesiaNombre').value) document.getElementById('dcIglesiaNombre').value = nombre;
+  if (!document.getElementById('dcIglesiaDireccion').value) document.getElementById('dcIglesiaDireccion').value = dir;
+}
+
+function guardarDatosIglesiaDeclaracion() {
+  try {
+    localStorage.setItem('dcIglesiaNombre', document.getElementById('dcIglesiaNombre').value);
+    localStorage.setItem('dcIglesiaDireccion', document.getElementById('dcIglesiaDireccion').value);
+  } catch (e) { /* ignorar */ }
+}
+
+function direccionDePersona(p, mapa) {
+  const fuente = (p.address_mode === 'inherited' && p.address_source_persona_id && mapa[p.address_source_persona_id]) ? mapa[p.address_source_persona_id] : p;
+  const l1 = [fuente.street, fuente.apartment].filter(Boolean).join(', ');
+  const l2 = [fuente.city, [fuente.state, fuente.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  return [l1, l2].filter(Boolean).join(' · ');
+}
+
+async function cargarDeclaraciones() {
+  poblarSelectorAnio('dcSelectAnio');
+  cargarDatosIglesiaDeclaracion();
+  const lista = document.getElementById('listaDeclaraciones');
+  lista.innerHTML = '<div class="estadoCargando">Cargando declaraciones…</div>';
+  const anio = parseInt(document.getElementById('dcSelectAnio').value, 10);
+  dcAnioActual = anio;
+  const desde = `${anio}-01-01`, hasta = `${anio}-12-31`;
+
+  const [rPers, rDz, rDn, rPg, rPm, rCm] = await Promise.all([
+    sbCall(sb.from('personas').select('id, nombre, apellido, nombre_completo, apodo, street, apartment, city, state, zip, address_mode, address_source_persona_id').range(0, 9999)),
+    sbCall(sb.from('diezmos').select('*').gte('fecha', desde).lte('fecha', hasta).eq('estado', 'Completado').range(0, 9999)),
+    sbCall(sb.from('donaciones').select('*').gte('fecha', desde).lte('fecha', hasta).eq('estado', 'Completado').range(0, 9999)),
+    sbCall(sb.from('pagos_promesa').select('*').gte('fecha', desde).lte('fecha', hasta).range(0, 9999)),
+    sbCall(sb.from('promesas').select('id, persona_id, campana_id').range(0, 9999)),
+    sbCall(sb.from('campanas').select('id, nombre').range(0, 9999)),
+  ]);
+  const err = [rPers, rDz, rDn, rPg, rPm, rCm].find(r => r.error);
+  if (err) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(err.error.message)}</div>`; return; }
+
+  const mapaPers = {};
+  (rPers.data || []).forEach(p => { mapaPers[p.id] = p; });
+  const promesaPorId = {};
+  (rPm.data || []).forEach(p => { promesaPorId[p.id] = p; });
+  const campanaPorId = {};
+  (rCm.data || []).forEach(c => { campanaPorId[c.id] = c; });
+
+  const porPersona = {};
+  dcSinPersona = { n: 0, monto: 0 };
+  const agregar = (personaId, tipo, fecha, metodo, ref, monto) => {
+    monto = Number(monto) || 0;
+    if (!personaId || !mapaPers[personaId]) { dcSinPersona.n++; dcSinPersona.monto += monto; return; }
+    if (!porPersona[personaId]) {
+      const p = mapaPers[personaId];
+      porPersona[personaId] = {
+        persona_id: personaId,
+        nombre: p.nombre_completo || `${p.nombre} ${p.apellido || ''}`.trim(),
+        direccion: direccionDePersona(p, mapaPers),
+        diezmos: 0, donaciones: 0, promesas: 0, total: 0, items: [],
+      };
+    }
+    const d = porPersona[personaId];
+    d.items.push({ fecha, tipo, metodo: metodo || '', ref: ref || '', monto });
+    d.total += monto;
+    if (tipo === 'Diezmo') d.diezmos += monto;
+    else if (tipo === 'Donación') d.donaciones += monto;
+    else d.promesas += monto;
+  };
+  (rDz.data || []).forEach(x => agregar(x.persona_id, 'Diezmo', x.fecha, x.metodo, x.referencia, x.monto));
+  (rDn.data || []).forEach(x => agregar(x.persona_id, 'Donación', x.fecha, x.metodo, x.referencia, x.monto));
+  (rPg.data || []).forEach(x => {
+    const pr = promesaPorId[x.promesa_id];
+    const camp = pr ? campanaPorId[pr.campana_id] : null;
+    agregar(pr?.persona_id, camp ? 'Campaña: ' + camp.nombre : 'Campaña', x.fecha, x.metodo, '', x.monto);
+  });
+
+  cacheDeclaraciones = Object.values(porPersona).sort((a, b) => b.total - a.total);
+  cacheDeclaraciones.forEach(d => d.items.sort((a, b) => a.fecha.localeCompare(b.fecha)));
+  renderDeclaraciones();
+}
+
+function renderDeclaraciones() {
+  const lista = document.getElementById('listaDeclaraciones');
+  const q = (document.getElementById('dcBuscador').value || '').trim().toLowerCase();
+  const filas = cacheDeclaraciones.filter(d => !q || d.nombre.toLowerCase().includes(q));
+  const totalGeneral = cacheDeclaraciones.reduce((s, d) => s + d.total, 0);
+  document.getElementById('resumenDeclaraciones').innerHTML = `
+    <div class="tarjetaResumen"><div class="etiqueta">Donantes con declaración ${dcAnioActual || ''}</div><div class="monto">${cacheDeclaraciones.length}</div></div>
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Total declarado</div><div class="monto">${formatoMoneda(totalGeneral)}</div></div>
+    ${dcSinPersona.n > 0 ? `<div class="tarjetaResumen egreso"><div class="etiqueta">Sin persona asignada (no incluidos)</div><div class="monto">${dcSinPersona.n} · ${formatoMoneda(dcSinPersona.monto)}</div></div>` : ''}`;
+
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay contribuciones con donante asignado en este año. Las ofrendas generales no tienen donante y no se incluyen.</div>'; return; }
+  lista.innerHTML = filas.map(d => `
+    <div class="tarjetaSeguimiento" onclick="abrirDeclaracion('${d.persona_id}')">
+      <div>
+        <div class="nombrePersona">${escV28(d.nombre)}</div>
+        <div class="metaLinea">Diezmos ${formatoMoneda(d.diezmos)} · Donaciones ${formatoMoneda(d.donaciones)} · Campañas ${formatoMoneda(d.promesas)} · ${d.items.length} contribución(es)</div>
+      </div>
+      <span class="badge badge-tipo">${formatoMoneda(d.total)}</span>
+    </div>`).join('');
+}
+
+function construirHtmlDeclaracion(d) {
+  const iglesia = escV28(document.getElementById('dcIglesiaNombre').value || DC_IGLESIA_POR_DEFECTO);
+  const dirIglesia = escV28(document.getElementById('dcIglesiaDireccion').value || '');
+  const hoy = formatoFecha(new Date().toISOString().slice(0, 10));
+  const celda = 'padding:6px 8px; border-bottom:1px solid #ccc; font-size:13px;';
+  return `
+  <div id="areaDeclaracion" style="font-family: Georgia, 'Times New Roman', serif; color:#111; padding:8px 4px;">
+    <div style="text-align:center; margin-bottom:18px;">
+      <div style="font-size:20px; font-weight:bold;">${iglesia}</div>
+      ${dirIglesia ? `<div style="font-size:13px; color:#444;">${dirIglesia}</div>` : ''}
+      <div style="font-size:16px; margin-top:12px; letter-spacing:0.04em;">DECLARACIÓN ANUAL DE CONTRIBUCIONES ${dcAnioActual}</div>
+    </div>
+    <div style="font-size:14px; margin-bottom:14px;">
+      <div><strong>Donante:</strong> ${escV28(d.nombre)}</div>
+      ${d.direccion ? `<div><strong>Dirección:</strong> ${escV28(d.direccion)}</div>` : ''}
+      <div><strong>Fecha de emisión:</strong> ${hoy}</div>
+    </div>
+    <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+      <thead><tr style="text-align:left; background:#f0f0f0;">
+        <th style="${celda}">Fecha</th><th style="${celda}">Concepto</th><th style="${celda}">Método</th><th style="${celda}">Ref.</th><th style="${celda} text-align:right;">Monto</th>
+      </tr></thead>
+      <tbody>
+        ${d.items.map(i => `<tr><td style="${celda}">${formatoFecha(i.fecha)}</td><td style="${celda}">${escV28(i.tipo)}</td><td style="${celda}">${escV28(i.metodo)}</td><td style="${celda}">${escV28(i.ref)}</td><td style="${celda} text-align:right;">${formatoMoneda(i.monto)}</td></tr>`).join('')}
+        <tr><td colspan="4" style="${celda} text-align:right; font-weight:bold;">Total ${dcAnioActual}</td><td style="${celda} text-align:right; font-weight:bold;">${formatoMoneda(d.total)}</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:13px; line-height:1.5;">Certificamos que las contribuciones anteriores fueron recibidas por ${iglesia} durante el año ${dcAnioActual}. No se proporcionaron bienes ni servicios a cambio de estas contribuciones, salvo beneficios religiosos intangibles.</p>
+    <div style="margin-top:40px; font-size:13px;">______________________________<br>Firma autorizada</div>
+  </div>`;
+}
+
+function abrirDeclaracion(personaId) {
+  const d = cacheDeclaraciones.find(x => x.persona_id === personaId);
+  if (!d) return;
+  document.getElementById('declaracionContenido').innerHTML = construirHtmlDeclaracion(d);
+  document.getElementById('modalDeclaracion').classList.add('abierto');
+}
+
+function cerrarModalDeclaracion() { document.getElementById('modalDeclaracion').classList.remove('abierto'); }
+
+function imprimirDeclaracion() {
+  const host = document.createElement('div');
+  host.id = 'printHostDeclaracion';
+  host.innerHTML = document.getElementById('declaracionContenido').innerHTML;
+  document.body.appendChild(host);
+  document.body.classList.add('imprimiendoDeclaracion');
+  const limpiar = () => {
+    document.body.classList.remove('imprimiendoDeclaracion');
+    host.remove();
+    window.removeEventListener('afterprint', limpiar);
+  };
+  window.addEventListener('afterprint', limpiar);
+  window.print();
+}
+
+function exportarDeclaracionesCSV() {
+  if (cacheDeclaraciones.length === 0) { alert('No hay declaraciones que exportar para este año.'); return; }
+  const enc = ['Donante', 'Dirección', 'Diezmos', 'Donaciones', 'Campañas', 'Total'];
+  const filas = cacheDeclaraciones.map(d => [d.nombre, d.direccion, d.diezmos.toFixed(2), d.donaciones.toFixed(2), d.promesas.toFixed(2), d.total.toFixed(2)]);
+  const contenido = [enc, ...filas].map(f => f.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿' + contenido], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `declaraciones_${dcAnioActual}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
