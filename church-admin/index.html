@@ -868,6 +868,78 @@
         <div class="grid-resumen" id="resumenDeclaraciones" style="margin-bottom:20px;"></div>
         <div id="listaDeclaraciones"><div class="estadoCargando">Cargando declaraciones…</div></div>
       </div>
+
+      <!-- Sub-vista: Todas las Transacciones -->
+      <div id="subvistaFinTransacciones" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <input type="text" id="trBuscar" placeholder="Buscar descripción, categoría o referencia…" oninput="trRender()">
+          <select id="trOrigen" onchange="trRender()"><option value="">Todos los orígenes</option></select>
+          <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="trDesde" onchange="trCargar()"></label>
+          <label style="font-size:0.8rem; color: var(--text-muted);">Hasta <input type="date" id="trHasta" onchange="trCargar()"></label>
+          <button class="btnSecundario" onclick="trExportarCSV()">⬇ Exportar CSV</button>
+        </div>
+        <div class="grid-resumen" id="trResumen" style="margin-bottom:16px;"></div>
+        <div class="tablaWrap"><div id="trTabla"><div class="estadoCargando">Cargando transacciones…</div></div></div>
+      </div>
+
+      <!-- Sub-vista: otrosIngresos -->
+      <div id="subvistaFinOtrosIngresos" style="display:none;">
+        <div class="barraAcciones">
+          <input type="text" id="lbBuscar_otrosIngresos" placeholder="Buscar…" oninput="libroRender('otrosIngresos')">
+          <button class="btnAccion" onclick="libroAbrirForm('otrosIngresos')">+ Nuevo</button>
+        </div>
+        <div class="grid-resumen" id="lbResumen_otrosIngresos" style="margin-bottom:20px;"></div>
+        <div id="lbLista_otrosIngresos"><div class="estadoCargando">Cargando…</div></div>
+      </div>
+
+      <!-- Sub-vista: ventas -->
+      <div id="subvistaFinVentas" style="display:none;">
+        <div class="barraAcciones">
+          <input type="text" id="lbBuscar_ventas" placeholder="Buscar…" oninput="libroRender('ventas')">
+          <button class="btnAccion" onclick="libroAbrirForm('ventas')">+ Nuevo</button>
+        </div>
+        <div class="grid-resumen" id="lbResumen_ventas" style="margin-bottom:20px;"></div>
+        <div id="lbLista_ventas"><div class="estadoCargando">Cargando…</div></div>
+      </div>
+
+      <!-- Sub-vista: eventos -->
+      <div id="subvistaFinEventos" style="display:none;">
+        <div class="barraAcciones">
+          <input type="text" id="lbBuscar_eventos" placeholder="Buscar…" oninput="libroRender('eventos')">
+          <button class="btnAccion" onclick="libroAbrirForm('eventos')">+ Nuevo</button>
+        </div>
+        <div class="grid-resumen" id="lbResumen_eventos" style="margin-bottom:20px;"></div>
+        <div id="lbLista_eventos"><div class="estadoCargando">Cargando…</div></div>
+      </div>
+
+      <!-- Sub-vista: Proveedores -->
+      <div id="subvistaFinProveedores" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <input type="text" id="pvBuscar" placeholder="Buscar proveedor…" oninput="renderProveedores()">
+          <label style="font-size:0.85rem; color: var(--text-muted);"><input type="checkbox" id="pvArchivados" onchange="renderProveedores()"> Mostrar archivados</label>
+          <button class="btnAccion" onclick="abrirFormProveedor()">+ Nuevo Proveedor</button>
+        </div>
+        <div id="listaProveedores"><div class="estadoCargando">Cargando proveedores…</div></div>
+      </div>
+
+      <!-- Sub-vista: Cuentas Bancarias -->
+      <div id="subvistaFinBancos" style="display:none;">
+        <div class="barraAcciones">
+          <div style="flex:1;"></div>
+          <button class="btnAccion" onclick="abrirFormBanco()">+ Nueva Cuenta Bancaria</button>
+        </div>
+        <div id="listaBancos"><div class="estadoCargando">Cargando cuentas bancarias…</div></div>
+      </div>
+
+      <!-- Sub-vista: Transferir Fondos -->
+      <div id="subvistaFinTransferencias" style="display:none;">
+        <div class="barraAcciones">
+          <div style="flex:1;"></div>
+          <button class="btnAccion" onclick="abrirFormTransferencia()">+ Nueva Transferencia</button>
+        </div>
+        <div class="grid-resumen" id="resumenTransferencias" style="margin-bottom:20px;"></div>
+        <div id="listaTransferencias"><div class="estadoCargando">Cargando transferencias…</div></div>
+      </div>
     </div>
 
     <!-- ═══ Vista: Secretaría ═══ -->
@@ -1341,6 +1413,96 @@
       <button type="button" class="btnSecundario" onclick="cerrarModalDeclaracion()">Cerrar</button>
       <button type="button" class="btnPrincipal" style="width:auto;" onclick="imprimirDeclaracion()">Imprimir / Guardar PDF</button>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Libro simple (Otros Ingresos / Ventas / Eventos) ═══════════════ -->
+<div class="modalOverlay" id="modalLibro">
+  <div class="modalCaja">
+    <h3 id="modalLibroTitulo">Nuevo registro</h3>
+    <form id="formLibro" onsubmit="return libroGuardar(event)">
+      <input type="hidden" id="lbKey"><input type="hidden" id="lbId">
+      <div class="formGrid">
+        <div><label for="lbFecha">Fecha *</label><input type="date" id="lbFecha" required></div>
+        <div><label for="lbMonto">Monto *</label><input type="number" id="lbMonto" step="0.01" min="0" required></div>
+        <div class="full"><label for="lbCampo" id="lbCampoLabel">Descripción *</label><input type="text" id="lbCampo" required></div>
+        <div class="full" id="lbOrgWrap"><label for="lbOrg" id="lbOrgLabel">Organización</label><select id="lbOrg"></select></div>
+        <div class="full"><label for="lbCategoria">Categoría</label><input type="text" id="lbCategoria" list="lbCatLista"><datalist id="lbCatLista"></datalist></div>
+        <div><label for="lbMetodo">Método</label><select id="lbMetodo"></select></div>
+        <div><label for="lbEstado">Estado</label><select id="lbEstado"></select></div>
+        <div class="full"><label for="lbFondo">Fondo</label><select id="lbFondo"></select></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarLibro" onclick="libroEliminar()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalLibro()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Proveedor ═══════════════ -->
+<div class="modalOverlay" id="modalProveedor">
+  <div class="modalCaja">
+    <h3 id="modalProveedorTitulo">Nuevo Proveedor</h3>
+    <form id="formProveedor" onsubmit="return guardarProveedor(event)">
+      <input type="hidden" id="pvId">
+      <div class="formGrid">
+        <div class="full"><label for="pvNombre">Nombre *</label><input type="text" id="pvNombre" required></div>
+        <div><label for="pvCategoria">Categoría</label><input type="text" id="pvCategoria" placeholder="Ej. Sonido, Limpieza"></div>
+        <div><label for="pvTelefono">Teléfono</label><input type="tel" id="pvTelefono"></div>
+        <div class="full"><label for="pvCorreo">Correo</label><input type="email" id="pvCorreo"></div>
+        <div class="full"><label for="pvNotas">Notas</label><textarea id="pvNotas"></textarea></div>
+        <div><label for="pvArchivado">Estado</label><select id="pvArchivado"><option value="false" selected>Activo</option><option value="true">Archivado</option></select></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarProveedor" onclick="eliminarProveedor()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalProveedor()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Cuenta bancaria ═══════════════ -->
+<div class="modalOverlay" id="modalBanco">
+  <div class="modalCaja">
+    <h3 id="modalBancoTitulo">Nueva Cuenta Bancaria</h3>
+    <form id="formBanco" onsubmit="return guardarBanco(event)">
+      <input type="hidden" id="bcId">
+      <div class="formGrid">
+        <div class="full"><label for="bcNombre">Nombre *</label><input type="text" id="bcNombre" required></div>
+        <div><label for="bcTipo">Tipo</label>
+          <select id="bcTipo"><option>Cheques</option><option>Ahorros</option><option>Efectivo</option><option>Otro</option></select></div>
+        <div><label for="bcActivo">Estado</label><select id="bcActivo"><option value="true" selected>Activa</option><option value="false">Inactiva</option></select></div>
+        <div class="full"><label for="bcCuenta">Cuenta contable (Activo)</label><select id="bcCuenta"></select></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="btnEliminarBanco" onclick="eliminarBanco()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="cerrarModalBanco()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Transferencia entre fondos ═══════════════ -->
+<div class="modalOverlay" id="modalTransferencia">
+  <div class="modalCaja">
+    <h3>Nueva Transferencia entre Fondos</h3>
+    <form id="formTransferencia" onsubmit="return guardarTransferencia(event)">
+      <div class="formGrid">
+        <div><label for="tfFecha">Fecha *</label><input type="date" id="tfFecha" required></div>
+        <div><label for="tfMonto">Monto *</label><input type="number" id="tfMonto" step="0.01" min="0.01" required></div>
+        <div><label for="tfOrigen">Fondo de origen *</label><select id="tfOrigen" required></select></div>
+        <div><label for="tfDestino">Fondo de destino *</label><select id="tfDestino" required></select></div>
+        <div class="full"><label for="tfNotas">Nota (opcional)</label><input type="text" id="tfNotas" placeholder="Motivo de la transferencia"></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" onclick="cerrarModalTransferencia()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Registrar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -1824,8 +1986,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-031';
-document.getElementById('versionTopbar').textContent = 'Ver-031';
+const APP_VERSION = 'church-admin Ver-032';
+document.getElementById('versionTopbar').textContent = 'Ver-032';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -1960,27 +2122,29 @@ const FIN_TARJETAS = [
     { tab: 'diezmos', icono: '🙏', etiqueta: 'Diezmos', sub: 'Registro de diezmos', color: 'c-gold', tabla: 'diezmos' },
     { tab: 'ofrendas', icono: '🕊️', etiqueta: 'Ofrendas', sub: 'Ofrendas generales', color: 'c-blue', tabla: 'ofrendas' },
     { tab: 'donaciones', icono: '💝', etiqueta: 'Donaciones', sub: 'Donaciones especiales', color: 'c-purple', tabla: 'donaciones' },
-    { tab: 'gastos', icono: '📉', etiqueta: 'Gastos', sub: 'Control de gastos', color: 'c-red', tabla: 'gastos' },
+    { tab: 'transacciones', icono: '📚', etiqueta: 'Todas las Transacciones', sub: 'Todo en un solo lugar', color: 'c-blue', tabla: 'transacciones' },
     { tab: 'depositos', icono: '🏦', etiqueta: 'Depósitos', sub: 'Registro bancario', color: 'c-teal', tabla: 'depositos' },
+    { tab: 'gastos', icono: '📉', etiqueta: 'Gastos', sub: 'Control de gastos', color: 'c-red', tabla: 'gastos' },
+    { tab: 'ventas', icono: '🛒', etiqueta: 'Ventas', sub: 'Recaudación e ingresos por eventos', color: 'c-pink', tabla: 'ventas' },
+    { tab: 'eventos', icono: '🎪', etiqueta: 'Eventos', sub: 'Gastos de eventos', color: 'c-amber', tabla: 'eventos' },
+    { tab: 'otrosIngresos', icono: '💵', etiqueta: 'Otros Ingresos', sub: 'Alquiler, intereses y otros', color: 'c-green', tabla: 'otros_ingresos' },
     { tab: 'campanas', icono: '🎯', etiqueta: 'Campañas de Promesas', sub: 'Promesas vs. lo pagado, por campaña', color: 'c-purple', tabla: 'campanas' },
     { tab: 'recurrentes', icono: '🔁', etiqueta: 'Gastos Recurrentes', sub: 'Renta, salarios y gastos fijos', color: 'c-red', tabla: 'recurrentes' },
     { tab: 'declaraciones', icono: '📄', etiqueta: 'Declaraciones de Donación', sub: 'Resumen anual por donante', color: 'c-gold' },
   ]},
+  { grupo: 'Administración', items: [
+    { tab: 'proveedores', icono: '🏢', etiqueta: 'Proveedores', sub: 'Registro de proveedores', color: 'c-teal', tabla: 'organizaciones' },
+    { tab: 'presupuesto', icono: '📋', etiqueta: 'Presupuesto', sub: 'Control presupuestal', color: 'c-amber' },
+  ]},
   { grupo: 'Contabilidad', items: [
     { tab: 'cuentas', icono: '📒', etiqueta: 'Catálogo de Cuentas', sub: 'Plan de cuentas', color: 'c-gold', tabla: 'cuentas' },
+    { tab: 'bancos', icono: '🏧', etiqueta: 'Cuentas Bancarias', sub: 'Bancos y fondos', color: 'c-teal', tabla: 'bancos' },
     { tab: 'fondos', icono: '💰', etiqueta: 'Fondos', sub: 'Balance por fondo ministerial', color: 'c-gold', tabla: 'fondos' },
-    { tab: 'presupuesto', icono: '📋', etiqueta: 'Presupuesto', sub: 'Control presupuestal', color: 'c-amber' },
+    { tab: 'transferencias', icono: '🔄', etiqueta: 'Transferir Fondos', sub: 'Mover $ entre fondos', color: 'c-teal', tabla: 'transferencias' },
     { tab: 'conciliacion', icono: '⚖️', etiqueta: 'Conciliación Bancaria', sub: 'Contra el estado de cuenta', color: 'c-teal', tabla: 'reconciliaciones' },
     { tab: 'reportes', icono: '📈', etiqueta: 'Estado de Resultados', sub: 'Reportes y exportación', color: 'c-purple' },
   ]},
   { grupo: 'En construcción (del A006)', pronto: true, items: [
-    { icono: '📚', etiqueta: 'Todas las Transacciones', sub: 'Todo en un solo lugar', color: 'c-blue' },
-    { icono: '🛒', etiqueta: 'Ventas', sub: 'Recaudación por eventos', color: 'c-pink' },
-    { icono: '🎪', etiqueta: 'Eventos', sub: 'Gastos de eventos', color: 'c-amber' },
-    { icono: '💵', etiqueta: 'Otros Ingresos', sub: 'Alquiler, intereses y otros', color: 'c-green' },
-    { icono: '🏢', etiqueta: 'Proveedores', sub: 'Registro de proveedores', color: 'c-teal' },
-    { icono: '🏧', etiqueta: 'Cuentas Bancarias', sub: 'Bancos y fondos', color: 'c-teal' },
-    { icono: '🔄', etiqueta: 'Transferir Fondos', sub: 'Mover $ entre fondos', color: 'c-teal' },
     { icono: '📓', etiqueta: 'Libro Diario', sub: 'Asientos de doble entrada', color: 'c-green' },
     { icono: '📗', etiqueta: 'Libro Mayor', sub: 'Mayor por cuenta', color: 'c-blue' },
     { icono: '🧮', etiqueta: 'Balance General', sub: 'Activos, pasivos y patrimonio', color: 'c-amber' },
@@ -2060,6 +2224,7 @@ async function finCargarInicio() {
 }
 
 function cambiarSubtabFinanzas(tab) {
+  finOcultarSubvistas();
   document.getElementById('subtabFinResumenBtn').classList.toggle('activa', tab === 'resumen');
   document.getElementById('subtabFinDepositosBtn').classList.toggle('activa', tab === 'depositos');
   document.getElementById('subtabFinCuentasBtn').classList.toggle('activa', tab === 'cuentas');
@@ -2103,6 +2268,13 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'conciliacion') cargarConciliacion();
   else if (tab === 'campanas') cargarCampanas();
   else if (tab === 'declaraciones') cargarDeclaraciones();
+  else if (tab === 'transacciones') trCargar();
+  else if (tab === 'otrosIngresos' || tab === 'ventas' || tab === 'eventos') libroCargar(tab);
+  else if (tab === 'proveedores') cargarProveedores();
+  else if (tab === 'bancos') cargarBancos();
+  else if (tab === 'transferencias') cargarTransferencias();
+  const svNuevo = document.getElementById('subvistaFin' + tab.charAt(0).toUpperCase() + tab.slice(1));
+  if (svNuevo) svNuevo.style.display = 'block';
 }
 
 // ── Finanzas: carga real desde Supabase ──────────────────────────────────
@@ -2716,7 +2888,7 @@ async function guardarPagoPromesa(evt) {
       monto,
       estado: 'Completado',
       fondo_id: fondoId,
-      cuenta_cr: cuentaIdPorCodigo('4003'),
+      cuenta_cr: cuentaIdPorCodigo('4008') || cuentaIdPorCodigo('4003'),
       solo_fondo: false,
       creado_por: getSesion().usuario?.id || null,
     }).select().single()
@@ -2926,6 +3098,523 @@ function exportarDeclaracionesCSV() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// ══════════════════════ VER-032: TRANSACCIONES / LIBROS SIMPLES / PROVEEDORES / BANCOS / TRANSFERENCIAS ══════════════════════
+function csvDescargar(nombreArchivo, encabezados, filas) {
+  const contenido = [encabezados, ...filas]
+    .map(f => f.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+  const blob = new Blob(['﻿' + contenido], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── TODAS LAS TRANSACCIONES (solo lectura) ──
+let cacheTransaccionesTodas = [];
+let trFiltradas = [];
+
+async function trCargar() {
+  const cont = document.getElementById('trTabla');
+  cont.innerHTML = '<div class="estadoCargando">Cargando transacciones…</div>';
+  if (!document.getElementById('trDesde').value) {
+    document.getElementById('trDesde').value = `${new Date().getFullYear()}-01-01`;
+    document.getElementById('trHasta').value = `${new Date().getFullYear()}-12-31`;
+  }
+  const desde = document.getElementById('trDesde').value;
+  const hasta = document.getElementById('trHasta').value;
+  let q = sb.from('transacciones').select('*').order('fecha', { ascending: false }).order('creado_en', { ascending: false }).range(0, 9999);
+  if (desde) q = q.gte('fecha', desde);
+  if (hasta) q = q.lte('fecha', hasta);
+  const { data, error } = await sbCall(q);
+  if (error) { cont.innerHTML = `<div class="estadoVacio">Error: ${escV28(error.message)}</div>`; return; }
+  cacheTransaccionesTodas = data || [];
+  const sel = document.getElementById('trOrigen');
+  const actual = sel.value;
+  const origenes = [...new Set(cacheTransaccionesTodas.map(t => t.tipo_origen || 'Sin origen'))].sort();
+  sel.innerHTML = '<option value="">Todos los orígenes</option>' + origenes.map(o => `<option value="${escV28(o)}">${escV28(o)}</option>`).join('');
+  sel.value = origenes.includes(actual) ? actual : '';
+  trRender();
+}
+
+function trRender() {
+  const q = (document.getElementById('trBuscar').value || '').trim().toLowerCase();
+  const origen = document.getElementById('trOrigen').value;
+  trFiltradas = cacheTransaccionesTodas.filter(t =>
+    (!origen || (t.tipo_origen || 'Sin origen') === origen) &&
+    (!q || `${t.descripcion || ''} ${t.categoria || ''} ${t.referencia || ''}`.toLowerCase().includes(q)));
+
+  let ing = 0, egr = 0;
+  trFiltradas.forEach(t => {
+    if (t.solo_fondo) return;
+    if (t.tipo === 'Ingreso') ing += Number(t.monto) || 0;
+    else if (t.tipo === 'Egreso') egr += Number(t.monto) || 0;
+  });
+  document.getElementById('trResumen').innerHTML = `
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Ingresos</div><div class="monto">${formatoMoneda(ing)}</div></div>
+    <div class="tarjetaResumen egreso"><div class="etiqueta">Egresos</div><div class="monto">${formatoMoneda(egr)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Balance</div><div class="monto">${formatoMoneda(ing - egr)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${trFiltradas.length}</div></div>`;
+
+  const cont = document.getElementById('trTabla');
+  if (trFiltradas.length === 0) { cont.innerHTML = '<div class="estadoVacio">No hay transacciones con esos filtros.</div>'; return; }
+  const LIMITE = 500;
+  const mostrar = trFiltradas.slice(0, LIMITE);
+  cont.innerHTML = `<table class="tablaTrans"><thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Origen</th><th>Método</th><th style="text-align:right;">Monto</th></tr></thead><tbody>
+    ${mostrar.map(t => {
+      const clase = t.tipo === 'Ingreso' ? 'montoIngreso' : (t.tipo === 'Egreso' ? 'montoEgreso' : '');
+      const signo = t.tipo === 'Ingreso' ? '+' : (t.tipo === 'Egreso' ? '−' : '');
+      return `<tr><td>${formatoFecha(t.fecha)}</td><td>${escV28(t.descripcion)}</td><td>${escV28(t.categoria)}</td><td>${escV28(t.tipo_origen || '—')}</td><td>${escV28(t.metodo || '—')}</td><td class="${clase}" style="text-align:right;">${signo}${formatoMoneda(t.monto)}</td></tr>`;
+    }).join('')}
+  </tbody></table>${trFiltradas.length > LIMITE ? `<div class="estadoVacio">Mostrando ${LIMITE} de ${trFiltradas.length}. Usa los filtros o exporta el CSV para ver todo.</div>` : ''}`;
+}
+
+function trExportarCSV() {
+  if (trFiltradas.length === 0) { alert('No hay transacciones que exportar.'); return; }
+  csvDescargar(`transacciones_${document.getElementById('trDesde').value || 'todas'}_${document.getElementById('trHasta').value || ''}.csv`,
+    ['Fecha', 'Descripción', 'Categoría', 'Origen', 'Tipo', 'Método', 'Estado', 'Referencia', 'Monto'],
+    trFiltradas.map(t => [t.fecha, t.descripcion, t.categoria, t.tipo_origen, t.tipo, t.metodo, t.estado, t.referencia, Number(t.monto) || 0]));
+}
+
+// ── LIBROS SIMPLES: Otros Ingresos / Ventas / Eventos ──
+const LIBROS = {
+  otrosIngresos: { tabla: 'otros_ingresos', titulo: 'Otros Ingresos', singular: 'Otro ingreso', tipo: 'Ingreso', origen: 'Otro Ingreso',
+    campo: 'descripcion', labelCampo: 'Descripción *', orgLabel: null, catDefault: 'Otros Ingresos', cuentaTipo: 'Ingreso', cuentaDefault: '4005' },
+  ventas: { tabla: 'ventas', titulo: 'Ventas', singular: 'Venta', tipo: 'Ingreso', origen: 'Venta',
+    campo: 'descripcion', labelCampo: 'Descripción *', orgLabel: 'Cliente / Comprador', catDefault: 'Ingresos por Eventos', cuentaTipo: 'Ingreso', cuentaDefault: '4004' },
+  eventos: { tabla: 'eventos', titulo: 'Eventos', singular: 'Evento', tipo: 'Egreso', origen: 'Evento',
+    campo: 'nombre', labelCampo: 'Nombre del evento *', orgLabel: 'Proveedor', catDefault: 'Gastos de Eventos', cuentaTipo: 'Gasto', cuentaDefault: '5006' },
+};
+const libroDatos = { otrosIngresos: [], ventas: [], eventos: [] };
+const libroTrans = {};
+
+async function libroAsegurarBase() {
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  await asegurarFondosFinanzas();
+  if (cacheOrganizacionesFinanzas.length === 0) {
+    const { data } = await sbCall(sb.from('organizaciones').select('*').eq('archivado', false));
+    if (data) cacheOrganizacionesFinanzas = data;
+  }
+}
+
+function nombreOrganizacionPorId(id) {
+  const o = cacheOrganizacionesFinanzas.find(x => x.id === id);
+  return o ? o.nombre : '';
+}
+
+async function libroCargar(key) {
+  const cfg = LIBROS[key];
+  const lista = document.getElementById('lbLista_' + key);
+  lista.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+  await libroAsegurarBase();
+  const { data, error } = await sbCall(sb.from(cfg.tabla).select('*').order('fecha', { ascending: false }).range(0, 9999));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(error.message)}</div>`; return; }
+  libroDatos[key] = data || [];
+  const ids = libroDatos[key].map(r => r.transaccion_id).filter(Boolean);
+  for (let i = 0; i < ids.length; i += 100) {
+    const { data: trs } = await sbCall(sb.from('transacciones').select('id, categoria, fondo_id').in('id', ids.slice(i, i + 100)));
+    (trs || []).forEach(t => { libroTrans[t.id] = t; });
+  }
+  libroRender(key);
+}
+
+function libroRender(key) {
+  const cfg = LIBROS[key];
+  const q = (document.getElementById('lbBuscar_' + key).value || '').trim().toLowerCase();
+  const todos = libroDatos[key];
+  const filas = todos.filter(r => !q || `${r[cfg.campo] || ''} ${nombreOrganizacionPorId(r.organizacion_id)} ${(libroTrans[r.transaccion_id] || {}).categoria || ''}`.toLowerCase().includes(q));
+  const total = todos.reduce((s, r) => s + (Number(r.monto) || 0), 0);
+  const pendientes = todos.filter(r => r.estado === 'Pendiente').reduce((s, r) => s + (Number(r.monto) || 0), 0);
+  const claseTotal = cfg.tipo === 'Ingreso' ? 'ingreso' : 'egreso';
+  document.getElementById('lbResumen_' + key).innerHTML = `
+    <div class="tarjetaResumen ${claseTotal}"><div class="etiqueta">Total ${cfg.titulo}</div><div class="monto">${formatoMoneda(total)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${todos.length}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Pendientes</div><div class="monto">${formatoMoneda(pendientes)}</div></div>`;
+  const lista = document.getElementById('lbLista_' + key);
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay registros.</div>'; return; }
+  lista.innerHTML = filas.map(r => {
+    const org = nombreOrganizacionPorId(r.organizacion_id);
+    const cat = (libroTrans[r.transaccion_id] || {}).categoria;
+    return `
+    <div class="tarjetaSeguimiento" onclick="libroAbrirForm('${key}', '${r.id}')">
+      <div>
+        <div class="nombrePersona">${escV28(r[cfg.campo] || cfg.singular)}</div>
+        <div class="metaLinea">${formatoFecha(r.fecha)}${cat ? ' · ' + escV28(cat) : ''}${org ? ' · ' + escV28(org) : ''} · ${escV28(r.metodo || '—')}${r.estado && r.estado !== 'Completado' ? ' · ' + escV28(r.estado) : ''}</div>
+      </div>
+      <span class="badge badge-tipo">${formatoMoneda(r.monto)}</span>
+    </div>`;
+  }).join('');
+}
+
+async function libroAbrirForm(key, id) {
+  const cfg = LIBROS[key];
+  await libroAsegurarBase();
+  document.getElementById('formLibro').reset();
+  document.getElementById('lbKey').value = key;
+  document.getElementById('lbId').value = '';
+  document.getElementById('btnEliminarLibro').style.display = 'none';
+  document.getElementById('modalLibroTitulo').textContent = 'Nuevo registro — ' + cfg.singular;
+  document.getElementById('lbCampoLabel').textContent = cfg.labelCampo;
+  document.getElementById('lbFecha').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('lbOrgWrap').style.display = cfg.orgLabel ? '' : 'none';
+  if (cfg.orgLabel) {
+    document.getElementById('lbOrgLabel').textContent = cfg.orgLabel;
+    document.getElementById('lbOrg').innerHTML = '<option value="">— Ninguno —</option>' +
+      cacheOrganizacionesFinanzas.map(o => `<option value="${o.id}">${escV28(o.nombre)}</option>`).join('');
+  }
+  document.getElementById('lbCatLista').innerHTML = cacheCuentas.filter(c => c.tipo === cfg.cuentaTipo)
+    .map(c => `<option value="${escV28(c.nombre)}"></option>`).join('');
+  document.getElementById('lbCategoria').value = cfg.catDefault;
+  poblarSelectMetodo('lbMetodo');
+  poblarSelectEstado('lbEstado');
+  poblarSelectFondos('lbFondo');
+
+  if (id) {
+    const r = libroDatos[key].find(x => x.id === id);
+    if (r) {
+      const t = libroTrans[r.transaccion_id] || {};
+      document.getElementById('modalLibroTitulo').textContent = 'Editar — ' + cfg.singular;
+      document.getElementById('lbId').value = r.id;
+      document.getElementById('lbFecha').value = r.fecha;
+      document.getElementById('lbMonto').value = r.monto;
+      document.getElementById('lbCampo').value = r[cfg.campo] || '';
+      if (cfg.orgLabel) document.getElementById('lbOrg').value = r.organizacion_id || '';
+      if (t.categoria) document.getElementById('lbCategoria').value = t.categoria;
+      poblarSelectMetodo('lbMetodo', r.metodo);
+      poblarSelectEstado('lbEstado', r.estado);
+      if (t.fondo_id) document.getElementById('lbFondo').value = t.fondo_id;
+      document.getElementById('btnEliminarLibro').style.display = 'inline-block';
+    }
+  }
+  document.getElementById('modalLibro').classList.add('abierto');
+}
+
+function cerrarModalLibro() { document.getElementById('modalLibro').classList.remove('abierto'); }
+
+async function libroGuardar(evt) {
+  evt.preventDefault();
+  const key = document.getElementById('lbKey').value;
+  const cfg = LIBROS[key];
+  const id = document.getElementById('lbId').value;
+  const sesion = getSesion();
+  const categoria = document.getElementById('lbCategoria').value.trim() || cfg.catDefault;
+  const cuenta = cacheCuentas.find(c => c.tipo === cfg.cuentaTipo && c.nombre === categoria)
+    || cacheCuentas.find(c => c.codigo === cfg.cuentaDefault);
+  const fondoId = document.getElementById('lbFondo').value || null;
+
+  const payload = {
+    fecha: document.getElementById('lbFecha').value,
+    monto: parseFloat(document.getElementById('lbMonto').value) || 0,
+    metodo: document.getElementById('lbMetodo').value,
+    estado: document.getElementById('lbEstado').value,
+  };
+  payload[cfg.campo] = document.getElementById('lbCampo').value.trim();
+  if (cfg.orgLabel) payload.organizacion_id = document.getElementById('lbOrg').value || null;
+  const cuentaCampos = cfg.tipo === 'Ingreso' ? { cuenta_cr: cuenta ? cuenta.id : null } : { cuenta_dr: cuenta ? cuenta.id : null };
+
+  let error;
+  if (id) {
+    const r = libroDatos[key].find(x => x.id === id);
+    ({ error } = await sbCall(sb.from(cfg.tabla).update(payload).eq('id', id)));
+    if (!error && r?.transaccion_id) {
+      await sbCall(sb.from('transacciones').update({
+        fecha: payload.fecha, monto: payload.monto, metodo: payload.metodo, estado: payload.estado,
+        descripcion: payload[cfg.campo], categoria, fondo_id: fondoId, ...cuentaCampos,
+      }).eq('id', r.transaccion_id));
+    }
+  } else {
+    const { data: trans, error: errTrans } = await sbCall(
+      sb.from('transacciones').insert({
+        fecha: payload.fecha, descripcion: payload[cfg.campo], categoria,
+        tipo: cfg.tipo, tipo_origen: cfg.origen, metodo: payload.metodo, monto: payload.monto,
+        estado: payload.estado, fondo_id: fondoId, ...cuentaCampos, solo_fondo: false,
+        creado_por: sesion.usuario?.id || null,
+      }).select().single()
+    );
+    if (errTrans) { alert('Error al crear la transacción vinculada: ' + errTrans.message); return false; }
+    payload.transaccion_id = trans.id;
+    payload.creado_por = sesion.usuario?.id || null;
+    ({ error } = await sbCall(sb.from(cfg.tabla).insert(payload)));
+    if (error) await sbCall(sb.from('transacciones').delete().eq('id', trans.id));
+  }
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalLibro();
+  libroCargar(key);
+  return false;
+}
+
+async function libroEliminar() {
+  const key = document.getElementById('lbKey').value;
+  const cfg = LIBROS[key];
+  const id = document.getElementById('lbId').value;
+  if (!id || !confirm('¿Eliminar este registro? Esto también borra la transacción vinculada.')) return;
+  const r = libroDatos[key].find(x => x.id === id);
+  const { error } = await sbCall(sb.from(cfg.tabla).delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  if (r?.transaccion_id) await sbCall(sb.from('transacciones').delete().eq('id', r.transaccion_id));
+  cerrarModalLibro();
+  libroCargar(key);
+}
+
+// ── PROVEEDORES (organizaciones) ──
+let cacheProveedores = [];
+
+async function cargarProveedores() {
+  const lista = document.getElementById('listaProveedores');
+  lista.innerHTML = '<div class="estadoCargando">Cargando proveedores…</div>';
+  const { data, error } = await sbCall(sb.from('organizaciones').select('*').order('nombre', { ascending: true }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(error.message)}</div>`; return; }
+  cacheProveedores = data || [];
+  renderProveedores();
+}
+
+function renderProveedores() {
+  const q = (document.getElementById('pvBuscar').value || '').trim().toLowerCase();
+  const verArchivados = document.getElementById('pvArchivados').checked;
+  const filas = cacheProveedores.filter(o => (verArchivados || !o.archivado) &&
+    (!q || `${o.nombre} ${o.categoria || ''} ${o.telefono || ''} ${o.correo || ''}`.toLowerCase().includes(q)));
+  const lista = document.getElementById('listaProveedores');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay proveedores registrados.</div>'; return; }
+  lista.innerHTML = filas.map(o => `
+    <div class="tarjetaSeguimiento" onclick="abrirFormProveedor('${o.id}')">
+      <div>
+        <div class="nombrePersona">${escV28(o.nombre)}</div>
+        <div class="metaLinea">${[o.categoria, o.telefono, o.correo].filter(Boolean).map(escV28).join(' · ') || 'Sin datos de contacto'}</div>
+      </div>
+      <span class="badge badge-estado-${o.archivado ? 'Inactivo' : 'Activo'}">${o.archivado ? 'Archivado' : 'Activo'}</span>
+    </div>`).join('');
+}
+
+function abrirFormProveedor(id) {
+  document.getElementById('formProveedor').reset();
+  document.getElementById('pvId').value = '';
+  document.getElementById('btnEliminarProveedor').style.display = 'none';
+  document.getElementById('modalProveedorTitulo').textContent = 'Nuevo Proveedor';
+  if (id) {
+    const o = cacheProveedores.find(x => x.id === id);
+    if (o) {
+      document.getElementById('modalProveedorTitulo').textContent = 'Editar Proveedor';
+      document.getElementById('pvId').value = o.id;
+      document.getElementById('pvNombre').value = o.nombre;
+      document.getElementById('pvCategoria').value = o.categoria || '';
+      document.getElementById('pvTelefono').value = o.telefono || '';
+      document.getElementById('pvCorreo').value = o.correo || '';
+      document.getElementById('pvNotas').value = o.notas || '';
+      document.getElementById('pvArchivado').value = o.archivado ? 'true' : 'false';
+      document.getElementById('btnEliminarProveedor').style.display = 'inline-block';
+    }
+  }
+  document.getElementById('modalProveedor').classList.add('abierto');
+}
+
+function cerrarModalProveedor() { document.getElementById('modalProveedor').classList.remove('abierto'); }
+
+async function guardarProveedor(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('pvId').value;
+  const payload = {
+    nombre: document.getElementById('pvNombre').value.trim(),
+    categoria: document.getElementById('pvCategoria').value.trim() || null,
+    telefono: document.getElementById('pvTelefono').value.trim() || null,
+    correo: document.getElementById('pvCorreo').value.trim() || null,
+    notas: document.getElementById('pvNotas').value.trim() || null,
+    archivado: document.getElementById('pvArchivado').value === 'true',
+  };
+  let error;
+  if (id) ({ error } = await sbCall(sb.from('organizaciones').update(payload).eq('id', id)));
+  else ({ error } = await sbCall(sb.from('organizaciones').insert(payload)));
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cacheOrganizacionesFinanzas = [];
+  cerrarModalProveedor();
+  cargarProveedores();
+  return false;
+}
+
+async function eliminarProveedor() {
+  const id = document.getElementById('pvId').value;
+  if (!id || !confirm('¿Eliminar este proveedor? Si ya tiene gastos asociados, mejor archívalo.')) return;
+  const { error } = await sbCall(sb.from('organizaciones').delete().eq('id', id));
+  if (error) { alert('No se pudo eliminar (probablemente tiene registros asociados). Archívalo en su lugar.\n\n' + error.message); return; }
+  cacheOrganizacionesFinanzas = [];
+  cerrarModalProveedor();
+  cargarProveedores();
+}
+
+// ── CUENTAS BANCARIAS (bancos) ──
+let cacheBancosAdmin = [];
+
+async function cargarBancos() {
+  const lista = document.getElementById('listaBancos');
+  lista.innerHTML = '<div class="estadoCargando">Cargando cuentas bancarias…</div>';
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  const { data, error } = await sbCall(sb.from('bancos').select('*').order('nombre', { ascending: true }));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(error.message)}</div>`; return; }
+  cacheBancosAdmin = data || [];
+  if (cacheBancosAdmin.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay cuentas bancarias registradas.</div>'; return; }
+  lista.innerHTML = cacheBancosAdmin.map(b => {
+    const cuenta = cacheCuentas.find(c => c.id === b.cuenta_id);
+    return `
+    <div class="tarjetaSeguimiento" onclick="abrirFormBanco('${b.id}')">
+      <div>
+        <div class="nombrePersona">${escV28(b.nombre)}</div>
+        <div class="metaLinea">${escV28(b.tipo || 'Sin tipo')}${cuenta ? ' · ' + escV28(cuenta.codigo + ' — ' + cuenta.nombre) : ' · Sin cuenta contable'}</div>
+      </div>
+      <span class="badge badge-estado-${b.activo ? 'Activo' : 'Inactivo'}">${b.activo ? 'Activa' : 'Inactiva'}</span>
+    </div>`;
+  }).join('');
+}
+
+function abrirFormBanco(id) {
+  document.getElementById('formBanco').reset();
+  document.getElementById('bcId').value = '';
+  document.getElementById('btnEliminarBanco').style.display = 'none';
+  document.getElementById('modalBancoTitulo').textContent = 'Nueva Cuenta Bancaria';
+  poblarSelectCuentas('bcCuenta', null, 'Activo');
+  if (id) {
+    const b = cacheBancosAdmin.find(x => x.id === id);
+    if (b) {
+      document.getElementById('modalBancoTitulo').textContent = 'Editar Cuenta Bancaria';
+      document.getElementById('bcId').value = b.id;
+      document.getElementById('bcNombre').value = b.nombre;
+      document.getElementById('bcTipo').value = b.tipo || 'Cheques';
+      document.getElementById('bcCuenta').value = b.cuenta_id || '';
+      document.getElementById('bcActivo').value = b.activo ? 'true' : 'false';
+      document.getElementById('btnEliminarBanco').style.display = 'inline-block';
+    }
+  }
+  document.getElementById('modalBanco').classList.add('abierto');
+}
+
+function cerrarModalBanco() { document.getElementById('modalBanco').classList.remove('abierto'); }
+
+async function guardarBanco(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('bcId').value;
+  const payload = {
+    nombre: document.getElementById('bcNombre').value.trim(),
+    tipo: document.getElementById('bcTipo').value,
+    cuenta_id: document.getElementById('bcCuenta').value || null,
+    activo: document.getElementById('bcActivo').value === 'true',
+  };
+  let error;
+  if (id) ({ error } = await sbCall(sb.from('bancos').update(payload).eq('id', id)));
+  else ({ error } = await sbCall(sb.from('bancos').insert(payload)));
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  cerrarModalBanco();
+  cargarBancos();
+  return false;
+}
+
+async function eliminarBanco() {
+  const id = document.getElementById('bcId').value;
+  if (!id || !confirm('¿Eliminar esta cuenta bancaria? Si ya tiene conciliaciones, mejor márcala como inactiva.')) return;
+  const { error } = await sbCall(sb.from('bancos').delete().eq('id', id));
+  if (error) { alert('No se pudo eliminar (probablemente tiene conciliaciones). Márcala como inactiva.\n\n' + error.message); return; }
+  cerrarModalBanco();
+  cargarBancos();
+}
+
+// ── TRANSFERIR FONDOS ──
+let cacheTransferencias = [];
+
+function nombreFondoPorId(id) {
+  const f = cacheFondos.find(x => x.id === id) || cacheFondosAdmin.find(x => x.id === id);
+  return f ? f.nombre : 'Fondo no encontrado';
+}
+
+async function cargarTransferencias() {
+  const lista = document.getElementById('listaTransferencias');
+  lista.innerHTML = '<div class="estadoCargando">Cargando transferencias…</div>';
+  const [{ data: fondos }, { data, error }] = await Promise.all([
+    sbCall(sb.from('fondos').select('*').order('nombre', { ascending: true })),
+    sbCall(sb.from('transferencias').select('*').order('fecha', { ascending: false }).range(0, 9999)),
+  ]);
+  if (fondos) cacheFondosAdmin = fondos;
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(error.message)}</div>`; return; }
+  cacheTransferencias = data || [];
+  const total = cacheTransferencias.reduce((s, t) => s + (Number(t.monto) || 0), 0);
+  document.getElementById('resumenTransferencias').innerHTML = `
+    <div class="tarjetaResumen"><div class="etiqueta">Total transferido</div><div class="monto">${formatoMoneda(total)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Transferencias</div><div class="monto">${cacheTransferencias.length}</div></div>`;
+  if (cacheTransferencias.length === 0) { lista.innerHTML = '<div class="estadoVacio">Aún no hay transferencias entre fondos.</div>'; return; }
+  lista.innerHTML = cacheTransferencias.map(t => `
+    <div class="tarjetaSeguimiento" style="cursor:default;">
+      <div style="flex:1;">
+        <div class="nombrePersona">${escV28(nombreFondoPorId(t.fondo_origen_id))} → ${escV28(nombreFondoPorId(t.fondo_destino_id))}</div>
+        <div class="metaLinea">${formatoFecha(t.fecha)}${t.notas ? ' · ' + escV28(t.notas) : ''}</div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        <span class="badge badge-tipo">${formatoMoneda(t.monto)}</span>
+        <button class="btnSecundario btnPeligro" style="padding:2px 10px; font-size:0.78rem;" onclick="eliminarTransferencia('${t.id}')">Eliminar</button>
+      </div>
+    </div>`).join('');
+}
+
+async function abrirFormTransferencia() {
+  await asegurarFondosFinanzas();
+  const { data: fondos } = await sbCall(sb.from('fondos').select('*').eq('activo', true).order('nombre'));
+  const lista = fondos || cacheFondos;
+  if (lista.length < 2) { alert('Necesitas al menos dos fondos activos para transferir.'); return; }
+  document.getElementById('formTransferencia').reset();
+  document.getElementById('tfFecha').value = new Date().toISOString().slice(0, 10);
+  const opts = lista.map(f => `<option value="${f.id}">${escV28(f.nombre)}</option>`).join('');
+  document.getElementById('tfOrigen').innerHTML = opts;
+  document.getElementById('tfDestino').innerHTML = opts;
+  document.getElementById('tfDestino').selectedIndex = 1;
+  document.getElementById('modalTransferencia').classList.add('abierto');
+}
+
+function cerrarModalTransferencia() { document.getElementById('modalTransferencia').classList.remove('abierto'); }
+
+async function guardarTransferencia(evt) {
+  evt.preventDefault();
+  const origen = document.getElementById('tfOrigen').value;
+  const destino = document.getElementById('tfDestino').value;
+  const monto = parseFloat(document.getElementById('tfMonto').value) || 0;
+  const fecha = document.getElementById('tfFecha').value;
+  const notas = document.getElementById('tfNotas').value.trim() || null;
+  if (!origen || !destino) { alert('Selecciona el fondo de origen y el de destino.'); return false; }
+  if (origen === destino) { alert('El fondo de origen y el de destino no pueden ser el mismo.'); return false; }
+  if (monto <= 0) { alert('Ingresa un monto mayor que cero.'); return false; }
+  const nombreO = nombreFondoPorId(origen), nombreD = nombreFondoPorId(destino);
+  const sesion = getSesion();
+
+  // Registro en Todas las Transacciones (solo_fondo: no afecta ingresos/gastos ni el balance general)
+  const { data: trans, error: errT } = await sbCall(
+    sb.from('transacciones').insert({
+      fecha, descripcion: `Transferencia — ${nombreO} → ${nombreD}`, categoria: 'Transferencia entre Fondos',
+      tipo: 'Transferencia', tipo_origen: 'Transferencia', metodo: 'Transferencia', monto, estado: 'Completado',
+      fondo_id: origen, solo_fondo: true, creado_por: sesion.usuario?.id || null,
+    }).select().single()
+  );
+  if (errT) { alert('Error al registrar la transacción: ' + errT.message); return false; }
+  const { error } = await sbCall(sb.from('transferencias').insert({
+    fecha, fondo_origen_id: origen, fondo_destino_id: destino, monto, notas,
+    transaccion_id: trans.id, creado_por: sesion.usuario?.id || null,
+  }));
+  if (error) {
+    await sbCall(sb.from('transacciones').delete().eq('id', trans.id));
+    alert('Error al guardar: ' + error.message);
+    return false;
+  }
+  cerrarModalTransferencia();
+  cargarTransferencias();
+  return false;
+}
+
+async function eliminarTransferencia(id) {
+  if (!confirm('¿Eliminar esta transferencia? Los saldos de los fondos vuelven a como estaban.')) return;
+  const t = cacheTransferencias.find(x => x.id === id);
+  const { error } = await sbCall(sb.from('transferencias').delete().eq('id', id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  if (t?.transaccion_id) await sbCall(sb.from('transacciones').delete().eq('id', t.transaccion_id));
+  cargarTransferencias();
 }
 
 // ══════════════════════ DEPÓSITOS ══════════════════════
@@ -4049,12 +4738,13 @@ async function cargarFondos() {
   const inicioAnio = `${anio}-01-01`;
   const finAnio = `${anio}-12-31`;
 
-  const [{ data: fondos, error: errF }, { data: trans, error: errT }] = await Promise.all([
+  const [{ data: fondos, error: errF }, { data: trans, error: errT }, { data: transf, error: errTf }] = await Promise.all([
     sbCall(sb.from('fondos').select('*').order('nombre', { ascending: true })),
     sbCall(sb.from('transacciones').select('fondo_id, tipo, monto, fecha').in('tipo', ['Ingreso', 'Egreso']).lte('fecha', finAnio).range(0, 9999)),
+    sbCall(sb.from('transferencias').select('fondo_origen_id, fondo_destino_id, monto, fecha').lte('fecha', finAnio).range(0, 9999)),
   ]);
 
-  if (errF || errT) { lista.innerHTML = `<div class="estadoVacio">Error: ${(errF || errT).message}</div>`; return; }
+  if (errF || errT || errTf) { lista.innerHTML = `<div class="estadoVacio">Error: ${(errF || errT || errTf).message}</div>`; return; }
 
   cacheFondosAdmin = fondos || [];
   const acum = {};
@@ -4068,6 +4758,14 @@ async function cargarFondos() {
     if (t.fecha >= inicioAnio) {
       if (signo === 1) a.ingAnio += monto; else a.egrAnio += monto;
     }
+  });
+
+  // Transferencias entre fondos: restan al origen y suman al destino (no afectan ingresos/gastos de la iglesia)
+  (transf || []).forEach(t => {
+    const monto = Number(t.monto) || 0;
+    const enAnio = t.fecha >= inicioAnio;
+    if (t.fondo_origen_id) { const a = asegurar(t.fondo_origen_id); a.saldo -= monto; if (enAnio) a.egrAnio += monto; }
+    if (t.fondo_destino_id) { const a = asegurar(t.fondo_destino_id); a.saldo += monto; if (enAnio) a.ingAnio += monto; }
   });
 
   const filas = cacheFondosAdmin.map(f => ({ id: f.id, nombre: f.nombre, descripcion: f.descripcion, activo: f.activo, ...(acum[f.id] || { ingAnio: 0, egrAnio: 0, saldo: 0 }) }));
