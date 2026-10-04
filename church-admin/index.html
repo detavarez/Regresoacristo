@@ -155,7 +155,17 @@
     box-shadow: 0 6px 18px rgba(15,36,69,0.12);
     transform: translateY(-2px);
   }
-  .tarjetaModulo .icono { font-size: 1.6rem; margin-bottom: 8px; }
+  .tarjetaModulo { position: relative; overflow: hidden; padding-top: 24px; }
+  .tarjetaModulo::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gold); }
+  .tarjetaModulo.c-gold::before { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+  .tarjetaModulo.c-green::before { background: #3daa6e; }
+  .tarjetaModulo.c-red::before { background: #d94f4f; }
+  .tarjetaModulo.c-blue::before { background: #3a8cb5; }
+  .tarjetaModulo.c-purple::before { background: #8b5cf6; }
+  .tarjetaModulo.c-pink::before { background: #ec4899; }
+  .tarjetaModulo.c-amber::before { background: #e8a030; }
+  .tarjetaModulo.c-teal::before { background: #06b6d4; }
+  .tarjetaModulo .icono { font-size: 1.8rem; margin-bottom: 8px; }
   .tarjetaModulo h3 { margin: 0 0 4px; font-size: 1rem; color: var(--navy); }
   .tarjetaModulo p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
   .tarjetaModulo.deshabilitado { opacity: 0.5; cursor: default; }
@@ -365,6 +375,38 @@
   }
   .btnSecundario:hover { background: var(--bg); }
   .btnPeligro { color: var(--danger); border-color: #f3c6c2; }
+
+  /* ── Tarjetas visuales estilo A006 (Ver-031) ─────────────────── */
+  .grupoTitulo { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 700; margin: 0 0 10px; }
+  .btnGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; margin-bottom: 26px; }
+  .btnCard {
+    position: relative; overflow: hidden; background: #fff; border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 14px 14px; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; gap: 5px;
+    text-align: left; user-select: none; transition: transform .15s, box-shadow .15s, border-color .15s; -webkit-tap-highlight-color: transparent;
+  }
+  .btnCard::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gold); }
+  .btnCard.c-gold::before { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+  .btnCard.c-green::before { background: #3daa6e; }
+  .btnCard.c-red::before { background: #d94f4f; }
+  .btnCard.c-blue::before { background: #3a8cb5; }
+  .btnCard.c-purple::before { background: #8b5cf6; }
+  .btnCard.c-pink::before { background: #ec4899; }
+  .btnCard.c-amber::before { background: #e8a030; }
+  .btnCard.c-teal::before { background: #06b6d4; }
+  .btnCard:hover { transform: translateY(-3px); border-color: var(--gold); box-shadow: 0 8px 22px rgba(15,36,69,0.14); }
+  .btnCard:active { transform: translateY(-1px); }
+  .btnCard .bcIcono { font-size: 1.8rem; line-height: 1; margin-bottom: 2px; }
+  .btnCard .bcEtiqueta { font-size: 0.88rem; font-weight: 700; color: var(--navy); line-height: 1.25; }
+  .btnCard .bcSub { font-size: 0.72rem; color: var(--text-muted); line-height: 1.3; }
+  .btnCard .bcBadge { position: absolute; top: 12px; right: 10px; background: var(--gold); color: var(--navy); border-radius: 999px; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; }
+  .btnCard.pronto { opacity: 0.55; cursor: default; }
+  .btnCard.pronto:hover { transform: none; box-shadow: none; border-color: var(--border); }
+  .btnCard.pronto .bcBadge { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+  .cabeceraBalance { background: var(--navy); color: #fff; border-radius: 14px; padding: 18px 20px; margin-bottom: 22px; }
+  .cabeceraBalance .cbEtiqueta { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.75; margin-bottom: 4px; }
+  .cabeceraBalance .cbMonto { font-size: 2rem; font-weight: 800; color: var(--gold-light); }
+  .cabeceraBalance .cbStats { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 8px; font-size: 0.8rem; opacity: 0.9; }
+  .cabeceraBalance .cbStats b { font-weight: 700; }
   #printHostDeclaracion { display: none; }
   @media print {
     body.imprimiendoDeclaracion > *:not(#printHostDeclaracion) { display: none !important; }
@@ -521,6 +563,10 @@
     .formAcciones .btnPeligro { margin-right: 0; }
     #declaracionContenido { overflow-x: auto; }
     .tarjetaLogin { padding: 28px 20px; }
+    .btnGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .btnCard { padding: 18px 12px 12px; }
+    .cabeceraBalance { padding: 14px 16px; }
+    .cabeceraBalance .cbMonto { font-size: 1.6rem; }
   }
 </style>
 </head>
@@ -574,23 +620,23 @@
       <p class="fecha" id="fechaHoy"></p>
 
       <div class="grid-modulos">
-        <div class="tarjetaModulo" onclick="mostrarResumenPastoral()"><div class="icono">📊</div><h3>Resumen Pastoral</h3><p>Overview para el pastor</p></div>
-        <div class="tarjetaModulo" onclick="mostrarFinanzas()">
+        <div class="tarjetaModulo c-blue" onclick="mostrarResumenPastoral()"><div class="icono">📊</div><h3>Resumen Pastoral</h3><p>Overview para el pastor</p></div>
+        <div class="tarjetaModulo c-gold" onclick="mostrarFinanzas()">
           <div class="icono">💰</div>
           <h3>Finanzas</h3>
           <p>Diezmos, ofrendas, gastos, reportes</p>
         </div>
-        <div class="tarjetaModulo" onclick="mostrarSecretaria()">
+        <div class="tarjetaModulo c-teal" onclick="mostrarSecretaria()">
           <div class="icono">📇</div>
           <h3>Secretaría</h3>
           <p>Directorio de miembros y familias</p>
         </div>
-        <div class="tarjetaModulo" onclick="mostrarPastoral()"><div class="icono">🤝</div><h3>Cuidado Pastoral</h3><p>Seguimientos y visitas</p></div>
-        <div class="tarjetaModulo" onclick="mostrarVoluntarios()"><div class="icono">🙋</div><h3>Voluntarios</h3><p>Ministerios y asignaciones</p></div>
-        <div class="tarjetaModulo" onclick="mostrarComunicaciones()"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Anuncios y mensajes</p></div>
-        <div class="tarjetaModulo" onclick="mostrarAsistencia()"><div class="icono">✅</div><h3>Asistencia</h3><p>Registro de servicios y reuniones</p></div>
-        <div class="tarjetaModulo" onclick="mostrarGrupos()"><div class="icono">👥</div><h3>Grupos Pequeños</h3><p>Células, líderes y miembros</p></div>
-        <div class="tarjetaModulo" onclick="mostrarAdministracion()"><div class="icono">⚙️</div><h3>Administración</h3><p>Usuarios, roles y catálogos</p></div>
+        <div class="tarjetaModulo c-purple" onclick="mostrarPastoral()"><div class="icono">🤝</div><h3>Cuidado Pastoral</h3><p>Seguimientos y visitas</p></div>
+        <div class="tarjetaModulo c-green" onclick="mostrarVoluntarios()"><div class="icono">🙋</div><h3>Voluntarios</h3><p>Ministerios y asignaciones</p></div>
+        <div class="tarjetaModulo c-pink" onclick="mostrarComunicaciones()"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Anuncios y mensajes</p></div>
+        <div class="tarjetaModulo c-amber" onclick="mostrarAsistencia()"><div class="icono">✅</div><h3>Asistencia</h3><p>Registro de servicios y reuniones</p></div>
+        <div class="tarjetaModulo c-blue" onclick="mostrarGrupos()"><div class="icono">👥</div><h3>Grupos Pequeños</h3><p>Células, líderes y miembros</p></div>
+        <div class="tarjetaModulo c-red" onclick="mostrarAdministracion()"><div class="icono">⚙️</div><h3>Administración</h3><p>Usuarios, roles y catálogos</p></div>
       </div>
 
       <div class="panelEstado" id="panelEstadoConexion">
@@ -600,11 +646,20 @@
 
     <!-- ═══ Vista: Finanzas ═══ -->
     <div id="vistaFinanzas" style="display:none;">
-      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
-      <h2>Finanzas</h2>
+      <button class="btnVolver" onclick="finVolver()">← Volver</button>
+      <h2 id="finTitulo">Finanzas</h2>
       <p class="fecha" id="finanzasSubtitulo"></p>
 
-      <div class="subtabs">
+      <!-- Inicio de Finanzas: tarjetas visuales (estilo A006) -->
+      <div id="finanzasHome">
+        <div class="cabeceraBalance" id="finHomeBalance">
+          <div class="cbEtiqueta">Balance general</div>
+          <div class="cbMonto">…</div>
+        </div>
+        <div id="finHomeTiles"></div>
+      </div>
+
+      <div class="subtabs" id="finSubtabsStrip" style="display:none;">
         <button class="subtab activa" id="subtabFinResumenBtn" onclick="cambiarSubtabFinanzas('resumen')"><span class="stIcon">📊</span><span class="stTexto">Resumen</span></button>
         <button class="subtab" id="subtabFinDepositosBtn" onclick="cambiarSubtabFinanzas('depositos')"><span class="stIcon">🏦</span><span class="stTexto">Depósitos</span></button>
         <button class="subtab" id="subtabFinCuentasBtn" onclick="cambiarSubtabFinanzas('cuentas')"><span class="stIcon">📒</span><span class="stTexto">Cuentas</span></button>
@@ -1769,8 +1824,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-030';
-document.getElementById('versionTopbar').textContent = 'Ver-030';
+const APP_VERSION = 'church-admin Ver-031';
+document.getElementById('versionTopbar').textContent = 'Ver-031';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -1895,7 +1950,113 @@ function mostrarDashboard() {
 function mostrarFinanzas() {
   document.getElementById('vistaDashboard').style.display = 'none';
   document.getElementById('vistaFinanzas').style.display = 'block';
-  cambiarSubtabFinanzas('resumen');
+  finMostrarInicio();
+}
+
+// ── Inicio de Finanzas con tarjetas (Ver-031, modelo A006) ──
+const FIN_TARJETAS = [
+  { grupo: 'Finanzas de la Iglesia', items: [
+    { tab: 'resumen', icono: '📊', etiqueta: 'Resumen Mensual', sub: 'Ingresos, egresos y balance por mes', color: 'c-blue' },
+    { tab: 'diezmos', icono: '🙏', etiqueta: 'Diezmos', sub: 'Registro de diezmos', color: 'c-gold', tabla: 'diezmos' },
+    { tab: 'ofrendas', icono: '🕊️', etiqueta: 'Ofrendas', sub: 'Ofrendas generales', color: 'c-blue', tabla: 'ofrendas' },
+    { tab: 'donaciones', icono: '💝', etiqueta: 'Donaciones', sub: 'Donaciones especiales', color: 'c-purple', tabla: 'donaciones' },
+    { tab: 'gastos', icono: '📉', etiqueta: 'Gastos', sub: 'Control de gastos', color: 'c-red', tabla: 'gastos' },
+    { tab: 'depositos', icono: '🏦', etiqueta: 'Depósitos', sub: 'Registro bancario', color: 'c-teal', tabla: 'depositos' },
+    { tab: 'campanas', icono: '🎯', etiqueta: 'Campañas de Promesas', sub: 'Promesas vs. lo pagado, por campaña', color: 'c-purple', tabla: 'campanas' },
+    { tab: 'recurrentes', icono: '🔁', etiqueta: 'Gastos Recurrentes', sub: 'Renta, salarios y gastos fijos', color: 'c-red', tabla: 'recurrentes' },
+    { tab: 'declaraciones', icono: '📄', etiqueta: 'Declaraciones de Donación', sub: 'Resumen anual por donante', color: 'c-gold' },
+  ]},
+  { grupo: 'Contabilidad', items: [
+    { tab: 'cuentas', icono: '📒', etiqueta: 'Catálogo de Cuentas', sub: 'Plan de cuentas', color: 'c-gold', tabla: 'cuentas' },
+    { tab: 'fondos', icono: '💰', etiqueta: 'Fondos', sub: 'Balance por fondo ministerial', color: 'c-gold', tabla: 'fondos' },
+    { tab: 'presupuesto', icono: '📋', etiqueta: 'Presupuesto', sub: 'Control presupuestal', color: 'c-amber' },
+    { tab: 'conciliacion', icono: '⚖️', etiqueta: 'Conciliación Bancaria', sub: 'Contra el estado de cuenta', color: 'c-teal', tabla: 'reconciliaciones' },
+    { tab: 'reportes', icono: '📈', etiqueta: 'Estado de Resultados', sub: 'Reportes y exportación', color: 'c-purple' },
+  ]},
+  { grupo: 'En construcción (del A006)', pronto: true, items: [
+    { icono: '📚', etiqueta: 'Todas las Transacciones', sub: 'Todo en un solo lugar', color: 'c-blue' },
+    { icono: '🛒', etiqueta: 'Ventas', sub: 'Recaudación por eventos', color: 'c-pink' },
+    { icono: '🎪', etiqueta: 'Eventos', sub: 'Gastos de eventos', color: 'c-amber' },
+    { icono: '💵', etiqueta: 'Otros Ingresos', sub: 'Alquiler, intereses y otros', color: 'c-green' },
+    { icono: '🏢', etiqueta: 'Proveedores', sub: 'Registro de proveedores', color: 'c-teal' },
+    { icono: '🏧', etiqueta: 'Cuentas Bancarias', sub: 'Bancos y fondos', color: 'c-teal' },
+    { icono: '🔄', etiqueta: 'Transferir Fondos', sub: 'Mover $ entre fondos', color: 'c-teal' },
+    { icono: '📓', etiqueta: 'Libro Diario', sub: 'Asientos de doble entrada', color: 'c-green' },
+    { icono: '📗', etiqueta: 'Libro Mayor', sub: 'Mayor por cuenta', color: 'c-blue' },
+    { icono: '🧮', etiqueta: 'Balance General', sub: 'Activos, pasivos y patrimonio', color: 'c-amber' },
+    { icono: '✅', etiqueta: 'Balance de Comprobación', sub: 'Verifica débitos = créditos', color: 'c-green' },
+    { icono: '🔒', etiqueta: 'Cierre de Periodo', sub: 'Bloquea meses ya cerrados', color: 'c-red' },
+    { icono: '🔧', etiqueta: 'Entradas de Ajuste', sub: 'Correcciones a periodos cerrados', color: 'c-amber' },
+  ]},
+];
+
+function finRenderTarjetas() {
+  const cont = document.getElementById('finHomeTiles');
+  if (cont.dataset.listo === '1') return;
+  cont.innerHTML = FIN_TARJETAS.map(g => `
+    <div class="grupoTitulo">${g.grupo}</div>
+    <div class="btnGrid">
+      ${g.items.map(i => g.pronto
+        ? `<div class="btnCard pronto ${i.color}" title="Aún no construido"><span class="bcBadge">Pronto</span><div class="bcIcono">${i.icono}</div><div class="bcEtiqueta">${i.etiqueta}</div><div class="bcSub">${i.sub}</div></div>`
+        : `<div class="btnCard ${i.color}" onclick="finAbrirSubvista('${i.tab}')"><span class="bcBadge" id="finBadge_${i.tab}" style="display:none;"></span><div class="bcIcono">${i.icono}</div><div class="bcEtiqueta">${i.etiqueta}</div><div class="bcSub">${i.sub}</div></div>`
+      ).join('')}
+    </div>`).join('');
+  cont.dataset.listo = '1';
+}
+
+function finOcultarSubvistas() {
+  document.querySelectorAll('[id^="subvistaFin"]').forEach(el => { el.style.display = 'none'; });
+}
+
+function finMostrarInicio() {
+  finOcultarSubvistas();
+  document.getElementById('finanzasHome').style.display = 'block';
+  document.getElementById('finTitulo').textContent = 'Finanzas';
+  document.getElementById('finanzasSubtitulo').textContent = 'Elige una sección';
+  finRenderTarjetas();
+  finCargarInicio();
+}
+
+function finAbrirSubvista(tab) {
+  document.getElementById('finanzasHome').style.display = 'none';
+  const tarjeta = FIN_TARJETAS.flatMap(g => g.items).find(i => i.tab === tab);
+  document.getElementById('finTitulo').textContent = tarjeta ? tarjeta.etiqueta : 'Finanzas';
+  document.getElementById('finanzasSubtitulo').textContent = '';
+  cambiarSubtabFinanzas(tab);
+  if (!history.state || history.state.ca !== 'sub') { try { history.pushState({ ca: 'sub' }, ''); } catch (e) { /* sin historial */ } }
+  window.scrollTo(0, 0);
+}
+
+function finVolver() {
+  if (document.getElementById('finanzasHome').style.display === 'none') {
+    if (history.state && history.state.ca === 'sub') history.back();
+    else finMostrarInicio();
+  } else {
+    mostrarDashboard();
+  }
+}
+
+async function finCargarInicio() {
+  const encabezado = document.getElementById('finHomeBalance');
+  const [rt, ...conteos] = await Promise.all([
+    sbCall(sb.from('transacciones').select('tipo, monto').eq('solo_fondo', false).neq('tipo', 'Transferencia').range(0, 9999)),
+    ...FIN_TARJETAS.flatMap(g => g.items).filter(i => i.tabla).map(i =>
+      sbCall(sb.from(i.tabla).select('id', { count: 'exact', head: true })).then(r => ({ tab: i.tab, n: r.count }))),
+  ]);
+  if (!rt.error) {
+    let ing = 0, egr = 0;
+    (rt.data || []).forEach(t => { if (t.tipo === 'Ingreso') ing += Number(t.monto) || 0; else if (t.tipo === 'Egreso') egr += Number(t.monto) || 0; });
+    encabezado.innerHTML = `
+      <div class="cbEtiqueta">Balance general</div>
+      <div class="cbMonto">${formatoMoneda(ing - egr)}</div>
+      <div class="cbStats"><span>Ingresos: <b>${formatoMoneda(ing)}</b></span><span>Gastos: <b>${formatoMoneda(egr)}</b></span></div>`;
+  } else {
+    encabezado.innerHTML = '<div class="cbEtiqueta">Balance general</div><div class="cbMonto">—</div>';
+  }
+  conteos.forEach(c => {
+    const b = document.getElementById('finBadge_' + c.tab);
+    if (b && typeof c.n === 'number') { b.textContent = c.n; b.style.display = ''; }
+  });
 }
 
 function cambiarSubtabFinanzas(tab) {
@@ -6288,7 +6449,12 @@ async function actualizarResumenPastoral() {
       document.getElementById(id).classList.remove('abierto');
       return;
     }
-    // 2) si hay un módulo abierto, "atrás" vuelve al menú
+    // 2) si estás dentro de una sección de Finanzas, "atrás" vuelve a las tarjetas
+    if (document.getElementById('vistaFinanzas').style.display !== 'none' && document.getElementById('finanzasHome').style.display === 'none') {
+      finMostrarInicio();
+      return;
+    }
+    // 3) si hay un módulo abierto, "atrás" vuelve al menú
     if (document.getElementById('vistaDashboard').style.display === 'none') mostrarDashboardOriginal();
   });
 })();
