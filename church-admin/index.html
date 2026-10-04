@@ -21,7 +21,27 @@
     --border: #d8dee5;
     --danger: #b3261e;
     --radius: 10px;
+    --surface: #fff;
+    --heading: #0f2445;
   }
+  :root[data-tema="oscuro"] {
+    --navy: #1b3a6b;
+    --navy-light: #244b86;
+    --gold: #d4af37;
+    --bg: #0b1426;
+    --surface: #14213a;
+    --text: #e6ebf2;
+    --text-muted: #9aa8bd;
+    --border: #2a3a58;
+    --danger: #ff6b61;
+    --heading: #e0c25e;
+    color-scheme: dark;
+  }
+  .btnTopIcono { background: transparent; border: 1px solid rgba(255,255,255,0.35); color:#fff; border-radius:8px; padding:5px 9px; cursor:pointer; font-size:1rem; margin-right:6px; }
+  .busqItem { display:flex; gap:10px; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border); cursor:pointer; }
+  .busqItem:hover { background: var(--bg); }
+  .busqTipo { font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--gold); min-width:78px; }
+  .busqGrupo { font-size:0.75rem; font-weight:700; color:var(--text-muted); padding:10px 12px 4px; text-transform:uppercase; }
   * { box-sizing: border-box; }
   body {
     margin: 0;
@@ -40,7 +60,7 @@
     padding: 20px;
   }
   .tarjetaLogin {
-    background: #fff;
+    background: var(--surface);
     border-radius: var(--radius);
     padding: 40px 36px;
     width: 100%;
@@ -50,7 +70,7 @@
   .tarjetaLogin h1 {
     font-size: 1.4rem;
     margin: 0 0 4px;
-    color: var(--navy);
+    color: var(--heading);
   }
   .tarjetaLogin .subtitulo {
     margin: 0 0 28px;
@@ -135,7 +155,7 @@
   .topbar button:hover { background: rgba(255,255,255,0.1); }
 
   .contenido { padding: 28px 24px; max-width: 1100px; margin: 0 auto; }
-  .contenido h2 { color: var(--navy); margin-bottom: 4px; }
+  .contenido h2 { color: var(--heading); margin-bottom: 4px; }
   .contenido .fecha { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; }
 
   .grid-modulos {
@@ -144,7 +164,7 @@
     gap: 16px;
   }
   .tarjetaModulo {
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 20px;
@@ -166,14 +186,14 @@
   .tarjetaModulo.c-amber::before { background: #e8a030; }
   .tarjetaModulo.c-teal::before { background: #06b6d4; }
   .tarjetaModulo .icono { font-size: 1.8rem; margin-bottom: 8px; }
-  .tarjetaModulo h3 { margin: 0 0 4px; font-size: 1rem; color: var(--navy); }
+  .tarjetaModulo h3 { margin: 0 0 4px; font-size: 1rem; color: var(--heading); }
   .tarjetaModulo p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
   .tarjetaModulo.deshabilitado { opacity: 0.5; cursor: default; }
 
   .panelEstado {
     margin-top: 28px;
     padding: 16px 18px;
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     font-size: 0.85rem;
@@ -193,7 +213,7 @@
   .btnVolver {
     background: none;
     border: none;
-    color: var(--navy);
+    color: var(--heading);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
@@ -212,7 +232,7 @@
     margin-bottom: 24px;
   }
   .tarjetaResumen {
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 18px;
@@ -228,13 +248,13 @@
   .tarjetaResumen .monto {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--navy);
+    color: var(--heading);
   }
   .tarjetaResumen.ingreso .monto { color: #1f7a4d; }
   .tarjetaResumen.egreso .monto { color: var(--danger); }
 
   .tablaWrap {
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
@@ -243,7 +263,7 @@
     margin: 0;
     padding: 16px 18px;
     font-size: 0.95rem;
-    color: var(--navy);
+    color: var(--heading);
     border-bottom: 1px solid var(--border);
   }
   table.tablaTrans { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -272,7 +292,7 @@
 
   /* ── Cuidado Pastoral ─────────────────────────────────────────── */
   .tarjetaSeguimiento {
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 16px 18px;
@@ -284,7 +304,7 @@
     gap: 12px;
   }
   .tarjetaSeguimiento:hover { box-shadow: 0 4px 14px rgba(15,36,69,0.1); }
-  .tarjetaSeguimiento .nombrePersona { font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+  .tarjetaSeguimiento .nombrePersona { font-weight: 600; color: var(--heading); margin-bottom: 2px; }
   .tarjetaSeguimiento .metaLinea { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
   .tarjetaSeguimiento .notasPreview { font-size: 0.85rem; color: var(--text); }
   .badge {
@@ -296,7 +316,7 @@
     white-space: nowrap;
   }
   .badge-prioridad-Baja { background: #e6f0e9; color: #2e6b47; }
-  .badge-prioridad-Media { background: #fff3d6; color: #8a6100; }
+  .badge-prioridad-Media { background: var(--surface)3d6; color: #8a6100; }
   .badge-prioridad-Alta { background: #fde3d3; color: #a34d0a; }
   .badge-prioridad-Urgente { background: #fdeceb; color: var(--danger); }
   .badge-tipo { background: var(--bg); color: var(--text-muted); }
@@ -323,13 +343,13 @@
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
   }
-  .subtab.activa { color: var(--navy); border-bottom-color: var(--gold); }
+  .subtab.activa { color: var(--heading); border-bottom-color: var(--gold); }
   /* Menús visuales (Ver-030): botones con ícono en lugar de pestañas de texto */
   .subtabs { flex-wrap: wrap; gap: 8px; border-bottom: none; padding-bottom: 4px; }
   .subtab {
     display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
     min-width: 84px; padding: 10px 10px; margin-bottom: 0;
-    background: #fff; border: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    background: var(--surface); border: 1px solid var(--border); border-bottom: 1px solid var(--border);
     border-radius: 12px; font-size: 0.74rem; line-height: 1.15; text-align: center;
     transition: background 0.12s, box-shadow 0.12s, transform 0.12s;
   }
@@ -364,8 +384,8 @@
   }
   .btnAccion:hover { background: var(--navy-light); }
   .btnSecundario {
-    background: #fff;
-    color: var(--navy);
+    background: var(--surface);
+    color: var(--heading);
     border: 1px solid var(--border);
     padding: 9px 16px;
     border-radius: 8px;
@@ -380,7 +400,7 @@
   .grupoTitulo { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 700; margin: 0 0 10px; }
   .btnGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; margin-bottom: 26px; }
   .btnCard {
-    position: relative; overflow: hidden; background: #fff; border: 1px solid var(--border); border-radius: 14px;
+    position: relative; overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
     padding: 20px 14px 14px; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; gap: 5px;
     text-align: left; user-select: none; transition: transform .15s, box-shadow .15s, border-color .15s; -webkit-tap-highlight-color: transparent;
   }
@@ -396,9 +416,9 @@
   .btnCard:hover { transform: translateY(-3px); border-color: var(--gold); box-shadow: 0 8px 22px rgba(15,36,69,0.14); }
   .btnCard:active { transform: translateY(-1px); }
   .btnCard .bcIcono { font-size: 1.8rem; line-height: 1; margin-bottom: 2px; }
-  .btnCard .bcEtiqueta { font-size: 0.88rem; font-weight: 700; color: var(--navy); line-height: 1.25; }
+  .btnCard .bcEtiqueta { font-size: 0.88rem; font-weight: 700; color: var(--heading); line-height: 1.25; }
   .btnCard .bcSub { font-size: 0.72rem; color: var(--text-muted); line-height: 1.3; }
-  .btnCard .bcBadge { position: absolute; top: 12px; right: 10px; background: var(--gold); color: var(--navy); border-radius: 999px; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; }
+  .btnCard .bcBadge { position: absolute; top: 12px; right: 10px; background: var(--gold); color: var(--heading); border-radius: 999px; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; }
   .btnCard.pronto { opacity: 0.55; cursor: default; }
   .btnCard.pronto:hover { transform: none; box-shadow: none; border-color: var(--border); }
   .btnCard.pronto .bcBadge { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
@@ -416,7 +436,7 @@
 
   .listaPersonas { display: flex; flex-direction: column; gap: 10px; }
   .cardPersona {
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 14px 18px;
@@ -427,7 +447,7 @@
     cursor: pointer;
   }
   .cardPersona:hover { box-shadow: 0 4px 12px rgba(15,36,69,0.08); }
-  .cardPersona .nombre { font-weight: 600; color: var(--navy); font-size: 0.95rem; }
+  .cardPersona .nombre { font-weight: 600; color: var(--heading); font-size: 0.95rem; }
   .cardPersona .detalle { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
   .cardPersona .flecha { color: var(--text-muted); }
 
@@ -437,12 +457,12 @@
     gap: 14px;
   }
   .cardFamilia {
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 16px 18px;
   }
-  .cardFamilia h4 { margin: 0 0 4px; color: var(--navy); font-size: 1rem; }
+  .cardFamilia h4 { margin: 0 0 4px; color: var(--heading); font-size: 1rem; }
   .cardFamilia .direccion { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px; }
   .cardFamilia ul { margin: 0; padding: 0; list-style: none; }
   .cardFamilia li {
@@ -466,13 +486,13 @@
   }
   .modalOverlay.abierto { display: flex; }
   .modalCaja {
-    background: #fff;
+    background: var(--surface);
     border-radius: var(--radius);
     width: 100%;
     max-width: 560px;
     padding: 28px 26px;
   }
-  .modalCaja h3 { margin: 0 0 20px; color: var(--navy); }
+  .modalCaja h3 { margin: 0 0 20px; color: var(--heading); }
   .formGrid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -507,7 +527,7 @@
     grid-column: 1 / -1;
     font-size: 0.75rem;
     font-weight: 700;
-    color: var(--navy);
+    color: var(--heading);
     text-transform: uppercase;
     letter-spacing: 0.03em;
     margin-top: 10px;
@@ -542,7 +562,7 @@
     .barraAcciones input[type="text"] { flex-basis: 100%; min-width: 0; }
     .barraAcciones label { flex: 1 1 100%; }
     .barraAcciones label input { width: 100%; }
-    .barraAcciones select { min-width: 0; max-width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+    .barraAcciones select { min-width: 0; max-width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
     input, select, textarea { font-size: 16px !important; }
     .btnAccion, .btnSecundario, .btnPrincipal { min-height: 42px; }
     /* tarjetas de lista */
@@ -557,7 +577,7 @@
     .modalOverlay { padding: 0; }
     .modalCaja { max-width: none !important; min-height: 100%; border-radius: 0; padding: 18px 14px 28px; }
     .formGrid { grid-template-columns: 1fr; gap: 12px; }
-    .formAcciones { position: sticky; bottom: 0; background: #fff; padding: 10px 0 4px; margin-top: 16px; border-top: 1px solid var(--border); }
+    .formAcciones { position: sticky; bottom: 0; background: var(--surface); padding: 10px 0 4px; margin-top: 16px; border-top: 1px solid var(--border); }
     .formAcciones { align-items: stretch; }
     .formAcciones button { flex: 1 1 auto; }
     .formAcciones .btnPeligro { margin-right: 0; }
@@ -608,6 +628,7 @@
   <div class="topbar">
     <div class="marca">Church <span>Admin</span> <span style="font-size:0.7rem; font-weight:600; opacity:0.85; margin-left:6px;" id="versionTopbar"></span></div>
     <div class="usuarioInfo">
+      <button class="btnTopIcono" onclick="abrirBusquedaGlobal()" title="Búsqueda global" aria-label="Búsqueda global">🔍</button><button class="btnTopIcono" id="btnTema" onclick="alternarTema()" title="Tema claro/oscuro" aria-label="Tema">🌙</button>
       <span id="nombreUsuarioTop"></span>
       <button onclick="manejarLogout()">Cerrar sesión</button>
     </div>
@@ -1221,8 +1242,8 @@
           <label for="gLiderBuscar">Líder</label>
           <input type="text" id="gLiderBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarLiderGrupo()">
           <input type="hidden" id="gLiderId">
-          <div id="sugerenciasLiderGrupo" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
-          <div id="gLiderSeleccionado" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+          <div id="sugerenciasLiderGrupo" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:var(--surface);"></div>
+          <div id="gLiderSeleccionado" style="margin-top:6px; font-size:0.85rem; color: var(--heading); font-weight:600;"></div>
         </div>
 
         <div><label for="gDiaHorario">Día y horario</label><input type="text" id="gDiaHorario" placeholder="Martes 7:00 PM"></div>
@@ -1254,7 +1275,7 @@
 
     <div style="margin-bottom:14px;">
       <input type="text" id="mgPersonaBuscar" placeholder="Buscar persona para agregar…" autocomplete="off" oninput="filtrarPersonaMiembroGrupo()">
-      <div id="sugerenciasPersonaMiembroGrupo" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
+      <div id="sugerenciasPersonaMiembroGrupo" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:var(--surface);"></div>
     </div>
 
     <div id="listaMiembrosGrupo" style="max-height:280px; overflow-y:auto;">
@@ -1308,6 +1329,15 @@
         <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modalOverlay" id="modalBusqueda">
+  <div class="modalCaja" style="max-width:640px;">
+    <h3>🔍 Búsqueda Global</h3>
+    <input type="text" id="busqTexto" placeholder="Persona, transacción, proveedor, campaña…" autocomplete="off" oninput="busquedaGlobalDebounce()" style="width:100%; padding:11px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text);">
+    <div id="busqResultados" style="margin-top:12px; max-height:55vh; overflow-y:auto;"><div class="estadoCargando">Escribe al menos 2 letras.</div></div>
+    <div class="formAcciones"><button type="button" class="btnSecundario" onclick="cerrarBusquedaGlobal()">Cerrar</button></div>
   </div>
 </div>
 
@@ -1711,7 +1741,7 @@
     <form id="formRolUsuario" onsubmit="return guardarRolUsuario(event)">
       <input type="hidden" id="ruUsuarioId">
       <div class="formGrid">
-        <div class="full" id="ruNombreUsuario" style="font-weight:600; color: var(--navy);"></div>
+        <div class="full" id="ruNombreUsuario" style="font-weight:600; color: var(--heading);"></div>
         <div>
           <label for="ruRol">Rol en Church Admin</label>
           <select id="ruRol">
@@ -1852,8 +1882,8 @@
           <label for="vPersonaBuscar">Persona *</label>
           <input type="text" id="vPersonaBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarPersonaVoluntario()">
           <input type="hidden" id="vPersonaId" required>
-          <div id="sugerenciasPersonaVoluntario" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
-          <div id="vPersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+          <div id="sugerenciasPersonaVoluntario" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:var(--surface);"></div>
+          <div id="vPersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--heading); font-weight:600;"></div>
         </div>
 
         <div>
@@ -1895,8 +1925,8 @@
           <label for="sPersonaBuscar">Persona *</label>
           <input type="text" id="sPersonaBuscar" placeholder="Buscar por nombre…" autocomplete="off" oninput="filtrarPersonaSeguimiento()">
           <input type="hidden" id="sPersonaId" required>
-          <div id="sugerenciasPersona" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:#fff;"></div>
-          <div id="sPersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--navy); font-weight:600;"></div>
+          <div id="sugerenciasPersona" style="display:none; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:160px; overflow-y:auto; background:var(--surface);"></div>
+          <div id="sPersonaSeleccionada" style="margin-top:6px; font-size:0.85rem; color: var(--heading); font-weight:600;"></div>
         </div>
 
         <div><label for="sFecha">Fecha *</label><input type="date" id="sFecha" required></div>
@@ -1986,8 +2016,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-032';
-document.getElementById('versionTopbar').textContent = 'Ver-032';
+const APP_VERSION = 'church-admin Ver-033';
+document.getElementById('versionTopbar').textContent = 'Ver-033';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -2093,6 +2123,61 @@ async function verificarConexion() {
   } else {
     panel.innerHTML = `<span class="puntoEstado ok"></span><strong>Conectado a Supabase.</strong> ${APP_VERSION}`;
   }
+}
+
+
+// ── Tema claro/oscuro (Ver-033) ──
+function aplicarTema(t) {
+  if (t === 'oscuro') document.documentElement.setAttribute('data-tema', 'oscuro');
+  else document.documentElement.removeAttribute('data-tema');
+  const b = document.getElementById('btnTema');
+  if (b) b.textContent = t === 'oscuro' ? '☀️' : '🌙';
+}
+function alternarTema() {
+  const nuevo = document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'claro' : 'oscuro';
+  aplicarTema(nuevo);
+  try { localStorage.setItem('ca_tema', nuevo); } catch (e) {}
+}
+(function () { let t = 'claro'; try { t = localStorage.getItem('ca_tema') || 'claro'; } catch (e) {} aplicarTema(t); })();
+
+// ── Búsqueda global (Ver-033) ──
+let busqTimer = null, busqSeq = 0;
+function abrirBusquedaGlobal() {
+  document.getElementById('modalBusqueda').classList.add('abierto');
+  const i = document.getElementById('busqTexto'); i.value = ''; i.focus();
+  document.getElementById('busqResultados').innerHTML = '<div class="estadoCargando">Escribe al menos 2 letras.</div>';
+}
+function cerrarBusquedaGlobal() { document.getElementById('modalBusqueda').classList.remove('abierto'); }
+function busquedaGlobalDebounce() { clearTimeout(busqTimer); busqTimer = setTimeout(ejecutarBusquedaGlobal, 300); }
+async function ejecutarBusquedaGlobal() {
+  const q = document.getElementById('busqTexto').value.trim().replace(/[%,()]/g, ' ');
+  const cont = document.getElementById('busqResultados');
+  if (q.length < 2) { cont.innerHTML = '<div class="estadoCargando">Escribe al menos 2 letras.</div>'; return; }
+  const mi = ++busqSeq;
+  cont.innerHTML = '<div class="estadoCargando">Buscando…</div>';
+  const like = '%' + q + '%';
+  const [pe, tr, og, cp] = await Promise.all([
+    sbCall(sb.from('personas').select('id, nombre_completo').ilike('nombre_completo', like).limit(15)),
+    sbCall(sb.from('transacciones').select('id, fecha, descripcion, categoria, monto').or('descripcion.ilike.' + like + ',categoria.ilike.' + like + ',referencia.ilike.' + like).order('fecha', { ascending: false }).limit(15)),
+    sbCall(sb.from('organizaciones').select('id, nombre, categoria').ilike('nombre', like).limit(10)),
+    sbCall(sb.from('campanas').select('id, nombre').ilike('nombre', like).limit(10)),
+  ]);
+  if (mi !== busqSeq) return;
+  const fila = (tipo, titulo, sub, accion) => `<div class="busqItem" onclick="${accion}"><span class="busqTipo">${tipo}</span><div><div>${escV28(titulo)}</div><div style="font-size:0.78rem; color:var(--text-muted);">${escV28(sub)}</div></div></div>`;
+  let h = '';
+  const ps = (pe.data || []); if (ps.length) h += '<div class="busqGrupo">Personas</div>' + ps.map(x => fila('Persona', x.nombre_completo, 'Abrir Secretaría', "irDesdeBusqueda('persona')")).join('');
+  const ts = (tr.data || []); if (ts.length) h += '<div class="busqGrupo">Transacciones</div>' + ts.map(x => fila(x.categoria || 'Trans.', x.descripcion || x.categoria || '', formatoFecha(x.fecha) + ' · ' + formatoMoneda(x.monto), "irDesdeBusqueda('trans')")).join('');
+  const os = (og.data || []); if (os.length) h += '<div class="busqGrupo">Proveedores / Organizaciones</div>' + os.map(x => fila('Proveedor', x.nombre, x.categoria || '', "irDesdeBusqueda('prov')")).join('');
+  const cs = (cp.data || []); if (cs.length) h += '<div class="busqGrupo">Campañas</div>' + cs.map(x => fila('Campaña', x.nombre, 'Abrir campañas', "irDesdeBusqueda('camp')")).join('');
+  cont.innerHTML = h || '<div class="estadoCargando">Sin resultados.</div>';
+}
+function irDesdeBusqueda(d) {
+  cerrarBusquedaGlobal();
+  setTimeout(() => {
+    if (d === 'persona') { mostrarSecretaria(); return; }
+    mostrarFinanzas();
+    finAbrirSubvista(d === 'trans' ? 'transacciones' : d === 'prov' ? 'proveedores' : 'campanas');
+  }, 60);
 }
 
 // ── Navegación entre vistas ──────────────────────────────────────────────
@@ -2771,7 +2856,7 @@ function renderPromesas() {
     const estado = pagado <= 0 ? 'Sin pagos' : (pagado >= prometido ? 'Cumplida' : 'Parcial');
     const pagos = cachePagosPromesa.filter(g => g.promesa_id === p.id);
     return `
-    <div style="border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; margin-bottom:10px; background:#fff;">
+    <div style="border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; margin-bottom:10px; background:var(--surface);">
       <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start;">
         <div>
           <div class="nombrePersona">${escV28(nombrePersonaPorId(p.persona_id))}</div>
@@ -5015,10 +5100,10 @@ async function cargarReporteResultados() {
   const filaCat = (c, v, clase) => `<tr><td>${c}</td><td class="${clase}">${formatoMoneda(v)}</td></tr>`;
   cont.innerHTML = `
     <table class="tablaTrans"><thead><tr><th>Concepto</th><th>Monto</th></tr></thead><tbody>
-      <tr><td colspan="2" style="font-weight:700; color:var(--navy);">Ingresos</td></tr>
+      <tr><td colspan="2" style="font-weight:700; color: var(--heading);">Ingresos</td></tr>
       ${catsIng.map(c => filaCat(c, ing[c], 'montoIngreso')).join('') || '<tr><td colspan="2" style="color:var(--text-muted);">—</td></tr>'}
       <tr><td style="font-weight:700;">Total ingresos</td><td class="montoIngreso">${formatoMoneda(totIng)}</td></tr>
-      <tr><td colspan="2" style="font-weight:700; color:var(--navy);">Egresos</td></tr>
+      <tr><td colspan="2" style="font-weight:700; color: var(--heading);">Egresos</td></tr>
       ${catsEgr.map(c => filaCat(c, egr[c], 'montoEgreso')).join('') || '<tr><td colspan="2" style="color:var(--text-muted);">—</td></tr>'}
       <tr><td style="font-weight:700;">Total egresos</td><td class="montoEgreso">${formatoMoneda(totEgr)}</td></tr>
       <tr><td style="font-weight:700;">Resultado neto</td><td style="font-weight:700;">${formatoMoneda(totIng - totEgr)}</td></tr>
