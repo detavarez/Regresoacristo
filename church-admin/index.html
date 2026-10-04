@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f2445">
 <title>Church Admin — Regreso a Cristo</title>
 <script>const APP_SLUG = 'church_admin';</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -460,6 +461,54 @@
     border-top: 1px solid var(--border);
   }
   .seccionForm:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+
+  /* ── Móvil (Ver-029) ──────────────────────────────────────────── */
+  @media (max-width: 720px) {
+    .topbar { padding: 10px 12px; gap: 8px; }
+    .topbar .usuarioInfo { gap: 8px; min-width: 0; }
+    .topbar #nombreUsuarioTop { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; }
+    .contenido { padding: 16px 12px; }
+    .contenido h2 { font-size: 1.25rem; }
+    .contenido .fecha { margin-bottom: 14px; }
+    .grid-modulos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .tarjetaModulo { padding: 14px 12px; }
+    .tarjetaModulo:hover { transform: none; }
+    .grid-resumen { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .tarjetaResumen { padding: 12px; }
+    .tarjetaResumen .etiqueta { font-size: 0.68rem; }
+    .tarjetaResumen .monto { font-size: 1.15rem; word-break: break-word; }
+    /* pestañas con desplazamiento horizontal */
+    .subtabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin-left: -12px; margin-right: -12px; padding: 0 12px; }
+    .subtabs::-webkit-scrollbar { display: none; }
+    .subtab { flex-shrink: 0; white-space: nowrap; padding: 10px 12px; }
+    /* barras de acciones */
+    .barraAcciones > * { flex: 1 1 auto; }
+    .barraAcciones > div[style*="flex:1"] { display: none; }
+    .barraAcciones input[type="text"] { flex-basis: 100%; min-width: 0; }
+    .barraAcciones label { flex: 1 1 100%; }
+    .barraAcciones label input { width: 100%; }
+    .barraAcciones select { min-width: 0; max-width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+    input, select, textarea { font-size: 16px !important; }
+    .btnAccion, .btnSecundario, .btnPrincipal { min-height: 42px; }
+    /* tarjetas de lista */
+    .tarjetaSeguimiento { flex-wrap: wrap; padding: 12px; }
+    .tarjetaSeguimiento > div[style*="flex:1"] { flex-basis: 100%; }
+    .cardPersona { padding: 12px; }
+    .gridFamilias { grid-template-columns: 1fr; }
+    /* tablas: desplazamiento horizontal */
+    .tablaWrap { overflow-x: auto; }
+    table.tablaTrans { min-width: 480px; }
+    /* modales casi a pantalla completa */
+    .modalOverlay { padding: 0; }
+    .modalCaja { max-width: none !important; min-height: 100%; border-radius: 0; padding: 18px 14px 28px; }
+    .formGrid { grid-template-columns: 1fr; gap: 12px; }
+    .formAcciones { position: sticky; bottom: 0; background: #fff; padding: 10px 0 4px; margin-top: 16px; border-top: 1px solid var(--border); }
+    .formAcciones { align-items: stretch; }
+    .formAcciones button { flex: 1 1 auto; }
+    .formAcciones .btnPeligro { margin-right: 0; }
+    #declaracionContenido { overflow-x: auto; }
+    .tarjetaLogin { padding: 28px 20px; }
+  }
 </style>
 </head>
 <body>
@@ -1707,8 +1756,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-028';
-document.getElementById('versionTopbar').textContent = 'Ver-028';
+const APP_VERSION = 'church-admin Ver-029';
+document.getElementById('versionTopbar').textContent = 'Ver-029';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -6155,6 +6204,81 @@ async function actualizarResumenPastoral() {
         ${nombresServicio.map(n => `<tr><td>${n}</td><td>${porServicio[n]}</td></tr>`).join('')}
       </tbody></table>`;
 }
+
+// ══════════════════════ VER-029: BOTÓN "ATRÁS" DEL CELULAR ══════════════════════
+// Cada módulo y cada ventana (modal) abierta agrega una entrada al historial;
+// así "atrás" cierra la ventana, luego regresa al menú, en vez de salir de la página.
+(function navegacionAtras() {
+  const mostrarDashboardOriginal = mostrarDashboard;
+  let backPendiente = 0;
+  const pushPendientes = [];
+  const ordenModales = [];
+  const cerradosPorAtras = new Set();
+
+  try { history.replaceState({ ca: 'base' }, ''); } catch (e) { return; }
+
+  function empujar(estado) {
+    if (backPendiente > 0) pushPendientes.push(estado);
+    else history.pushState(estado, '');
+  }
+
+  // Módulos: cada mostrarX() agrega una entrada; "← Volver" retrocede en el historial
+  ['Finanzas', 'Secretaria', 'Pastoral', 'Voluntarios', 'Comunicaciones', 'Asistencia', 'Administracion', 'Grupos', 'ResumenPastoral'].forEach(n => {
+    const original = window['mostrar' + n];
+    if (typeof original !== 'function') return;
+    window['mostrar' + n] = function () {
+      const resultado = original.apply(this, arguments);
+      if (!history.state || history.state.ca !== 'vista') empujar({ ca: 'vista' });
+      return resultado;
+    };
+  });
+
+  window.mostrarDashboard = function () {
+    if (history.state && history.state.ca === 'vista' && backPendiente === 0) {
+      backPendiente++;
+      history.back();
+      mostrarDashboardOriginal();
+      return;
+    }
+    mostrarDashboardOriginal();
+  };
+
+  // Modales: abrir = nueva entrada; cerrar por botón = retroceder esa entrada
+  const observador = new MutationObserver(muts => {
+    muts.forEach(m => {
+      const el = m.target;
+      const abierto = el.classList.contains('abierto');
+      const idx = ordenModales.indexOf(el.id);
+      if (abierto && idx === -1) {
+        ordenModales.push(el.id);
+        empujar({ ca: 'modal', id: el.id });
+      } else if (!abierto && idx !== -1) {
+        ordenModales.splice(idx, 1);
+        if (cerradosPorAtras.has(el.id)) { cerradosPorAtras.delete(el.id); return; }
+        backPendiente++;
+        history.back();
+      }
+    });
+  });
+  document.querySelectorAll('.modalOverlay').forEach(el => observador.observe(el, { attributes: true, attributeFilter: ['class'] }));
+
+  window.addEventListener('popstate', () => {
+    if (backPendiente > 0) {
+      backPendiente--;
+      if (backPendiente === 0) while (pushPendientes.length) history.pushState(pushPendientes.shift(), '');
+      return;
+    }
+    // 1) si hay una ventana abierta, "atrás" la cierra
+    if (ordenModales.length) {
+      const id = ordenModales[ordenModales.length - 1];
+      cerradosPorAtras.add(id);
+      document.getElementById(id).classList.remove('abierto');
+      return;
+    }
+    // 2) si hay un módulo abierto, "atrás" vuelve al menú
+    if (document.getElementById('vistaDashboard').style.display === 'none') mostrarDashboardOriginal();
+  });
+})();
 
 // ── Auto-login si ya hay sesión guardada ─────────────────────────────────
 (async function iniciar() {
