@@ -762,6 +762,17 @@
         <div id="listaRecurrentes"><div class="estadoCargando">Cargando plantillas…</div></div>
       </div>
 
+      <!-- Sub-vista: Por aprobar (Cash App / Zelle) — Ver-034 -->
+      <div id="subvistaFinPorAprobar" style="display:none;">
+        <div class="grid-resumen" id="resumenPorAprobar" style="margin-bottom:20px;"></div>
+        <div class="barraAcciones">
+          <label style="display:flex; align-items:center; gap:8px; font-size:0.88rem; color:var(--text-muted);">
+            <input type="checkbox" id="paVerResueltos" onchange="cargarPorAprobar()"> Ver también aprobados y rechazados
+          </label>
+        </div>
+        <div id="listaPorAprobar"><div class="estadoCargando">Cargando pagos…</div></div>
+      </div>
+
       <!-- Sub-vista: Diezmos -->
       <div id="subvistaFinDiezmos" style="display:none;">
         <div class="grid-resumen" id="resumenDiezmos" style="margin-bottom:20px;"></div>
@@ -1637,6 +1648,41 @@
   </div>
 </div>
 
+<!-- ═══════════════ MODAL: Aprobar pago entrante (Cash App / Zelle) ═══════════════ -->
+<div class="modalOverlay" id="modalPorAprobar">
+  <div class="modalCaja">
+    <h3>Aprobar pago recibido</h3>
+    <form id="formPorAprobar" onsubmit="return paAprobar(event)">
+      <input type="hidden" id="paId">
+      <div class="formGrid">
+        <div class="full"><label>Remitente</label><div id="paRemitenteTxt" style="font-weight:600; color:var(--navy);"></div></div>
+        <div class="full"><label>Nota del donante</label><div id="paNotaTxt" style="color:var(--text-muted);"></div></div>
+        <div><label for="paMonto">Monto</label><input type="text" id="paMonto" readonly></div>
+        <div><label for="paFecha">Fecha *</label><input type="date" id="paFecha" required></div>
+        <div class="full"><label for="paTipo">Tipo *</label>
+          <select id="paTipo" required onchange="paCambiarTipo()">
+            <option value="">Selecciona…</option>
+            <option value="Diezmo">Diezmo</option>
+            <option value="Ofrenda">Ofrenda</option>
+            <option value="Donación">Donación</option>
+          </select>
+          <div id="paTipoAyuda" style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;"></div>
+        </div>
+        <div class="full" id="paPersonaWrap"><label for="paPersona">Miembro *</label><select id="paPersona"></select>
+          <div id="paPersonaAyuda" style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;"></div>
+        </div>
+        <div class="full" id="paSubWrap"><label for="paSub" id="paSubLabel">Detalle</label><select id="paSub"></select></div>
+        <div class="full"><label for="paFondo">Fondo</label><select id="paFondo"></select></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" onclick="paRechazar()">Rechazar</button>
+        <button type="button" class="btnSecundario" onclick="paCerrar()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Aprobar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ═══════════════ MODAL: Nuevo/Editar Diezmo ═══════════════ -->
 <div class="modalOverlay" id="modalDiezmo">
   <div class="modalCaja">
@@ -2016,8 +2062,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-033';
-document.getElementById('versionTopbar').textContent = 'Ver-033';
+const APP_VERSION = 'church-admin Ver-034';
+document.getElementById('versionTopbar').textContent = 'Ver-034';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -2204,6 +2250,7 @@ function mostrarFinanzas() {
 const FIN_TARJETAS = [
   { grupo: 'Finanzas de la Iglesia', items: [
     { tab: 'resumen', icono: '📊', etiqueta: 'Resumen Mensual', sub: 'Ingresos, egresos y balance por mes', color: 'c-blue' },
+    { tab: 'porAprobar', icono: '📥', etiqueta: 'Por aprobar', sub: 'Cash App y Zelle recibidos', color: 'c-green' },
     { tab: 'diezmos', icono: '🙏', etiqueta: 'Diezmos', sub: 'Registro de diezmos', color: 'c-gold', tabla: 'diezmos' },
     { tab: 'ofrendas', icono: '🕊️', etiqueta: 'Ofrendas', sub: 'Ofrendas generales', color: 'c-blue', tabla: 'ofrendas' },
     { tab: 'donaciones', icono: '💝', etiqueta: 'Donaciones', sub: 'Donaciones especiales', color: 'c-purple', tabla: 'donaciones' },
@@ -2306,6 +2353,7 @@ async function finCargarInicio() {
     const b = document.getElementById('finBadge_' + c.tab);
     if (b && typeof c.n === 'number') { b.textContent = c.n; b.style.display = ''; }
   });
+  paActualizarInsignia();
 }
 
 function cambiarSubtabFinanzas(tab) {
@@ -2358,6 +2406,7 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'proveedores') cargarProveedores();
   else if (tab === 'bancos') cargarBancos();
   else if (tab === 'transferencias') cargarTransferencias();
+  else if (tab === 'porAprobar') cargarPorAprobar();
   const svNuevo = document.getElementById('subvistaFin' + tab.charAt(0).toUpperCase() + tab.slice(1));
   if (svNuevo) svNuevo.style.display = 'block';
 }
@@ -4127,6 +4176,217 @@ async function generarRecurrenteAhora(id) {
 
   alert(`✔ Movimiento generado. Próxima fecha: ${formatoFecha(nuevaFecha)}`);
   cargarRecurrentes();
+}
+
+// ══════════════════════ POR APROBAR: Cash App / Zelle (Ver-034) ══════════════════════
+// Los pagos los deja la Edge Function "ingest-pago" en pagos_entrantes. Nada llega a los libros
+// hasta que se aprueba aquí; al aprobar se crea el mismo registro que crearía el formulario manual.
+let cachePagosEntrantes = [];
+const PA_FUENTES = {
+  cashapp: { etiqueta: 'Cash App', metodo: 'CashApp' },
+  zelle:   { etiqueta: 'Zelle',    metodo: 'Electrónico' },
+};
+
+async function paActualizarInsignia() {
+  const r = await sbCall(sb.from('pagos_entrantes').select('id', { count: 'exact', head: true }).eq('estado', 'Por aprobar'));
+  const b = document.getElementById('finBadge_porAprobar');
+  if (!b || r.error || typeof r.count !== 'number') return;
+  b.textContent = r.count;
+  b.style.display = r.count > 0 ? '' : 'none';
+}
+
+async function cargarPorAprobar() {
+  const lista = document.getElementById('listaPorAprobar');
+  lista.innerHTML = '<div class="estadoCargando">Cargando pagos…</div>';
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  await asegurarDirectorioFinanzas();
+  await asegurarFondosFinanzas();
+  const verResueltos = document.getElementById('paVerResueltos').checked;
+  let q = sb.from('pagos_entrantes').select('*')
+    .order('fecha', { ascending: false }).order('creado_en', { ascending: false }).range(0, 299);
+  if (!verResueltos) q = q.eq('estado', 'Por aprobar');
+  const { data, error } = await sbCall(q);
+  if (error) {
+    lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(error.message)}. ¿Ya corriste el SQL de pagos_entrantes?</div>`;
+    return;
+  }
+  cachePagosEntrantes = data || [];
+  paRender();
+  paActualizarInsignia();
+}
+
+function paRender() {
+  const pend = cachePagosEntrantes.filter(x => x.estado === 'Por aprobar');
+  const total = pend.reduce((s, x) => s + (Number(x.monto) || 0), 0);
+  const sinMiembro = pend.filter(x => !x.persona_id).length;
+  document.getElementById('resumenPorAprobar').innerHTML = `
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Por aprobar</div><div class="monto">${formatoMoneda(total)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Pagos</div><div class="monto">${pend.length}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Sin miembro</div><div class="monto">${sinMiembro}</div></div>`;
+  const lista = document.getElementById('listaPorAprobar');
+  if (cachePagosEntrantes.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">No hay pagos por aprobar. Los pagos de Cash App y Zelle aparecen aquí solos.</div>';
+    return;
+  }
+  lista.innerHTML = cachePagosEntrantes.map(x => {
+    const f = PA_FUENTES[x.fuente] || { etiqueta: x.fuente };
+    const pendiente = x.estado === 'Por aprobar';
+    const miembro = x.persona_id ? nombrePersonaPorId(x.persona_id) : '';
+    const aviso = x.remitente_verificado ? '' : ' <span title="Gmail no pudo confirmar que este correo viene realmente de Cash App/Wells Fargo. Compáralo con tu estado de cuenta." style="color:var(--danger);">⚠</span>';
+    const partes = [
+      formatoFecha(x.fecha), f.etiqueta,
+      x.nota ? escV28(x.nota) : 'sin nota',
+      miembro ? '→ ' + escV28(miembro) : '',
+      x.tipo_sugerido ? escV28(x.tipo_sugerido) : '¿tipo?',
+      pendiente ? '' : escV28(x.estado),
+    ].filter(Boolean);
+    const click = pendiente ? `paAbrir('${x.id}')` : (x.estado === 'Rechazado' ? `paReabrir('${x.id}')` : '');
+    return `
+    <div class="tarjetaSeguimiento"${click ? ` onclick="${click}"` : ''}${pendiente ? '' : ' style="opacity:0.6;"'}>
+      <div>
+        <div class="nombrePersona">${escV28(x.remitente)}${aviso}</div>
+        <div class="metaLinea">${partes.join(' · ')}</div>
+      </div>
+      <span class="badge badge-tipo">${formatoMoneda(x.monto)}</span>
+    </div>`;
+  }).join('');
+}
+
+function paAbrir(id) {
+  const x = cachePagosEntrantes.find(r => r.id === id);
+  if (!x) return;
+  document.getElementById('paId').value = x.id;
+  document.getElementById('paRemitenteTxt').textContent = `${x.remitente} · ${(PA_FUENTES[x.fuente] || {}).etiqueta || x.fuente}`;
+  document.getElementById('paNotaTxt').textContent = x.nota || '—';
+  document.getElementById('paMonto').value = formatoMoneda(x.monto);
+  document.getElementById('paFecha').value = x.fecha;
+  poblarSelectPersonas('paPersona', x.persona_id || '');
+  document.getElementById('paPersonaAyuda').textContent = x.persona_origen === 'alias'
+    ? 'Sugerido: ya habías aprobado a este remitente antes.'
+    : x.persona_origen === 'nombre' ? 'Sugerido: el nombre coincide exactamente con un miembro.' : '';
+  document.getElementById('paTipo').value = x.tipo_sugerido || '';
+  poblarSelectFondos('paFondo');
+  paCambiarTipo();
+  document.getElementById('modalPorAprobar').classList.add('abierto');
+}
+
+function paCerrar() { document.getElementById('modalPorAprobar').classList.remove('abierto'); }
+
+function paCambiarTipo() {
+  const tipo = document.getElementById('paTipo').value;
+  const personaWrap = document.getElementById('paPersonaWrap');
+  const subWrap = document.getElementById('paSubWrap');
+  const sub = document.getElementById('paSub');
+  personaWrap.style.display = (tipo === 'Diezmo' || tipo === 'Donación') ? '' : 'none';
+  document.getElementById('paPersona').required = (tipo === 'Diezmo' || tipo === 'Donación');
+  document.getElementById('paTipoAyuda').textContent = tipo === 'Ofrenda'
+    ? 'Las ofrendas no guardan donante; si esta persona necesita declaración de donación, usa Diezmo o Donación.' : '';
+  if (tipo === 'Ofrenda') {
+    subWrap.style.display = '';
+    document.getElementById('paSubLabel').textContent = 'Tipo de ofrenda';
+    sub.innerHTML = OFRENDA_TIPOS.map(t => `<option value="${t}">${t}</option>`).join('');
+    sub.value = 'Ofrenda General';
+  } else if (tipo === 'Donación') {
+    subWrap.style.display = '';
+    document.getElementById('paSubLabel').textContent = 'Propósito';
+    sub.innerHTML = DONACION_PROPOSITOS.map(t => `<option value="${t}">${t}</option>`).join('');
+    sub.value = 'Fondo General';
+  } else {
+    subWrap.style.display = 'none';
+    sub.innerHTML = '';
+  }
+}
+
+// Reclama el pago (Por aprobar → Aprobado) antes de crear nada, así un doble clic o dos personas a la vez no lo duplican.
+async function paReclamar(id, estadoNuevo) {
+  const sesion = getSesion();
+  return sbCall(sb.from('pagos_entrantes').update({
+    estado: estadoNuevo, resuelto_por: sesion.usuario?.id ? String(sesion.usuario.id) : null,
+    resuelto_en: new Date().toISOString(),
+  }).eq('id', id).eq('estado', 'Por aprobar').select('id'));
+}
+
+async function paDevolver(id) {
+  await sbCall(sb.from('pagos_entrantes').update({ estado: 'Por aprobar', resuelto_por: null, resuelto_en: null, tipo_aprobado: null, transaccion_id: null }).eq('id', id));
+}
+
+async function paAprobar(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('paId').value;
+  const x = cachePagosEntrantes.find(r => r.id === id);
+  if (!x) return false;
+  const tipo = document.getElementById('paTipo').value;
+  const personaId = document.getElementById('paPersona').value || null;
+  const sub = document.getElementById('paSub').value;
+  const fondoId = document.getElementById('paFondo').value || null;
+  const fecha = document.getElementById('paFecha').value;
+  if (!tipo) { alert('Elige el tipo.'); return false; }
+  if ((tipo === 'Diezmo' || tipo === 'Donación') && !personaId) { alert('Selecciona un miembro.'); return false; }
+
+  const btn = evt.target.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  try {
+    const { data: ganado, error: eClaim } = await paReclamar(id, 'Aprobado');
+    if (eClaim) { alert('No se pudo reservar el pago: ' + eClaim.message); return false; }
+    if (!ganado || ganado.length === 0) { alert('Este pago ya fue procesado por otra persona.'); paCerrar(); cargarPorAprobar(); return false; }
+
+    const sesion = getSesion();
+    const f = PA_FUENTES[x.fuente] || { etiqueta: x.fuente, metodo: 'Electrónico' };
+    const referencia = `${f.etiqueta} ${x.external_id}`;
+    const monto = Number(x.monto);
+    const nombre = personaId ? nombrePersonaPorId(personaId) : x.remitente;
+
+    let descripcion, categoria, origen, cuentaCr;
+    if (tipo === 'Diezmo') { descripcion = `Diezmo — ${nombre}`; categoria = 'Diezmos'; origen = 'Diezmo'; cuentaCr = cuentaIdPorCodigo('4001'); }
+    else if (tipo === 'Ofrenda') { descripcion = `Ofrenda — ${sub}`; categoria = sub; origen = 'Ofrenda'; cuentaCr = cuentaIdPorCodigo(OFRENDA_TIPO_CUENTA[sub] || '4002'); }
+    else { descripcion = `Donación — ${nombre}`; categoria = sub; origen = 'Donación'; cuentaCr = cuentaIdPorCodigo('4003'); }
+
+    const { data: trans, error: errTrans } = await sbCall(sb.from('transacciones').insert({
+      fecha, descripcion, categoria, tipo: 'Ingreso', tipo_origen: origen, metodo: f.metodo, monto,
+      referencia, estado: 'Completado', fondo_id: fondoId, cuenta_cr: cuentaCr, solo_fondo: false,
+      creado_por: sesion.usuario?.id || null,
+    }).select().single());
+    if (errTrans) { await paDevolver(id); alert('Error al crear la transacción: ' + errTrans.message); return false; }
+
+    const base = { fecha, monto, metodo: f.metodo, estado: 'Completado', transaccion_id: trans.id, creado_por: sesion.usuario?.id || null };
+    let error;
+    if (tipo === 'Diezmo') ({ error } = await sbCall(sb.from('diezmos').insert({ ...base, persona_id: personaId, referencia })));
+    else if (tipo === 'Ofrenda') ({ error } = await sbCall(sb.from('ofrendas').insert({ ...base, tipo: sub })));
+    else ({ error } = await sbCall(sb.from('donaciones').insert({ ...base, persona_id: personaId, referencia })));
+    if (error) {
+      await sbCall(sb.from('transacciones').delete().eq('id', trans.id));
+      await paDevolver(id);
+      alert('Error al guardar: ' + error.message);
+      return false;
+    }
+
+    await sbCall(sb.from('pagos_entrantes').update({ tipo_aprobado: tipo, transaccion_id: String(trans.id) }).eq('id', id));
+    // Aprende "este remitente = este miembro" para sugerirlo la próxima vez.
+    if (personaId && x.remitente_norm) {
+      await sbCall(sb.from('alias_donantes').upsert({ alias: x.remitente_norm, persona_id: String(personaId) }, { onConflict: 'alias' }));
+    }
+    paCerrar();
+    cargarPorAprobar();
+  } finally {
+    btn.disabled = false;
+  }
+  return false;
+}
+
+async function paRechazar() {
+  const id = document.getElementById('paId').value;
+  if (!id || !confirm('¿Rechazar este pago? No se creará ningún registro en los libros.')) return;
+  const { data, error } = await paReclamar(id, 'Rechazado');
+  if (error) { alert('Error: ' + error.message); return; }
+  if (!data || data.length === 0) alert('Este pago ya fue procesado por otra persona.');
+  paCerrar();
+  cargarPorAprobar();
+}
+
+async function paReabrir(id) {
+  if (!confirm('¿Devolver este pago rechazado a "Por aprobar"?')) return;
+  await paDevolver(id);
+  cargarPorAprobar();
 }
 
 // ══════════════════════ DIEZMOS / OFRENDAS / DONACIONES / GASTOS ══════════════════════
