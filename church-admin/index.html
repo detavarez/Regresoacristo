@@ -314,6 +314,18 @@
     margin-bottom: -1px;
   }
   .subtab.activa { color: var(--navy); border-bottom-color: var(--gold); }
+  /* Menús visuales (Ver-030): botones con ícono en lugar de pestañas de texto */
+  .subtabs { flex-wrap: wrap; gap: 8px; border-bottom: none; padding-bottom: 4px; }
+  .subtab {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    min-width: 84px; padding: 10px 10px; margin-bottom: 0;
+    background: #fff; border: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    border-radius: 12px; font-size: 0.74rem; line-height: 1.15; text-align: center;
+    transition: background 0.12s, box-shadow 0.12s, transform 0.12s;
+  }
+  .subtab .stIcon { font-size: 1.35rem; line-height: 1; }
+  .subtab:hover { box-shadow: 0 4px 12px rgba(15,36,69,0.12); transform: translateY(-1px); }
+  .subtab.activa { background: var(--navy); color: #fff; border-color: var(--navy); border-bottom-color: var(--gold); box-shadow: inset 0 -3px 0 var(--gold); }
 
   .barraAcciones {
     display: flex;
@@ -478,9 +490,10 @@
     .tarjetaResumen .etiqueta { font-size: 0.68rem; }
     .tarjetaResumen .monto { font-size: 1.15rem; word-break: break-word; }
     /* pestañas con desplazamiento horizontal */
-    .subtabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin-left: -12px; margin-right: -12px; padding: 0 12px; }
+    .subtabs { gap: 6px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin-left: -12px; margin-right: -12px; padding: 0 12px; }
     .subtabs::-webkit-scrollbar { display: none; }
-    .subtab { flex-shrink: 0; white-space: nowrap; padding: 10px 12px; }
+    .subtab { flex-shrink: 0; white-space: nowrap; min-width: 74px; padding: 8px 8px; font-size: 0.7rem; }
+    .subtab:hover { transform: none; }
     /* barras de acciones */
     .barraAcciones > * { flex: 1 1 auto; }
     .barraAcciones > div[style*="flex:1"] { display: none; }
@@ -592,20 +605,20 @@
       <p class="fecha" id="finanzasSubtitulo"></p>
 
       <div class="subtabs">
-        <button class="subtab activa" id="subtabFinResumenBtn" onclick="cambiarSubtabFinanzas('resumen')">Resumen</button>
-        <button class="subtab" id="subtabFinDepositosBtn" onclick="cambiarSubtabFinanzas('depositos')">Depósitos</button>
-        <button class="subtab" id="subtabFinCuentasBtn" onclick="cambiarSubtabFinanzas('cuentas')">Cuentas</button>
-        <button class="subtab" id="subtabFinRecurrentesBtn" onclick="cambiarSubtabFinanzas('recurrentes')">Recurrentes</button>
-        <button class="subtab" id="subtabFinDiezmosBtn" onclick="cambiarSubtabFinanzas('diezmos')">Diezmos</button>
-        <button class="subtab" id="subtabFinOfrendasBtn" onclick="cambiarSubtabFinanzas('ofrendas')">Ofrendas</button>
-        <button class="subtab" id="subtabFinDonacionesBtn" onclick="cambiarSubtabFinanzas('donaciones')">Donaciones</button>
-        <button class="subtab" id="subtabFinGastosBtn" onclick="cambiarSubtabFinanzas('gastos')">Gastos</button>
-        <button class="subtab" id="subtabFinFondosBtn" onclick="cambiarSubtabFinanzas('fondos')">Fondos</button>
-        <button class="subtab" id="subtabFinPresupuestoBtn" onclick="cambiarSubtabFinanzas('presupuesto')">Presupuesto</button>
-        <button class="subtab" id="subtabFinReportesBtn" onclick="cambiarSubtabFinanzas('reportes')">Reportes</button>
-        <button class="subtab" id="subtabFinConciliacionBtn" onclick="cambiarSubtabFinanzas('conciliacion')">Conciliación</button>
-        <button class="subtab" id="subtabFinCampanasBtn" onclick="cambiarSubtabFinanzas('campanas')">Campañas</button>
-        <button class="subtab" id="subtabFinDeclaracionesBtn" onclick="cambiarSubtabFinanzas('declaraciones')">Declaraciones</button>
+        <button class="subtab activa" id="subtabFinResumenBtn" onclick="cambiarSubtabFinanzas('resumen')"><span class="stIcon">📊</span><span class="stTexto">Resumen</span></button>
+        <button class="subtab" id="subtabFinDepositosBtn" onclick="cambiarSubtabFinanzas('depositos')"><span class="stIcon">🏦</span><span class="stTexto">Depósitos</span></button>
+        <button class="subtab" id="subtabFinCuentasBtn" onclick="cambiarSubtabFinanzas('cuentas')"><span class="stIcon">📒</span><span class="stTexto">Cuentas</span></button>
+        <button class="subtab" id="subtabFinRecurrentesBtn" onclick="cambiarSubtabFinanzas('recurrentes')"><span class="stIcon">🔁</span><span class="stTexto">Recurrentes</span></button>
+        <button class="subtab" id="subtabFinDiezmosBtn" onclick="cambiarSubtabFinanzas('diezmos')"><span class="stIcon">🙏</span><span class="stTexto">Diezmos</span></button>
+        <button class="subtab" id="subtabFinOfrendasBtn" onclick="cambiarSubtabFinanzas('ofrendas')"><span class="stIcon">🎁</span><span class="stTexto">Ofrendas</span></button>
+        <button class="subtab" id="subtabFinDonacionesBtn" onclick="cambiarSubtabFinanzas('donaciones')"><span class="stIcon">💝</span><span class="stTexto">Donaciones</span></button>
+        <button class="subtab" id="subtabFinGastosBtn" onclick="cambiarSubtabFinanzas('gastos')"><span class="stIcon">🧾</span><span class="stTexto">Gastos</span></button>
+        <button class="subtab" id="subtabFinFondosBtn" onclick="cambiarSubtabFinanzas('fondos')"><span class="stIcon">🗂️</span><span class="stTexto">Fondos</span></button>
+        <button class="subtab" id="subtabFinPresupuestoBtn" onclick="cambiarSubtabFinanzas('presupuesto')"><span class="stIcon">🎯</span><span class="stTexto">Presupuesto</span></button>
+        <button class="subtab" id="subtabFinReportesBtn" onclick="cambiarSubtabFinanzas('reportes')"><span class="stIcon">📈</span><span class="stTexto">Reportes</span></button>
+        <button class="subtab" id="subtabFinConciliacionBtn" onclick="cambiarSubtabFinanzas('conciliacion')"><span class="stIcon">⚖️</span><span class="stTexto">Conciliación</span></button>
+        <button class="subtab" id="subtabFinCampanasBtn" onclick="cambiarSubtabFinanzas('campanas')"><span class="stIcon">📣</span><span class="stTexto">Campañas</span></button>
+        <button class="subtab" id="subtabFinDeclaracionesBtn" onclick="cambiarSubtabFinanzas('declaraciones')"><span class="stIcon">📄</span><span class="stTexto">Declaraciones</span></button>
       </div>
 
       <!-- Sub-vista: Resumen -->
@@ -809,9 +822,9 @@
       <p class="fecha">Directorio de miembros y familias</p>
 
       <div class="subtabs">
-        <button class="subtab activa" id="subtabDirectorioBtn" onclick="cambiarSubtabSecretaria('directorio')">Directorio</button>
-        <button class="subtab" id="subtabFamiliasBtn" onclick="cambiarSubtabSecretaria('familias')">Familias</button>
-        <button class="subtab" id="subtabCumpleanosBtn" onclick="cambiarSubtabSecretaria('cumpleanos')">Cumpleaños</button>
+        <button class="subtab activa" id="subtabDirectorioBtn" onclick="cambiarSubtabSecretaria('directorio')"><span class="stIcon">📇</span><span class="stTexto">Directorio</span></button>
+        <button class="subtab" id="subtabFamiliasBtn" onclick="cambiarSubtabSecretaria('familias')"><span class="stIcon">👨‍👩‍👧</span><span class="stTexto">Familias</span></button>
+        <button class="subtab" id="subtabCumpleanosBtn" onclick="cambiarSubtabSecretaria('cumpleanos')"><span class="stIcon">🎂</span><span class="stTexto">Cumpleaños</span></button>
       </div>
 
       <!-- Sub-vista: Directorio -->
@@ -889,8 +902,8 @@
       <p class="fecha">Anuncios y registro de mensajes enviados</p>
 
       <div class="subtabs">
-        <button class="subtab activa" id="subtabAnunciosBtn" onclick="cambiarSubtabComunicaciones('anuncios')">Anuncios</button>
-        <button class="subtab" id="subtabMensajesBtn" onclick="cambiarSubtabComunicaciones('mensajes')">Mensajes enviados</button>
+        <button class="subtab activa" id="subtabAnunciosBtn" onclick="cambiarSubtabComunicaciones('anuncios')"><span class="stIcon">📢</span><span class="stTexto">Anuncios</span></button>
+        <button class="subtab" id="subtabMensajesBtn" onclick="cambiarSubtabComunicaciones('mensajes')"><span class="stIcon">✉️</span><span class="stTexto">Mensajes enviados</span></button>
       </div>
 
       <!-- Sub-vista: Anuncios -->
@@ -949,8 +962,8 @@
       <p class="fecha">Usuarios, roles y catálogos del sistema</p>
 
       <div class="subtabs">
-        <button class="subtab activa" id="subtabUsuariosBtn" onclick="cambiarSubtabAdmin('usuarios')">Usuarios y Roles</button>
-        <button class="subtab" id="subtabCatalogosBtn" onclick="cambiarSubtabAdmin('catalogos')">Catálogos</button>
+        <button class="subtab activa" id="subtabUsuariosBtn" onclick="cambiarSubtabAdmin('usuarios')"><span class="stIcon">👤</span><span class="stTexto">Usuarios y Roles</span></button>
+        <button class="subtab" id="subtabCatalogosBtn" onclick="cambiarSubtabAdmin('catalogos')"><span class="stIcon">🗃️</span><span class="stTexto">Catálogos</span></button>
       </div>
 
       <!-- Sub-vista: Usuarios y Roles -->
@@ -1756,8 +1769,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-029';
-document.getElementById('versionTopbar').textContent = 'Ver-029';
+const APP_VERSION = 'church-admin Ver-030';
+document.getElementById('versionTopbar').textContent = 'Ver-030';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
