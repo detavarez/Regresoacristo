@@ -972,6 +972,16 @@
         <div id="lcNota_comprobacion" style="font-size:0.78rem; color:var(--text-muted); margin-top:10px;"></div>
       </div>
 
+      <!-- Sub-vista: Entradas de Ajuste -->
+      <div id="subvistaFinAjustes" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <div style="flex:1;"></div>
+          <button class="btnAccion" onclick="ajAbrir()">+ Nuevo ajuste</button>
+        </div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Para corregir un mes ya cerrado: registra el ajuste con fecha de un mes abierto. Va a las cuentas 4009 / 5009 (Ajustes de periodos cerrados).</div>
+        <div id="listaAjustes"><div class="estadoCargando">Cargando…</div></div>
+      </div>
+
       <!-- Sub-vista: Cierre de Periodo -->
       <div id="subvistaFinCierre" style="display:none;">
         <div class="barraAcciones" style="align-items:center;">
@@ -1429,6 +1439,28 @@
     <input type="text" id="busqTexto" placeholder="Persona, transacción, proveedor, campaña…" autocomplete="off" oninput="busquedaGlobalDebounce()" style="width:100%; padding:11px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text);">
     <div id="busqResultados" style="margin-top:12px; max-height:55vh; overflow-y:auto;"><div class="estadoCargando">Escribe al menos 2 letras.</div></div>
     <div class="formAcciones"><button type="button" class="btnSecundario" onclick="cerrarBusquedaGlobal()">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Entrada de ajuste ═══════════════ -->
+<div class="modalOverlay" id="modalAjuste">
+  <div class="modalCaja">
+    <h3>Nuevo ajuste</h3>
+    <form id="formAjuste" onsubmit="return ajGuardar(event)">
+      <div class="formGrid">
+        <div><label for="ajTipo">Tipo *</label><select id="ajTipo"><option value="Ingreso">Ingreso (suma)</option><option value="Egreso">Gasto (resta)</option></select></div>
+        <div><label for="ajMonto">Monto *</label><input type="number" id="ajMonto" step="0.01" min="0.01" required></div>
+        <div><label for="ajFecha">Fecha del ajuste *</label><input type="date" id="ajFecha" required></div>
+        <div><label for="ajMes">Mes que corrige</label><input type="month" id="ajMes"></div>
+        <div class="full"><label for="ajDesc">Motivo *</label><input type="text" id="ajDesc" maxlength="200" required placeholder="Ej.: depósito de marzo registrado por $10 menos"></div>
+        <div><label for="ajMetodo">Método</label><select id="ajMetodo"></select></div>
+        <div><label for="ajFondo">Fondo</label><select id="ajFondo"></select></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" onclick="ajCerrar()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar ajuste</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -2207,8 +2239,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-037';
-document.getElementById('versionTopbar').textContent = 'Ver-037';
+const APP_VERSION = 'church-admin Ver-038';
+document.getElementById('versionTopbar').textContent = 'Ver-038';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -2426,9 +2458,7 @@ const FIN_TARJETAS = [
     { tab: 'balance', icono: '🧮', etiqueta: 'Balance General', sub: 'Activos, pasivos y patrimonio', color: 'c-amber' },
     { tab: 'comprobacion', icono: '✅', etiqueta: 'Balance de Comprobación', sub: 'Verifica débitos = créditos', color: 'c-green' },
     { tab: 'cierre', icono: '🔒', etiqueta: 'Cierre de Periodo', sub: 'Bloquea meses ya cerrados', color: 'c-red' },
-  ]},
-  { grupo: 'En construcción (del A006)', pronto: true, items: [
-    { icono: '🔧', etiqueta: 'Entradas de Ajuste', sub: 'Correcciones a periodos cerrados', color: 'c-amber' },
+    { tab: 'ajustes', icono: '🔧', etiqueta: 'Entradas de Ajuste', sub: 'Correcciones a periodos cerrados', color: 'c-amber' },
   ]},
 ];
 
@@ -2554,6 +2584,7 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'transferencias') cargarTransferencias();
   else if (tab === 'porAprobar') cargarPorAprobar();
   else if (tab === 'bolsas') cargarBolsas();
+  else if (tab === 'ajustes') cargarAjustes();
   else if (tab === 'cierre') { poblarSelectorAnio('cieSelectAnio'); cargarCierre(); }
   else if (tab === 'diario' || tab === 'mayor' || tab === 'balance' || tab === 'comprobacion') lcCargar(tab);
   const svNuevo = document.getElementById('subvistaFin' + tab.charAt(0).toUpperCase() + tab.slice(1));
@@ -3465,6 +3496,68 @@ function trExportarCSV() {
     trFiltradas.map(t => [t.fecha, t.descripcion, t.categoria, t.tipo_origen, t.tipo, t.metodo, t.estado, t.referencia, Number(t.monto) || 0]));
 }
 
+// ══════════════════════ ENTRADAS DE AJUSTE (Ver-038) ══════════════════════
+// Corrigen meses cerrados sin reabrirlos: transacción tipo_origen 'Ajuste' con fecha de un mes abierto,
+// a las cuentas 4009 (ingreso) / 5009 (gasto).
+let cacheAjustes = [];
+
+async function cargarAjustes() {
+  const lista = document.getElementById('listaAjustes');
+  lista.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+  const { data, error } = await sbCall(sb.from('transacciones').select('*').eq('tipo_origen', 'Ajuste').order('fecha', { ascending: false }).range(0, 499));
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(error.message)}</div>`; return; }
+  cacheAjustes = data || [];
+  if (!cacheAjustes.length) { lista.innerHTML = '<div class="estadoVacio">No hay ajustes registrados.</div>'; return; }
+  lista.innerHTML = cacheAjustes.map(a => `
+    <div class="tarjetaSeguimiento">
+      <div><div class="nombrePersona">${escV28(a.descripcion)}</div>
+        <div class="metaLinea">${formatoFecha(a.fecha)} · ${escV28(a.referencia || '')} · ${a.tipo === 'Ingreso' ? 'Suma' : 'Resta'}</div></div>
+      <div style="display:flex; gap:8px; align-items:center;"><span class="badge badge-tipo">${a.tipo === 'Ingreso' ? '+' : '−'}${formatoMoneda(a.monto)}</span>
+      <button type="button" class="btnPeligro" onclick="ajEliminar('${a.id}')">Borrar</button></div>
+    </div>`).join('');
+}
+
+async function ajAbrir() {
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  await asegurarFondosFinanzas();
+  document.getElementById('formAjuste').reset();
+  document.getElementById('ajFecha').value = new Date().toISOString().slice(0, 10);
+  poblarSelectMetodo('ajMetodo', 'Electrónico');
+  poblarSelectFondos('ajFondo');
+  document.getElementById('modalAjuste').classList.add('abierto');
+}
+function ajCerrar() { document.getElementById('modalAjuste').classList.remove('abierto'); }
+
+async function ajGuardar(evt) {
+  evt.preventDefault();
+  const tipo = document.getElementById('ajTipo').value;
+  const monto = Math.round(parseFloat(document.getElementById('ajMonto').value) * 100) / 100;
+  const fecha = document.getElementById('ajFecha').value;
+  const desc = document.getElementById('ajDesc').value.trim();
+  const mes = document.getElementById('ajMes').value;
+  if (!(monto > 0) || !fecha || !desc) { alert('Completa monto, fecha y motivo.'); return false; }
+  const cuenta = cuentaIdPorCodigo(tipo === 'Ingreso' ? '4009' : '5009');
+  const sesion = getSesion();
+  const { error } = await sbCall(sb.from('transacciones').insert({
+    fecha, descripcion: desc, categoria: 'Ajuste de periodo cerrado', referencia: mes ? `Ajuste a ${mes}` : 'Ajuste',
+    tipo, tipo_origen: 'Ajuste', metodo: document.getElementById('ajMetodo').value, monto, estado: 'Completado',
+    fondo_id: document.getElementById('ajFondo').value || null,
+    cuenta_cr: tipo === 'Ingreso' ? cuenta : null, cuenta_dr: tipo === 'Egreso' ? cuenta : null,
+    solo_fondo: false, creado_por: sesion.usuario?.id || null,
+  }));
+  if (error) { alert('Error: ' + error.message); return false; }
+  ajCerrar();
+  cargarAjustes();
+  return false;
+}
+
+async function ajEliminar(id) {
+  if (!confirm('¿Borrar este ajuste?')) return;
+  const { error } = await sbCall(sb.from('transacciones').delete().eq('id', id));
+  if (error) { alert('Error: ' + error.message); return; }
+  cargarAjustes();
+}
+
 // ══════════════════════ CIERRE DE PERIODO (Ver-037) ══════════════════════
 // Tabla periodos_cerrados (mes = primer día). Un trigger en la base impide crear/editar/borrar transacciones
 // con fecha en un mes cerrado; aquí solo se cierra y se reabre.
@@ -3534,11 +3627,13 @@ function lcIngresoPorOrigen(t) {
   if (o.includes('ofrenda')) return c.includes('misi') ? '4006' : (c.includes('construc') ? '4007' : '4002');
   if (o.includes('donaci')) return '4003';
   if (o.includes('promesa')) return '4008';
+  if (o.includes('ajuste')) return '4009';
   if (o.includes('venta') || o.includes('evento')) return '4004';
   return '4005';
 }
 function lcGastoPorCategoria(t) {
   const c = `${t.categoria || ''} ${t.descripcion || ''}`.toLowerCase();
+  if (String(t.tipo_origen || '').toLowerCase().includes('ajuste')) return '5009';
   if (c.includes('administrativ')) return '5004';
   if (c.includes('evento')) return '5006';
   if (c.includes('misi')) return '5005';
