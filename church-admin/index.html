@@ -972,6 +972,18 @@
         <div id="lcNota_comprobacion" style="font-size:0.78rem; color:var(--text-muted); margin-top:10px;"></div>
       </div>
 
+      <!-- Sub-vista: Auditoría -->
+      <div id="subvistaFinAuditoria" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <input type="text" id="auBuscar" placeholder="Buscar descripción…" oninput="auRender()">
+          <select id="auModulo" onchange="auRender()"><option value="">Todos los módulos</option></select>
+          <select id="auAccion" onchange="auRender()"><option value="">Todas las acciones</option><option value="crear">Crear</option><option value="editar">Editar</option><option value="eliminar">Eliminar</option></select>
+          <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="auDesde" onchange="cargarAuditoria()"></label>
+          <button class="btnSecundario" onclick="auExportarCSV()">⬇ Exportar CSV</button>
+        </div>
+        <div id="listaAuditoria"><div class="estadoCargando">Cargando…</div></div>
+      </div>
+
       <!-- Sub-vista: Entradas de Ajuste -->
       <div id="subvistaFinAjustes" style="display:none;">
         <div class="barraAcciones" style="align-items:center;">
@@ -2239,8 +2251,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-038';
-document.getElementById('versionTopbar').textContent = 'Ver-038';
+const APP_VERSION = 'church-admin Ver-039';
+document.getElementById('versionTopbar').textContent = 'Ver-039';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -2459,6 +2471,7 @@ const FIN_TARJETAS = [
     { tab: 'comprobacion', icono: '✅', etiqueta: 'Balance de Comprobación', sub: 'Verifica débitos = créditos', color: 'c-green' },
     { tab: 'cierre', icono: '🔒', etiqueta: 'Cierre de Periodo', sub: 'Bloquea meses ya cerrados', color: 'c-red' },
     { tab: 'ajustes', icono: '🔧', etiqueta: 'Entradas de Ajuste', sub: 'Correcciones a periodos cerrados', color: 'c-amber' },
+    { tab: 'auditoria', icono: '🕵️', etiqueta: 'Auditoría', sub: 'Quién cambió qué y cuándo', color: 'c-purple' },
   ]},
 ];
 
@@ -2584,6 +2597,7 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'transferencias') cargarTransferencias();
   else if (tab === 'porAprobar') cargarPorAprobar();
   else if (tab === 'bolsas') cargarBolsas();
+  else if (tab === 'auditoria') cargarAuditoria();
   else if (tab === 'ajustes') cargarAjustes();
   else if (tab === 'cierre') { poblarSelectorAnio('cieSelectAnio'); cargarCierre(); }
   else if (tab === 'diario' || tab === 'mayor' || tab === 'balance' || tab === 'comprobacion') lcCargar(tab);
@@ -3494,6 +3508,60 @@ function trExportarCSV() {
   csvDescargar(`transacciones_${document.getElementById('trDesde').value || 'todas'}_${document.getElementById('trHasta').value || ''}.csv`,
     ['Fecha', 'Descripción', 'Categoría', 'Origen', 'Tipo', 'Método', 'Estado', 'Referencia', 'Monto'],
     trFiltradas.map(t => [t.fecha, t.descripcion, t.categoria, t.tipo_origen, t.tipo, t.metodo, t.estado, t.referencia, Number(t.monto) || 0]));
+}
+
+// ══════════════════════ AUDITORÍA (Ver-039) ══════════════════════
+// audit_log lo llena un trigger en la base (08_sql_auditoria.sql) cada vez que se crea, edita o borra un registro financiero.
+let cacheAuditoria = [], auUsuarios = new Map(), auFiltradas = [];
+
+async function cargarAuditoria() {
+  const lista = document.getElementById('listaAuditoria');
+  lista.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+  let q = sb.from('audit_log').select('*').order('creado_en', { ascending: false }).range(0, 499);
+  const desde = document.getElementById('auDesde').value;
+  if (desde) q = q.gte('creado_en', desde);
+  const [r, ru] = await Promise.all([sbCall(q), sbCall(sb.from('usuarios').select('id, nombre'))]);
+  if (r.error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(r.error.message)}. ¿Ya corriste el SQL de auditoría y tienes permiso para verla?</div>`; return; }
+  auUsuarios = new Map((ru.data || []).map(u => [String(u.id), u.nombre]));
+  cacheAuditoria = r.data || [];
+  const sel = document.getElementById('auModulo'), actual = sel.value;
+  const mods = [...new Set(cacheAuditoria.map(a => a.modulo).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Todos los módulos</option>' + mods.map(m => `<option value="${escV28(m)}">${escV28(m)}</option>`).join('');
+  sel.value = mods.includes(actual) ? actual : '';
+  auRender();
+}
+
+function auCambios(a) {
+  const d = a.detalle || {};
+  if (a.accion === 'editar' && d.antes && d.despues) {
+    return Object.keys(d.despues).filter(k => JSON.stringify(d.antes[k]) !== JSON.stringify(d.despues[k]))
+      .map(k => `${k}: ${d.antes[k] ?? '—'} → ${d.despues[k] ?? '—'}`);
+  }
+  const reg = d.despues || d.antes || {};
+  return ['monto', 'fecha', 'tipo', 'metodo', 'categoria', 'estado'].filter(k => reg[k] != null).map(k => `${k}: ${reg[k]}`);
+}
+
+function auRender() {
+  const q = (document.getElementById('auBuscar').value || '').trim().toLowerCase();
+  const mod = document.getElementById('auModulo').value, acc = document.getElementById('auAccion').value;
+  auFiltradas = cacheAuditoria.filter(a => (!mod || a.modulo === mod) && (!acc || a.accion === acc) && (!q || (a.descripcion || '').toLowerCase().includes(q)));
+  const lista = document.getElementById('listaAuditoria');
+  if (!auFiltradas.length) { lista.innerHTML = '<div class="estadoVacio">Sin registros. La auditoría solo registra cambios hechos después de instalar el SQL.</div>'; return; }
+  const icono = { crear: '➕', editar: '✏️', eliminar: '🗑️' };
+  lista.innerHTML = auFiltradas.map(a => {
+    const cuando = new Date(a.creado_en).toLocaleString('es-US', { dateStyle: 'short', timeStyle: 'short' });
+    const quien = a.usuario_id ? (auUsuarios.get(String(a.usuario_id)) || String(a.usuario_id).slice(0, 8)) : 'Sistema';
+    return `<div class="tarjetaSeguimiento">
+      <div><div class="nombrePersona">${icono[a.accion] || ''} ${escV28(a.accion)} · ${escV28(a.modulo || '')} — ${escV28(a.descripcion || '')}</div>
+        <div class="metaLinea">${escV28(cuando)} · ${escV28(quien)}</div>
+        <div class="metaLinea">${auCambios(a).map(escV28).join(' · ')}</div></div></div>`;
+  }).join('');
+}
+
+function auExportarCSV() {
+  if (!auFiltradas.length) { alert('No hay registros que exportar.'); return; }
+  csvDescargar(`auditoria_${new Date().toISOString().slice(0, 10)}.csv`, ['Fecha', 'Usuario', 'Módulo', 'Acción', 'Descripción', 'Cambios'],
+    auFiltradas.map(a => [a.creado_en, auUsuarios.get(String(a.usuario_id)) || a.usuario_id || 'Sistema', a.modulo, a.accion, a.descripcion, auCambios(a).join(' | ')]));
 }
 
 // ══════════════════════ ENTRADAS DE AJUSTE (Ver-038) ══════════════════════
