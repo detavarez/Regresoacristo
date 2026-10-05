@@ -972,6 +972,15 @@
         <div id="lcNota_comprobacion" style="font-size:0.78rem; color:var(--text-muted); margin-top:10px;"></div>
       </div>
 
+      <!-- Sub-vista: Cierre de Periodo -->
+      <div id="subvistaFinCierre" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <select id="cieSelectAnio" onchange="cargarCierre()"></select>
+        </div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Un mes cerrado no permite crear, editar ni borrar transacciones con fecha en ese mes. Se puede reabrir.</div>
+        <div id="listaCierre"><div class="estadoCargando">Cargando…</div></div>
+      </div>
+
       <!-- Sub-vista: Todas las Transacciones -->
       <div id="subvistaFinTransacciones" style="display:none;">
         <div class="barraAcciones" style="align-items:center;">
@@ -2198,8 +2207,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-036';
-document.getElementById('versionTopbar').textContent = 'Ver-036';
+const APP_VERSION = 'church-admin Ver-037';
+document.getElementById('versionTopbar').textContent = 'Ver-037';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -2416,9 +2425,9 @@ const FIN_TARJETAS = [
     { tab: 'mayor', icono: '📗', etiqueta: 'Libro Mayor', sub: 'Mayor por cuenta', color: 'c-blue' },
     { tab: 'balance', icono: '🧮', etiqueta: 'Balance General', sub: 'Activos, pasivos y patrimonio', color: 'c-amber' },
     { tab: 'comprobacion', icono: '✅', etiqueta: 'Balance de Comprobación', sub: 'Verifica débitos = créditos', color: 'c-green' },
+    { tab: 'cierre', icono: '🔒', etiqueta: 'Cierre de Periodo', sub: 'Bloquea meses ya cerrados', color: 'c-red' },
   ]},
   { grupo: 'En construcción (del A006)', pronto: true, items: [
-    { icono: '🔒', etiqueta: 'Cierre de Periodo', sub: 'Bloquea meses ya cerrados', color: 'c-red' },
     { icono: '🔧', etiqueta: 'Entradas de Ajuste', sub: 'Correcciones a periodos cerrados', color: 'c-amber' },
   ]},
 ];
@@ -2545,6 +2554,7 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'transferencias') cargarTransferencias();
   else if (tab === 'porAprobar') cargarPorAprobar();
   else if (tab === 'bolsas') cargarBolsas();
+  else if (tab === 'cierre') { poblarSelectorAnio('cieSelectAnio'); cargarCierre(); }
   else if (tab === 'diario' || tab === 'mayor' || tab === 'balance' || tab === 'comprobacion') lcCargar(tab);
   const svNuevo = document.getElementById('subvistaFin' + tab.charAt(0).toUpperCase() + tab.slice(1));
   if (svNuevo) svNuevo.style.display = 'block';
@@ -3453,6 +3463,53 @@ function trExportarCSV() {
   csvDescargar(`transacciones_${document.getElementById('trDesde').value || 'todas'}_${document.getElementById('trHasta').value || ''}.csv`,
     ['Fecha', 'Descripción', 'Categoría', 'Origen', 'Tipo', 'Método', 'Estado', 'Referencia', 'Monto'],
     trFiltradas.map(t => [t.fecha, t.descripcion, t.categoria, t.tipo_origen, t.tipo, t.metodo, t.estado, t.referencia, Number(t.monto) || 0]));
+}
+
+// ══════════════════════ CIERRE DE PERIODO (Ver-037) ══════════════════════
+// Tabla periodos_cerrados (mes = primer día). Un trigger en la base impide crear/editar/borrar transacciones
+// con fecha en un mes cerrado; aquí solo se cierra y se reabre.
+let cacheCierres = [];
+
+async function cargarCierre() {
+  const lista = document.getElementById('listaCierre');
+  lista.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+  const anio = Number(document.getElementById('cieSelectAnio').value) || new Date().getFullYear();
+  const [rc, rt] = await Promise.all([
+    sbCall(sb.from('periodos_cerrados').select('*')),
+    sbCall(sb.from('transacciones').select('fecha, tipo, monto, solo_fondo').gte('fecha', `${anio}-01-01`).lte('fecha', `${anio}-12-31`).range(0, 9999)),
+  ]);
+  if (rc.error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(rc.error.message)}. ¿Ya corriste el SQL de cierre de periodo?</div>`; return; }
+  cacheCierres = rc.data || [];
+  const tot = Array.from({ length: 12 }, () => ({ ing: 0, egr: 0 }));
+  (rt.data || []).forEach(t => {
+    if (t.solo_fondo) return;
+    const m = Number(String(t.fecha).slice(5, 7)) - 1;
+    if (t.tipo === 'Ingreso') tot[m].ing += Number(t.monto) || 0; else if (t.tipo === 'Egreso') tot[m].egr += Number(t.monto) || 0;
+  });
+  lista.innerHTML = NOMBRES_MESES.map((nombre, i) => {
+    const mes = `${anio}-${String(i + 1).padStart(2, '0')}-01`;
+    const cerrado = cacheCierres.some(c => String(c.mes).slice(0, 10) === mes);
+    return `<div class="tarjetaSeguimiento">
+      <div><div class="nombrePersona">${cerrado ? '🔒' : '🔓'} ${nombre} ${anio}</div>
+        <div class="metaLinea">Ingresos ${formatoMoneda(tot[i].ing)} · Gastos ${formatoMoneda(tot[i].egr)} · ${cerrado ? 'Cerrado' : 'Abierto'}</div></div>
+      <button type="button" class="${cerrado ? 'btnSecundario' : 'btnPeligro'}" onclick="${cerrado ? 'cieReabrir' : 'cieCerrar'}('${mes}')">${cerrado ? 'Reabrir' : 'Cerrar'}</button>
+    </div>`;
+  }).join('');
+}
+
+async function cieCerrar(mes) {
+  if (!confirm(`¿Cerrar ${mes.slice(0, 7)}? No se podrán crear, editar ni borrar transacciones de ese mes hasta reabrirlo.`)) return;
+  const sesion = getSesion();
+  const { error } = await sbCall(sb.from('periodos_cerrados').insert({ mes, cerrado_por: sesion.usuario?.id ? String(sesion.usuario.id) : null }));
+  if (error) { alert('Error: ' + error.message); return; }
+  cargarCierre();
+}
+
+async function cieReabrir(mes) {
+  if (!confirm(`¿Reabrir ${mes.slice(0, 7)}? Volverá a permitir cambios en ese mes.`)) return;
+  const { error } = await sbCall(sb.from('periodos_cerrados').delete().eq('mes', mes));
+  if (error) { alert('Error: ' + error.message); return; }
+  cargarCierre();
 }
 
 // ══════════════════════ LIBROS CONTABLES (Ver-036): Diario, Mayor, Balance General, Comprobación ══════════════════════
