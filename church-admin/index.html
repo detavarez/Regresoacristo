@@ -925,6 +925,53 @@
         <div id="listaDeclaraciones"><div class="estadoCargando">Cargando declaraciones…</div></div>
       </div>
 
+      <!-- Sub-vista: Libro Diario -->
+      <div id="subvistaFinDiario" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="lcDesde_diario" onchange="lcPintar('diario')"></label>
+          <label style="font-size:0.8rem; color: var(--text-muted);">Hasta <input type="date" id="lcHasta_diario" onchange="lcPintar('diario')"></label>
+          <button class="btnSecundario" onclick="lcExportarCSV('diario')">⬇ Exportar CSV</button>
+        </div>
+        <div class="grid-resumen" id="lcResumen_diario" style="margin-bottom:16px;"></div>
+        <div class="tablaWrap"><div id="lcCont_diario"><div class="estadoCargando">Cargando…</div></div></div>
+        <div id="lcNota_diario" style="font-size:0.78rem; color:var(--text-muted); margin-top:10px;"></div>
+      </div>
+
+      <!-- Sub-vista: Libro Mayor -->
+      <div id="subvistaFinMayor" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <select id="lcCuenta_mayor" onchange="lcPintar('mayor')"></select>
+          <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="lcDesde_mayor" onchange="lcPintar('mayor')"></label>
+          <label style="font-size:0.8rem; color: var(--text-muted);">Hasta <input type="date" id="lcHasta_mayor" onchange="lcPintar('mayor')"></label>
+          <button class="btnSecundario" onclick="lcExportarCSV('mayor')">⬇ Exportar CSV</button>
+        </div>
+        <div class="grid-resumen" id="lcResumen_mayor" style="margin-bottom:16px;"></div>
+        <div class="tablaWrap"><div id="lcCont_mayor"><div class="estadoCargando">Cargando…</div></div></div>
+        <div id="lcNota_mayor" style="font-size:0.78rem; color:var(--text-muted); margin-top:10px;"></div>
+      </div>
+
+      <!-- Sub-vista: Balance General -->
+      <div id="subvistaFinBalance" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <label style="font-size:0.8rem; color: var(--text-muted);">Al <input type="date" id="lcHasta_balance" onchange="lcPintar('balance')"></label>
+          <button class="btnSecundario" onclick="lcExportarCSV('balance')">⬇ Exportar CSV</button>
+        </div>
+        <div class="grid-resumen" id="lcResumen_balance" style="margin-bottom:16px;"></div>
+        <div class="tablaWrap"><div id="lcCont_balance"><div class="estadoCargando">Cargando…</div></div></div>
+        <div id="lcNota_balance" style="font-size:0.78rem; color:var(--text-muted); margin-top:10px;"></div>
+      </div>
+
+      <!-- Sub-vista: Balance de Comprobación -->
+      <div id="subvistaFinComprobacion" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <label style="font-size:0.8rem; color: var(--text-muted);">Al <input type="date" id="lcHasta_comprobacion" onchange="lcPintar('comprobacion')"></label>
+          <button class="btnSecundario" onclick="lcExportarCSV('comprobacion')">⬇ Exportar CSV</button>
+        </div>
+        <div class="grid-resumen" id="lcResumen_comprobacion" style="margin-bottom:16px;"></div>
+        <div class="tablaWrap"><div id="lcCont_comprobacion"><div class="estadoCargando">Cargando…</div></div></div>
+        <div id="lcNota_comprobacion" style="font-size:0.78rem; color:var(--text-muted); margin-top:10px;"></div>
+      </div>
+
       <!-- Sub-vista: Todas las Transacciones -->
       <div id="subvistaFinTransacciones" style="display:none;">
         <div class="barraAcciones" style="align-items:center;">
@@ -2151,8 +2198,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-035';
-document.getElementById('versionTopbar').textContent = 'Ver-035';
+const APP_VERSION = 'church-admin Ver-036';
+document.getElementById('versionTopbar').textContent = 'Ver-036';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -2365,12 +2412,12 @@ const FIN_TARJETAS = [
     { tab: 'transferencias', icono: '🔄', etiqueta: 'Transferir Fondos', sub: 'Mover $ entre fondos', color: 'c-teal', tabla: 'transferencias' },
     { tab: 'conciliacion', icono: '⚖️', etiqueta: 'Conciliación Bancaria', sub: 'Contra el estado de cuenta', color: 'c-teal', tabla: 'reconciliaciones' },
     { tab: 'reportes', icono: '📈', etiqueta: 'Estado de Resultados', sub: 'Reportes y exportación', color: 'c-purple' },
+    { tab: 'diario', icono: '📓', etiqueta: 'Libro Diario', sub: 'Asientos de doble entrada', color: 'c-green' },
+    { tab: 'mayor', icono: '📗', etiqueta: 'Libro Mayor', sub: 'Mayor por cuenta', color: 'c-blue' },
+    { tab: 'balance', icono: '🧮', etiqueta: 'Balance General', sub: 'Activos, pasivos y patrimonio', color: 'c-amber' },
+    { tab: 'comprobacion', icono: '✅', etiqueta: 'Balance de Comprobación', sub: 'Verifica débitos = créditos', color: 'c-green' },
   ]},
   { grupo: 'En construcción (del A006)', pronto: true, items: [
-    { icono: '📓', etiqueta: 'Libro Diario', sub: 'Asientos de doble entrada', color: 'c-green' },
-    { icono: '📗', etiqueta: 'Libro Mayor', sub: 'Mayor por cuenta', color: 'c-blue' },
-    { icono: '🧮', etiqueta: 'Balance General', sub: 'Activos, pasivos y patrimonio', color: 'c-amber' },
-    { icono: '✅', etiqueta: 'Balance de Comprobación', sub: 'Verifica débitos = créditos', color: 'c-green' },
     { icono: '🔒', etiqueta: 'Cierre de Periodo', sub: 'Bloquea meses ya cerrados', color: 'c-red' },
     { icono: '🔧', etiqueta: 'Entradas de Ajuste', sub: 'Correcciones a periodos cerrados', color: 'c-amber' },
   ]},
@@ -2498,6 +2545,7 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'transferencias') cargarTransferencias();
   else if (tab === 'porAprobar') cargarPorAprobar();
   else if (tab === 'bolsas') cargarBolsas();
+  else if (tab === 'diario' || tab === 'mayor' || tab === 'balance' || tab === 'comprobacion') lcCargar(tab);
   const svNuevo = document.getElementById('subvistaFin' + tab.charAt(0).toUpperCase() + tab.slice(1));
   if (svNuevo) svNuevo.style.display = 'block';
 }
@@ -3405,6 +3453,203 @@ function trExportarCSV() {
   csvDescargar(`transacciones_${document.getElementById('trDesde').value || 'todas'}_${document.getElementById('trHasta').value || ''}.csv`,
     ['Fecha', 'Descripción', 'Categoría', 'Origen', 'Tipo', 'Método', 'Estado', 'Referencia', 'Monto'],
     trFiltradas.map(t => [t.fecha, t.descripcion, t.categoria, t.tipo_origen, t.tipo, t.metodo, t.estado, t.referencia, Number(t.monto) || 0]));
+}
+
+// ══════════════════════ LIBROS CONTABLES (Ver-036): Diario, Mayor, Balance General, Comprobación ══════════════════════
+// Las transacciones migradas no guardan cuenta de débito/crédito. Aquí cada asiento se CALCULA al mostrarlo
+// (nada se escribe en la base): si la transacción trae cuenta, se usa; si no, se deriva:
+//   método → Efectivo=1001 Caja · CashApp=1005 · resto=1002 Banco
+//   Ingreso: débito al activo del método, crédito a 4001 Diezmos / 4002 Ofrendas (4006 Misiones, 4007 Construcción) / 4003 Donaciones / 4004 Ventas / 4005 Otros
+//   Egreso: débito al gasto según categoría (genérica "gastos" → 5007 Otros), crédito al activo del método
+// Las filas marcadas con ≈ tienen al menos una cuenta calculada.
+let lcAsientos = [];
+let lcCargado = false;
+
+function lcActivoPorMetodo(m) {
+  const x = String(m || '').toLowerCase();
+  if (x === 'efectivo') return '1001';
+  if (x === 'cashapp') return '1005';
+  return '1002';
+}
+function lcIngresoPorOrigen(t) {
+  const o = String(t.tipo_origen || '').toLowerCase(), c = String(t.categoria || '').toLowerCase();
+  if (o.includes('diezmo')) return '4001';
+  if (o.includes('ofrenda')) return c.includes('misi') ? '4006' : (c.includes('construc') ? '4007' : '4002');
+  if (o.includes('donaci')) return '4003';
+  if (o.includes('promesa')) return '4008';
+  if (o.includes('venta') || o.includes('evento')) return '4004';
+  return '4005';
+}
+function lcGastoPorCategoria(t) {
+  const c = `${t.categoria || ''} ${t.descripcion || ''}`.toLowerCase();
+  if (c.includes('administrativ')) return '5004';
+  if (c.includes('evento')) return '5006';
+  if (c.includes('misi')) return '5005';
+  if (c.includes('construc')) return '5008';
+  if (c.includes('personal') || c.includes('salario') || c.includes('pastor')) return '5001';
+  if (c.includes('servicio') || c.includes('luz') || c.includes('agua') || c.includes('internet')) return '5002';
+  if (c.includes('manten') || c.includes('repar')) return '5003';
+  return '5007';
+}
+function lcCodigoDeId(id) { const c = cacheCuentas.find(x => String(x.id) === String(id)); return c ? c.codigo : null; }
+
+function lcAsiento(t) {
+  if (t.solo_fondo) return null;
+  const sdr = t.cuenta_dr ? lcCodigoDeId(t.cuenta_dr) : null;
+  const scr = t.cuenta_cr ? lcCodigoDeId(t.cuenta_cr) : null;
+  let dr = sdr, cr = scr;
+  if (t.tipo === 'Ingreso') { dr = dr || lcActivoPorMetodo(t.metodo); cr = cr || lcIngresoPorOrigen(t); }
+  else if (t.tipo === 'Egreso') { dr = dr || lcGastoPorCategoria(t); cr = cr || lcActivoPorMetodo(t.metodo); }
+  else if (!(dr && cr)) return null;
+  const monto = Math.round((Number(t.monto) || 0) * 100);
+  if (!dr || !cr || monto <= 0) return null;
+  return { fecha: t.fecha, desc: t.descripcion || t.categoria || '', ref: t.referencia || '', dr, cr, c: monto, derivado: !(sdr && scr) };
+}
+
+function lcNombre(cod) { const c = cacheCuentas.find(x => x.codigo === cod); return c ? `${cod} · ${c.nombre}` : cod; }
+function lcCuenta(cod) { return cacheCuentas.find(x => x.codigo === cod) || { codigo: cod, nombre: cod, tipo: '', normal: 'Débito' }; }
+function lcM(c) { return formatoMoneda(c / 100); }
+
+async function lcCargar(modo) {
+  const cont = document.getElementById('lcCont_' + modo);
+  cont.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  const { data, error } = await sbCall(sb.from('transacciones')
+    .select('fecha, descripcion, categoria, referencia, tipo, tipo_origen, metodo, monto, solo_fondo, cuenta_dr, cuenta_cr')
+    .order('fecha', { ascending: true }).order('creado_en', { ascending: true }).range(0, 9999));
+  if (error) { cont.innerHTML = `<div class="estadoVacio">Error: ${escV28(error.message)}</div>`; return; }
+  lcAsientos = (data || []).map(lcAsiento).filter(Boolean);
+  lcCargado = true;
+  const hoy = new Date(), y = hoy.getFullYear();
+  const d = document.getElementById('lcDesde_' + modo), h = document.getElementById('lcHasta_' + modo);
+  if (d && !d.value) d.value = `${y}-01-01`;
+  if (h && !h.value) h.value = hoy.toISOString().slice(0, 10);
+  if (modo === 'mayor') {
+    const usadas = [...new Set(lcAsientos.flatMap(a => [a.dr, a.cr]))].sort();
+    const sel = document.getElementById('lcCuenta_mayor'), actual = sel.value;
+    sel.innerHTML = usadas.map(c => `<option value="${c}">${escV28(lcNombre(c))}</option>`).join('');
+    sel.value = usadas.includes(actual) ? actual : (usadas.includes('1001') ? '1001' : (usadas[0] || ''));
+  }
+  lcPintar(modo);
+}
+
+function lcFecha(modo, id) { return (document.getElementById(id + '_' + modo) || {}).value || ''; }
+
+function lcPintar(modo) {
+  if (!lcCargado) return;
+  const nota = document.getElementById('lcNota_' + modo);
+  const derivados = lcAsientos.filter(a => a.derivado).length;
+  nota.textContent = `≈ = cuenta calculada (las transacciones migradas no la traen guardada): ${derivados} de ${lcAsientos.length} asientos. ` +
+    'Método → Caja (efectivo), CashApp o Banco; gastos con categoría genérica van a 5007 Otros Gastos. No incluye saldos iniciales ni transferencias entre fondos. No se modifica nada en la base.';
+  ({ diario: lcDiario, mayor: lcMayor, balance: lcBalance, comprobacion: lcComprobacion })[modo]();
+}
+
+let lcUltimoCSV = {};
+
+function lcDiario() {
+  const d = lcFecha('diario', 'lcDesde'), h = lcFecha('diario', 'lcHasta');
+  const filas = lcAsientos.filter(a => (!d || a.fecha >= d) && (!h || a.fecha <= h));
+  const total = filas.reduce((s, a) => s + a.c, 0);
+  document.getElementById('lcResumen_diario').innerHTML = `
+    <div class="tarjetaResumen"><div class="etiqueta">Asientos</div><div class="monto">${filas.length}</div></div>
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Total débitos</div><div class="monto">${lcM(total)}</div></div>
+    <div class="tarjetaResumen egreso"><div class="etiqueta">Total créditos</div><div class="monto">${lcM(total)}</div></div>`;
+  lcUltimoCSV.diario = { enc: ['Fecha', 'Descripción', 'Referencia', 'Cuenta débito', 'Cuenta crédito', 'Monto', 'Calculada'], filas: filas.map(a => [a.fecha, a.desc, a.ref, lcNombre(a.dr), lcNombre(a.cr), a.c / 100, a.derivado ? 'sí' : 'no']) };
+  const cont = document.getElementById('lcCont_diario');
+  if (!filas.length) { cont.innerHTML = '<div class="estadoVacio">No hay asientos en este periodo.</div>'; return; }
+  const LIM = 400, mostrar = filas.slice().reverse().slice(0, LIM);
+  cont.innerHTML = `<table class="tablaTrans"><thead><tr><th>Fecha</th><th>Descripción / Cuenta</th><th style="text-align:right;">Débito</th><th style="text-align:right;">Crédito</th></tr></thead><tbody>
+    ${mostrar.map(a => `
+      <tr><td>${formatoFecha(a.fecha)}</td><td><b>${escV28(a.desc)}</b>${a.derivado ? ' <span title="Cuenta calculada">≈</span>' : ''}</td><td></td><td></td></tr>
+      <tr><td></td><td>${escV28(lcNombre(a.dr))}</td><td style="text-align:right;">${lcM(a.c)}</td><td></td></tr>
+      <tr><td></td><td style="padding-left:28px;">${escV28(lcNombre(a.cr))}</td><td></td><td style="text-align:right;">${lcM(a.c)}</td></tr>`).join('')}
+  </tbody></table>${filas.length > LIM ? `<div class="estadoVacio">Mostrando los ${LIM} más recientes de ${filas.length}. Acota las fechas o exporta el CSV.</div>` : ''}`;
+}
+
+function lcMayor() {
+  const cod = document.getElementById('lcCuenta_mayor').value;
+  const d = lcFecha('mayor', 'lcDesde'), h = lcFecha('mayor', 'lcHasta');
+  const cuenta = lcCuenta(cod), deb = cuenta.normal !== 'Crédito';
+  const efecto = a => (a.dr === cod ? a.c : 0) - (a.cr === cod ? a.c : 0);   // + débito, − crédito
+  const signo = v => deb ? v : -v;
+  const movs = lcAsientos.filter(a => (a.dr === cod || a.cr === cod));
+  const inicial = movs.filter(a => d && a.fecha < d).reduce((s, a) => s + efecto(a), 0);
+  const rango = movs.filter(a => (!d || a.fecha >= d) && (!h || a.fecha <= h));
+  let saldo = signo(inicial), totD = 0, totC = 0;
+  const filas = rango.map(a => {
+    const e = efecto(a); if (e > 0) totD += e; else totC += -e;
+    saldo += signo(e);
+    return { a, deb: e > 0 ? e : 0, cre: e < 0 ? -e : 0, saldo };
+  });
+  document.getElementById('lcResumen_mayor').innerHTML = `
+    <div class="tarjetaResumen"><div class="etiqueta">Saldo inicial</div><div class="monto">${lcM(signo(inicial))}</div></div>
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Débitos</div><div class="monto">${lcM(totD)}</div></div>
+    <div class="tarjetaResumen egreso"><div class="etiqueta">Créditos</div><div class="monto">${lcM(totC)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Saldo final</div><div class="monto">${lcM(saldo)}</div></div>`;
+  lcUltimoCSV.mayor = { enc: ['Fecha', 'Descripción', 'Contrapartida', 'Débito', 'Crédito', 'Saldo', 'Calculada'], filas: filas.map(f => [f.a.fecha, f.a.desc, lcNombre(f.a.dr === cod ? f.a.cr : f.a.dr), f.deb / 100, f.cre / 100, f.saldo / 100, f.a.derivado ? 'sí' : 'no']) };
+  const cont = document.getElementById('lcCont_mayor');
+  if (!filas.length) { cont.innerHTML = '<div class="estadoVacio">Esta cuenta no tiene movimientos en el periodo.</div>'; return; }
+  cont.innerHTML = `<table class="tablaTrans"><thead><tr><th>Fecha</th><th>Descripción</th><th>Contrapartida</th><th style="text-align:right;">Débito</th><th style="text-align:right;">Crédito</th><th style="text-align:right;">Saldo</th></tr></thead><tbody>
+    ${filas.slice(-500).map(f => `<tr><td>${formatoFecha(f.a.fecha)}</td><td>${escV28(f.a.desc)}${f.a.derivado ? ' ≈' : ''}</td><td>${escV28(lcNombre(f.a.dr === cod ? f.a.cr : f.a.dr))}</td><td style="text-align:right;">${f.deb ? lcM(f.deb) : ''}</td><td style="text-align:right;">${f.cre ? lcM(f.cre) : ''}</td><td style="text-align:right;">${lcM(f.saldo)}</td></tr>`).join('')}
+  </tbody></table>${filas.length > 500 ? `<div class="estadoVacio">Mostrando los últimos 500 de ${filas.length}. Exporta el CSV para ver todo.</div>` : ''}`;
+}
+
+function lcSaldos(hasta) {
+  const m = new Map();
+  lcAsientos.filter(a => !hasta || a.fecha <= hasta).forEach(a => {
+    const x = m.get(a.dr) || { d: 0, c: 0 }; x.d += a.c; m.set(a.dr, x);
+    const y = m.get(a.cr) || { d: 0, c: 0 }; y.c += a.c; m.set(a.cr, y);
+  });
+  return m;
+}
+
+function lcComprobacion() {
+  const m = lcSaldos(lcFecha('comprobacion', 'lcHasta'));
+  const filas = [...m.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([cod, v]) => ({ cod, d: v.d, c: v.c, deudor: Math.max(v.d - v.c, 0), acreedor: Math.max(v.c - v.d, 0) }));
+  const td = filas.reduce((s, f) => s + f.d, 0), tc = filas.reduce((s, f) => s + f.c, 0);
+  const sd = filas.reduce((s, f) => s + f.deudor, 0), sa = filas.reduce((s, f) => s + f.acreedor, 0);
+  const ok = td === tc && sd === sa;
+  document.getElementById('lcResumen_comprobacion').innerHTML = `
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Débitos</div><div class="monto">${lcM(td)}</div></div>
+    <div class="tarjetaResumen egreso"><div class="etiqueta">Créditos</div><div class="monto">${lcM(tc)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Resultado</div><div class="monto">${ok ? '✓ Cuadra' : '✗ Diferencia ' + lcM(Math.abs(td - tc))}</div></div>`;
+  lcUltimoCSV.comprobacion = { enc: ['Cuenta', 'Débitos', 'Créditos', 'Saldo deudor', 'Saldo acreedor'], filas: filas.map(f => [lcNombre(f.cod), f.d / 100, f.c / 100, f.deudor / 100, f.acreedor / 100]) };
+  const cont = document.getElementById('lcCont_comprobacion');
+  if (!filas.length) { cont.innerHTML = '<div class="estadoVacio">Sin movimientos.</div>'; return; }
+  cont.innerHTML = `<table class="tablaTrans"><thead><tr><th>Cuenta</th><th style="text-align:right;">Débitos</th><th style="text-align:right;">Créditos</th><th style="text-align:right;">Saldo deudor</th><th style="text-align:right;">Saldo acreedor</th></tr></thead><tbody>
+    ${filas.map(f => `<tr><td>${escV28(lcNombre(f.cod))}</td><td style="text-align:right;">${lcM(f.d)}</td><td style="text-align:right;">${lcM(f.c)}</td><td style="text-align:right;">${f.deudor ? lcM(f.deudor) : ''}</td><td style="text-align:right;">${f.acreedor ? lcM(f.acreedor) : ''}</td></tr>`).join('')}
+    <tr style="font-weight:700;"><td>Totales</td><td style="text-align:right;">${lcM(td)}</td><td style="text-align:right;">${lcM(tc)}</td><td style="text-align:right;">${lcM(sd)}</td><td style="text-align:right;">${lcM(sa)}</td></tr>
+  </tbody></table>`;
+}
+
+function lcBalance() {
+  const m = lcSaldos(lcFecha('balance', 'lcHasta'));
+  const saldo = (cod, deudora) => { const v = m.get(cod) || { d: 0, c: 0 }; return deudora ? v.d - v.c : v.c - v.d; };
+  const grupo = (pref, deudora) => [...m.keys()].filter(c => c.startsWith(pref)).sort().map(c => ({ cod: c, v: saldo(c, deudora) })).filter(x => x.v !== 0);
+  const act = grupo('1', true), pas = grupo('2', false), pat = grupo('3', false);
+  const ing = [...m.keys()].filter(c => c.startsWith('4')).reduce((s, c) => s + saldo(c, false), 0);
+  const gas = [...m.keys()].filter(c => c.startsWith('5')).reduce((s, c) => s + saldo(c, true), 0);
+  const resultado = ing - gas;
+  const sum = a => a.reduce((s, x) => s + x.v, 0);
+  const tAct = sum(act), tPas = sum(pas), tPat = sum(pat) + resultado;
+  document.getElementById('lcResumen_balance').innerHTML = `
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Activos</div><div class="monto">${lcM(tAct)}</div></div>
+    <div class="tarjetaResumen egreso"><div class="etiqueta">Pasivos</div><div class="monto">${lcM(tPas)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Patrimonio</div><div class="monto">${lcM(tPat)}</div></div>`;
+  const bloque = (titulo, items, total, extra) => `<h4 style="margin:14px 0 6px;">${titulo}</h4><table class="tablaTrans"><tbody>
+    ${items.map(x => `<tr><td>${escV28(lcNombre(x.cod))}</td><td style="text-align:right;">${lcM(x.v)}</td></tr>`).join('')}${extra || ''}
+    <tr style="font-weight:700;"><td>Total ${titulo.toLowerCase()}</td><td style="text-align:right;">${lcM(total)}</td></tr></tbody></table>`;
+  lcUltimoCSV.balance = { enc: ['Sección', 'Cuenta', 'Saldo'], filas: [...act.map(x => ['Activos', lcNombre(x.cod), x.v / 100]), ...pas.map(x => ['Pasivos', lcNombre(x.cod), x.v / 100]), ...pat.map(x => ['Patrimonio', lcNombre(x.cod), x.v / 100]), ['Patrimonio', 'Resultado acumulado (ingresos − gastos)', resultado / 100]] };
+  document.getElementById('lcCont_balance').innerHTML = `<div style="padding:0 16px 16px;">
+    ${bloque('Activos', act, tAct)}${bloque('Pasivos', pas, tPas)}
+    ${bloque('Patrimonio', pat, tPat, `<tr><td>Resultado acumulado (ingresos − gastos)</td><td style="text-align:right;">${lcM(resultado)}</td></tr>`)}
+    <div style="margin-top:12px; font-weight:600;">${tAct === tPas + tPat ? '✓ Activos = Pasivos + Patrimonio' : '✗ No cuadra: diferencia ' + lcM(Math.abs(tAct - tPas - tPat))}</div></div>`;
+}
+
+function lcExportarCSV(modo) {
+  const x = lcUltimoCSV[modo];
+  if (!x || !x.filas.length) { alert('No hay datos que exportar.'); return; }
+  csvDescargar(`${modo}_${new Date().toISOString().slice(0, 10)}.csv`, x.enc, x.filas);
 }
 
 // ── LIBROS SIMPLES: Otros Ingresos / Ventas / Eventos ──
