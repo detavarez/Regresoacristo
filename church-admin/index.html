@@ -677,6 +677,7 @@
           <div class="cbEtiqueta">Balance general</div>
           <div class="cbMonto">…</div>
         </div>
+        <div id="finHomeTendencia" style="margin-bottom:22px;"></div>
         <div id="finHomeTiles"></div>
       </div>
 
@@ -1451,6 +1452,17 @@
     <input type="text" id="busqTexto" placeholder="Persona, transacción, proveedor, campaña…" autocomplete="off" oninput="busquedaGlobalDebounce()" style="width:100%; padding:11px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text);">
     <div id="busqResultados" style="margin-top:12px; max-height:55vh; overflow-y:auto;"><div class="estadoCargando">Escribe al menos 2 letras.</div></div>
     <div class="formAcciones"><button type="button" class="btnSecundario" onclick="cerrarBusquedaGlobal()">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Comprobante ═══════════════ -->
+<div class="modalOverlay" id="modalRecibo">
+  <div class="modalCaja" style="max-width:520px;">
+    <div id="reciboContenido"></div>
+    <div class="formAcciones">
+      <button type="button" class="btnSecundario" onclick="cerrarRecibo()">Cerrar</button>
+      <button type="button" class="btnPrincipal" style="width:auto;" onclick="imprimirRecibo()">Imprimir / Guardar PDF</button>
+    </div>
   </div>
 </div>
 
@@ -2251,8 +2263,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-039';
-document.getElementById('versionTopbar').textContent = 'Ver-039';
+const APP_VERSION = 'church-admin Ver-040';
+document.getElementById('versionTopbar').textContent = 'Ver-040';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -2524,13 +2536,14 @@ function finVolver() {
 async function finCargarInicio() {
   const encabezado = document.getElementById('finHomeBalance');
   const [rt, ...conteos] = await Promise.all([
-    sbCall(sb.from('transacciones').select('tipo, monto').eq('solo_fondo', false).neq('tipo', 'Transferencia').range(0, 9999)),
+    sbCall(sb.from('transacciones').select('tipo, monto, fecha').eq('solo_fondo', false).neq('tipo', 'Transferencia').range(0, 9999)),
     ...FIN_TARJETAS.flatMap(g => g.items).filter(i => i.tabla).map(i =>
       sbCall(sb.from(i.tabla).select('id', { count: 'exact', head: true })).then(r => ({ tab: i.tab, n: r.count }))),
   ]);
   if (!rt.error) {
     let ing = 0, egr = 0;
     (rt.data || []).forEach(t => { if (t.tipo === 'Ingreso') ing += Number(t.monto) || 0; else if (t.tipo === 'Egreso') egr += Number(t.monto) || 0; });
+    finRenderTendencia(rt.data || []);
     encabezado.innerHTML = `
       <div class="cbEtiqueta">Balance general</div>
       <div class="cbMonto">${formatoMoneda(ing - egr)}</div>
@@ -3444,6 +3457,67 @@ function csvDescargar(nombreArchivo, encabezados, filas) {
   URL.revokeObjectURL(url);
 }
 
+// ── Tendencia de los últimos 6 meses en el inicio (Ver-040) ──
+function finRenderTendencia(filas) {
+  const cont = document.getElementById('finHomeTendencia');
+  const hoy = new Date();
+  const meses = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+    meses.push({ clave: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, nombre: NOMBRES_MESES[d.getMonth()].slice(0, 3), ing: 0, egr: 0 });
+  }
+  filas.forEach(t => {
+    const m = meses.find(x => x.clave === String(t.fecha).slice(0, 7));
+    if (!m) return;
+    if (t.tipo === 'Ingreso') m.ing += Number(t.monto) || 0; else if (t.tipo === 'Egreso') m.egr += Number(t.monto) || 0;
+  });
+  const max = Math.max(1, ...meses.flatMap(m => [m.ing, m.egr]));
+  cont.innerHTML = `<div class="tablaWrap" style="padding:14px 16px;">
+    <div style="font-weight:700; margin-bottom:10px;">Últimos 6 meses</div>
+    <div style="display:flex; gap:8px; align-items:flex-end; height:120px;">
+      ${meses.map(m => `<div style="flex:1; text-align:center;">
+        <div style="display:flex; gap:3px; align-items:flex-end; justify-content:center; height:100px;">
+          <div title="Ingresos ${formatoMoneda(m.ing)}" style="width:42%; height:${Math.max(2, m.ing / max * 100)}%; background:#1f7a4d; border-radius:3px 3px 0 0;"></div>
+          <div title="Gastos ${formatoMoneda(m.egr)}" style="width:42%; height:${Math.max(2, m.egr / max * 100)}%; background:#b3261e; border-radius:3px 3px 0 0;"></div>
+        </div>
+        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">${m.nombre}</div></div>`).join('')}
+    </div>
+    <div style="display:flex; gap:14px; font-size:0.75rem; color:var(--text-muted); margin-top:8px; flex-wrap:wrap;">
+      <span><span style="display:inline-block; width:10px; height:10px; background:#1f7a4d; border-radius:2px;"></span> Ingresos</span>
+      <span><span style="display:inline-block; width:10px; height:10px; background:#b3261e; border-radius:2px;"></span> Gastos</span>
+      <span>Mes actual: ${formatoMoneda(meses[5].ing)} / ${formatoMoneda(meses[5].egr)}</span>
+    </div></div>`;
+}
+
+// ── Comprobante imprimible de una transacción (Ver-040) ──
+function trAbrirRecibo(id) {
+  const t = cacheTransaccionesTodas.find(x => String(x.id) === String(id));
+  if (!t) return;
+  let iglesia = DC_IGLESIA_POR_DEFECTO;
+  try { iglesia = localStorage.getItem('dcIglesiaNombre') || iglesia; } catch (e) { /* sin almacenamiento */ }
+  const titulo = t.tipo === 'Ingreso' ? 'Comprobante de ingreso' : (t.tipo === 'Egreso' ? 'Comprobante de egreso' : 'Comprobante');
+  const filas = [['Fecha', formatoFecha(t.fecha)], ['Concepto', t.descripcion], ['Categoría', t.categoria], ['Origen', t.tipo_origen], ['Método', t.metodo], ['Referencia', t.referencia], ['Estado', t.estado]]
+    .filter(f => f[1]);
+  document.getElementById('reciboContenido').innerHTML = `
+    <div style="text-align:center; margin-bottom:14px;"><div style="font-size:1.15rem; font-weight:700;">${escV28(iglesia)}</div>
+      <div style="font-size:0.95rem;">${titulo}</div><div style="font-size:0.75rem; color:#666;">Folio ${escV28(String(t.id).slice(0, 8).toUpperCase())}</div></div>
+    <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">${filas.map(f => `<tr><td style="padding:6px 0; border-bottom:1px solid #ddd; color:#555; width:34%;">${f[0]}</td><td style="padding:6px 0; border-bottom:1px solid #ddd;">${escV28(f[1])}</td></tr>`).join('')}
+      <tr><td style="padding:10px 0; font-weight:700;">Monto</td><td style="padding:10px 0; font-weight:700; font-size:1.15rem;">${formatoMoneda(t.monto)}</td></tr></table>
+    <div style="font-size:0.72rem; color:#777; margin-top:14px;">Documento generado el ${escV28(formatoFecha(new Date().toISOString().slice(0, 10)))}.</div>`;
+  document.getElementById('modalRecibo').classList.add('abierto');
+}
+function cerrarRecibo() { document.getElementById('modalRecibo').classList.remove('abierto'); }
+function imprimirRecibo() {
+  const host = document.createElement('div');
+  host.id = 'printHostDeclaracion';
+  host.innerHTML = document.getElementById('reciboContenido').innerHTML;
+  document.body.appendChild(host);
+  document.body.classList.add('imprimiendoDeclaracion');
+  const limpiar = () => { document.body.classList.remove('imprimiendoDeclaracion'); host.remove(); window.removeEventListener('afterprint', limpiar); };
+  window.addEventListener('afterprint', limpiar);
+  window.print();
+}
+
 // ── TODAS LAS TRANSACCIONES (solo lectura) ──
 let cacheTransaccionesTodas = [];
 let trFiltradas = [];
@@ -3498,7 +3572,7 @@ function trRender() {
     ${mostrar.map(t => {
       const clase = t.tipo === 'Ingreso' ? 'montoIngreso' : (t.tipo === 'Egreso' ? 'montoEgreso' : '');
       const signo = t.tipo === 'Ingreso' ? '+' : (t.tipo === 'Egreso' ? '−' : '');
-      return `<tr><td>${formatoFecha(t.fecha)}</td><td>${escV28(t.descripcion)}</td><td>${escV28(t.categoria)}</td><td>${escV28(t.tipo_origen || '—')}</td><td>${escV28(t.metodo || '—')}</td><td class="${clase}" style="text-align:right;">${signo}${formatoMoneda(t.monto)}</td></tr>`;
+      return `<tr style="cursor:pointer;" title="Ver comprobante" onclick="trAbrirRecibo('${t.id}')"><td>${formatoFecha(t.fecha)}</td><td>${escV28(t.descripcion)}</td><td>${escV28(t.categoria)}</td><td>${escV28(t.tipo_origen || '—')}</td><td>${escV28(t.metodo || '—')}</td><td class="${clase}" style="text-align:right;">${signo}${formatoMoneda(t.monto)}</td></tr>`;
     }).join('')}
   </tbody></table>${trFiltradas.length > LIMITE ? `<div class="estadoVacio">Mostrando ${LIMITE} de ${trFiltradas.length}. Usa los filtros o exporta el CSV para ver todo.</div>` : ''}`;
 }
