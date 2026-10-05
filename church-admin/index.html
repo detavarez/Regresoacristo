@@ -764,6 +764,11 @@
 
       <!-- Sub-vista: Por aprobar (Cash App / Zelle) — Ver-034 -->
       <div id="subvistaFinPorAprobar" style="display:none;">
+        <div id="paImportBar" class="barraAcciones" style="display:none; align-items:center; gap:10px;">
+          <span id="paImportEstado" style="font-size:0.9rem; font-weight:600;"></span>
+          <button type="button" class="btnSecundario" id="paBtnImport" onclick="paAlternarImportacion()"></button>
+          <span style="font-size:0.78rem; color:var(--text-muted);">Pausada, los correos nuevos no se pierden: entran al reactivarla.</span>
+        </div>
         <div class="grid-resumen" id="resumenPorAprobar" style="margin-bottom:20px;"></div>
         <div class="barraAcciones">
           <label style="display:flex; align-items:center; gap:8px; font-size:0.88rem; color:var(--text-muted);">
@@ -771,6 +776,25 @@
           </label>
         </div>
         <div id="listaPorAprobar"><div class="estadoCargando">Cargando pagos…</div></div>
+      </div>
+
+      <!-- Sub-vista: Bolsas (aparte) — fondos fuera de las finanzas de la iglesia -->
+      <div id="subvistaFinBolsas" style="display:none;">
+        <div style="margin-bottom:12px; font-size:0.85rem; color:var(--text-muted);">Bolsas aparte (renta del local, etc.). Se llevan por persona y <b>no forman parte de las finanzas de la iglesia</b>: no entran a diezmos, ofrendas, reportes ni balance.</div>
+        <div class="grid-resumen" id="resumenBolsas" style="margin-bottom:20px;"></div>
+        <div class="barraAcciones">
+          <select id="blSelBolsa" onchange="cargarBolsas()"></select>
+          <button class="btnSecundario" onclick="blAbrirAdmin()">Administrar bolsas</button>
+        </div>
+        <div class="barraAcciones">
+          <input type="month" id="blMes" onchange="cargarBolsas()">
+          <input type="text" id="blBuscar" placeholder="Buscar por nombre…" oninput="blRender()">
+          <button class="btnAccion" onclick="blAbrir(null)">+ Nuevo aporte</button>
+        </div>
+        <label style="display:flex; align-items:center; gap:8px; font-size:0.88rem; color:var(--text-muted); margin-bottom:12px;">
+          <input type="checkbox" id="blTodos" onchange="cargarBolsas()"> Ver todos los meses
+        </label>
+        <div id="listaBolsas"><div class="estadoCargando">Cargando aportes…</div></div>
       </div>
 
       <!-- Sub-vista: Diezmos -->
@@ -1676,10 +1700,75 @@
       </div>
       <div class="formAcciones">
         <button type="button" class="btnPeligro" onclick="paRechazar()">Rechazar</button>
+        <button type="button" class="btnSecundario" onclick="psAbrir()">Pagos separados / Bolsas</button>
         <button type="button" class="btnSecundario" onclick="paCerrar()">Cancelar</button>
         <button type="submit" class="btnPrincipal" style="width:auto;">Aprobar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Pagos separados (un pago, varios propósitos) ═══════════════ -->
+<div class="modalOverlay" id="modalPorAprobarSep">
+  <div class="modalCaja">
+    <h3>Pagos separados / Bolsas</h3>
+    <form id="formPorAprobarSep" onsubmit="return psAprobar(event)">
+      <div class="formGrid">
+        <div class="full"><label>Remitente</label><div id="psRemitenteTxt" style="font-weight:600; color:var(--navy);"></div></div>
+        <div class="full"><label>Nota del donante</label><div id="psNotaTxt" style="color:var(--text-muted);"></div></div>
+        <div><label>Total recibido</label><div id="psTotalTxt" style="font-weight:600;"></div></div>
+        <div><label for="psFecha">Fecha *</label><input type="date" id="psFecha" required></div>
+      </div>
+      <div style="margin-top:14px; font-size:0.82rem; color:var(--text-muted);">Reparte el total en líneas. Una línea <b>Aparte</b> va a una bolsa (Renta, etc.): se lleva por persona en la pestaña Bolsas y no entra a las finanzas de la iglesia.</div>
+      <div id="psLineas" style="margin-top:10px;"></div>
+      <button type="button" class="btnSecundario" onclick="psAgregarLinea()">+ Agregar otra línea</button>
+      <div id="psResumenTxt" style="margin:14px 0 4px; font-weight:600;"></div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" onclick="psCerrar()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" id="psBtnAprobar" style="width:auto;">Aprobar todo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Aporte a una bolsa aparte ═══════════════ -->
+<div class="modalOverlay" id="modalBolsaAporte">
+  <div class="modalCaja">
+    <h3 id="blTitulo">Aporte a bolsa</h3>
+    <form id="formBolsaAporte" onsubmit="return blGuardar(event)">
+      <div class="formGrid">
+        <div class="full"><label for="blBolsa">Bolsa *</label><select id="blBolsa" required></select></div>
+        <div class="full"><label for="blPersona">Miembro</label><select id="blPersona"></select></div>
+        <div class="full"><label for="blAportante">Nombre (si no es miembro)</label><input type="text" id="blAportante" maxlength="120"></div>
+        <div><label for="blMonto">Monto *</label><input type="text" inputmode="decimal" id="blMonto" placeholder="0.00" required></div>
+        <div><label for="blFecha">Fecha *</label><input type="date" id="blFecha" required></div>
+        <div><label for="blMetodo">Método</label><select id="blMetodo"></select></div>
+        <div><label for="blReferencia">Referencia</label><input type="text" id="blReferencia"></div>
+        <div class="full"><label for="blNota">Nota</label><input type="text" id="blNota"></div>
+        <div class="full" id="blAviso" style="display:none; font-size:0.82rem; color:var(--text-muted);">Este aporte viene de un pago de Cash App/Zelle: el monto, la fecha, el método y la referencia no se pueden cambiar.</div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" id="blBtnEliminar" onclick="blEliminar()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" onclick="blCerrar()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: Administrar bolsas ═══════════════ -->
+<div class="modalOverlay" id="modalBolsasAdmin">
+  <div class="modalCaja">
+    <h3>Administrar bolsas</h3>
+    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:10px;">Crea las bolsas que necesites. Las archivadas dejan de ofrecerse para aportes nuevos, pero su historial se conserva.</div>
+    <div id="blAdminLista"></div>
+    <div class="formGrid" style="margin-top:12px;">
+      <div class="full"><label for="blNuevoNombre">Nueva bolsa</label><input type="text" id="blNuevoNombre" maxlength="60" placeholder="Nombre de la bolsa"></div>
+    </div>
+    <div class="formAcciones">
+      <button type="button" class="btnSecundario" onclick="blCerrarAdmin()">Cerrar</button>
+      <button type="button" class="btnPrincipal" style="width:auto;" onclick="blCrear()">Crear bolsa</button>
+    </div>
   </div>
 </div>
 
@@ -2062,8 +2151,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-034';
-document.getElementById('versionTopbar').textContent = 'Ver-034';
+const APP_VERSION = 'church-admin Ver-035';
+document.getElementById('versionTopbar').textContent = 'Ver-035';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -2251,6 +2340,7 @@ const FIN_TARJETAS = [
   { grupo: 'Finanzas de la Iglesia', items: [
     { tab: 'resumen', icono: '📊', etiqueta: 'Resumen Mensual', sub: 'Ingresos, egresos y balance por mes', color: 'c-blue' },
     { tab: 'porAprobar', icono: '📥', etiqueta: 'Por aprobar', sub: 'Cash App y Zelle recibidos', color: 'c-green' },
+    { tab: 'bolsas', icono: '🗂️', etiqueta: 'Bolsas (aparte)', sub: 'Renta y otras, fuera de las finanzas', color: 'c-gold' },
     { tab: 'diezmos', icono: '🙏', etiqueta: 'Diezmos', sub: 'Registro de diezmos', color: 'c-gold', tabla: 'diezmos' },
     { tab: 'ofrendas', icono: '🕊️', etiqueta: 'Ofrendas', sub: 'Ofrendas generales', color: 'c-blue', tabla: 'ofrendas' },
     { tab: 'donaciones', icono: '💝', etiqueta: 'Donaciones', sub: 'Donaciones especiales', color: 'c-purple', tabla: 'donaciones' },
@@ -2407,6 +2497,7 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'bancos') cargarBancos();
   else if (tab === 'transferencias') cargarTransferencias();
   else if (tab === 'porAprobar') cargarPorAprobar();
+  else if (tab === 'bolsas') cargarBolsas();
   const svNuevo = document.getElementById('subvistaFin' + tab.charAt(0).toUpperCase() + tab.slice(1));
   if (svNuevo) svNuevo.style.display = 'block';
 }
@@ -4211,6 +4302,7 @@ async function cargarPorAprobar() {
     return;
   }
   cachePagosEntrantes = data || [];
+  paCargarImportacion();
   paRender();
   paActualizarInsignia();
 }
@@ -4387,6 +4479,496 @@ async function paReabrir(id) {
   if (!confirm('¿Devolver este pago rechazado a "Por aprobar"?')) return;
   await paDevolver(id);
   cargarPorAprobar();
+}
+
+// ── Interruptor: importación automática de correos (Cash App / Zelle) ──
+// La función ingest-pago lee ajustes_ingest.activo; si está apagado responde 503 y el script de Gmail
+// NO avanza su marca, así que los correos recibidos durante la pausa se importan al reactivar.
+let paImportActiva = true;
+async function paCargarImportacion() {
+  const bar = document.getElementById('paImportBar');
+  const { data, error } = await sbCall(sb.from('ajustes_ingest').select('activo').eq('id', 1).maybeSingle());
+  if (error || !data) { bar.style.display = 'none'; return; }
+  paImportActiva = data.activo === true;
+  bar.style.display = 'flex';
+  const e = document.getElementById('paImportEstado');
+  e.textContent = paImportActiva ? '🟢 Importación de correos: activa' : '🔴 Importación de correos: pausada';
+  document.getElementById('paBtnImport').textContent = paImportActiva ? 'Pausar importación' : 'Reanudar importación';
+}
+async function paAlternarImportacion() {
+  const nuevo = !paImportActiva;
+  if (!nuevo && !confirm('¿Pausar la importación? Los pagos nuevos no aparecerán en "Por aprobar" hasta que la reanudes (no se pierden).')) return;
+  const sesion = getSesion();
+  const { error } = await sbCall(sb.from('ajustes_ingest').update({
+    activo: nuevo, actualizado_por: sesion.usuario?.id ? String(sesion.usuario.id) : null, actualizado_en: new Date().toISOString(),
+  }).eq('id', 1));
+  if (error) { alert('Error: ' + error.message); return; }
+  paCargarImportacion();
+}
+
+// ══════════════════════ POR APROBAR: PAGOS SEPARADOS / BOLSAS ══════════════════════
+// Un mismo pago (ej. Zelle de $116 = $100 renta + $16 diezmo) se reparte en varias líneas.
+// Cada línea crea su propio registro; la suma debe ser exactamente el total recibido.
+// Una línea puede ir a una "bolsa aparte" (Renta, etc., creadas en la pestaña Bolsas): se anota en
+// bolsa_aportes a nombre del miembro/aportante y NO crea transacción ni diezmo/ofrenda/donación,
+// o sea que no entra a las finanzas de la iglesia.
+let psPagoActual = null;
+let psContador = 0;
+
+function psCentavos(v) {
+  const n = Math.round(parseFloat(String(v ?? '').replace(/[^0-9.\-]/g, '')) * 100);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function psLineasEls() { return Array.from(document.querySelectorAll('#psLineas .psLinea')); }
+
+async function psAbrir() {
+  const id = document.getElementById('paId').value;
+  const x = cachePagosEntrantes.find(r => r.id === id);
+  if (!x) return;
+  paCerrar();
+  const rb = await blCargarBolsas();
+  if (rb.error) alert('No se pudieron cargar las bolsas (' + rb.error.message + '). ¿Ya corriste el SQL de bolsas? Solo estarán Diezmo, Ofrenda y Donación.');
+  psPagoActual = x;
+  psContador = 0;
+  document.getElementById('psRemitenteTxt').textContent = `${x.remitente} · ${(PA_FUENTES[x.fuente] || {}).etiqueta || x.fuente}`;
+  document.getElementById('psNotaTxt').textContent = x.nota || '—';
+  document.getElementById('psTotalTxt').textContent = formatoMoneda(x.monto);
+  document.getElementById('psFecha').value = x.fecha;
+  document.getElementById('psLineas').innerHTML = '';
+  psAgregarLinea();
+  psAgregarLinea();
+  psActualizar();
+  document.getElementById('modalPorAprobarSep').classList.add('abierto');
+}
+
+function psCerrar() {
+  document.getElementById('modalPorAprobarSep').classList.remove('abierto');
+  psPagoActual = null;
+}
+
+function psAgregarLinea() {
+  if (!psPagoActual) return;
+  const n = ++psContador;
+  const div = document.createElement('div');
+  div.className = 'psLinea';
+  div.dataset.n = String(n);
+  div.style.cssText = 'border:1px solid rgba(128,128,128,0.35); border-radius:10px; padding:10px; margin-bottom:10px;';
+  div.innerHTML = `
+    <div class="formGrid">
+      <div><label for="psMonto_${n}">Monto *</label>
+        <input type="text" inputmode="decimal" id="psMonto_${n}" placeholder="0.00" oninput="psActualizar()">
+        <button type="button" class="btnSecundario" style="margin-top:6px;" onclick="psResto(${n})">Usar el resto</button></div>
+      <div><label for="psTipo_${n}">Tipo *</label>
+        <select id="psTipo_${n}" onchange="psCambiarTipo(${n})">
+          <option value="">Selecciona…</option>
+          <option value="Diezmo">Diezmo</option>
+          <option value="Ofrenda">Ofrenda</option>
+          <option value="Donación">Donación</option>
+          ${blActivas().map(b => `<option value="bolsa:${b.id}">Aparte: ${escV28(b.nombre)}</option>`).join('')}
+        </select></div>
+      <div class="full" id="psPersonaWrap_${n}"><label for="psPersona_${n}" id="psPersonaLabel_${n}">Miembro *</label><select id="psPersona_${n}"></select></div>
+      <div class="full" id="psSubWrap_${n}"><label for="psSub_${n}" id="psSubLabel_${n}">Detalle</label><select id="psSub_${n}"></select></div>
+      <div class="full" id="psFondoWrap_${n}"><label for="psFondo_${n}">Fondo</label><select id="psFondo_${n}"></select></div>
+      <div class="full" id="psAyuda_${n}" style="display:none; font-size:0.82rem; color:var(--text-muted);">Va a una bolsa aparte (pestaña Bolsas), a nombre del miembro. No entra a las finanzas de la iglesia. Si quien pagó no es miembro, deja el miembro vacío y se anota con el nombre del remitente.</div>
+    </div>
+    <button type="button" class="btnPeligro" style="margin-top:8px;" onclick="psQuitarLinea(${n})">Quitar esta línea</button>`;
+  document.getElementById('psLineas').appendChild(div);
+  poblarSelectPersonas('psPersona_' + n, psPagoActual.persona_id || '');
+  poblarSelectFondos('psFondo_' + n);
+  psCambiarTipo(n);
+  psActualizar();
+}
+
+function psQuitarLinea(n) {
+  if (psLineasEls().length <= 1) { alert('Se necesita al menos 1 línea.'); return; }
+  const el = document.querySelector(`#psLineas .psLinea[data-n="${n}"]`);
+  if (el) el.remove();
+  psActualizar();
+}
+
+function psCambiarTipo(n) {
+  const tipo = document.getElementById('psTipo_' + n).value;
+  const esBolsa = tipo.startsWith('bolsa:');
+  const conMiembro = (tipo === 'Diezmo' || tipo === 'Donación' || esBolsa);
+  document.getElementById('psPersonaWrap_' + n).style.display = conMiembro ? '' : 'none';
+  document.getElementById('psPersonaLabel_' + n).textContent = esBolsa ? 'Miembro (opcional)' : 'Miembro *';
+  document.getElementById('psFondoWrap_' + n).style.display = esBolsa ? 'none' : '';
+  document.getElementById('psAyuda_' + n).style.display = esBolsa ? '' : 'none';
+  const wrap = document.getElementById('psSubWrap_' + n);
+  const sub = document.getElementById('psSub_' + n);
+  if (tipo === 'Ofrenda') {
+    wrap.style.display = '';
+    document.getElementById('psSubLabel_' + n).textContent = 'Tipo de ofrenda';
+    sub.innerHTML = OFRENDA_TIPOS.map(t => `<option value="${t}">${t}</option>`).join('');
+    sub.value = 'Ofrenda General';
+  } else if (tipo === 'Donación') {
+    wrap.style.display = '';
+    document.getElementById('psSubLabel_' + n).textContent = 'Propósito';
+    sub.innerHTML = DONACION_PROPOSITOS.map(t => `<option value="${t}">${t}</option>`).join('');
+    sub.value = 'Fondo General';
+  } else {
+    wrap.style.display = 'none';
+    sub.innerHTML = '';
+  }
+}
+
+function psResto(n) {
+  if (!psPagoActual) return;
+  const total = psCentavos(psPagoActual.monto);
+  let otros = 0;
+  psLineasEls().forEach(el => { if (el.dataset.n !== String(n)) otros += psCentavos(document.getElementById('psMonto_' + el.dataset.n).value); });
+  const resto = total - otros;
+  if (resto > 0) document.getElementById('psMonto_' + n).value = (resto / 100).toFixed(2);
+  psActualizar();
+}
+
+function psActualizar() {
+  if (!psPagoActual) return;
+  const total = psCentavos(psPagoActual.monto);
+  const asignado = psLineasEls().reduce((s, el) => s + psCentavos(document.getElementById('psMonto_' + el.dataset.n).value), 0);
+  const falta = total - asignado;
+  const txt = document.getElementById('psResumenTxt');
+  txt.textContent = `Asignado ${formatoMoneda(asignado / 100)} de ${formatoMoneda(total / 100)}` +
+    (falta === 0 ? ' ✓' : falta > 0 ? ` · falta ${formatoMoneda(falta / 100)}` : ` · se pasa por ${formatoMoneda(-falta / 100)}`);
+  txt.style.color = falta === 0 ? 'var(--navy)' : 'var(--danger)';
+  document.getElementById('psBtnAprobar').disabled = (falta !== 0);
+}
+
+// Crea transacción + registro hijo para UNA línea. Devuelve { transId, tabla } o { error }.
+async function psCrearLinea(x, l, referencia, fecha) {
+  const sesion = getSesion();
+  const f = PA_FUENTES[x.fuente] || { etiqueta: x.fuente, metodo: 'Electrónico' };
+  const nombre = l.personaId ? nombrePersonaPorId(l.personaId) : x.remitente;
+  const monto = l.centavos / 100;
+  let descripcion, categoria, origen, cuentaCr, tabla;
+  if (l.tipo === 'Diezmo') { descripcion = `Diezmo — ${nombre}`; categoria = 'Diezmos'; origen = 'Diezmo'; cuentaCr = cuentaIdPorCodigo('4001'); tabla = 'diezmos'; }
+  else if (l.tipo === 'Ofrenda') { descripcion = `Ofrenda — ${l.sub}`; categoria = l.sub; origen = 'Ofrenda'; cuentaCr = cuentaIdPorCodigo(OFRENDA_TIPO_CUENTA[l.sub] || '4002'); tabla = 'ofrendas'; }
+  else { descripcion = `Donación — ${nombre}`; categoria = l.sub; origen = 'Donación'; cuentaCr = cuentaIdPorCodigo('4003'); tabla = 'donaciones'; }
+
+  const { data: trans, error: errTrans } = await sbCall(sb.from('transacciones').insert({
+    fecha, descripcion, categoria, tipo: 'Ingreso', tipo_origen: origen, metodo: f.metodo, monto,
+    referencia, estado: 'Completado', fondo_id: l.fondoId, cuenta_cr: cuentaCr, solo_fondo: false,
+    creado_por: sesion.usuario?.id || null,
+  }).select().single());
+  if (errTrans) return { error: errTrans };
+
+  const base = { fecha, monto, metodo: f.metodo, estado: 'Completado', transaccion_id: trans.id, creado_por: sesion.usuario?.id || null };
+  let error;
+  if (l.tipo === 'Diezmo') ({ error } = await sbCall(sb.from('diezmos').insert({ ...base, persona_id: l.personaId, referencia })));
+  else if (l.tipo === 'Ofrenda') ({ error } = await sbCall(sb.from('ofrendas').insert({ ...base, tipo: l.sub })));
+  else ({ error } = await sbCall(sb.from('donaciones').insert({ ...base, persona_id: l.personaId, referencia })));
+  if (error) {
+    await sbCall(sb.from('transacciones').delete().eq('id', trans.id));
+    return { error };
+  }
+  return { transId: trans.id, tabla };
+}
+
+// Bolsa aparte: se anota a nombre del miembro (o del remitente si no es miembro), SIN tocar los libros de la iglesia.
+async function psCrearBolsa(x, l, referencia, fecha) {
+  const sesion = getSesion();
+  const f = PA_FUENTES[x.fuente] || { etiqueta: x.fuente, metodo: 'Electrónico' };
+  const { data, error } = await sbCall(sb.from('bolsa_aportes').insert({
+    bolsa_id: l.bolsaId, persona_id: l.personaId ? String(l.personaId) : null, aportante: l.personaId ? null : x.remitente,
+    fecha, monto: l.centavos / 100, metodo: f.metodo, referencia, nota: x.nota || null, pago_entrante_id: x.id,
+    creado_por: sesion.usuario?.id ? String(sesion.usuario.id) : null,
+  }).select().single());
+  if (error) return { error };
+  return { aporteId: data.id };
+}
+
+async function psAprobar(evt) {
+  evt.preventDefault();
+  const x = psPagoActual;
+  if (!x) return false;
+  const fecha = document.getElementById('psFecha').value;
+  if (!fecha) { alert('Falta la fecha.'); return false; }
+
+  const lineas = [];
+  for (const el of psLineasEls()) {
+    const n = el.dataset.n;
+    const centavos = psCentavos(document.getElementById('psMonto_' + n).value);
+    const tipo = document.getElementById('psTipo_' + n).value;
+    const personaId = document.getElementById('psPersona_' + n).value || null;
+    const nPos = lineas.length + 1;
+    if (centavos <= 0) { alert(`Línea ${nPos}: escribe un monto mayor que cero.`); return false; }
+    if (!tipo) { alert(`Línea ${nPos}: elige el tipo.`); return false; }
+    if ((tipo === 'Diezmo' || tipo === 'Donación') && !personaId) { alert(`Línea ${nPos}: selecciona un miembro.`); return false; }
+    if (tipo.startsWith('bolsa:') && !blActivas().some(b => 'bolsa:' + b.id === tipo)) { alert(`Línea ${nPos}: esa bolsa ya no está activa.`); return false; }
+    lineas.push({ centavos, tipo, bolsaId: tipo.startsWith('bolsa:') ? tipo.slice(6) : null, personaId: (tipo === 'Ofrenda') ? null : personaId,
+      sub: document.getElementById('psSub_' + n).value, fondoId: document.getElementById('psFondo_' + n).value || null });
+  }
+  if (lineas.length < 1) { alert('Se necesita al menos 1 línea.'); return false; }
+  if (lineas.reduce((s, l) => s + l.centavos, 0) !== psCentavos(x.monto)) { alert('La suma de las líneas debe ser igual al total recibido.'); return false; }
+
+  const btn = document.getElementById('psBtnAprobar');
+  btn.disabled = true;
+  try {
+    const { data: ganado, error: eClaim } = await paReclamar(x.id, 'Aprobado');
+    if (eClaim) { alert('No se pudo reservar el pago: ' + eClaim.message); return false; }
+    if (!ganado || ganado.length === 0) { alert('Este pago ya fue procesado por otra persona.'); psCerrar(); cargarPorAprobar(); return false; }
+
+    const f = PA_FUENTES[x.fuente] || { etiqueta: x.fuente };
+    const creadas = [];
+    for (let i = 0; i < lineas.length; i++) {
+      const ref = lineas.length > 1 ? `${f.etiqueta} ${x.external_id} (${i + 1}/${lineas.length})` : `${f.etiqueta} ${x.external_id}`;
+      const r = lineas[i].bolsaId ? await psCrearBolsa(x, lineas[i], ref, fecha) : await psCrearLinea(x, lineas[i], ref, fecha);
+      if (r.error) {
+        // deshacer lo ya creado y devolver el pago a "Por aprobar"
+        for (const c of creadas) {
+          if (c.aporteId) { await sbCall(sb.from('bolsa_aportes').delete().eq('id', c.aporteId)); continue; }
+          await sbCall(sb.from(c.tabla).delete().eq('transaccion_id', c.transId));
+          await sbCall(sb.from('transacciones').delete().eq('id', c.transId));
+        }
+        await paDevolver(x.id);
+        alert(`Error en la línea ${i + 1}: ${r.error.message}. No se guardó nada.`);
+        return false;
+      }
+      creadas.push(r);
+    }
+
+    const idsTrans = creadas.filter(c => c.transId).map(c => String(c.transId));
+    const soloBolsa = lineas.every(l => l.bolsaId);
+    const bolsasUsadas = [...new Set(lineas.filter(l => l.bolsaId).map(l => l.bolsaId))];
+    await sbCall(sb.from('pagos_entrantes').update({
+      tipo_aprobado: soloBolsa ? (bolsasUsadas.length === 1 ? 'Bolsa: ' + blNombre(bolsasUsadas[0]) : 'Bolsa')
+                               : (lineas.length > 1 ? 'Separado' : lineas[0].tipo),
+      transaccion_id: idsTrans.length ? idsTrans.join(',') : null,
+    }).eq('id', x.id));
+    // Aprende el alias solo si todas las líneas con miembro son de la MISMA persona.
+    const miembros = [...new Set(lineas.filter(l => l.personaId).map(l => String(l.personaId)))];
+    if (miembros.length === 1 && x.remitente_norm) {
+      await sbCall(sb.from('alias_donantes').upsert({ alias: x.remitente_norm, persona_id: miembros[0] }, { onConflict: 'alias' }));
+    }
+    psCerrar();
+    cargarPorAprobar();
+  } finally {
+    btn.disabled = false;
+  }
+  return false;
+}
+
+// ══════════════════════ BOLSAS (aparte) ══════════════════════
+// Fondos aparte (Renta del local, etc.) que se crean DESDE LA APP, sin tocar código ni SQL.
+// Cada aporte se lleva por persona como cualquier otro movimiento, pero NO es parte de las finanzas
+// de la iglesia: tablas propias (bolsas, bolsa_aportes); no tocan transacciones, diezmos, ofrendas,
+// donaciones, reportes ni balance, y no se depositan en ninguna cuenta.
+let cacheBolsas = [];
+let cacheBolsaAportes = [];
+let blEditandoId = null;
+
+function blDosDig(n) { return String(n).padStart(2, '0'); }
+function blActivas() { return cacheBolsas.filter(b => b.activa); }
+function blNombre(id) { const b = cacheBolsas.find(x => String(x.id) === String(id)); return b ? b.nombre : '(bolsa)'; }
+function blNombreAportante(a) { return a.persona_id ? nombrePersonaPorId(a.persona_id) : (a.aportante || '—'); }
+
+async function blCargarBolsas() {
+  const { data, error } = await sbCall(sb.from('bolsas').select('*').order('nombre', { ascending: true }));
+  if (error) return { error };
+  cacheBolsas = data || [];
+  return {};
+}
+
+async function cargarBolsas() {
+  const lista = document.getElementById('listaBolsas');
+  lista.innerHTML = '<div class="estadoCargando">Cargando aportes…</div>';
+  await asegurarDirectorioFinanzas();
+  const rb = await blCargarBolsas();
+  if (rb.error) {
+    lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(rb.error.message)}. ¿Ya corriste el SQL de bolsas?</div>`;
+    return;
+  }
+  const sel = document.getElementById('blSelBolsa');
+  const actual = sel.value || 'todas';
+  sel.innerHTML = '<option value="todas">Todas las bolsas</option>' +
+    cacheBolsas.map(b => `<option value="${b.id}">${escV28(b.nombre)}${b.activa ? '' : ' (archivada)'}</option>`).join('');
+  sel.value = (actual === 'todas' || cacheBolsas.some(b => String(b.id) === actual)) ? actual : 'todas';
+  const mes = document.getElementById('blMes');
+  if (!mes.value) { const d = new Date(); mes.value = `${d.getFullYear()}-${blDosDig(d.getMonth() + 1)}`; }
+  let q = sb.from('bolsa_aportes').select('*')
+    .order('fecha', { ascending: false }).order('creado_en', { ascending: false }).range(0, 999);
+  if (sel.value !== 'todas') q = q.eq('bolsa_id', sel.value);
+  if (!document.getElementById('blTodos').checked) {
+    const [y, m] = mes.value.split('-').map(Number);
+    const ini = `${y}-${blDosDig(m)}-01`;
+    const sig = m === 12 ? `${y + 1}-01-01` : `${y}-${blDosDig(m + 1)}-01`;
+    q = q.gte('fecha', ini).lt('fecha', sig);
+  }
+  const { data, error } = await sbCall(q);
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(error.message)}</div>`; return; }
+  cacheBolsaAportes = data || [];
+  blRender();
+}
+
+function blRender() {
+  const buscar = (document.getElementById('blBuscar').value || '').trim().toLowerCase();
+  const todas = document.getElementById('blSelBolsa').value === 'todas';
+  const filas = cacheBolsaAportes.filter(a => !buscar || blNombreAportante(a).toLowerCase().includes(buscar));
+  const cts = v => Math.round((Number(v) || 0) * 100);
+  const total = filas.reduce((s, a) => s + cts(a.monto), 0);
+  const porPersona = new Map(), porBolsa = new Map();
+  filas.forEach(a => {
+    const k = a.persona_id ? 'p:' + a.persona_id : 'n:' + (a.aportante || '').trim().toLowerCase();
+    const cur = porPersona.get(k) || { nombre: blNombreAportante(a), c: 0 };
+    cur.c += cts(a.monto); porPersona.set(k, cur);
+    porBolsa.set(a.bolsa_id, (porBolsa.get(a.bolsa_id) || 0) + cts(a.monto));
+  });
+  document.getElementById('resumenBolsas').innerHTML = `
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">${todas ? 'Total en bolsas' : escV28(blNombre(document.getElementById('blSelBolsa').value))}</div><div class="monto">${formatoMoneda(total / 100)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Aportes</div><div class="monto">${filas.length}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Personas</div><div class="monto">${porPersona.size}</div></div>`;
+  const lista = document.getElementById('listaBolsas');
+  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay aportes en este periodo. Crea bolsas con "Administrar bolsas".</div>'; return; }
+  const tarjeta = (titulo, monto) => `
+    <div class="tarjetaSeguimiento"><div><div class="nombrePersona">${escV28(titulo)}</div></div><span class="badge badge-tipo">${formatoMoneda(monto / 100)}</span></div>`;
+  const bloqueBolsas = todas ? `<h4 style="margin:6px 0 8px; color:var(--navy);">Por bolsa</h4>` +
+    [...porBolsa.entries()].sort((a, b) => b[1] - a[1]).map(([id, c]) => tarjeta(blNombre(id), c)).join('') : '';
+  const bloquePersonas = `<h4 style="margin:${todas ? 18 : 6}px 0 8px; color:var(--navy);">Por persona</h4>` +
+    [...porPersona.values()].sort((a, b) => b.c - a.c).map(p => tarjeta(p.nombre, p.c)).join('');
+  const detalle = filas.map(a => {
+    const partes = [formatoFecha(a.fecha), todas ? escV28(blNombre(a.bolsa_id)) : '', a.metodo ? escV28(a.metodo) : '',
+      a.referencia ? escV28(a.referencia) : '', a.nota ? escV28(a.nota) : ''].filter(Boolean);
+    return `
+    <div class="tarjetaSeguimiento" onclick="blAbrir('${a.id}')">
+      <div>
+        <div class="nombrePersona">${escV28(blNombreAportante(a))}</div>
+        <div class="metaLinea">${partes.join(' · ')}</div>
+      </div>
+      <span class="badge badge-tipo">${formatoMoneda(a.monto)}</span>
+    </div>`;
+  }).join('');
+  lista.innerHTML = `${bloqueBolsas}${bloquePersonas}<h4 style="margin:18px 0 8px; color:var(--navy);">Detalle</h4>${detalle}`;
+}
+
+// ── Aporte (agregar / editar / eliminar) ──
+function blAbrir(id) {
+  const a = id ? cacheBolsaAportes.find(r => String(r.id) === String(id)) : null;
+  if (id && !a) return;
+  const activas = blActivas();
+  if (!a && activas.length === 0) { alert('Primero crea una bolsa con "Administrar bolsas".'); return; }
+  blEditandoId = a ? a.id : null;
+  document.getElementById('blTitulo').textContent = a ? 'Aporte a bolsa' : 'Nuevo aporte a bolsa';
+  const opciones = (a && !activas.some(b => String(b.id) === String(a.bolsa_id)) ? cacheBolsas.filter(b => String(b.id) === String(a.bolsa_id)) : []).concat(activas);
+  document.getElementById('blBolsa').innerHTML = opciones.map(b => `<option value="${b.id}">${escV28(b.nombre)}</option>`).join('');
+  const selActual = document.getElementById('blSelBolsa').value;
+  document.getElementById('blBolsa').value = a ? a.bolsa_id : (activas.some(b => String(b.id) === selActual) ? selActual : activas[0].id);
+  poblarSelectPersonas('blPersona', a ? (a.persona_id || '') : '');
+  poblarSelectMetodo('blMetodo', a ? (a.metodo || 'Efectivo') : 'Efectivo');
+  document.getElementById('blAportante').value = a?.aportante || '';
+  document.getElementById('blMonto').value = a ? Number(a.monto).toFixed(2) : '';
+  document.getElementById('blFecha').value = a ? a.fecha : new Date().toISOString().slice(0, 10);
+  document.getElementById('blReferencia').value = a?.referencia || '';
+  document.getElementById('blNota').value = a?.nota || '';
+  const ligado = !!(a && a.pago_entrante_id);
+  ['blMonto', 'blFecha', 'blReferencia'].forEach(i => { document.getElementById(i).readOnly = ligado; });
+  document.getElementById('blMetodo').disabled = ligado;
+  document.getElementById('blAviso').style.display = ligado ? '' : 'none';
+  document.getElementById('blBtnEliminar').style.display = a ? '' : 'none';
+  document.getElementById('modalBolsaAporte').classList.add('abierto');
+}
+
+function blCerrar() { document.getElementById('modalBolsaAporte').classList.remove('abierto'); blEditandoId = null; }
+
+async function blGuardar(evt) {
+  evt.preventDefault();
+  const bolsaId = document.getElementById('blBolsa').value;
+  const personaId = document.getElementById('blPersona').value || null;
+  const aportante = document.getElementById('blAportante').value.trim().slice(0, 120);
+  const monto = Math.round(parseFloat(String(document.getElementById('blMonto').value).replace(/[^0-9.\-]/g, '')) * 100) / 100;
+  const fecha = document.getElementById('blFecha').value;
+  if (!bolsaId) { alert('Elige la bolsa.'); return false; }
+  if (!personaId && !aportante) { alert('Elige un miembro o escribe el nombre de quien aportó.'); return false; }
+  if (!(monto > 0)) { alert('Escribe un monto mayor que cero.'); return false; }
+  if (!fecha) { alert('Falta la fecha.'); return false; }
+  const sesion = getSesion();
+  const campos = {
+    bolsa_id: bolsaId, persona_id: personaId ? String(personaId) : null, aportante: personaId ? null : aportante,
+    fecha, monto, metodo: document.getElementById('blMetodo').value || null,
+    referencia: document.getElementById('blReferencia').value.trim() || null,
+    nota: document.getElementById('blNota').value.trim() || null,
+  };
+  let error;
+  if (blEditandoId) {
+    const a = cacheBolsaAportes.find(r => String(r.id) === String(blEditandoId));
+    if (a && a.pago_entrante_id) { delete campos.fecha; delete campos.monto; delete campos.metodo; delete campos.referencia; }
+    ({ error } = await sbCall(sb.from('bolsa_aportes').update(campos).eq('id', blEditandoId)));
+  } else {
+    ({ error } = await sbCall(sb.from('bolsa_aportes').insert({ ...campos, creado_por: sesion.usuario?.id ? String(sesion.usuario.id) : null })));
+  }
+  if (error) { alert('Error al guardar: ' + error.message); return false; }
+  blCerrar();
+  cargarBolsas();
+  return false;
+}
+
+async function blEliminar() {
+  const a = cacheBolsaAportes.find(r => String(r.id) === String(blEditandoId));
+  if (!a) return;
+  const aviso = a.pago_entrante_id ? '\n\nEste aporte vino de un pago de Cash App/Zelle que ya figura como aprobado; eliminarlo no lo devuelve a "Por aprobar".' : '';
+  if (!confirm('¿Eliminar este aporte?' + aviso)) return;
+  const { error } = await sbCall(sb.from('bolsa_aportes').delete().eq('id', a.id));
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
+  blCerrar();
+  cargarBolsas();
+}
+
+// ── Administrar bolsas (crear / renombrar / archivar) ──
+async function blAbrirAdmin() {
+  const r = await blCargarBolsas();
+  if (r.error) { alert('Error: ' + r.error.message + '. ¿Ya corriste el SQL de bolsas?'); return; }
+  blAdminRender();
+  document.getElementById('modalBolsasAdmin').classList.add('abierto');
+}
+
+function blCerrarAdmin() { document.getElementById('modalBolsasAdmin').classList.remove('abierto'); cargarBolsas(); }
+
+function blAdminRender() {
+  const cont = document.getElementById('blAdminLista');
+  if (cacheBolsas.length === 0) { cont.innerHTML = '<div class="estadoVacio">Todavía no hay bolsas.</div>'; return; }
+  cont.innerHTML = cacheBolsas.map(b => `
+    <div class="tarjetaSeguimiento"${b.activa ? '' : ' style="opacity:0.6;"'}>
+      <div><div class="nombrePersona">${escV28(b.nombre)}</div><div class="metaLinea">${b.activa ? 'Activa' : 'Archivada'}</div></div>
+      <div style="display:flex; gap:6px;">
+        <button type="button" class="btnSecundario" onclick="blRenombrar('${b.id}')">Renombrar</button>
+        <button type="button" class="btnSecundario" onclick="blAlternar('${b.id}')">${b.activa ? 'Archivar' : 'Activar'}</button>
+      </div>
+    </div>`).join('');
+}
+
+function blMensajeError(error) {
+  return /duplicate|unique/i.test(error.message || '') ? 'Ya existe una bolsa con ese nombre.' : 'Error: ' + error.message;
+}
+
+async function blCrear() {
+  const input = document.getElementById('blNuevoNombre');
+  const nombre = input.value.trim().replace(/\s+/g, ' ').slice(0, 60);
+  if (!nombre) { alert('Escribe el nombre de la bolsa.'); return; }
+  const { error } = await sbCall(sb.from('bolsas').insert({ nombre }));
+  if (error) { alert(blMensajeError(error)); return; }
+  input.value = '';
+  await blCargarBolsas();
+  blAdminRender();
+}
+
+async function blRenombrar(id) {
+  const b = cacheBolsas.find(x => String(x.id) === String(id));
+  if (!b) return;
+  const nuevo = (prompt('Nuevo nombre de la bolsa:', b.nombre) || '').trim().replace(/\s+/g, ' ').slice(0, 60);
+  if (!nuevo || nuevo === b.nombre) return;
+  const { error } = await sbCall(sb.from('bolsas').update({ nombre: nuevo }).eq('id', id));
+  if (error) { alert(blMensajeError(error)); return; }
+  await blCargarBolsas();
+  blAdminRender();
+}
+
+async function blAlternar(id) {
+  const b = cacheBolsas.find(x => String(x.id) === String(id));
+  if (!b) return;
+  const { error } = await sbCall(sb.from('bolsas').update({ activa: !b.activa }).eq('id', id));
+  if (error) { alert('Error: ' + error.message); return; }
+  await blCargarBolsas();
+  blAdminRender();
 }
 
 // ══════════════════════ DIEZMOS / OFRENDAS / DONACIONES / GASTOS ══════════════════════
