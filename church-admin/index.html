@@ -779,6 +779,18 @@
         <div id="listaPorAprobar"><div class="estadoCargando">Cargando pagos…</div></div>
       </div>
 
+      <!-- Sub-vista: Registros móviles — Ver-041 -->
+      <div id="subvistaFinRegMovil" style="display:none;">
+        <div class="barraAcciones" style="align-items:center; gap:10px;">
+          <a class="btnSecundario" href="movil.html" target="_blank" style="text-decoration:none;">📱 Abrir app móvil</a>
+          <label style="display:flex; align-items:center; gap:8px; font-size:0.88rem; color:var(--text-muted);">
+            <input type="checkbox" id="rmVerResueltos" onchange="cargarRegMovil()"> Ver también aprobados y rechazados
+          </label>
+        </div>
+        <div class="grid-resumen" id="resumenRegMovil" style="margin-bottom:20px;"></div>
+        <div id="listaRegMovil"><div class="estadoCargando">Cargando…</div></div>
+      </div>
+
       <!-- Sub-vista: Bolsas (aparte) — fondos fuera de las finanzas de la iglesia -->
       <div id="subvistaFinBolsas" style="display:none;">
         <div style="margin-bottom:12px; font-size:0.85rem; color:var(--text-muted);">Bolsas aparte (renta del local, etc.). Se llevan por persona y <b>no forman parte de las finanzas de la iglesia</b>: no entran a diezmos, ofrendas, reportes ni balance.</div>
@@ -1226,6 +1238,7 @@
       <div class="subtabs">
         <button class="subtab activa" id="subtabUsuariosBtn" onclick="cambiarSubtabAdmin('usuarios')"><span class="stIcon">👤</span><span class="stTexto">Usuarios y Roles</span></button>
         <button class="subtab" id="subtabCatalogosBtn" onclick="cambiarSubtabAdmin('catalogos')"><span class="stIcon">🗃️</span><span class="stTexto">Catálogos</span></button>
+        <button class="subtab" id="subtabConfigBtn" onclick="cambiarSubtabAdmin('config')"><span class="stIcon">⚙️</span><span class="stTexto">Configuración</span></button>
       </div>
 
       <!-- Sub-vista: Usuarios y Roles -->
@@ -1234,6 +1247,34 @@
         <div id="resumenRoles" class="grid-resumen" style="margin-bottom:20px;"></div>
         <div id="listaUsuariosAdmin">
           <div class="estadoCargando">Cargando usuarios…</div>
+        </div>
+      </div>
+
+      <!-- Sub-vista: Configuración — Ver-041 -->
+      <div id="subvistaConfig" style="display:none;">
+        <div class="tablaWrap" style="margin-bottom:20px;">
+          <h3>Datos de la Iglesia</h3>
+          <form onsubmit="return cfgGuardar(event)" style="padding:14px 18px;">
+            <div class="formGrid">
+              <div class="full"><label for="cfgNombre">Nombre de la iglesia</label><input type="text" id="cfgNombre"></div>
+              <div class="full"><label for="cfgDireccion">Dirección</label><input type="text" id="cfgDireccion"></div>
+              <div><label for="cfgTelefono">Teléfono</label><input type="text" id="cfgTelefono"></div>
+              <div><label for="cfgCorreo">Correo</label><input type="email" id="cfgCorreo"></div>
+              <div><label for="cfgPastor">Pastor</label><input type="text" id="cfgPastor"></div>
+              <div><label for="cfgEin">EIN</label><input type="text" id="cfgEin"></div>
+            </div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin:8px 0;">Se usan en los comprobantes y en las declaraciones de donaciones.</div>
+            <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+            <span id="cfgEstado" style="margin-left:10px; font-size:0.85rem; color:var(--text-muted);"></span>
+          </form>
+        </div>
+        <div class="tablaWrap">
+          <h3>Respaldo</h3>
+          <div style="padding:14px 18px;">
+            <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:10px;">Descarga una copia de tus datos (transacciones, diezmos, ofrendas, donaciones, miembros, cuentas, fondos y más) en un archivo JSON. Supabase ya guarda copias automáticas; esta es tu copia personal.</div>
+            <button type="button" class="btnSecundario" onclick="cfgRespaldo()">⬇ Descargar respaldo (JSON)</button>
+            <span id="cfgRespaldoEstado" style="margin-left:10px; font-size:0.85rem; color:var(--text-muted);"></span>
+          </div>
         </div>
       </div>
 
@@ -1820,6 +1861,28 @@
   </div>
 </div>
 
+<div class="modalOverlay" id="modalRegMovil">
+  <div class="modalCaja">
+    <h3>Aprobar registro móvil</h3>
+    <form onsubmit="return rmAprobar(event)">
+      <input type="hidden" id="rmId">
+      <div class="formGrid">
+        <div class="full"><label>Registro</label><div id="rmResumen" style="font-weight:600; color:var(--heading);"></div></div>
+        <div class="full"><label>Detalle</label><div id="rmDetalle" style="color:var(--text-muted);"></div></div>
+        <div><label for="rmFecha">Fecha *</label><input type="date" id="rmFecha" required></div>
+        <div class="full" id="rmPersonaWrap"><label for="rmPersona">Miembro *</label><select id="rmPersona"></select>
+          <div id="rmPersonaAyuda" style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;"></div></div>
+        <div class="full"><label for="rmFondo">Fondo</label><select id="rmFondo"></select></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnPeligro" onclick="rmRechazar()">Rechazar</button>
+        <button type="button" class="btnSecundario" onclick="rmCerrar()">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Aprobar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ═══════════════ MODAL: Pagos separados (un pago, varios propósitos) ═══════════════ -->
 <div class="modalOverlay" id="modalPorAprobarSep">
   <div class="modalCaja">
@@ -2263,8 +2326,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-040';
-document.getElementById('versionTopbar').textContent = 'Ver-040';
+const APP_VERSION = 'church-admin Ver-041';
+document.getElementById('versionTopbar').textContent = 'Ver-041';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -2452,6 +2515,7 @@ const FIN_TARJETAS = [
   { grupo: 'Finanzas de la Iglesia', items: [
     { tab: 'resumen', icono: '📊', etiqueta: 'Resumen Mensual', sub: 'Ingresos, egresos y balance por mes', color: 'c-blue' },
     { tab: 'porAprobar', icono: '📥', etiqueta: 'Por aprobar', sub: 'Cash App y Zelle recibidos', color: 'c-green' },
+    { tab: 'regMovil', icono: '📱', etiqueta: 'Registros móviles', sub: 'Enviados desde el celular', color: 'c-teal' },
     { tab: 'bolsas', icono: '🗂️', etiqueta: 'Bolsas (aparte)', sub: 'Renta y otras, fuera de las finanzas', color: 'c-gold' },
     { tab: 'diezmos', icono: '🙏', etiqueta: 'Diezmos', sub: 'Registro de diezmos', color: 'c-gold', tabla: 'diezmos' },
     { tab: 'ofrendas', icono: '🕊️', etiqueta: 'Ofrendas', sub: 'Ofrendas generales', color: 'c-blue', tabla: 'ofrendas' },
@@ -2556,6 +2620,8 @@ async function finCargarInicio() {
     if (b && typeof c.n === 'number') { b.textContent = c.n; b.style.display = ''; }
   });
   paActualizarInsignia();
+  rmActualizarInsignia();
+  cfgSincronizar();
 }
 
 function cambiarSubtabFinanzas(tab) {
@@ -2609,6 +2675,7 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'bancos') cargarBancos();
   else if (tab === 'transferencias') cargarTransferencias();
   else if (tab === 'porAprobar') cargarPorAprobar();
+  else if (tab === 'regMovil') cargarRegMovil();
   else if (tab === 'bolsas') cargarBolsas();
   else if (tab === 'auditoria') cargarAuditoria();
   else if (tab === 'ajustes') cargarAjustes();
@@ -3455,6 +3522,199 @@ function csvDescargar(nombreArchivo, encabezados, filas) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+
+// ── Registros móviles (Ver-041) ──
+let cacheRegMovil = [];
+
+async function rmActualizarInsignia() {
+  const r = await sbCall(sb.from('registros_movil').select('id', { count: 'exact', head: true }).eq('estado', 'Pendiente'));
+  const b = document.getElementById('finBadge_regMovil');
+  if (!b || r.error || typeof r.count !== 'number') return;
+  b.textContent = r.count;
+  b.style.display = r.count > 0 ? '' : 'none';
+}
+
+async function cargarRegMovil() {
+  const lista = document.getElementById('listaRegMovil');
+  lista.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  await asegurarDirectorioFinanzas();
+  await asegurarFondosFinanzas();
+  let q = sb.from('registros_movil').select('*').order('fecha', { ascending: false }).order('creado_en', { ascending: false }).range(0, 299);
+  if (!document.getElementById('rmVerResueltos').checked) q = q.eq('estado', 'Pendiente');
+  const { data, error } = await sbCall(q);
+  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(error.message)}. ¿Ya corriste el SQL 09?</div>`; return; }
+  cacheRegMovil = data || [];
+  const pend = cacheRegMovil.filter(x => x.estado === 'Pendiente');
+  document.getElementById('resumenRegMovil').innerHTML = `
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Por aprobar</div><div class="monto">${formatoMoneda(pend.reduce((t, x) => t + (Number(x.monto) || 0), 0))}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${pend.length}</div></div>`;
+  if (!cacheRegMovil.length) { lista.innerHTML = '<div class="estadoVacio">No hay registros móviles pendientes.</div>'; }
+  else lista.innerHTML = cacheRegMovil.map(x => {
+    const pendiente = x.estado === 'Pendiente';
+    const partes = [formatoFecha(x.fecha), escV28(x.tipo), x.subtipo ? escV28(x.subtipo) : '', escV28(x.metodo), x.servicio ? escV28(x.servicio) : '', pendiente ? '' : escV28(x.estado)].filter(Boolean);
+    return `<div class="tarjetaSeguimiento"${pendiente ? ` onclick="rmAbrir('${x.id}')"` : ' style="opacity:0.6;"'}>
+      <div><div class="nombrePersona">${escV28(x.nombre || 'Anónima')}</div><div class="metaLinea">${partes.join(' · ')}</div></div>
+      <span class="badge badge-tipo">${formatoMoneda(x.monto)}</span></div>`;
+  }).join('');
+  rmActualizarInsignia();
+}
+
+function rmAbrir(id) {
+  const x = cacheRegMovil.find(r => r.id === id);
+  if (!x) return;
+  document.getElementById('rmId').value = x.id;
+  document.getElementById('rmResumen').textContent = `${x.tipo} · ${formatoMoneda(x.monto)} · ${x.nombre || 'Anónima'}`;
+  document.getElementById('rmDetalle').textContent = [x.subtipo, x.metodo, x.servicio, x.no_sobre ? 'Sobre ' + x.no_sobre : '', x.referencia, x.proyecto].filter(Boolean).join(' · ') || '—';
+  document.getElementById('rmFecha').value = x.fecha;
+  const conPersona = x.tipo !== 'Ofrenda';
+  document.getElementById('rmPersonaWrap').style.display = conPersona ? '' : 'none';
+  document.getElementById('rmPersona').required = conPersona;
+  if (conPersona) {
+    poblarSelectPersonas('rmPersona', x.persona_id || '');
+    document.getElementById('rmPersonaAyuda').textContent = x.persona_id ? 'El nombre coincide con un miembro.' : `Escribió: “${x.nombre || ''}”. Elige el miembro correcto.`;
+  }
+  poblarSelectFondos('rmFondo');
+  document.getElementById('modalRegMovil').classList.add('abierto');
+}
+
+function rmCerrar() { document.getElementById('modalRegMovil').classList.remove('abierto'); }
+
+async function rmReclamar(id, estadoNuevo) {
+  const sesion = getSesion();
+  return sbCall(sb.from('registros_movil').update({
+    estado: estadoNuevo, resuelto_por: sesion.usuario?.id ? String(sesion.usuario.id) : null, resuelto_en: new Date().toISOString(),
+  }).eq('id', id).eq('estado', 'Pendiente').select('id'));
+}
+
+async function rmDevolver(id) {
+  await sbCall(sb.from('registros_movil').update({ estado: 'Pendiente', resuelto_por: null, resuelto_en: null, transaccion_id: null }).eq('id', id));
+}
+
+async function rmAprobar(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('rmId').value;
+  const x = cacheRegMovil.find(r => r.id === id);
+  if (!x) return false;
+  const personaId = x.tipo === 'Ofrenda' ? null : (document.getElementById('rmPersona').value || null);
+  const fondoId = document.getElementById('rmFondo').value || null;
+  const fecha = document.getElementById('rmFecha').value;
+  if (x.tipo !== 'Ofrenda' && !personaId) { alert('Selecciona un miembro.'); return false; }
+  const btn = evt.target.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  try {
+    const { data: ganado, error: eClaim } = await rmReclamar(id, 'Aprobado');
+    if (eClaim) { alert('No se pudo reservar el registro: ' + eClaim.message); return false; }
+    if (!ganado || ganado.length === 0) { alert('Este registro ya fue procesado.'); rmCerrar(); cargarRegMovil(); return false; }
+
+    const sesion = getSesion();
+    const monto = Number(x.monto);
+    const sub = x.subtipo || '';
+    const referencia = x.referencia || (x.no_sobre ? 'Sobre ' + x.no_sobre : null);
+    const nombre = personaId ? nombrePersonaPorId(personaId) : (x.nombre || '');
+    let descripcion, categoria, origen, cuentaCr;
+    if (x.tipo === 'Diezmo') { descripcion = `Diezmo — ${nombre}`; categoria = 'Diezmos'; origen = 'Diezmo'; cuentaCr = cuentaIdPorCodigo('4001'); }
+    else if (x.tipo === 'Ofrenda') { descripcion = `Ofrenda — ${sub}`; categoria = sub; origen = 'Ofrenda'; cuentaCr = cuentaIdPorCodigo(OFRENDA_TIPO_CUENTA[sub] || '4002'); }
+    else { descripcion = `Donación — ${nombre}`; categoria = sub; origen = 'Donación'; cuentaCr = cuentaIdPorCodigo('4003'); }
+
+    const { data: trans, error: errTrans } = await sbCall(sb.from('transacciones').insert({
+      fecha, descripcion, categoria, tipo: 'Ingreso', tipo_origen: origen, metodo: x.metodo, monto,
+      referencia, estado: 'Completado', fondo_id: fondoId, cuenta_cr: cuentaCr, solo_fondo: false,
+      creado_por: sesion.usuario?.id || null,
+    }).select().single());
+    if (errTrans) { await rmDevolver(id); alert('Error al crear la transacción: ' + errTrans.message); return false; }
+
+    const base = { fecha, monto, metodo: x.metodo, estado: 'Completado', transaccion_id: trans.id, creado_por: sesion.usuario?.id || null };
+    let error;
+    if (x.tipo === 'Diezmo') ({ error } = await sbCall(sb.from('diezmos').insert({ ...base, persona_id: personaId, referencia })));
+    else if (x.tipo === 'Ofrenda') ({ error } = await sbCall(sb.from('ofrendas').insert({ ...base, tipo: sub })));
+    else ({ error } = await sbCall(sb.from('donaciones').insert({ ...base, persona_id: personaId, referencia })));
+    if (error) {
+      await sbCall(sb.from('transacciones').delete().eq('id', trans.id));
+      await rmDevolver(id);
+      alert('Error al guardar: ' + error.message);
+      return false;
+    }
+    await sbCall(sb.from('registros_movil').update({ transaccion_id: String(trans.id) }).eq('id', id));
+    rmCerrar();
+    cargarRegMovil();
+  } finally {
+    btn.disabled = false;
+  }
+  return false;
+}
+
+async function rmRechazar() {
+  const id = document.getElementById('rmId').value;
+  if (!id || !confirm('¿Rechazar este registro? No se creará nada en los libros.')) return;
+  const { data, error } = await rmReclamar(id, 'Rechazado');
+  if (error) { alert('Error: ' + error.message); return; }
+  if (!data || data.length === 0) alert('Este registro ya fue procesado.');
+  rmCerrar();
+  cargarRegMovil();
+}
+
+// ── Configuración: datos de la iglesia y respaldo (Ver-041) ──
+async function cfgSincronizar() {
+  const { data } = await sbCall(sb.from('config_iglesia').select('*').eq('id', 1).maybeSingle());
+  if (!data) return data;
+  try {
+    if (data.nombre) localStorage.setItem('dcIglesiaNombre', data.nombre);
+    const dir = [data.direccion, data.ein ? 'EIN ' + data.ein : ''].filter(Boolean).join(' · ');
+    if (dir) localStorage.setItem('dcIglesiaDireccion', dir);
+  } catch (e) { /* sin almacenamiento */ }
+  return data;
+}
+
+async function cfgCargar() {
+  const d = (await cfgSincronizar()) || {};
+  document.getElementById('cfgNombre').value = d.nombre || DC_IGLESIA_POR_DEFECTO;
+  document.getElementById('cfgDireccion').value = d.direccion || '';
+  document.getElementById('cfgTelefono').value = d.telefono || '';
+  document.getElementById('cfgCorreo').value = d.correo || '';
+  document.getElementById('cfgPastor').value = d.pastor || '';
+  document.getElementById('cfgEin').value = d.ein || '';
+}
+
+async function cfgGuardar(evt) {
+  evt.preventDefault();
+  const v = id => document.getElementById(id).value.trim() || null;
+  const { error } = await sbCall(sb.from('config_iglesia').upsert({
+    id: 1, nombre: v('cfgNombre'), direccion: v('cfgDireccion'), telefono: v('cfgTelefono'),
+    correo: v('cfgCorreo'), pastor: v('cfgPastor'), ein: v('cfgEin'), actualizado_en: new Date().toISOString(),
+  }, { onConflict: 'id' }));
+  const est = document.getElementById('cfgEstado');
+  if (error) { est.textContent = 'Error: ' + error.message + ' (¿SQL 09?)'; return false; }
+  est.textContent = 'Guardado ✓';
+  cfgSincronizar();
+  return false;
+}
+
+async function cfgRespaldo() {
+  const est = document.getElementById('cfgRespaldoEstado');
+  const tablas = ['config_iglesia', 'personas', 'transacciones', 'diezmos', 'ofrendas', 'donaciones', 'gastos', 'cuentas', 'fondos', 'bancos',
+    'organizaciones', 'transferencias', 'reconciliaciones', 'promesas', 'campanas', 'presupuesto', 'pagos_entrantes', 'registros_movil', 'ministerios'];
+  const out = { generado: new Date().toISOString(), version: APP_VERSION, tablas: {} };
+  for (const t of tablas) {
+    est.textContent = 'Leyendo ' + t + '…';
+    const filas = [];
+    for (let desde = 0; desde < 50000; desde += 1000) {
+      const { data, error } = await sbCall(sb.from(t).select('*').range(desde, desde + 999));
+      if (error) { if (desde === 0) out.tablas[t] = { error: error.message }; break; }
+      filas.push(...(data || []));
+      if (!data || data.length < 1000) break;
+    }
+    if (!out.tablas[t]) out.tablas[t] = filas;
+  }
+  const blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'respaldo_church_admin_' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  est.textContent = 'Listo ✓';
 }
 
 // ── Tendencia de los últimos 6 meses en el inicio (Ver-040) ──
@@ -4844,6 +5104,8 @@ async function cargarPorAprobar() {
   paCargarImportacion();
   paRender();
   paActualizarInsignia();
+  rmActualizarInsignia();
+  cfgSincronizar();
 }
 
 function paRender() {
@@ -7944,11 +8206,13 @@ function mostrarAdministracion() {
 }
 
 function cambiarSubtabAdmin(tab) {
-  const esUsuarios = tab === 'usuarios';
-  document.getElementById('subtabUsuariosBtn').classList.toggle('activa', esUsuarios);
-  document.getElementById('subtabCatalogosBtn').classList.toggle('activa', !esUsuarios);
-  document.getElementById('subvistaUsuarios').style.display = esUsuarios ? 'block' : 'none';
-  document.getElementById('subvistaCatalogos').style.display = esUsuarios ? 'none' : 'block';
+  document.getElementById('subtabUsuariosBtn').classList.toggle('activa', tab === 'usuarios');
+  document.getElementById('subtabCatalogosBtn').classList.toggle('activa', tab === 'catalogos');
+  document.getElementById('subtabConfigBtn').classList.toggle('activa', tab === 'config');
+  document.getElementById('subvistaUsuarios').style.display = tab === 'usuarios' ? 'block' : 'none';
+  document.getElementById('subvistaCatalogos').style.display = tab === 'catalogos' ? 'block' : 'none';
+  document.getElementById('subvistaConfig').style.display = tab === 'config' ? 'block' : 'none';
+  if (tab === 'config') cfgCargar();
 }
 
 // ── Usuarios y Roles ──────────────────────────────────────────────────────

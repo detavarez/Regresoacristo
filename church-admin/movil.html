@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D1B2A">
+<title>Church Admin — Móvil</title>
+<script>const APP_SLUG = 'church_admin';</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="../shared/supabase-client.js"></script>
+<script src="../shared/auth.js"></script>
+<style>
+:root{--gold:#C9A84C;--gold-light:#E8C97A;--navy:#0D1B2A;--navy-mid:#1A2D42;--cream:#F5EFE0;--white:#FDFAF5;--muted:#8A9BB0;--success:#3DAA6E;--danger:#D94F4F;--warning:#E8A030;--info:#3A8CB5;--border:rgba(201,168,76,.18)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--navy);color:var(--white);min-height:100vh;max-width:430px;margin:0 auto;padding-bottom:76px}
+.topbar{background:var(--navy-mid);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.tl{display:flex;align-items:center;gap:10px}
+.logo-i{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--navy)}
+.topbar h1{font-family:Georgia,serif;font-size:15px;color:var(--gold-light)}
+.topbar .ts{font-size:10px;color:var(--muted)}
+.sbtn{background:rgba(201,168,76,.12);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--gold-light);font-size:12px;font-weight:600;cursor:pointer}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--navy-mid);border-top:1px solid var(--border);display:flex;z-index:100}
+.bn{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 0;color:var(--muted);font-size:10px;gap:3px;border:none;background:none;cursor:pointer}
+.bn.active{color:var(--gold-light)}.bn .ico{font-size:20px}
+.bn .nb{position:absolute;top:4px;right:calc(50% - 20px);background:var(--danger);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px}
+.page{display:none;padding:16px}.page.active{display:block}
+.pg-title{font-family:Georgia,serif;font-size:20px;color:var(--cream);margin-bottom:4px}
+.pg-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+.type-row{display:flex;gap:10px;margin-bottom:16px}
+.type-btn{flex:1;background:var(--navy-mid);border:1px solid var(--border);border-radius:12px;padding:14px 8px;cursor:pointer;text-align:center;color:inherit}
+.type-btn:active{transform:scale(.96)}.type-btn .ti{font-size:22px;margin-bottom:5px}.type-btn .tt{font-size:12px;font-weight:600;color:var(--cream)}
+.type-btn.sel{background:rgba(201,168,76,.12);border-color:rgba(201,168,76,.4)}
+.form-card{background:var(--navy-mid);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px}
+.form-card h3{font-size:13px;font-weight:600;color:var(--gold-light);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.fgrp{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.fgrp label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.fgrp input,.fgrp select{background:var(--navy);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--white);font-size:16px;width:100%;outline:none}
+.fgrp input:focus,.fgrp select:focus{border-color:var(--gold)}
+.amt{position:relative}.amt .pfx{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:18px;font-weight:700}
+.amt input{padding-left:30px;font-size:22px;color:var(--gold-light);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{padding:8px 13px;border-radius:20px;border:1px solid var(--border);background:var(--navy);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;user-select:none}
+.chip.sel{background:rgba(201,168,76,.15);border-color:rgba(201,168,76,.4);color:var(--gold-light)}
+.submit{width:100%;padding:15px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;border:none;background:linear-gradient(135deg,var(--gold),#8a6e2f);color:var(--navy)}
+.submit:disabled{opacity:.5}
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-m{background:var(--navy-mid);border:1px solid var(--border);border-radius:12px;padding:14px}
+.stat-m .sl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600;margin-bottom:3px}
+.stat-m .sv{font-family:ui-monospace,Menlo,monospace;font-size:18px;color:var(--white)}
+.info-card{background:rgba(201,168,76,.07);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px}
+.info-card .it{font-size:12px;font-weight:600;color:var(--gold-light);margin-bottom:5px}.info-card .ix{font-size:12px;color:var(--muted);line-height:1.6}
+.pend-item{background:var(--navy-mid);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.pi-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px}
+.pi-type{font-size:13px;font-weight:700;color:var(--gold-light)}.pi-amt{font-size:18px;font-weight:700;font-family:ui-monospace,Menlo,monospace;color:#5dd49a}
+.pi-det{font-size:12px;color:var(--muted);line-height:1.7}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.bw{background:rgba(232,160,48,.15);color:#f0b44f;border:1px solid rgba(232,160,48,.3)}
+.bs{background:rgba(61,170,110,.15);color:#5dd49a;border:1px solid rgba(61,170,110,.3)}
+.bd{background:rgba(217,79,79,.15);color:#f07070;border:1px solid rgba(217,79,79,.3)}
+.cancel-btn{margin-top:9px;padding:7px 14px;border-radius:7px;background:rgba(217,79,79,.12);border:1px solid rgba(217,79,79,.3);color:#f07070;font-size:12px;font-weight:600;cursor:pointer}
+.empty{text-align:center;color:var(--muted);font-size:13px;padding:30px 10px}
+.ov{display:none;position:fixed;inset:0;background:rgba(13,27,42,.94);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:30px}
+.ov.show{display:flex}.ov .big{font-size:56px}.ov .t{font-family:Georgia,serif;font-size:22px;color:var(--gold-light)}.ov .s{font-size:13px;color:var(--muted);text-align:center;max-width:280px;line-height:1.6}
+.ov button{margin-top:10px;padding:12px 28px;border-radius:10px;background:var(--gold);color:var(--navy);font-size:14px;font-weight:700;border:none;cursor:pointer}
+.toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);background:var(--navy-mid);border:1px solid var(--border);border-radius:9px;padding:10px 18px;font-size:13px;font-weight:600;color:var(--gold-light);z-index:1000;display:none;max-width:90%}
+.toast.show{display:block}
+#loginBox{max-width:430px;margin:0 auto;padding:60px 22px}
+#loginBox h2{font-family:Georgia,serif;color:var(--gold-light);text-align:center;margin:14px 0 4px}
+#loginMsg{color:#f07070;font-size:13px;margin:8px 0;min-height:18px;text-align:center}
+</style>
+</head>
+<body>
+
+<div id="loginBox" style="display:none">
+  <div class="logo-i" style="margin:0 auto;width:56px;height:56px;font-size:28px">✝</div>
+  <h2>Regreso a Cristo</h2>
+  <div class="pg-sub" style="text-align:center">Registro móvil · Ver-M001</div>
+  <div class="form-card">
+    <div class="fgrp"><label>Correo</label><input type="email" id="lgEmail" autocomplete="username" inputmode="email"></div>
+    <div class="fgrp"><label>Contraseña</label><input type="password" id="lgPass" autocomplete="current-password"></div>
+    <div id="loginMsg"></div>
+    <button class="submit" id="lgBtn" onclick="entrar()">Entrar</button>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+<div class="topbar">
+  <div class="tl"><div class="logo-i">✝</div><div><h1>Church Admin</h1><div class="ts">Móvil Ver-M001 · <span id="quien"></span></div></div></div>
+  <div style="display:flex;gap:8px;align-items:center"><span id="dot" style="width:8px;height:8px;border-radius:50%;background:#3DAA6E;display:inline-block"></span><button class="sbtn" onclick="cargar(true)">↻</button><button class="sbtn" onclick="salir()">Salir</button></div>
+</div>
+<div id="toast" class="toast"></div>
+
+<div id="pg-inicio" class="page active">
+  <div class="pg-title">Bienvenido 👋</div>
+  <div class="pg-sub">Registra diezmos, ofrendas y donaciones</div>
+  <div class="info-card"><div class="it">📱 Cómo funciona</div><div class="ix">Cada registro queda <strong style="color:var(--warning)">PENDIENTE</strong> hasta que el tesorero lo apruebe en Church Admin. Al aprobarlo, entra a los libros.</div></div>
+  <div class="stat-row" id="homeStats"></div>
+  <div class="pg-sub" style="margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Acceso rápido</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button class="type-btn" onclick="irRegistrar('Diezmo')"><div class="ti">🙏</div><div class="tt">Diezmo</div></button>
+    <button class="type-btn" onclick="irRegistrar('Ofrenda')"><div class="ti">🕊️</div><div class="tt">Ofrenda</div></button>
+    <button class="type-btn" onclick="irRegistrar('Donación')"><div class="ti">💝</div><div class="tt">Donación</div></button>
+    <button class="type-btn" onclick="mostrar('pendientes')"><div class="ti">⏳</div><div class="tt">Pendientes</div><div style="font-size:10px;color:var(--muted)" id="homePend">0 en espera</div></button>
+  </div>
+</div>
+
+<div id="pg-registrar" class="page">
+  <div class="pg-title">Nuevo Registro</div>
+  <div class="pg-sub">Elige el tipo y completa el formulario</div>
+  <div class="type-row">
+    <button class="type-btn sel" id="tb-Diezmo" onclick="setTipo('Diezmo')"><div class="ti">🙏</div><div class="tt">Diezmo</div></button>
+    <button class="type-btn" id="tb-Ofrenda" onclick="setTipo('Ofrenda')"><div class="ti">🕊️</div><div class="tt">Ofrenda</div></button>
+    <button class="type-btn" id="tb-Donación" onclick="setTipo('Donación')"><div class="ti">💝</div><div class="tt">Donación</div></button>
+  </div>
+  <div class="form-card">
+    <h3 id="frmTitulo">🙏 Registro de Diezmo</h3>
+    <div class="info-card" id="frmAnon" style="display:none"><div class="ix">Las ofrendas son anónimas. No se registra ningún nombre.</div></div>
+    <div class="fgrp" id="gNombre"><label id="lNombre">Nombre del miembro</label><input type="text" id="fNombre" list="dlPersonas" placeholder="Nombre completo" autocomplete="off"><datalist id="dlPersonas"></datalist></div>
+    <div class="fgrp"><label>Monto</label><div class="amt"><span class="pfx">$</span><input type="number" id="fMonto" placeholder="0.00" min="0" step="0.01" inputmode="decimal"></div></div>
+    <div class="fgrp" id="gSobre"><label>No. de sobre (opcional)</label><input type="text" id="fSobre" placeholder="S-000"></div>
+    <div class="fgrp" id="gSub"><label id="lSub">Tipo</label><select id="fSub"></select></div>
+    <div class="fgrp" id="gProyecto"><label>Proyecto (opcional)</label><input type="text" id="fProyecto" placeholder="Ej. Misión Norte"></div>
+    <div class="fgrp" id="gServicio"><label>Servicio</label><select id="fServicio"></select></div>
+    <div class="fgrp"><label>Método de pago</label><div class="chips" id="chips"></div></div>
+    <div class="fgrp"><label>Fecha</label><input type="date" id="fFecha"></div>
+    <div class="fgrp" id="gRef"><label>Referencia / # cheque / ID</label><input type="text" id="fRef" placeholder="CHQ-1234"></div>
+    <button class="submit" id="btnEnviar" onclick="enviar()">✝ Enviar para aprobación</button>
+  </div>
+</div>
+
+<div id="pg-pendientes" class="page"><div class="pg-title">Mis Registros</div><div class="pg-sub">Enviados y pendientes de aprobación</div><div id="listaPend"></div></div>
+<div id="pg-historial" class="page"><div class="pg-title">Historial</div><div class="pg-sub">Aprobados o rechazados</div><div id="listaHist"></div></div>
+
+<div class="bottom-nav">
+  <button class="bn active" id="bn-inicio" onclick="mostrar('inicio')"><span class="ico">🏠</span>Inicio</button>
+  <button class="bn" id="bn-registrar" onclick="mostrar('registrar')"><span class="ico">➕</span>Registrar</button>
+  <button class="bn" id="bn-pendientes" onclick="mostrar('pendientes')"><span class="ico">⏳</span>Pendientes<span class="nb" id="pendBadge" style="display:none">0</span></button>
+  <button class="bn" id="bn-historial" onclick="mostrar('historial')"><span class="ico">📋</span>Historial</button>
+</div>
+<div class="ov" id="ov"><div class="big">✅</div><div class="t">¡Enviado!</div><div class="s">Tu registro quedó pendiente de aprobación.</div><button onclick="cerrarOv()">Continuar</button></div>
+</div>
+
+<script>
+const METODOS = ['Efectivo','Cheque','Zelle','CashApp','Transferencia','Tarjeta','PayPal','Venmo','Electrónico'];
+const OFRENDAS = ['Ofrenda General','Misiones','Construcción','Especial','Bebés y Niños','Jóvenes'];
+const DONACIONES = ['Fondo General','Fondo de Misiones','Construcción','Educación','Ayuda Social'];
+const SERVICIOS_BASE = ['Domingo AM','Domingo PM','Miércoles','Especial'];
+let tipo = 'Diezmo', metodo = 'Efectivo', registros = [], personas = [], paginaActual = 'inicio';
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hoy = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+const money = n => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2800); }
+
+function mostrar(p, desdeHistorial) {
+  paginaActual = p;
+  ['inicio', 'registrar', 'pendientes', 'historial'].forEach(x => {
+    $('pg-' + x).classList.toggle('active', x === p);
+    $('bn-' + x).classList.toggle('active', x === p);
+  });
+  window.scrollTo(0, 0);
+  if (!desdeHistorial) history.pushState({ p }, '');
+}
+window.addEventListener('popstate', e => {
+  if ($('ov').classList.contains('show')) { cerrarOv(true); history.pushState({ p: paginaActual }, ''); return; }
+  const p = e.state && e.state.p;
+  if (p) mostrar(p, true);
+  else if (paginaActual !== 'inicio') mostrar('inicio', true);
+});
+
+function chips() {
+  $('chips').innerHTML = METODOS.map(m => `<div class="chip${m === metodo ? ' sel' : ''}" onclick="setMetodo('${m}')">${m}</div>`).join('');
+}
+function setMetodo(m) { metodo = m; chips(); }
+
+function setTipo(t) {
+  tipo = t;
+  ['Diezmo', 'Ofrenda', 'Donación'].forEach(x => $('tb-' + x).classList.toggle('sel', x === t));
+  const ico = { Diezmo: '🙏', Ofrenda: '🕊️', 'Donación': '💝' }[t];
+  $('frmTitulo').textContent = `${ico} Registro de ${t}`;
+  $('frmAnon').style.display = t === 'Ofrenda' ? '' : 'none';
+  $('gNombre').style.display = t === 'Ofrenda' ? 'none' : '';
+  $('lNombre').textContent = t === 'Diezmo' ? 'Nombre del miembro' : 'Nombre del donante';
+  $('gSobre').style.display = t === 'Diezmo' ? '' : 'none';
+  $('gServicio').style.display = t === 'Donación' ? 'none' : '';
+  $('gProyecto').style.display = t === 'Donación' ? '' : 'none';
+  $('gRef').style.display = t === 'Ofrenda' ? 'none' : '';
+  $('gSub').style.display = t === 'Diezmo' ? 'none' : '';
+  if (t === 'Ofrenda') { $('lSub').textContent = 'Tipo de ofrenda'; $('fSub').innerHTML = OFRENDAS.map(x => `<option>${x}</option>`).join(''); }
+  if (t === 'Donación') { $('lSub').textContent = 'Propósito'; $('fSub').innerHTML = DONACIONES.map(x => `<option>${x}</option>`).join(''); }
+}
+function irRegistrar(t) { setTipo(t); mostrar('registrar'); }
+
+async function enviar() {
+  const monto = Math.round(Number($('fMonto').value) * 100) / 100;
+  const nombre = $('fNombre').value.trim();
+  const fecha = $('fFecha').value;
+  if (!(monto > 0)) { toast('Escribe un monto válido.'); return; }
+  if (tipo !== 'Ofrenda' && !nombre) { toast('Escribe el nombre.'); return; }
+  if (!fecha) { toast('Elige la fecha.'); return; }
+  let personaId = null;
+  if (tipo !== 'Ofrenda') {
+    const k = norm(nombre);
+    const m = personas.filter(p => norm(p.nombre) === k);
+    if (m.length === 1) personaId = m[0].id;
+  }
+  const fila = {
+    tipo, nombre: tipo === 'Ofrenda' ? null : nombre, persona_id: personaId, monto, metodo, fecha,
+    no_sobre: tipo === 'Diezmo' ? ($('fSobre').value.trim() || null) : null,
+    servicio: tipo === 'Donación' ? null : $('fServicio').value,
+    referencia: tipo === 'Ofrenda' ? null : ($('fRef').value.trim() || null),
+    subtipo: tipo === 'Diezmo' ? null : $('fSub').value,
+    proyecto: tipo === 'Donación' ? ($('fProyecto').value.trim() || null) : null,
+  };
+  const b = $('btnEnviar'); b.disabled = true;
+  const { error } = await sbCall(sb.from('registros_movil').insert(fila));
+  b.disabled = false;
+  if (error) { toast('No se pudo enviar: ' + error.message); return; }
+  ['fNombre', 'fMonto', 'fSobre', 'fRef', 'fProyecto'].forEach(i => $(i).value = '');
+  $('ov').classList.add('show');
+  cargar();
+}
+function cerrarOv(sinNav) { $('ov').classList.remove('show'); if (!sinNav) mostrar('pendientes'); }
+
+async function cancelar(id) {
+  if (!confirm('¿Cancelar este registro?')) return;
+  const { error } = await sbCall(sb.from('registros_movil').delete().eq('id', id).eq('estado', 'Pendiente'));
+  if (error) { toast('Error: ' + error.message); return; }
+  cargar();
+}
+
+function item(r, conCancelar) {
+  const cls = r.estado === 'Aprobado' ? 'bs' : r.estado === 'Rechazado' ? 'bd' : 'bw';
+  const det = [r.nombre, r.subtipo, r.servicio, r.metodo, r.fecha, r.no_sobre ? 'Sobre ' + r.no_sobre : '', r.referencia, r.proyecto].filter(Boolean).map(esc).join(' · ');
+  return `<div class="pend-item"><div class="pi-h"><div><div class="pi-type">${r.tipo} <span class="badge ${cls}">${r.estado}</span></div></div><div class="pi-amt">${money(r.monto)}</div></div><div class="pi-det">${det}</div>${conCancelar ? `<button class="cancel-btn" onclick="cancelar('${r.id}')">✕ Cancelar</button>` : ''}</div>`;
+}
+
+function pintar() {
+  const pend = registros.filter(r => r.estado === 'Pendiente');
+  const hist = registros.filter(r => r.estado !== 'Pendiente');
+  const mes = hoy().slice(0, 7);
+  const delMes = registros.filter(r => r.estado !== 'Rechazado' && String(r.fecha).startsWith(mes));
+  $('homeStats').innerHTML = `<div class="stat-m"><div class="sl">Pendientes</div><div class="sv">${pend.length}</div></div>
+    <div class="stat-m"><div class="sl">Este mes</div><div class="sv">${money(delMes.reduce((s, r) => s + Number(r.monto), 0))}</div></div>`;
+  $('homePend').textContent = pend.length + ' en espera';
+  const nb = $('pendBadge'); nb.textContent = pend.length; nb.style.display = pend.length ? '' : 'none';
+  $('listaPend').innerHTML = pend.length ? pend.map(r => item(r, true)).join('') : '<div class="empty">No tienes registros pendientes.</div>';
+  $('listaHist').innerHTML = hist.length ? hist.slice(0, 100).map(r => item(r, false)).join('') : '<div class="empty">Aún no hay registros resueltos.</div>';
+}
+
+async function cargar(avisar) {
+  const uid = getSesion().usuario.id;
+  const { data, error } = await sbCall(sb.from('registros_movil').select('*').eq('creado_por', uid).order('creado_en', { ascending: false }).range(0, 299));
+  if (error) {
+    $('dot').style.background = '#D94F4F';
+    $('listaPend').innerHTML = `<div class="empty">Error: ${esc(error.message)}. ¿Ya se corrió el SQL 09?</div>`;
+    return;
+  }
+  $('dot').style.background = '#3DAA6E';
+  registros = data || [];
+  pintar();
+  if (avisar) toast('Actualizado');
+}
+
+async function cargarListas() {
+  const { data } = await sbCall(sb.from('personas').select('id, nombre, apellido, nombre_completo').eq('archivado', false).range(0, 4999));
+  personas = (data || []).map(p => ({ id: p.id, nombre: p.nombre_completo || `${p.nombre || ''} ${p.apellido || ''}`.trim() })).filter(p => p.nombre);
+  $('dlPersonas').innerHTML = personas.map(p => `<option value="${esc(p.nombre)}">`).join('');
+  let serv = SERVICIOS_BASE;
+  const r = await sbCall(sb.from('tipos_servicio').select('nombre, activo').order('nombre'));
+  if (!r.error && r.data && r.data.length) { const a = r.data.filter(x => x.activo !== false).map(x => x.nombre); if (a.length) serv = a; }
+  $('fServicio').innerHTML = serv.map(x => `<option>${esc(x)}</option>`).join('');
+}
+
+async function iniciarApp() {
+  $('loginBox').style.display = 'none';
+  $('app').style.display = '';
+  $('quien').textContent = getSesion().usuario.nombre || getSesion().usuario.email || '';
+  $('fFecha').value = hoy();
+  chips(); setTipo('Diezmo');
+  history.replaceState({ p: 'inicio' }, '');
+  await Promise.all([cargarListas(), cargar()]);
+}
+
+async function entrar() {
+  const b = $('lgBtn'); b.disabled = true; $('loginMsg').textContent = '';
+  const r = await iniciarSesion($('lgEmail').value.trim(), $('lgPass').value);
+  b.disabled = false;
+  if (!r.ok) { $('loginMsg').textContent = r.mensaje; return; }
+  iniciarApp();
+}
+async function salir() { await cerrarSesion(); location.reload(); }
+
+(async function () {
+  const { data } = await sb.auth.getSession();
+  if (data && data.session) {
+    const r = await cargarSesion();
+    if (r.ok) { iniciarApp(); return; }
+  }
+  $('loginBox').style.display = '';
+})();
+</script>
+</body>
+</html>
