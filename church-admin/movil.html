@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0D1B2A">
+<link rel="manifest" href="manifest-movil.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Church Admin — Móvil</title>
 <script>const APP_SLUG = 'church_admin';</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -86,7 +91,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <div id="app" style="display:none">
 <div class="topbar">
   <div class="tl"><div class="logo-i">✝</div><div><h1>Church Admin</h1><div class="ts">Móvil Ver-M001 · <span id="quien"></span></div></div></div>
-  <div style="display:flex;gap:8px;align-items:center"><span id="dot" style="width:8px;height:8px;border-radius:50%;background:#3DAA6E;display:inline-block"></span><button class="sbtn" onclick="cargar(true)">↻</button><button class="sbtn" onclick="salir()">Salir</button></div>
+  <div style="display:flex;gap:8px;align-items:center"><span id="dot" style="width:8px;height:8px;border-radius:50%;background:#3DAA6E;display:inline-block"></span><button class="sbtn" id="btnInstalar" style="display:none" onclick="instalarApp()">📲</button><button class="sbtn" onclick="cargar(true)">↻</button><button class="sbtn" onclick="salir()">Salir</button></div>
 </div>
 <div id="toast" class="toast"></div>
 
@@ -292,6 +297,16 @@ async function entrar() {
   iniciarApp();
 }
 async function salir() { await cerrarSesion(); location.reload(); }
+
+let evInst = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); evInst = e; $('btnInstalar').style.display = ''; });
+window.addEventListener('appinstalled', () => { $('btnInstalar').style.display = 'none'; });
+async function instalarApp() {
+  if (evInst) { evInst.prompt(); await evInst.userChoice; evInst = null; $('btnInstalar').style.display = 'none'; return; }
+  alert('iPhone: toca Compartir → "Agregar a pantalla de inicio". Android: ⋮ → "Instalar app".');
+}
+if (/iphone|ipad/i.test(navigator.userAgent) && !navigator.standalone) $('btnInstalar').style.display = '';
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 
 (async function () {
   const { data } = await sb.auth.getSession();

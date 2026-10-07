@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D1B2A">
+<link rel="manifest" href="manifest-pastor.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Resumen del Pastor</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{--gold:#C9A84C;--gold-light:#E8C97A;--navy:#0D1B2A;--navy-mid:#1A2D42;--cream:#F5EFE0;--white:#FDFAF5;--muted:#8A9BB0;--ok:#5dd49a;--bad:#f07070;--border:rgba(201,168,76,.18)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--navy);color:var(--white);min-height:100vh;max-width:480px;margin:0 auto;padding:16px}
+h1{font-family:Georgia,serif;font-size:20px;color:var(--gold-light);text-align:center;margin:18px 0 4px}
+.sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:18px}
+.logo{width:56px;height:56px;margin:30px auto 0;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--navy)}
+.dots{display:flex;justify-content:center;gap:14px;margin:18px 0}
+.dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--gold)}.dot.on{background:var(--gold)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:280px;margin:0 auto}
+.pad button{background:var(--navy-mid);border:1px solid var(--border);border-radius:14px;color:var(--cream);font-size:24px;padding:16px 0;cursor:pointer}
+.pad button:active{transform:scale(.95)}
+#msg{color:var(--bad);text-align:center;font-size:13px;min-height:20px;margin-top:14px}
+.card{background:var(--navy-mid);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.card h2{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.v{font-family:ui-monospace,Menlo,monospace;font-size:18px;margin-top:2px}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.bal{text-align:center;padding:6px 0 2px}.bal .v{font-size:30px}
+.row{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:12px}.row .l{width:34px;color:var(--muted)}
+.bar{height:9px;border-radius:5px;min-width:2px}.bi{background:var(--ok)}.bg{background:var(--bad)}
+.tools{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.tools button{background:rgba(201,168,76,.12);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--gold-light);font-size:12px;font-weight:600;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="pin">
+  <div class="logo">✝</div>
+  <h1>Resumen del Pastor</h1>
+  <div class="sub">Escribe tu PIN de 4 números</div>
+  <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  <div class="pad" id="pad"></div>
+  <div id="msg"></div>
+</div>
+<div id="vista" style="display:none">
+  <h1>Resumen del Pastor</h1>
+  <div class="sub" id="gen"></div>
+  <div class="card"><h2>Este mes</h2><div class="bal"><div class="k">Balance</div><div class="v" id="mBal"></div></div>
+    <div class="grid" style="margin-top:10px"><div><div class="k">Ingresos</div><div class="v ok" id="mIng"></div></div><div><div class="k">Gastos</div><div class="v bad" id="mGas"></div></div>
+    <div><div class="k">Diezmos</div><div class="v" id="mDie"></div></div><div><div class="k">Ofrendas</div><div class="v" id="mOfr"></div></div>
+    <div><div class="k">Donaciones</div><div class="v" id="mDon"></div></div></div></div>
+  <div class="card"><h2>Este año</h2><div class="bal"><div class="k">Balance</div><div class="v" id="aBal"></div></div>
+    <div class="grid" style="margin-top:10px"><div><div class="k">Ingresos</div><div class="v ok" id="aIng"></div></div><div><div class="k">Gastos</div><div class="v bad" id="aGas"></div></div>
+    <div><div class="k">Diezmos</div><div class="v" id="aDie"></div></div><div><div class="k">Ofrendas</div><div class="v" id="aOfr"></div></div>
+    <div><div class="k">Donaciones</div><div class="v" id="aDon"></div></div></div></div>
+  <div class="card"><h2>Últimos 6 meses</h2><div id="serie"></div></div>
+  <div class="card"><h2>Gente</h2><div class="grid"><div><div class="k">Miembros activos</div><div class="v" id="miem"></div></div>
+    <div><div class="k">Última asistencia</div><div class="v" id="aUlt"></div></div>
+    <div><div class="k">Promedio 8 semanas</div><div class="v" id="aProm"></div></div></div></div>
+  <div class="tools"><button onclick="cargar()">↻ Actualizar</button><button id="btnInstalar" style="display:none" onclick="instalar()">📲 Instalar</button><button onclick="salir()">Salir</button></div>
+</div>
+<script>
+const sb = supabase.createClient('https://mhdzugfaykazcwbvcrkh.supabase.co', 'sb_publishable_8g4MN2pEDMIo0PUetbcXuQ_Bw13eMcO', { auth: { persistSession: false } });
+const $ = id => document.getElementById(id);
+const money = n => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const MES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+let pin = '', clave = '';
+$('pad').innerHTML = [1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k => k === '' ? '<span></span>' : `<button onclick="tecla('${k}')">${k}</button>`).join('');
+function pintar() { document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i < pin.length)); }
+function tecla(k) {
+  if (k === '⌫') pin = pin.slice(0, -1); else if (pin.length < 4) pin += k;
+  pintar();
+  if (pin.length === 4) { clave = pin; pin = ''; setTimeout(pintar, 150); entrar(); }
+}
+async function entrar() {
+  $('msg').textContent = '';
+  const ok = await cargar();
+  if (ok) { $('pin').style.display = 'none'; $('vista').style.display = ''; }
+}
+async function cargar() {
+  const { data, error } = await sb.rpc('pastor_resumen', { p_pin: clave });
+  if (error) { $('msg').textContent = 'No se pudo conectar.'; return false; }
+  if (data.error) {
+    $('msg').textContent = { pin: 'PIN incorrecto.', bloqueado: 'Demasiados intentos. Espera 15 minutos.', no_configurado: 'El PIN todavía no está configurado.' }[data.error] || 'Error.';
+    return false;
+  }
+  const f = (p, o) => { $(p + 'Ing').textContent = money(o.ingresos); $(p + 'Gas').textContent = money(o.gastos); $(p + 'Die').textContent = money(o.diezmos); $(p + 'Ofr').textContent = money(o.ofrendas); $(p + 'Don').textContent = money(o.donaciones);
+    const b = $(p + 'Bal'); b.textContent = money(o.ingresos - o.gastos); b.className = 'v ' + (o.ingresos - o.gastos >= 0 ? 'ok' : 'bad'); };
+  f('m', data.mes); f('a', data.anio);
+  $('miem').textContent = data.miembros;
+  const as = data.asistencia || {};
+  $('aUlt').textContent = as.ultimo_total ?? '—'; $('aProm').textContent = as.promedio_8_semanas ?? '—';
+  const mx = Math.max(1, ...data.serie.map(s => Math.max(s.ingresos, s.gastos)));
+  $('serie').innerHTML = data.serie.map(s => `<div class="row"><span class="l">${MES[Number(s.mes.slice(5)) - 1]}</span><div style="flex:1"><div class="bar bi" style="width:${s.ingresos / mx * 100}%"></div><div class="bar bg" style="width:${s.gastos / mx * 100}%;margin-top:3px"></div></div><span style="font-family:ui-monospace,monospace;font-size:11px">${money(s.ingresos)}</span></div>`).join('');
+  $('gen').textContent = 'Actualizado ' + new Date(data.generado).toLocaleString('es');
+  return true;
+}
+function salir() { clave = ''; $('vista').style.display = 'none'; $('pin').style.display = ''; }
+let ev = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); ev = e; $('btnInstalar').style.display = ''; });
+async function instalar() { if (ev) { ev.prompt(); ev = null; $('btnInstalar').style.display = 'none'; } }
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

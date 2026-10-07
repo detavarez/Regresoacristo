@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0f2445">
+<link rel="manifest" href="manifest-admin.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Church Admin — Regreso a Cristo</title>
 <script>const APP_SLUG = 'church_admin';</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -572,7 +577,11 @@
     .gridFamilias { grid-template-columns: 1fr; }
     /* tablas: desplazamiento horizontal */
     .tablaWrap { overflow-x: auto; }
-    table.tablaTrans { min-width: 480px; }
+    table.tablaTrans { min-width: 0; width: 100%; table-layout: auto; font-size: 0.78rem; }
+    table.tablaTrans th, table.tablaTrans td { padding: 7px 5px; }
+    table.tablaTrans td { max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    table.tablaTrans td.montoIngreso, table.tablaTrans td.montoEgreso, table.tablaTrans td:last-child, table.tablaTrans td[style*="text-align:right"] { max-width: none; overflow: visible; text-overflow: clip; }
+    table.tablaTrans th { white-space: nowrap; font-size: 0.7rem; }
     /* modales casi a pantalla completa */
     .modalOverlay { padding: 0; }
     .modalCaja { max-width: none !important; min-height: 100%; border-radius: 0; padding: 18px 14px 28px; }
@@ -628,7 +637,7 @@
   <div class="topbar">
     <div class="marca">Church <span>Admin</span> <span style="font-size:0.7rem; font-weight:600; opacity:0.85; margin-left:6px;" id="versionTopbar"></span></div>
     <div class="usuarioInfo">
-      <button class="btnTopIcono" onclick="abrirBusquedaGlobal()" title="Búsqueda global" aria-label="Búsqueda global">🔍</button><button class="btnTopIcono" id="btnTema" onclick="alternarTema()" title="Tema claro/oscuro" aria-label="Tema">🌙</button>
+      <button class="btnTopIcono" id="btnInstalar" style="display:none;" onclick="instalarApp()" title="Instalar en el celular" aria-label="Instalar">📲</button><button class="btnTopIcono" onclick="abrirBusquedaGlobal()" title="Búsqueda global" aria-label="Búsqueda global">🔍</button><button class="btnTopIcono" id="btnTema" onclick="alternarTema()" title="Tema claro/oscuro" aria-label="Tema">🌙</button>
       <span id="nombreUsuarioTop"></span>
       <button onclick="manejarLogout()">Cerrar sesión</button>
     </div>
@@ -643,6 +652,7 @@
       <div class="grid-modulos">
         <div class="tarjetaModulo c-blue" onclick="mostrarResumenPastoral()"><div class="icono">📊</div><h3>Resumen Pastoral</h3><p>Overview para el pastor</p></div>
         <div class="tarjetaModulo c-gold" onclick="mostrarFinanzas()">
+          <span class="bcBadge" id="dashBadgeAprob" style="display:none;"></span>
           <div class="icono">💰</div>
           <h3>Finanzas</h3>
           <p>Diezmos, ofrendas, gastos, reportes</p>
@@ -765,6 +775,7 @@
 
       <!-- Sub-vista: Por aprobar (Cash App / Zelle) — Ver-034 -->
       <div id="subvistaFinPorAprobar" style="display:none;">
+        <div class="barraAcciones"><a class="btnSecundario" href="movil.html" target="_blank" style="text-decoration:none;">📱 Abrir app móvil</a></div>
         <div id="paImportBar" class="barraAcciones" style="display:none; align-items:center; gap:10px;">
           <span id="paImportEstado" style="font-size:0.9rem; font-weight:600;"></span>
           <button type="button" class="btnSecundario" id="paBtnImport" onclick="paAlternarImportacion()"></button>
@@ -777,18 +788,6 @@
           </label>
         </div>
         <div id="listaPorAprobar"><div class="estadoCargando">Cargando pagos…</div></div>
-      </div>
-
-      <!-- Sub-vista: Registros móviles — Ver-041 -->
-      <div id="subvistaFinRegMovil" style="display:none;">
-        <div class="barraAcciones" style="align-items:center; gap:10px;">
-          <a class="btnSecundario" href="movil.html" target="_blank" style="text-decoration:none;">📱 Abrir app móvil</a>
-          <label style="display:flex; align-items:center; gap:8px; font-size:0.88rem; color:var(--text-muted);">
-            <input type="checkbox" id="rmVerResueltos" onchange="cargarRegMovil()"> Ver también aprobados y rechazados
-          </label>
-        </div>
-        <div class="grid-resumen" id="resumenRegMovil" style="margin-bottom:20px;"></div>
-        <div id="listaRegMovil"><div class="estadoCargando">Cargando…</div></div>
       </div>
 
       <!-- Sub-vista: Bolsas (aparte) — fondos fuera de las finanzas de la iglesia -->
@@ -1267,6 +1266,18 @@
             <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
             <span id="cfgEstado" style="margin-left:10px; font-size:0.85rem; color:var(--text-muted);"></span>
           </form>
+        </div>
+        <div class="tablaWrap" style="margin-bottom:20px;">
+          <h3>Página del pastor (PIN)</h3>
+          <div style="padding:14px 18px;">
+            <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:10px;">Una página aparte, <b>pastor.html</b>, que solo muestra el resumen (balance, diezmos, ofrendas, asistencia). Entra con un PIN de 4 números, sin cuenta. Después de 5 intentos fallidos se bloquea 15 minutos.</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              <input type="password" id="cfgPinPastor" inputmode="numeric" maxlength="4" placeholder="PIN nuevo (4 números)" style="max-width:200px;">
+              <button type="button" class="btnPrincipal" style="width:auto;" onclick="cfgFijarPin()">Guardar PIN</button>
+              <a class="btnSecundario" href="pastor.html" target="_blank" style="text-decoration:none;">Abrir página</a>
+              <span id="cfgPinEstado" style="font-size:0.85rem; color:var(--text-muted);"></span>
+            </div>
+          </div>
         </div>
         <div class="tablaWrap">
           <h3>Respaldo</h3>
@@ -2059,6 +2070,7 @@
             <option value="Administrador">Administrador</option>
             <option value="Tesorero">Tesorero</option>
             <option value="Colaborador">Colaborador</option>
+            <option value="Pastor">Pastor</option>
           </select>
         </div>
       </div>
@@ -2326,8 +2338,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-041';
-document.getElementById('versionTopbar').textContent = 'Ver-041';
+const APP_VERSION = 'church-admin Ver-042';
+document.getElementById('versionTopbar').textContent = 'Ver-042';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -2419,6 +2431,8 @@ function mostrarApp() {
   });
 
   verificarConexion();
+  paActualizarInsignia();
+  aplicarRol();
 }
 
 // ── Verificación de conexión (prueba real a Supabase) ───────────────────
@@ -2514,8 +2528,7 @@ function mostrarFinanzas() {
 const FIN_TARJETAS = [
   { grupo: 'Finanzas de la Iglesia', items: [
     { tab: 'resumen', icono: '📊', etiqueta: 'Resumen Mensual', sub: 'Ingresos, egresos y balance por mes', color: 'c-blue' },
-    { tab: 'porAprobar', icono: '📥', etiqueta: 'Por aprobar', sub: 'Cash App y Zelle recibidos', color: 'c-green' },
-    { tab: 'regMovil', icono: '📱', etiqueta: 'Registros móviles', sub: 'Enviados desde el celular', color: 'c-teal' },
+    { tab: 'porAprobar', icono: '✅', etiqueta: 'Aprobaciones', sub: 'Cash App, Zelle y app móvil', color: 'c-green' },
     { tab: 'bolsas', icono: '🗂️', etiqueta: 'Bolsas (aparte)', sub: 'Renta y otras, fuera de las finanzas', color: 'c-gold' },
     { tab: 'diezmos', icono: '🙏', etiqueta: 'Diezmos', sub: 'Registro de diezmos', color: 'c-gold', tabla: 'diezmos' },
     { tab: 'ofrendas', icono: '🕊️', etiqueta: 'Ofrendas', sub: 'Ofrendas generales', color: 'c-blue', tabla: 'ofrendas' },
@@ -2675,7 +2688,6 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'bancos') cargarBancos();
   else if (tab === 'transferencias') cargarTransferencias();
   else if (tab === 'porAprobar') cargarPorAprobar();
-  else if (tab === 'regMovil') cargarRegMovil();
   else if (tab === 'bolsas') cargarBolsas();
   else if (tab === 'auditoria') cargarAuditoria();
   else if (tab === 'ajustes') cargarAjustes();
@@ -3528,39 +3540,9 @@ function csvDescargar(nombreArchivo, encabezados, filas) {
 // ── Registros móviles (Ver-041) ──
 let cacheRegMovil = [];
 
-async function rmActualizarInsignia() {
-  const r = await sbCall(sb.from('registros_movil').select('id', { count: 'exact', head: true }).eq('estado', 'Pendiente'));
-  const b = document.getElementById('finBadge_regMovil');
-  if (!b || r.error || typeof r.count !== 'number') return;
-  b.textContent = r.count;
-  b.style.display = r.count > 0 ? '' : 'none';
-}
+async function rmActualizarInsignia() { return paActualizarInsignia(); }
 
-async function cargarRegMovil() {
-  const lista = document.getElementById('listaRegMovil');
-  lista.innerHTML = '<div class="estadoCargando">Cargando…</div>';
-  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
-  await asegurarDirectorioFinanzas();
-  await asegurarFondosFinanzas();
-  let q = sb.from('registros_movil').select('*').order('fecha', { ascending: false }).order('creado_en', { ascending: false }).range(0, 299);
-  if (!document.getElementById('rmVerResueltos').checked) q = q.eq('estado', 'Pendiente');
-  const { data, error } = await sbCall(q);
-  if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(error.message)}. ¿Ya corriste el SQL 09?</div>`; return; }
-  cacheRegMovil = data || [];
-  const pend = cacheRegMovil.filter(x => x.estado === 'Pendiente');
-  document.getElementById('resumenRegMovil').innerHTML = `
-    <div class="tarjetaResumen ingreso"><div class="etiqueta">Por aprobar</div><div class="monto">${formatoMoneda(pend.reduce((t, x) => t + (Number(x.monto) || 0), 0))}</div></div>
-    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${pend.length}</div></div>`;
-  if (!cacheRegMovil.length) { lista.innerHTML = '<div class="estadoVacio">No hay registros móviles pendientes.</div>'; }
-  else lista.innerHTML = cacheRegMovil.map(x => {
-    const pendiente = x.estado === 'Pendiente';
-    const partes = [formatoFecha(x.fecha), escV28(x.tipo), x.subtipo ? escV28(x.subtipo) : '', escV28(x.metodo), x.servicio ? escV28(x.servicio) : '', pendiente ? '' : escV28(x.estado)].filter(Boolean);
-    return `<div class="tarjetaSeguimiento"${pendiente ? ` onclick="rmAbrir('${x.id}')"` : ' style="opacity:0.6;"'}>
-      <div><div class="nombrePersona">${escV28(x.nombre || 'Anónima')}</div><div class="metaLinea">${partes.join(' · ')}</div></div>
-      <span class="badge badge-tipo">${formatoMoneda(x.monto)}</span></div>`;
-  }).join('');
-  rmActualizarInsignia();
-}
+function cargarRegMovil() { return cargarPorAprobar(); }
 
 function rmAbrir(id) {
   const x = cacheRegMovil.find(r => r.id === id);
@@ -3692,6 +3674,15 @@ async function cfgGuardar(evt) {
   return false;
 }
 
+async function cfgFijarPin() {
+  const pin = document.getElementById('cfgPinPastor').value.trim();
+  const est = document.getElementById('cfgPinEstado');
+  if (!/^[0-9]{4}$/.test(pin)) { est.textContent = 'Deben ser 4 números.'; return; }
+  const { error } = await sbCall(sb.rpc('fijar_pin_pastor', { p_pin: pin }));
+  est.textContent = error ? 'Error: ' + error.message : 'PIN guardado ✓';
+  if (!error) document.getElementById('cfgPinPastor').value = '';
+}
+
 async function cfgRespaldo() {
   const est = document.getElementById('cfgRespaldoEstado');
   const tablas = ['config_iglesia', 'personas', 'transacciones', 'diezmos', 'ofrendas', 'donaciones', 'gastos', 'cuentas', 'fondos', 'bancos',
@@ -3716,6 +3707,33 @@ async function cfgRespaldo() {
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   est.textContent = 'Listo ✓';
 }
+
+// ── Rol Pastor: solo ve ciertas pantallas (Ver-042) ──
+const ROL_PASTOR_MODULOS = ['mostrarResumenPastoral', 'mostrarPastoral', 'mostrarSecretaria', 'mostrarAsistencia', 'mostrarComunicaciones', 'mostrarGrupos'];
+function aplicarRol() {
+  const rol = getSesion().rol;
+  document.querySelectorAll('#vistaDashboard .tarjetaModulo').forEach(t => {
+    const oc = t.getAttribute('onclick') || '';
+    t.style.display = (rol === 'Pastor' && !ROL_PASTOR_MODULOS.some(f => oc.startsWith(f + '('))) ? 'none' : '';
+  });
+}
+
+// ── Instalar como app (Ver-042) ──
+let eventoInstalar = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  eventoInstalar = e;
+  const b = document.getElementById('btnInstalar'); if (b) b.style.display = '';
+});
+window.addEventListener('appinstalled', () => { const b = document.getElementById('btnInstalar'); if (b) b.style.display = 'none'; });
+async function instalarApp() {
+  if (eventoInstalar) { eventoInstalar.prompt(); await eventoInstalar.userChoice; eventoInstalar = null; document.getElementById('btnInstalar').style.display = 'none'; return; }
+  alert('Para instalar: en iPhone toca Compartir → "Agregar a pantalla de inicio". En Android toca ⋮ → "Instalar app".');
+}
+if (/iphone|ipad/i.test(navigator.userAgent) && !window.navigator.standalone) {
+  document.addEventListener('DOMContentLoaded', () => { const b = document.getElementById('btnInstalar'); if (b) b.style.display = ''; });
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 
 // ── Tendencia de los últimos 6 meses en el inicio (Ver-040) ──
 function finRenderTendencia(filas) {
@@ -5078,11 +5096,17 @@ const PA_FUENTES = {
 };
 
 async function paActualizarInsignia() {
-  const r = await sbCall(sb.from('pagos_entrantes').select('id', { count: 'exact', head: true }).eq('estado', 'Por aprobar'));
-  const b = document.getElementById('finBadge_porAprobar');
-  if (!b || r.error || typeof r.count !== 'number') return;
-  b.textContent = r.count;
-  b.style.display = r.count > 0 ? '' : 'none';
+  const [r1, r2] = await Promise.all([
+    sbCall(sb.from('pagos_entrantes').select('id', { count: 'exact', head: true }).eq('estado', 'Por aprobar')),
+    sbCall(sb.from('registros_movil').select('id', { count: 'exact', head: true }).eq('estado', 'Pendiente')),
+  ]);
+  const n = (typeof r1.count === 'number' ? r1.count : 0) + (typeof r2.count === 'number' ? r2.count : 0);
+  ['finBadge_porAprobar', 'dashBadgeAprob'].forEach(id => {
+    const b = document.getElementById(id);
+    if (!b) return;
+    b.textContent = n;
+    b.style.display = n > 0 ? '' : 'none';
+  });
 }
 
 async function cargarPorAprobar() {
@@ -5101,27 +5125,43 @@ async function cargarPorAprobar() {
     return;
   }
   cachePagosEntrantes = data || [];
+  let qm = sb.from('registros_movil').select('*').order('fecha', { ascending: false }).order('creado_en', { ascending: false }).range(0, 299);
+  if (!verResueltos) qm = qm.eq('estado', 'Pendiente');
+  const rm = await sbCall(qm);
+  cacheRegMovil = rm.error ? [] : (rm.data || []);
   paCargarImportacion();
   paRender();
   paActualizarInsignia();
-  rmActualizarInsignia();
   cfgSincronizar();
 }
 
 function paRender() {
-  const pend = cachePagosEntrantes.filter(x => x.estado === 'Por aprobar');
-  const total = pend.reduce((s, x) => s + (Number(x.monto) || 0), 0);
-  const sinMiembro = pend.filter(x => !x.persona_id).length;
+  const pendP = cachePagosEntrantes.filter(x => x.estado === 'Por aprobar');
+  const pendM = cacheRegMovil.filter(x => x.estado === 'Pendiente');
+  const total = pendP.reduce((s, x) => s + (Number(x.monto) || 0), 0) + pendM.reduce((s, x) => s + (Number(x.monto) || 0), 0);
+  const sinMiembro = pendP.filter(x => !x.persona_id).length;
   document.getElementById('resumenPorAprobar').innerHTML = `
     <div class="tarjetaResumen ingreso"><div class="etiqueta">Por aprobar</div><div class="monto">${formatoMoneda(total)}</div></div>
-    <div class="tarjetaResumen"><div class="etiqueta">Pagos</div><div class="monto">${pend.length}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Pendientes</div><div class="monto">${pendP.length + pendM.length}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">📱 Móvil</div><div class="monto">${pendM.length}</div></div>
     <div class="tarjetaResumen"><div class="etiqueta">Sin miembro</div><div class="monto">${sinMiembro}</div></div>`;
   const lista = document.getElementById('listaPorAprobar');
-  if (cachePagosEntrantes.length === 0) {
-    lista.innerHTML = '<div class="estadoVacio">No hay pagos por aprobar. Los pagos de Cash App y Zelle aparecen aquí solos.</div>';
+  const items = [
+    ...cachePagosEntrantes.map(x => ({ src: 'p', x })),
+    ...cacheRegMovil.map(x => ({ src: 'm', x })),
+  ].sort((a, b) => String(b.x.fecha).localeCompare(String(a.x.fecha)) || String(b.x.creado_en).localeCompare(String(a.x.creado_en)));
+  if (items.length === 0) {
+    lista.innerHTML = '<div class="estadoVacio">Nada por aprobar. Aquí aparecen solos los pagos de Cash App y Zelle y lo que se registra desde el celular.</div>';
     return;
   }
-  lista.innerHTML = cachePagosEntrantes.map(x => {
+  lista.innerHTML = items.map(({ src, x }) => {
+    if (src === 'm') {
+      const pend = x.estado === 'Pendiente';
+      const partes = ['📱', formatoFecha(x.fecha), escV28(x.tipo), x.subtipo ? escV28(x.subtipo) : '', escV28(x.metodo), pend ? '' : escV28(x.estado)].filter(Boolean);
+      return `<div class="tarjetaSeguimiento"${pend ? ` onclick="rmAbrir('${x.id}')"` : ' style="opacity:0.6;"'}>
+        <div><div class="nombrePersona">${escV28(x.nombre || 'Anónima')}</div><div class="metaLinea">${partes.join(' · ')}</div></div>
+        <span class="badge badge-tipo">${formatoMoneda(x.monto)}</span></div>`;
+    }
     const f = PA_FUENTES[x.fuente] || { etiqueta: x.fuente };
     const pendiente = x.estado === 'Por aprobar';
     const miembro = x.persona_id ? nombrePersonaPorId(x.persona_id) : '';
