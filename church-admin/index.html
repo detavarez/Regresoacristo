@@ -687,7 +687,9 @@
           <div class="cbEtiqueta">Balance general</div>
           <div class="cbMonto">…</div>
         </div>
-        <div id="finHomeTendencia" style="margin-bottom:22px;"></div>
+        <div id="finHomeAlertas"></div>
+        <div id="finHomeTendencia" style="margin-bottom:14px;"></div>
+        <div id="finHomeComparativas" style="margin-bottom:22px;"></div>
         <div id="finHomeTiles"></div>
       </div>
 
@@ -714,7 +716,7 @@
           <select id="finSelectMes" onchange="cargarFinanzas()"></select>
           <select id="finSelectAnio" onchange="cargarFinanzas()"></select>
           <div style="flex:1;"></div>
-          <button class="btnSecundario" onclick="exportarFinanzasCSV()">⬇ Exportar CSV</button>
+          <button class="btnSecundario" onclick="exportarFinanzasCSV()">⬇ Exportar</button>
         </div>
 
         <div class="grid-resumen">
@@ -789,6 +791,18 @@
         </div>
         <div id="listaPorAprobar"><div class="estadoCargando">Cargando pagos…</div></div>
       </div>
+
+      <!-- Sub-vistas Ver-043 -->
+      <div id="subvistaFinPagosPromesa" style="display:none;">
+        <div class="grid-resumen" id="resumenPagosPromesa" style="margin-bottom:20px;"></div>
+        <div class="barraAcciones"><input type="text" id="ppBuscar" placeholder="Buscar persona o campaña…" oninput="ppRender()"><button class="btnSecundario" onclick="ppExportar()">⬇ Exportar</button></div>
+        <div id="listaPagosPromesa"><div class="estadoCargando">Cargando…</div></div>
+      </div>
+      <div id="subvistaFinEventosHist" style="display:none;">
+        <div class="barraAcciones"><button class="btnSecundario" onclick="ehExportar()">⬇ Exportar</button></div>
+        <div id="listaEventosHist"><div class="estadoCargando">Cargando…</div></div>
+      </div>
+      <div id="subvistaFinReportesHub" style="display:none;"><div id="reportesHubTiles"></div></div>
 
       <!-- Sub-vista: Bolsas (aparte) — fondos fuera de las finanzas de la iglesia -->
       <div id="subvistaFinBolsas" style="display:none;">
@@ -883,7 +897,7 @@
             <option value="anioAnterior">Año anterior</option>
           </select>
           <div style="flex:1;"></div>
-          <button class="btnSecundario" onclick="exportarReporteCSV()">⬇ Exportar CSV</button>
+          <button class="btnSecundario" onclick="exportarReporteCSV()">⬇ Exportar</button>
         </div>
         <div class="grid-resumen" id="resumenReporte"></div>
         <div class="tablaWrap" style="margin-bottom:20px;">
@@ -924,7 +938,7 @@
           <select id="dcSelectAnio" onchange="cargarDeclaraciones()"></select>
           <input type="text" id="dcBuscador" placeholder="Buscar donante…" oninput="renderDeclaraciones()">
           <div style="flex:1;"></div>
-          <button class="btnSecundario" onclick="exportarDeclaracionesCSV()">⬇ Exportar CSV</button>
+          <button class="btnSecundario" onclick="exportarDeclaracionesCSV()">⬇ Exportar</button>
         </div>
         <div class="tablaWrap" style="margin-bottom:20px;">
           <h3>Datos de la iglesia para la declaración</h3>
@@ -942,7 +956,7 @@
         <div class="barraAcciones" style="align-items:center;">
           <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="lcDesde_diario" onchange="lcPintar('diario')"></label>
           <label style="font-size:0.8rem; color: var(--text-muted);">Hasta <input type="date" id="lcHasta_diario" onchange="lcPintar('diario')"></label>
-          <button class="btnSecundario" onclick="lcExportarCSV('diario')">⬇ Exportar CSV</button>
+          <button class="btnSecundario" onclick="lcExportarCSV('diario')">⬇ Exportar</button>
         </div>
         <div class="grid-resumen" id="lcResumen_diario" style="margin-bottom:16px;"></div>
         <div class="tablaWrap"><div id="lcCont_diario"><div class="estadoCargando">Cargando…</div></div></div>
@@ -955,7 +969,7 @@
           <select id="lcCuenta_mayor" onchange="lcPintar('mayor')"></select>
           <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="lcDesde_mayor" onchange="lcPintar('mayor')"></label>
           <label style="font-size:0.8rem; color: var(--text-muted);">Hasta <input type="date" id="lcHasta_mayor" onchange="lcPintar('mayor')"></label>
-          <button class="btnSecundario" onclick="lcExportarCSV('mayor')">⬇ Exportar CSV</button>
+          <button class="btnSecundario" onclick="lcExportarCSV('mayor')">⬇ Exportar</button>
         </div>
         <div class="grid-resumen" id="lcResumen_mayor" style="margin-bottom:16px;"></div>
         <div class="tablaWrap"><div id="lcCont_mayor"><div class="estadoCargando">Cargando…</div></div></div>
@@ -966,7 +980,7 @@
       <div id="subvistaFinBalance" style="display:none;">
         <div class="barraAcciones" style="align-items:center;">
           <label style="font-size:0.8rem; color: var(--text-muted);">Al <input type="date" id="lcHasta_balance" onchange="lcPintar('balance')"></label>
-          <button class="btnSecundario" onclick="lcExportarCSV('balance')">⬇ Exportar CSV</button>
+          <button class="btnSecundario" onclick="lcExportarCSV('balance')">⬇ Exportar</button>
         </div>
         <div class="grid-resumen" id="lcResumen_balance" style="margin-bottom:16px;"></div>
         <div class="tablaWrap"><div id="lcCont_balance"><div class="estadoCargando">Cargando…</div></div></div>
@@ -977,7 +991,7 @@
       <div id="subvistaFinComprobacion" style="display:none;">
         <div class="barraAcciones" style="align-items:center;">
           <label style="font-size:0.8rem; color: var(--text-muted);">Al <input type="date" id="lcHasta_comprobacion" onchange="lcPintar('comprobacion')"></label>
-          <button class="btnSecundario" onclick="lcExportarCSV('comprobacion')">⬇ Exportar CSV</button>
+          <button class="btnSecundario" onclick="lcExportarCSV('comprobacion')">⬇ Exportar</button>
         </div>
         <div class="grid-resumen" id="lcResumen_comprobacion" style="margin-bottom:16px;"></div>
         <div class="tablaWrap"><div id="lcCont_comprobacion"><div class="estadoCargando">Cargando…</div></div></div>
@@ -991,7 +1005,7 @@
           <select id="auModulo" onchange="auRender()"><option value="">Todos los módulos</option></select>
           <select id="auAccion" onchange="auRender()"><option value="">Todas las acciones</option><option value="crear">Crear</option><option value="editar">Editar</option><option value="eliminar">Eliminar</option></select>
           <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="auDesde" onchange="cargarAuditoria()"></label>
-          <button class="btnSecundario" onclick="auExportarCSV()">⬇ Exportar CSV</button>
+          <button class="btnSecundario" onclick="auExportarCSV()">⬇ Exportar</button>
         </div>
         <div id="listaAuditoria"><div class="estadoCargando">Cargando…</div></div>
       </div>
@@ -1022,7 +1036,7 @@
           <select id="trOrigen" onchange="trRender()"><option value="">Todos los orígenes</option></select>
           <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="trDesde" onchange="trCargar()"></label>
           <label style="font-size:0.8rem; color: var(--text-muted);">Hasta <input type="date" id="trHasta" onchange="trCargar()"></label>
-          <button class="btnSecundario" onclick="trExportarCSV()">⬇ Exportar CSV</button>
+          <button class="btnSecundario" onclick="trExportarCSV()">⬇ Exportar</button>
         </div>
         <div class="grid-resumen" id="trResumen" style="margin-bottom:16px;"></div>
         <div class="tablaWrap"><div id="trTabla"><div class="estadoCargando">Cargando transacciones…</div></div></div>
@@ -1105,7 +1119,7 @@
         <div class="barraAcciones">
           <input type="text" id="buscadorPersonas" placeholder="Buscar por nombre, apodo, teléfono o correo…" oninput="filtrarDirectorio()">
           <button class="btnAccion" onclick="abrirFormPersona()">+ Nuevo Miembro</button>
-          <button class="btnSecundario" onclick="exportarDirectorioCSV()">⬇ Exportar CSV</button>
+          <button class="btnSecundario" onclick="exportarDirectorioCSV()">⬇ Exportar</button>
         </div>
         <div class="listaPersonas" id="listaPersonas">
           <div class="estadoCargando">Cargando directorio…</div>
@@ -1278,6 +1292,10 @@
               <span id="cfgPinEstado" style="font-size:0.85rem; color:var(--text-muted);"></span>
             </div>
           </div>
+        </div>
+        <div class="btnGrid" style="margin-bottom:20px;">
+          <div class="btnCard c-pink" id="cfgTileImportar" onclick="impAbrir()"><div class="bcIcono">📥</div><div class="bcEtiqueta">Importar Excel</div><div class="bcSub">Subir diezmos, ofrendas, donaciones o gastos</div></div>
+          <div class="btnCard c-red" id="cfgTilePeligro" onclick="peAbrir()"><div class="bcIcono">🗑️</div><div class="bcEtiqueta">Zona de peligro</div><div class="bcSub">Borrar datos</div></div>
         </div>
         <div class="tablaWrap">
           <h3>Respaldo</h3>
@@ -1872,6 +1890,37 @@
   </div>
 </div>
 
+<div class="modalOverlay" id="modalImportar">
+  <div class="modalCaja">
+    <h3>Importar desde Excel</h3>
+    <div id="impPaso1">
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:10px;">Sube un archivo .xlsx o .csv. La primera fila debe tener los nombres de las columnas (fecha, monto, nombre…). Los nombres deben coincidir con un miembro existente.</p>
+      <input type="file" id="impArchivo" accept=".xlsx,.xls,.csv" onchange="impLeer(this)">
+      <div id="impMsg" style="font-size:0.85rem; margin-top:8px;"></div>
+    </div>
+    <div id="impPaso2" style="display:none;">
+      <div class="formGrid">
+        <div><label for="impTipo">Tipo</label><select id="impTipo" onchange="impPintarMapa()"><option>Diezmo</option><option>Ofrenda</option><option>Donación</option><option>Gasto</option></select></div>
+        <div><label for="impFondo">Fondo</label><select id="impFondo"></select></div>
+      </div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin:10px 0 4px;" id="impResumen"></div>
+      <div class="formGrid" id="impMapa"></div>
+      <div id="impMsg2" style="font-size:0.85rem;"></div>
+      <div class="formAcciones"><button type="button" class="btnSecundario" onclick="document.getElementById('modalImportar').classList.remove('abierto')">Cancelar</button><button type="button" class="btnPrincipal" style="width:auto;" onclick="impEjecutar()">Importar</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modalOverlay" id="modalPeligro">
+  <div class="modalCaja">
+    <h3 style="color:var(--danger);">⚠ Zona de peligro</h3>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:10px;">Marca lo que quieres borrar para siempre. Antes se descarga un respaldo automático.</p>
+    <div id="peLista" style="display:grid; gap:6px; margin-bottom:12px;"></div>
+    <label for="peConfirmar">Escribe BORRAR para confirmar</label><input type="text" id="peConfirmar" autocomplete="off">
+    <div class="formAcciones"><button type="button" class="btnSecundario" onclick="document.getElementById('modalPeligro').classList.remove('abierto')">Cancelar</button><button type="button" class="btnPeligro" onclick="peBorrar()">Borrar</button></div>
+  </div>
+</div>
+
 <div class="modalOverlay" id="modalRegMovil">
   <div class="modalCaja">
     <h3>Aprobar registro móvil</h3>
@@ -1891,6 +1940,20 @@
         <button type="submit" class="btnPrincipal" style="width:auto;">Aprobar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modalOverlay" id="modalExportar">
+  <div class="modalCaja" style="max-width:380px;">
+    <h3>Exportar</h3>
+    <div id="expNombre" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:14px;"></div>
+    <div class="btnGrid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+      <div class="btnCard c-green" onclick="expElegir('xlsx')"><div class="bcIcono">📗</div><div class="bcEtiqueta">Excel</div></div>
+      <div class="btnCard c-red" onclick="expElegir('pdf')"><div class="bcIcono">📄</div><div class="bcEtiqueta">PDF</div></div>
+      <div class="btnCard c-blue" onclick="expElegir('csv')"><div class="bcIcono">🧾</div><div class="bcEtiqueta">CSV</div></div>
+      <div class="btnCard c-purple" onclick="expElegir('json')"><div class="bcIcono">🧩</div><div class="bcEtiqueta">JSON</div></div>
+    </div>
+    <div class="formAcciones"><button type="button" class="btnSecundario" onclick="document.getElementById('modalExportar').classList.remove('abierto')">Cancelar</button></div>
   </div>
 </div>
 
@@ -1973,6 +2036,7 @@
         <div><label for="dzReferencia">Ref / # Cheque</label><input type="text" id="dzReferencia" placeholder="CHQ-001"></div>
       </div>
       <div class="formAcciones">
+        <button type="button" class="btnSecundario" id="btnReciboDiezmo" style="display:none;" onclick="rcDesdeRegistro(this.dataset.t)">🧾 Recibo</button>
         <button type="button" class="btnPeligro" id="btnEliminarDiezmo" onclick="eliminarDiezmo()" style="display:none;">Eliminar</button>
         <button type="button" class="btnSecundario" onclick="cerrarModalDiezmo()">Cancelar</button>
         <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
@@ -2023,6 +2087,7 @@
         <div><label for="dnReferencia">No. Recibo / Ref.</label><input type="text" id="dnReferencia" placeholder="R-2026-000"></div>
       </div>
       <div class="formAcciones">
+        <button type="button" class="btnSecundario" id="btnReciboDonacion" style="display:none;" onclick="rcDesdeRegistro(this.dataset.t)">🧾 Recibo</button>
         <button type="button" class="btnPeligro" id="btnEliminarDonacion" onclick="eliminarDonacion()" style="display:none;">Eliminar</button>
         <button type="button" class="btnSecundario" onclick="cerrarModalDonacion()">Cancelar</button>
         <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
@@ -2065,7 +2130,7 @@
         <div class="full" id="ruNombreUsuario" style="font-weight:600; color: var(--heading);"></div>
         <div>
           <label for="ruRol">Rol en Church Admin</label>
-          <select id="ruRol">
+          <select id="ruRol" onchange="ruPintarPermisos(true)">
             <option value="">Sin acceso</option>
             <option value="Administrador">Administrador</option>
             <option value="Tesorero">Tesorero</option>
@@ -2073,6 +2138,7 @@
             <option value="Pastor">Pastor</option>
           </select>
         </div>
+        <div class="full"><label>Permisos (marca lo que esta persona puede hacer)</label><div id="ruPermisos" style="display:grid; gap:6px; margin-top:6px;"></div></div>
       </div>
       <div class="formAcciones">
         <button type="button" class="btnSecundario" onclick="cerrarModalRolUsuario()">Cancelar</button>
@@ -2338,8 +2404,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-042';
-document.getElementById('versionTopbar').textContent = 'Ver-042';
+const APP_VERSION = 'church-admin Ver-043';
+document.getElementById('versionTopbar').textContent = 'Ver-043';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -2537,8 +2603,10 @@ const FIN_TARJETAS = [
     { tab: 'depositos', icono: '🏦', etiqueta: 'Depósitos', sub: 'Registro bancario', color: 'c-teal', tabla: 'depositos' },
     { tab: 'gastos', icono: '📉', etiqueta: 'Gastos', sub: 'Control de gastos', color: 'c-red', tabla: 'gastos' },
     { tab: 'ventas', icono: '🛒', etiqueta: 'Ventas', sub: 'Recaudación e ingresos por eventos', color: 'c-pink', tabla: 'ventas' },
+    { tab: 'eventosHist', icono: '🗓️', etiqueta: 'Eventos histórico', sub: 'Gastos y ventas por evento', color: 'c-pink' },
     { tab: 'eventos', icono: '🎪', etiqueta: 'Eventos', sub: 'Gastos de eventos', color: 'c-amber', tabla: 'eventos' },
     { tab: 'otrosIngresos', icono: '💵', etiqueta: 'Otros Ingresos', sub: 'Alquiler, intereses y otros', color: 'c-green', tabla: 'otros_ingresos' },
+    { tab: 'pagosPromesa', icono: '💳', etiqueta: 'Pagos de Promesas', sub: 'Pagos recibidos por campaña', color: 'c-purple', tabla: 'pagos_promesa' },
     { tab: 'campanas', icono: '🎯', etiqueta: 'Campañas de Promesas', sub: 'Promesas vs. lo pagado, por campaña', color: 'c-purple', tabla: 'campanas' },
     { tab: 'recurrentes', icono: '🔁', etiqueta: 'Gastos Recurrentes', sub: 'Renta, salarios y gastos fijos', color: 'c-red', tabla: 'recurrentes' },
     { tab: 'declaraciones', icono: '📄', etiqueta: 'Declaraciones de Donación', sub: 'Resumen anual por donante', color: 'c-gold' },
@@ -2562,12 +2630,16 @@ const FIN_TARJETAS = [
     { tab: 'ajustes', icono: '🔧', etiqueta: 'Entradas de Ajuste', sub: 'Correcciones a periodos cerrados', color: 'c-amber' },
     { tab: 'auditoria', icono: '🕵️', etiqueta: 'Auditoría', sub: 'Quién cambió qué y cuándo', color: 'c-purple' },
   ]},
+  { grupo: 'Sistema', items: [
+    { tab: 'reportesHub', icono: '📈', etiqueta: 'Reportes', sub: 'Todos los reportes en un lugar', color: 'c-teal' },
+    { tab: 'configIr', icono: '⚙️', etiqueta: 'Configuración', sub: 'Datos, listas, importar y más', color: 'c-pink' },
+  ]},
 ];
 
 function finRenderTarjetas() {
   const cont = document.getElementById('finHomeTiles');
   if (cont.dataset.listo === '1') return;
-  cont.innerHTML = FIN_TARJETAS.map(g => `
+  cont.innerHTML = FIN_TARJETAS.map(g => ({ ...g, items: g.items.filter(i => !FIN_PERM_TAB[i.tab] || puede(FIN_PERM_TAB[i.tab])) })).filter(g => g.items.length).map(g => `
     <div class="grupoTitulo">${g.grupo}</div>
     <div class="btnGrid">
       ${g.items.map(i => g.pronto
@@ -2613,7 +2685,7 @@ function finVolver() {
 async function finCargarInicio() {
   const encabezado = document.getElementById('finHomeBalance');
   const [rt, ...conteos] = await Promise.all([
-    sbCall(sb.from('transacciones').select('tipo, monto, fecha').eq('solo_fondo', false).neq('tipo', 'Transferencia').range(0, 9999)),
+    sbCall(sb.from('transacciones').select('tipo, monto, fecha, categoria, fondo_id').eq('solo_fondo', false).neq('tipo', 'Transferencia').range(0, 9999)),
     ...FIN_TARJETAS.flatMap(g => g.items).filter(i => i.tabla).map(i =>
       sbCall(sb.from(i.tabla).select('id', { count: 'exact', head: true })).then(r => ({ tab: i.tab, n: r.count }))),
   ]);
@@ -2621,6 +2693,8 @@ async function finCargarInicio() {
     let ing = 0, egr = 0;
     (rt.data || []).forEach(t => { if (t.tipo === 'Ingreso') ing += Number(t.monto) || 0; else if (t.tipo === 'Egreso') egr += Number(t.monto) || 0; });
     finRenderTendencia(rt.data || []);
+    finRenderComparativas(rt.data || []);
+    finRenderAlertas(rt.data || []);
     encabezado.innerHTML = `
       <div class="cbEtiqueta">Balance general</div>
       <div class="cbMonto">${formatoMoneda(ing - egr)}</div>
@@ -2688,6 +2762,10 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'bancos') cargarBancos();
   else if (tab === 'transferencias') cargarTransferencias();
   else if (tab === 'porAprobar') cargarPorAprobar();
+  else if (tab === 'pagosPromesa') cargarPagosPromesa();
+  else if (tab === 'eventosHist') cargarEventosHist();
+  else if (tab === 'reportesHub') renderReportesHub();
+  else if (tab === 'configIr') { mostrarAdministracion(); cambiarSubtabAdmin('config'); return; }
   else if (tab === 'bolsas') cargarBolsas();
   else if (tab === 'auditoria') cargarAuditoria();
   else if (tab === 'ajustes') cargarAjustes();
@@ -2837,36 +2915,11 @@ async function cargarFinanzas() {
 }
 
 function exportarFinanzasCSV() {
-  if (cacheFilasFinanzasActuales.length === 0) {
-    alert('No hay transacciones que exportar en este periodo.');
-    return;
-  }
-
-  const encabezados = ['Fecha', 'Descripción', 'Categoría', 'Tipo', 'Método', 'Monto'];
-  const filasCSV = cacheFilasFinanzasActuales.map(t => [
-    t.fecha,
-    (t.descripcion || '').replace(/"/g, '""'),
-    (t.categoria || '').replace(/"/g, '""'),
-    t.tipo || '',
-    t.metodo || '',
-    Number(t.monto) || 0,
-  ]);
-
-  const contenido = [encabezados, ...filasCSV]
-    .map(fila => fila.map(campo => `"${campo}"`).join(','))
-    .join('\n');
-
-  const blob = new Blob(['\uFEFF' + contenido], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
+  if (cacheFilasFinanzasActuales.length === 0) { alert('No hay transacciones que exportar en este periodo.'); return; }
   const mes = document.getElementById('finSelectMes').value;
   const anio = document.getElementById('finSelectAnio').value;
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `finanzas_${NOMBRES_MESES[mes]}_${anio}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  csvDescargar(`finanzas_${NOMBRES_MESES[mes]}_${anio}.csv`, ['Fecha', 'Descripción', 'Categoría', 'Tipo', 'Método', 'Monto'],
+    cacheFilasFinanzasActuales.map(t => [t.fecha, t.descripcion, t.categoria, t.tipo, t.metodo, Number(t.monto) || 0]));
 }
 
 // ══════════════════════ VER-028: CONCILIACIÓN / CAMPAÑAS / DECLARACIONES ══════════════════════
@@ -3506,34 +3559,58 @@ function imprimirDeclaracion() {
 
 function exportarDeclaracionesCSV() {
   if (cacheDeclaraciones.length === 0) { alert('No hay declaraciones que exportar para este año.'); return; }
-  const enc = ['Donante', 'Dirección', 'Diezmos', 'Donaciones', 'Campañas', 'Total'];
-  const filas = cacheDeclaraciones.map(d => [d.nombre, d.direccion, d.diezmos.toFixed(2), d.donaciones.toFixed(2), d.promesas.toFixed(2), d.total.toFixed(2)]);
-  const contenido = [enc, ...filas].map(f => f.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-  const blob = new Blob(['﻿' + contenido], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `declaraciones_${dcAnioActual}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  csvDescargar(`declaraciones_${dcAnioActual}.csv`, ['Donante', 'Dirección', 'Diezmos', 'Donaciones', 'Campañas', 'Total'],
+    cacheDeclaraciones.map(d => [d.nombre, d.direccion, d.diezmos.toFixed(2), d.donaciones.toFixed(2), d.promesas.toFixed(2), d.total.toFixed(2)]));
 }
 
 // ══════════════════════ VER-032: TRANSACCIONES / LIBROS SIMPLES / PROVEEDORES / BANCOS / TRANSFERENCIAS ══════════════════════
+let expPendiente = null;
 function csvDescargar(nombreArchivo, encabezados, filas) {
-  const contenido = [encabezados, ...filas]
-    .map(f => f.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
-    .join('\n');
-  const blob = new Blob(['﻿' + contenido], { type: 'text/csv;charset=utf-8;' });
+  expPendiente = { nombre: nombreArchivo.replace(/\.csv$/i, ''), enc: encabezados, filas };
+  document.getElementById('expNombre').textContent = expPendiente.nombre + ' · ' + filas.length + ' filas';
+  document.getElementById('modalExportar').classList.add('abierto');
+}
+function expDescargarBlob(blob, nombre) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = nombreArchivo;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+function expCargarXlsx() {
+  return new Promise((ok, no) => {
+    if (window.XLSX) return ok();
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = ok; sc.onerror = () => no(new Error('No se pudo cargar Excel'));
+    document.head.appendChild(sc);
+  });
+}
+async function expElegir(fmt) {
+  const e = expPendiente; if (!e) return;
+  document.getElementById('modalExportar').classList.remove('abierto');
+  if (fmt === 'csv') {
+    const txt = [e.enc, ...e.filas].map(f => f.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    expDescargarBlob(new Blob(['﻿' + txt], { type: 'text/csv;charset=utf-8;' }), e.nombre + '.csv');
+  } else if (fmt === 'json') {
+    const objs = e.filas.map(f => Object.fromEntries(e.enc.map((h, i) => [h, f[i] ?? ''])));
+    expDescargarBlob(new Blob([JSON.stringify(objs, null, 1)], { type: 'application/json' }), e.nombre + '.json');
+  } else if (fmt === 'xlsx') {
+    try {
+      await expCargarXlsx();
+      const ws = XLSX.utils.aoa_to_sheet([e.enc, ...e.filas.map(f => f.map(c => (typeof c === 'number' || c === null || c === undefined) ? (c ?? '') : (c !== '' && !isNaN(c) && /^-?\d+(\.\d+)?$/.test(String(c)) && String(c).length < 12 && !/^0\d/.test(String(c)) ? Number(c) : c)))]);
+      ws['!cols'] = e.enc.map((h, i) => ({ wch: Math.min(40, Math.max(String(h).length, ...e.filas.slice(0, 200).map(f => String(f[i] ?? '').length)) + 2) }));
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Datos');
+      XLSX.writeFile(wb, e.nombre + '.xlsx');
+    } catch (err) { alert(err.message + '. Revisa tu conexión.'); }
+  } else if (fmt === 'pdf') {
+    const iglesia = (() => { try { return localStorage.getItem('dcIglesiaNombre') || DC_IGLESIA_POR_DEFECTO; } catch (x) { return DC_IGLESIA_POR_DEFECTO; } })();
+    const esc = escV28;
+    const w = window.open('', '_blank');
+    if (!w) { alert('Permite las ventanas emergentes para generar el PDF.'); return; }
+    w.document.write(`<!doctype html><meta charset="utf-8"><title>${esc(e.nombre)}</title><style>body{font-family:Arial,sans-serif;font-size:11px;margin:18px}h1{font-size:16px;margin:0}p{color:#555;margin:2px 0 12px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #bbb;padding:4px 6px;text-align:left}th{background:#eee}tr:nth-child(even) td{background:#fafafa}</style><h1>${esc(iglesia)}</h1><p>${esc(e.nombre.replace(/_/g, ' '))} · ${new Date().toLocaleDateString('es')}</p><table><thead><tr>${e.enc.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${e.filas.map(f => `<tr>${f.map(c => `<td>${esc(c ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table><script>setTimeout(()=>print(),300)<\/script>`);
+    w.document.close();
+  }
 }
 
 
@@ -3708,10 +3785,178 @@ async function cfgRespaldo() {
   est.textContent = 'Listo ✓';
 }
 
+
+// ── Permisos individuales (Ver-043) ──
+const PERM_KEYS = [
+  { key: 'verReportes', label: 'Ver reportes (Diario, Mayor, P&L, Balance, Conciliación)' },
+  { key: 'agregarTrans', label: 'Agregar transacciones' },
+  { key: 'editarTrans', label: 'Editar transacciones' },
+  { key: 'eliminarTrans', label: 'Eliminar transacciones' },
+  { key: 'gestionarMiembros', label: 'Gestionar miembros y proveedores' },
+  { key: 'gestionarUsuarios', label: 'Gestionar usuarios' },
+  { key: 'gestionarConfig', label: 'Gestionar configuración (catálogos, fondos, bancos, presupuesto)' },
+  { key: 'verAuditoria', label: 'Ver historial de auditoría' },
+  { key: 'importarDatos', label: 'Importar datos' },
+  { key: 'exportarDatos', label: 'Exportar datos (Excel, PDF, JSON)' },
+  { key: 'enviarEmail', label: 'Enviar reportes por correo' },
+  { key: 'cerrarPeriodo', label: 'Cerrar o reabrir periodos contables' },
+];
+const PERM_POR_ROL = {
+  Administrador: Object.fromEntries(PERM_KEYS.map(p => [p.key, true])),
+  Tesorero: { verReportes: true, agregarTrans: true, editarTrans: true, eliminarTrans: false, gestionarMiembros: true, gestionarUsuarios: false, gestionarConfig: false, verAuditoria: true, importarDatos: true, exportarDatos: true, enviarEmail: true, cerrarPeriodo: true },
+  Colaborador: { agregarTrans: true },
+  Pastor: { verReportes: true, exportarDatos: true },
+};
+function puede(k) {
+  const s = getSesion();
+  if (!s || !s.rol) return false;
+  if (s.rol === 'Administrador') return true;
+  return !!(s.permisos && (s.permisos.todo || s.permisos[k]));
+}
+function ruPintarPermisos(desdeRol) {
+  const rol = document.getElementById('ruRol').value;
+  const u = cacheUsuarioApps.find(a => a.usuario_id === document.getElementById('ruUsuarioId').value);
+  const guardados = (!desdeRol && u && u.permisos && Object.keys(u.permisos).length) ? u.permisos : null;
+  const base = PERM_POR_ROL[rol] || {};
+  document.getElementById('ruPermisos').innerHTML = rol ? PERM_KEYS.map(p =>
+    `<label style="display:flex; gap:8px; align-items:flex-start; font-size:0.85rem; font-weight:400;"><input type="checkbox" id="ruPerm_${p.key}" ${(guardados ? guardados[p.key] : base[p.key]) ? 'checked' : ''}> <span>${p.label}</span></label>`).join('') : '';
+}
+// Oculta tarjetas según permisos
+const FIN_PERM_TAB = { diario: 'verReportes', mayor: 'verReportes', balance: 'verReportes', comprobacion: 'verReportes', reportes: 'verReportes', reportesHub: 'verReportes', conciliacion: 'verReportes', declaraciones: 'verReportes', cierre: 'cerrarPeriodo', ajustes: 'agregarTrans', auditoria: 'verAuditoria', configIr: 'gestionarConfig' };
+
+// ── Importar Excel (Ver-043) ──
+const IMP_TIPOS = {
+  Diezmo: { cols: ['fecha', 'monto', 'nombre', 'metodo', 'referencia'], persona: true },
+  Ofrenda: { cols: ['fecha', 'monto', 'subtipo', 'metodo'], persona: false },
+  'Donación': { cols: ['fecha', 'monto', 'nombre', 'subtipo', 'metodo', 'referencia'], persona: true },
+  Gasto: { cols: ['fecha', 'monto', 'descripcion', 'categoria', 'metodo'], persona: false },
+};
+const IMP_ALIAS = { fecha: ['fecha', 'date'], monto: ['monto', 'amount', 'total', 'cantidad'], nombre: ['nombre', 'miembro', 'persona', 'donante', 'name'], metodo: ['metodo', 'método', 'forma', 'method'], referencia: ['referencia', 'ref', 'cheque', 'sobre'], subtipo: ['tipo', 'subtipo', 'proposito', 'propósito'], descripcion: ['descripcion', 'descripción', 'concepto', 'detalle'], categoria: ['categoria', 'categoría'] };
+let impDatos = null;
+function impAbrir() {
+  impDatos = null;
+  document.getElementById('impPaso1').style.display = '';
+  document.getElementById('impPaso2').style.display = 'none';
+  document.getElementById('impArchivo').value = '';
+  document.getElementById('impMsg').textContent = '';
+  document.getElementById('modalImportar').classList.add('abierto');
+}
+async function impLeer(inp) {
+  const f = inp.files[0]; if (!f) return;
+  document.getElementById('impMsg').textContent = 'Leyendo…';
+  try {
+    await expCargarXlsx();
+    const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
+    const filas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '', raw: false, dateNF: 'yyyy-mm-dd' });
+    if (!filas.length) { document.getElementById('impMsg').textContent = 'El archivo no tiene filas.'; return; }
+    impDatos = { filas, enc: Object.keys(filas[0]) };
+    document.getElementById('impPaso1').style.display = 'none';
+    document.getElementById('impPaso2').style.display = '';
+    poblarSelectFondos('impFondo');
+    impPintarMapa();
+  } catch (e) { document.getElementById('impMsg').textContent = 'No se pudo leer: ' + e.message; }
+}
+function impPintarMapa() {
+  const tipo = document.getElementById('impTipo').value;
+  const enc = impDatos.enc;
+  document.getElementById('impMapa').innerHTML = IMP_TIPOS[tipo].cols.map(c => {
+    const auto = enc.find(h => (IMP_ALIAS[c] || [c]).includes(String(h).trim().toLowerCase())) || '';
+    return `<div><label>${c}</label><select id="impCol_${c}"><option value="">—</option>${enc.map(h => `<option ${h === auto ? 'selected' : ''}>${esc(h)}</option>`).join('')}</select></div>`;
+  }).join('');
+  document.getElementById('impResumen').textContent = impDatos.filas.length + ' filas encontradas.';
+}
+function impFecha(v) {
+  v = String(v || '').trim();
+  let m = v.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/); if (m) { const y = m[3].length === 2 ? '20' + m[3] : m[3]; return `${y}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`; }
+  return null;
+}
+async function impEjecutar() {
+  const tipo = document.getElementById('impTipo').value, cfg = IMP_TIPOS[tipo];
+  const col = c => { const e = document.getElementById('impCol_' + c); return e && e.value ? e.value : null; };
+  if (!col('fecha') || !col('monto')) { alert('Elige las columnas de fecha y monto.'); return; }
+  await asegurarDirectorioFinanzas(); await asegurarFondosFinanzas();
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  const porNombre = {};
+  cacheDirectorio.forEach(p => { const k = normNombre(nombreMostrar(p)); const k2 = normNombre(p.nombre_completo || ''); [k, k2].forEach(x => { if (x) (porNombre[x] = porNombre[x] || []).push(p.id); }); });
+  const buenas = [], malas = [];
+  impDatos.filas.forEach((f, i) => {
+    const fecha = impFecha(f[col('fecha')]); const monto = Math.round(parseFloat(String(f[col('monto')]).replace(/[$,\s]/g, '')) * 100) / 100;
+    if (!fecha || !(monto > 0)) { malas.push(`Fila ${i + 2}: fecha o monto inválido`); return; }
+    let personaId = null;
+    if (cfg.persona) {
+      const ids = porNombre[normNombre(f[col('nombre')] || '')] || [];
+      if (ids.length !== 1) { malas.push(`Fila ${i + 2}: miembro "${f[col('nombre')] || ''}" ${ids.length ? 'repetido' : 'no encontrado'}`); return; }
+      personaId = ids[0];
+    }
+    buenas.push({ fecha, monto, personaId, metodo: (col('metodo') && f[col('metodo')]) || 'Efectivo', ref: col('referencia') ? String(f[col('referencia')] || '') || null : null, sub: col('subtipo') ? String(f[col('subtipo')] || '') : '', desc: col('descripcion') ? String(f[col('descripcion')] || '') : '', cat: col('categoria') ? String(f[col('categoria')] || '') : '', nombre: col('nombre') ? String(f[col('nombre')] || '') : '' });
+  });
+  if (!buenas.length) { alert('Ninguna fila se puede importar.\n\n' + malas.slice(0, 10).join('\n')); return; }
+  if (!confirm(`Se importarán ${buenas.length} registros de ${tipo}.` + (malas.length ? `\n${malas.length} filas se omiten:\n` + malas.slice(0, 8).join('\n') : '') + '\n\n¿Continuar?')) return;
+  const sesion = getSesion(), fondoId = document.getElementById('impFondo').value || null, uid = sesion.usuario?.id || null;
+  const filasTrans = buenas.map(b => {
+    const nombre = b.personaId ? nombrePersonaPorId(b.personaId) : '';
+    if (tipo === 'Diezmo') return { fecha: b.fecha, descripcion: `Diezmo — ${nombre}`, categoria: 'Diezmos', tipo: 'Ingreso', tipo_origen: 'Diezmo', cuenta_cr: cuentaIdPorCodigo('4001') };
+    if (tipo === 'Ofrenda') { const sub = b.sub || 'Ofrenda General'; return { fecha: b.fecha, descripcion: `Ofrenda — ${sub}`, categoria: sub, tipo: 'Ingreso', tipo_origen: 'Ofrenda', cuenta_cr: cuentaIdPorCodigo(OFRENDA_TIPO_CUENTA[sub] || '4002') }; }
+    if (tipo === 'Donación') return { fecha: b.fecha, descripcion: `Donación — ${nombre}`, categoria: b.sub || 'Fondo General', tipo: 'Ingreso', tipo_origen: 'Donación', cuenta_cr: cuentaIdPorCodigo('4003') };
+    const cg = cacheCuentas.find(c => c.tipo === 'Gasto' && c.nombre === b.cat);
+    return { fecha: b.fecha, descripcion: b.desc || 'Gasto importado', categoria: b.cat || 'Otros Gastos', tipo: 'Egreso', tipo_origen: 'Gasto', cuenta_dr: cg ? cg.id : null };
+  }).map((t, i) => ({ ...t, metodo: buenas[i].metodo, monto: buenas[i].monto, referencia: buenas[i].ref, estado: 'Completado', fondo_id: fondoId, solo_fondo: false, creado_por: uid }));
+  document.getElementById('impMsg2').textContent = 'Importando…';
+  const { data: trans, error: e1 } = await sbCall(sb.from('transacciones').insert(filasTrans).select('id'));
+  if (e1 || !trans || trans.length !== buenas.length) { alert('Error al crear transacciones: ' + (e1 ? e1.message : 'conteo distinto')); document.getElementById('impMsg2').textContent = ''; return; }
+  const tabla = { Diezmo: 'diezmos', Ofrenda: 'ofrendas', 'Donación': 'donaciones', Gasto: 'gastos' }[tipo];
+  const filasReg = buenas.map((b, i) => {
+    const base = { fecha: b.fecha, monto: b.monto, metodo: b.metodo, estado: 'Completado', transaccion_id: trans[i].id, creado_por: uid };
+    if (tipo === 'Diezmo') return { ...base, persona_id: b.personaId, referencia: b.ref };
+    if (tipo === 'Ofrenda') return { ...base, tipo: b.sub || 'Ofrenda General' };
+    if (tipo === 'Donación') return { ...base, persona_id: b.personaId, referencia: b.ref };
+    return { ...base, descripcion: b.desc || 'Gasto importado', categoria: b.cat || 'Otros Gastos' };
+  });
+  const { error: e2 } = await sbCall(sb.from(tabla).insert(filasReg));
+  if (e2) {
+    await sbCall(sb.from('transacciones').delete().in('id', trans.map(t => t.id)));
+    alert('Error al guardar: ' + e2.message + '\nNo se importó nada.'); document.getElementById('impMsg2').textContent = ''; return;
+  }
+  document.getElementById('impMsg2').textContent = '';
+  document.getElementById('modalImportar').classList.remove('abierto');
+  alert(`Listo: ${buenas.length} registros importados.` + (malas.length ? `\n${malas.length} omitidos.` : ''));
+}
+function normNombre(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim(); }
+
+// ── Zona de peligro (Ver-043) ──
+const PELIGRO_TABLAS = [
+  ['diezmos', 'Diezmos'], ['ofrendas', 'Ofrendas'], ['donaciones', 'Donaciones'], ['gastos', 'Gastos'],
+  ['transacciones', 'Transacciones (todas)'], ['registros_movil', 'Registros móviles'], ['pagos_entrantes', 'Pagos Cash App/Zelle'],
+];
+function peAbrir() {
+  document.getElementById('peLista').innerHTML = PELIGRO_TABLAS.map(([t, n]) => `<label style="display:flex; gap:8px; font-size:0.9rem; font-weight:400;"><input type="checkbox" class="peChk" value="${t}"> ${n}</label>`).join('');
+  document.getElementById('peConfirmar').value = '';
+  document.getElementById('modalPeligro').classList.add('abierto');
+}
+async function peBorrar() {
+  const sel = [...document.querySelectorAll('.peChk:checked')].map(c => c.value);
+  if (!sel.length) { alert('Marca qué quieres borrar.'); return; }
+  if (document.getElementById('peConfirmar').value.trim() !== 'BORRAR') { alert('Escribe BORRAR (en mayúsculas) para confirmar.'); return; }
+  if (!confirm('Se descargará un respaldo y luego se borrará: ' + sel.join(', ') + '.\nEsto NO se puede deshacer. ¿Seguro?')) return;
+  await cfgRespaldo();
+  const orden = ['diezmos', 'ofrendas', 'donaciones', 'gastos', 'registros_movil', 'pagos_entrantes', 'transacciones'].filter(t => sel.includes(t));
+  const fallos = [];
+  for (const t of orden) {
+    const { error } = await sbCall(sb.from(t).delete().not('id', 'is', null));
+    if (error) fallos.push(`${t}: ${error.message}`);
+  }
+  document.getElementById('modalPeligro').classList.remove('abierto');
+  alert(fallos.length ? 'Algunos no se pudieron borrar:\n' + fallos.join('\n') : 'Datos borrados.');
+}
+
 // ── Rol Pastor: solo ve ciertas pantallas (Ver-042) ──
 const ROL_PASTOR_MODULOS = ['mostrarResumenPastoral', 'mostrarPastoral', 'mostrarSecretaria', 'mostrarAsistencia', 'mostrarComunicaciones', 'mostrarGrupos'];
 function aplicarRol() {
   const rol = getSesion().rol;
+  const tImp = document.getElementById('cfgTileImportar'), tPel = document.getElementById('cfgTilePeligro');
+  if (tImp) tImp.style.display = puede('importarDatos') ? '' : 'none';
+  if (tPel) tPel.style.display = rol === 'Administrador' ? '' : 'none';
   document.querySelectorAll('#vistaDashboard .tarjetaModulo').forEach(t => {
     const oc = t.getAttribute('onclick') || '';
     t.style.display = (rol === 'Pastor' && !ROL_PASTOR_MODULOS.some(f => oc.startsWith(f + '('))) ? 'none' : '';
@@ -3765,6 +4010,130 @@ function finRenderTendencia(filas) {
       <span><span style="display:inline-block; width:10px; height:10px; background:#b3261e; border-radius:2px;"></span> Gastos</span>
       <span>Mes actual: ${formatoMoneda(meses[5].ing)} / ${formatoMoneda(meses[5].egr)}</span>
     </div></div>`;
+}
+
+
+// ── Inicio de Finanzas: comparativas y alertas (Ver-043) ──
+function barraComparativa(etiqueta, valor, max, color) {
+  return `<div style="display:flex; align-items:center; gap:8px; margin:6px 0; font-size:0.8rem;"><span style="width:92px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escV28(etiqueta)}</span><div style="flex:1; background:var(--bg); border-radius:4px; height:10px;"><div style="width:${Math.max(1, valor / (max || 1) * 100)}%; height:10px; border-radius:4px; background:${color};"></div></div><b style="min-width:84px; text-align:right;">${formatoMoneda(valor)}</b></div>`;
+}
+async function finRenderComparativas(filas) {
+  const cont = document.getElementById('finHomeComparativas');
+  const hoy = new Date();
+  const y = hoy.getFullYear(), m = hoy.getMonth();
+  const k = (yy, mm) => `${yy}-${String(mm + 1).padStart(2, '0')}`;
+  const mesAct = k(y, m), mesAnt = m === 0 ? k(y - 1, 11) : k(y, m - 1);
+  const mmdd = `${String(m + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+  let iMes = 0, iAnt = 0, iAnio = 0, iAnioAnt = 0;
+  const porFondo = {};
+  filas.forEach(t => {
+    if (t.tipo !== 'Ingreso') return;
+    const f = String(t.fecha), v = Number(t.monto) || 0;
+    if (f.startsWith(mesAct)) { iMes += v; porFondo[t.fondo_id || ''] = (porFondo[t.fondo_id || ''] || 0) + v; }
+    else if (f.startsWith(mesAnt)) iAnt += v;
+    if (f.startsWith(String(y))) iAnio += v;
+    else if (f.startsWith(String(y - 1)) && f.slice(5) <= mmdd) iAnioAnt += v;
+  });
+  await asegurarFondosFinanzas();
+  const nombreFondo = id => (cacheFondos.find(x => x.id === id) || {}).nombre || 'Sin fondo';
+  const lista = Object.entries(porFondo).map(([id, v]) => ({ n: nombreFondo(id), v })).sort((a, b) => b.v - a.v).slice(0, 6);
+  const mx1 = Math.max(iMes, iAnt), mx2 = Math.max(iAnio, iAnioAnt), mx3 = Math.max(1, ...lista.map(x => x.v));
+  const pct = (a, b) => b > 0 ? Math.round((a - b) / b * 100) : null;
+  const chip = (a, b) => { const p = pct(a, b); return p === null ? '' : `<span class="badge ${p >= 0 ? 'badge-estado-Activo' : 'badge-estado-Inactivo'}">${p >= 0 ? '▲' : '▼'} ${Math.abs(p)}%</span>`; };
+  cont.innerHTML = `<div class="tablaWrap" style="padding:14px 16px;">
+    <div style="font-weight:700; margin-bottom:6px;">Ingresos: este mes vs. el pasado ${chip(iMes, iAnt)}</div>
+    ${barraComparativa('Este mes', iMes, mx1, '#c9a227')}${barraComparativa('Mes pasado', iAnt, mx1, '#8a9bb0')}
+    <div style="font-weight:700; margin:12px 0 6px;">Este año vs. el pasado (mismo periodo) ${chip(iAnio, iAnioAnt)}</div>
+    ${barraComparativa(String(y), iAnio, mx2, '#c9a227')}${barraComparativa(String(y - 1), iAnioAnt, mx2, '#8a9bb0')}
+    <div style="font-weight:700; margin:12px 0 6px;">Este mes por fondo</div>
+    ${lista.length ? lista.map(x => barraComparativa(x.n, x.v, mx3, '#3a8cb5')).join('') : '<div style="font-size:0.8rem; color:var(--text-muted);">Sin ingresos este mes.</div>'}
+  </div>`;
+}
+async function finRenderAlertas(filas) {
+  const cont = document.getElementById('finHomeAlertas');
+  const anio = new Date().getFullYear();
+  const alertas = [];
+  const [rp, rc] = await Promise.all([
+    sbCall(sb.from('presupuesto').select('categoria, monto_anual').eq('anio', anio)),
+    sbCall(sb.from('reconciliaciones').select('banco_id, fecha, diferencia').order('fecha', { ascending: false }).range(0, 499)),
+  ]);
+  const real = {};
+  filas.forEach(t => { if (t.tipo === 'Egreso' && String(t.fecha).startsWith(String(anio))) { const c = (t.categoria || '').trim().toLowerCase(); real[c] = (real[c] || 0) + (Number(t.monto) || 0); } });
+  (rp.data || []).forEach(p => {
+    const pres = Number(p.monto_anual) || 0; if (!pres) return;
+    const r = real[(p.categoria || '').trim().toLowerCase()] || 0, pc = r / pres * 100;
+    if (pc >= 90) alertas.push({ ic: pc >= 100 ? '🔴' : '🟠', msg: `Presupuesto "${p.categoria}" al ${pc.toFixed(0)}% (${formatoMoneda(r)} de ${formatoMoneda(pres)})`, tab: 'presupuesto' });
+  });
+  const vistos = new Set();
+  (rc.data || []).forEach(c => {
+    if (vistos.has(c.banco_id)) return; vistos.add(c.banco_id);
+    if (Math.abs(Number(c.diferencia) || 0) >= 0.01) {
+      const b = cacheBancosAdmin.find(x => x.id === c.banco_id);
+      alertas.push({ ic: '🟡', msg: `Conciliación${b ? ' de "' + b.nombre + '"' : ''} sin cuadrar (diferencia ${formatoMoneda(c.diferencia)})`, tab: 'conciliacion' });
+    }
+  });
+  cont.innerHTML = alertas.length ? `<div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">${alertas.map(a => `<div class="tablaWrap" style="padding:10px 14px; cursor:pointer; display:flex; gap:10px; align-items:center;" onclick="finAbrirSubvista('${a.tab}')"><span>${a.ic}</span><span style="flex:1; font-size:0.85rem;">${escV28(a.msg)}</span><span style="font-size:0.72rem; color:var(--text-muted);">Ver →</span></div>`).join('')}</div>` : '';
+}
+
+// ── Pagos de Promesas (Ver-043) ──
+let cachePagosPromesaAll = [];
+async function cargarPagosPromesa() {
+  const lista = document.getElementById('listaPagosPromesa');
+  lista.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+  await asegurarDirectorioFinanzas();
+  const [rp, rm, rc] = await Promise.all([
+    sbCall(sb.from('pagos_promesa').select('*').order('fecha', { ascending: false }).range(0, 4999)),
+    sbCall(sb.from('promesas').select('*').range(0, 4999)),
+    sbCall(sb.from('campanas').select('id, nombre').range(0, 999)),
+  ]);
+  if (rp.error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(rp.error.message)}</div>`; return; }
+  const prom = Object.fromEntries((rm.data || []).map(p => [p.id, p]));
+  const camp = Object.fromEntries((rc.data || []).map(c => [c.id, c.nombre]));
+  cachePagosPromesaAll = (rp.data || []).map(x => { const pr = prom[x.promesa_id] || {}; return { ...x, persona: pr.persona_id ? nombrePersonaPorId(pr.persona_id) : '', campana: camp[pr.campana_id] || '' }; });
+  ppRender();
+}
+function ppFiltrados() {
+  const q = (document.getElementById('ppBuscar').value || '').trim().toLowerCase();
+  return cachePagosPromesaAll.filter(x => !q || `${x.persona} ${x.campana}`.toLowerCase().includes(q));
+}
+function ppRender() {
+  const f = ppFiltrados();
+  document.getElementById('resumenPagosPromesa').innerHTML = `<div class="tarjetaResumen ingreso"><div class="etiqueta">Total pagado</div><div class="monto">${formatoMoneda(f.reduce((s, x) => s + (Number(x.monto) || 0), 0))}</div></div><div class="tarjetaResumen"><div class="etiqueta">Pagos</div><div class="monto">${f.length}</div></div>`;
+  document.getElementById('listaPagosPromesa').innerHTML = f.length ? f.map(x => `<div class="tarjetaSeguimiento"><div><div class="nombrePersona">${escV28(x.persona || '—')}</div><div class="metaLinea">${formatoFecha(x.fecha)} · ${escV28(x.campana || 'Sin campaña')} · ${escV28(x.metodo || '—')}</div></div><span class="badge badge-tipo">${formatoMoneda(x.monto)}</span></div>`).join('') : '<div class="estadoVacio">No hay pagos de promesas.</div>';
+}
+function ppExportar() { csvDescargar('pagos_promesas.csv', ['Fecha', 'Persona', 'Campaña', 'Método', 'Monto'], ppFiltrados().map(x => [x.fecha, x.persona, x.campana, x.metodo, Number(x.monto) || 0])); }
+
+// ── Eventos histórico (Ver-043) ──
+let ehFilas = [];
+async function cargarEventosHist() {
+  const lista = document.getElementById('listaEventosHist');
+  lista.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+  const [re, rv] = await Promise.all([
+    sbCall(sb.from('eventos').select('*').order('fecha', { ascending: false }).range(0, 4999)),
+    sbCall(sb.from('ventas').select('*').range(0, 4999)),
+  ]);
+  if (re.error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(re.error.message)}</div>`; return; }
+  const grupos = {};
+  (re.data || []).forEach(e => { const n = (e.nombre || 'Sin nombre').trim(); const g = grupos[n.toLowerCase()] ||= { nombre: n, gastos: 0, ventas: 0, n: 0, ultima: '' }; g.gastos += Number(e.monto) || 0; g.n++; if (String(e.fecha) > g.ultima) g.ultima = String(e.fecha); });
+  (rv.data || []).forEach(v => { const d = String(v.descripcion || '').toLowerCase(); Object.keys(grupos).forEach(k => { if (k && d.includes(k)) grupos[k].ventas += Number(v.monto) || 0; }); });
+  ehFilas = Object.values(grupos).sort((a, b) => b.ultima.localeCompare(a.ultima));
+  lista.innerHTML = ehFilas.length ? ehFilas.map(g => { const neto = g.ventas - g.gastos; return `<div class="tarjetaSeguimiento"><div><div class="nombrePersona">${escV28(g.nombre)}</div><div class="metaLinea">${g.n} gasto(s) · último ${formatoFecha(g.ultima)} · Gastos ${formatoMoneda(g.gastos)} · Ventas ${formatoMoneda(g.ventas)}</div></div><span class="badge ${neto >= 0 ? 'badge-estado-Activo' : 'badge-estado-Inactivo'}">${formatoMoneda(neto)}</span></div>`; }).join('') : '<div class="estadoVacio">Aún no hay eventos registrados.</div>';
+}
+function ehExportar() { csvDescargar('eventos_historico.csv', ['Evento', 'Gastos', 'Ventas', 'Neto', 'Último'], ehFilas.map(g => [g.nombre, g.gastos.toFixed(2), g.ventas.toFixed(2), (g.ventas - g.gastos).toFixed(2), g.ultima])); }
+
+// ── Hub de Reportes (Ver-043) ──
+const REPORTES_HUB = [['reportes', '📈', 'Estado de Resultados', 'Ingresos y gastos por periodo', 'c-purple'], ['balance', '⚖️', 'Balance General', 'Dónde está el dinero', 'c-amber'], ['comprobacion', '✅', 'Balance de Comprobación', 'Débitos = créditos', 'c-green'], ['declaraciones', '🧾', 'Declaraciones de Donación', 'Estados anuales por donante', 'c-gold'], ['diario', '📓', 'Libro Diario', 'Todos los asientos', 'c-green'], ['mayor', '📗', 'Libro Mayor', 'Movimientos por cuenta', 'c-blue'], ['conciliacion', '⚖️', 'Conciliación Bancaria', 'Libro contra el banco', 'c-teal'], ['transacciones', '📚', 'Todas las Transacciones', 'Filtrar y exportar', 'c-blue']];
+function renderReportesHub() {
+  document.getElementById('reportesHubTiles').innerHTML = `<div class="btnGrid">${REPORTES_HUB.map(r => `<div class="btnCard ${r[4]}" onclick="finAbrirSubvista('${r[0]}')"><div class="bcIcono">${r[1]}</div><div class="bcEtiqueta">${r[2]}</div><div class="bcSub">${r[3]}</div></div>`).join('')}</div>`;
+}
+
+// ── Recibo desde un diezmo o donación (Ver-043) ──
+async function rcDesdeRegistro(transId) {
+  if (!transId) { alert('Este registro no tiene transacción vinculada.'); return; }
+  const { data } = await sbCall(sb.from('transacciones').select('*').eq('id', transId).maybeSingle());
+  if (!data) { alert('No se encontró la transacción.'); return; }
+  if (!cacheTransaccionesTodas.some(x => String(x.id) === String(data.id))) cacheTransaccionesTodas.push(data);
+  trAbrirRecibo(data.id);
 }
 
 // ── Comprobante imprimible de una transacción (Ver-040) ──
@@ -5920,6 +6289,7 @@ function filtrarDiezmos() {
 function abrirFormDiezmo(id) {
   document.getElementById('formDiezmo').reset();
   document.getElementById('btnEliminarDiezmo').style.display = 'none';
+  document.getElementById('btnReciboDiezmo').style.display = 'none';
   document.getElementById('dzFecha').value = new Date().toISOString().slice(0, 10);
   poblarSelectPersonas('dzPersona');
   poblarSelectMetodo('dzMetodo');
@@ -5942,6 +6312,7 @@ function abrirFormDiezmo(id) {
       poblarSelectEstado('dzEstado', d.estado);
       document.getElementById('dzReferencia').value = d.referencia || '';
       document.getElementById('btnEliminarDiezmo').style.display = 'inline-block';
+      if (d.transaccion_id) { const br = document.getElementById('btnReciboDiezmo'); br.dataset.t = d.transaccion_id; br.style.display = ''; }
       restaurarFondoDesdeTransaccion('dzFondo', d.transaccion_id);
     }
   }
@@ -6202,6 +6573,7 @@ function filtrarDonaciones() {
 async function abrirFormDonacion(id) {
   document.getElementById('formDonacion').reset();
   document.getElementById('btnEliminarDonacion').style.display = 'none';
+  document.getElementById('btnReciboDonacion').style.display = 'none';
   document.getElementById('dnFecha').value = new Date().toISOString().slice(0, 10);
   poblarSelectPersonas('dnPersona');
   poblarSelectProposito('dnProposito');
@@ -6225,6 +6597,7 @@ async function abrirFormDonacion(id) {
       poblarSelectEstado('dnEstado', d.estado);
       document.getElementById('dnReferencia').value = d.referencia || '';
       document.getElementById('btnEliminarDonacion').style.display = 'inline-block';
+      if (d.transaccion_id) { const br = document.getElementById('btnReciboDonacion'); br.dataset.t = d.transaccion_id; br.style.display = ''; }
       restaurarFondoDesdeTransaccion('dnFondo', d.transaccion_id);
       if (d.transaccion_id) {
         const { data: t } = await sbCall(sb.from('transacciones').select('categoria').eq('id', d.transaccion_id).single());
@@ -6807,17 +7180,7 @@ function exportarReporteCSV() {
   if (cacheFilasReporte.length === 0) { alert('No hay datos que exportar en este rango.'); return; }
   const desde = document.getElementById('repDesde').value;
   const hasta = document.getElementById('repHasta').value;
-  const contenido = [['Tipo', 'Categoría', 'Monto'], ...cacheFilasReporte]
-    .map(f => f.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-  const blob = new Blob(['﻿' + contenido], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `estado_resultados_${desde}_a_${hasta}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  csvDescargar(`estado_resultados_${desde}_a_${hasta}.csv`, ['Tipo', 'Categoría', 'Monto'], cacheFilasReporte);
 }
 
 // ── Navegación: Secretaría ───────────────────────────────────────────────
@@ -6897,36 +7260,9 @@ function filtrarDirectorio() {
 }
 
 function exportarDirectorioCSV() {
-  if (cacheDirectorio.length === 0) {
-    alert('No hay miembros que exportar.');
-    return;
-  }
-
-  const encabezados = ['Nombre', 'Teléfono', 'Correo', 'Familia', 'Dirección', 'Ciudad', 'Estado', 'Código Postal'];
-  const filasCSV = cacheDirectorio.map(p => [
-    p.nombre_completo || `${p.nombre} ${p.apellido}`,
-    p.telefono || '',
-    p.correo || '',
-    p.households?.nombre || '',
-    p.street || '',
-    p.city || '',
-    p.state || '',
-    p.zip || '',
-  ]);
-
-  const contenido = [encabezados, ...filasCSV]
-    .map(fila => fila.map(campo => `"${String(campo).replace(/"/g, '""')}"`).join(','))
-    .join('\n');
-
-  const blob = new Blob(['\uFEFF' + contenido], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'directorio_miembros.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  if (cacheDirectorio.length === 0) { alert('No hay miembros que exportar.'); return; }
+  csvDescargar('directorio_miembros.csv', ['Nombre', 'Teléfono', 'Correo', 'Familia', 'Dirección', 'Ciudad', 'Estado', 'Código Postal'],
+    cacheDirectorio.map(p => [p.nombre_completo || `${p.nombre} ${p.apellido}`, p.telefono || '', p.correo || '', p.households?.nombre || '', p.street || '', p.city || '', p.state || '', p.zip || '']));
 }
 
 // ── Cumpleaños ────────────────────────────────────────────────────────────
@@ -8326,6 +8662,7 @@ function abrirModalRolUsuario(usuarioId) {
   document.getElementById('ruUsuarioId').value = usuarioId;
   document.getElementById('ruNombreUsuario').textContent = `${u.nombre || u.correo} (${u.correo})`;
   document.getElementById('ruRol').value = rolDeUsuario(usuarioId) || '';
+  ruPintarPermisos(false);
   document.getElementById('modalRolUsuario').classList.add('abierto');
 }
 
@@ -8348,6 +8685,8 @@ async function guardarRolUsuario(evt) {
     if (!confirmado) return false;
   }
 
+  const permisosNuevos = {};
+  PERM_KEYS.forEach(p => { const c = document.getElementById('ruPerm_' + p.key); if (c) permisosNuevos[p.key] = c.checked; });
   let error;
   if (!nuevoRol) {
     // "Sin acceso" — quitar el registro si existía
@@ -8356,11 +8695,11 @@ async function guardarRolUsuario(evt) {
     }
   } else if (filaExistente) {
     ({ error } = await sbCall(
-      sb.from('usuario_apps').update({ rol: nuevoRol }).eq('usuario_id', usuarioId).eq('app', 'church_admin')
+      sb.from('usuario_apps').update({ rol: nuevoRol, permisos: permisosNuevos }).eq('usuario_id', usuarioId).eq('app', 'church_admin')
     ));
   } else {
     ({ error } = await sbCall(
-      sb.from('usuario_apps').insert({ usuario_id: usuarioId, app: 'church_admin', rol: nuevoRol, permisos: {}, activo: true })
+      sb.from('usuario_apps').insert({ usuario_id: usuarioId, app: 'church_admin', rol: nuevoRol, permisos: permisosNuevos, activo: true })
     ));
   }
 

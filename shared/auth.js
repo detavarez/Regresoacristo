@@ -91,8 +91,9 @@ async function cargarSesion() {
  */
 const ROLES_DEFAULT = {
   Administrador: { todo: true },
-  Tesorero: { verReportes: true, agregarTrans: true, editarTrans: true, exportarDatos: true },
+  Tesorero: { verReportes: true, agregarTrans: true, editarTrans: true, gestionarMiembros: true, verAuditoria: true, importarDatos: true, exportarDatos: true, enviarEmail: true, cerrarPeriodo: true },
   Colaborador: { agregarTrans: true },
+  Pastor: { verReportes: true, exportarDatos: true },
 };
 
 function resolverPermisos(rol, override) {

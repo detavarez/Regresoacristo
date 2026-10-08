@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Church Admin — Móvil</title>
+<title>MobileCash</title>
 <script>const APP_SLUG = 'church_admin';</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="../shared/supabase-client.js"></script>
@@ -78,8 +78,8 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 
 <div id="loginBox" style="display:none">
   <div class="logo-i" style="margin:0 auto;width:56px;height:56px;font-size:28px">✝</div>
-  <h2>Regreso a Cristo</h2>
-  <div class="pg-sub" style="text-align:center">Registro móvil · Ver-M001</div>
+  <h2>MobileCash</h2>
+  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M002</div>
   <div class="form-card">
     <div class="fgrp"><label>Correo</label><input type="email" id="lgEmail" autocomplete="username" inputmode="email"></div>
     <div class="fgrp"><label>Contraseña</label><input type="password" id="lgPass" autocomplete="current-password"></div>
@@ -90,7 +90,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 
 <div id="app" style="display:none">
 <div class="topbar">
-  <div class="tl"><div class="logo-i">✝</div><div><h1>Church Admin</h1><div class="ts">Móvil Ver-M001 · <span id="quien"></span></div></div></div>
+  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M002 · <span id="quien"></span></div></div></div>
   <div style="display:flex;gap:8px;align-items:center"><span id="dot" style="width:8px;height:8px;border-radius:50%;background:#3DAA6E;display:inline-block"></span><button class="sbtn" id="btnInstalar" style="display:none" onclick="instalarApp()">📲</button><button class="sbtn" onclick="cargar(true)">↻</button><button class="sbtn" onclick="salir()">Salir</button></div>
 </div>
 <div id="toast" class="toast"></div>

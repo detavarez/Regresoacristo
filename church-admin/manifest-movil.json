@@ -1,6 +1,6 @@
 {
- "name": "Registro Móvil — Regreso a Cristo",
- "short_name": "Registro",
+ "name": "MobileCash",
+ "short_name": "MobileCash",
  "start_url": "movil.html",
  "scope": "./",
  "display": "standalone",
