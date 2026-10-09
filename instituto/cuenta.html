@@ -3,46 +3,80 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mi cuenta — Instituto Bíblico</title>
-<link rel="stylesheet" href="assets/instituto.css">
+<title>Mi perfil — Instituto Bíblico</title>
+<link rel="stylesheet" href="assets/instituto.css?v=10">
 <style>
-  .caja{max-width:420px;margin:0 auto}
-  .caja input{
-    width:100%;font-family:var(--sans);font-size:.92rem;padding:11px 12px;
-    border:1px solid var(--arena);background:var(--papel);color:var(--tinta);border-radius:4px;margin:0 0 10px;
-  }
-  .msg{font-family:var(--sans);font-size:.85rem;padding:10px 12px;border-radius:4px;margin:0 0 14px}
+  .msg{font-family:var(--sans);font-size:.85rem;padding:11px 14px;border-radius:10px;margin:0 0 16px}
   .msg.ok{background:color-mix(in srgb,var(--oliva) 14%,transparent);color:var(--oliva)}
   .msg.err{background:color-mix(in srgb,var(--granate) 12%,transparent);color:var(--granate)}
-  .obligatorio{background:color-mix(in srgb,var(--oro) 16%,transparent);border-left:3px solid var(--oro);padding:12px 14px;margin:0 0 22px;font-family:var(--sans);font-size:.9rem}
+  .obligatorio{background:color-mix(in srgb,var(--oro) 16%,transparent);border-left:3px solid var(--oro);padding:12px 14px;margin:0 0 22px;font-family:var(--sans);font-size:.9rem;border-radius:0 10px 10px 0}
+  .dos{display:grid;grid-template-columns:1fr;gap:0 18px}
+  @media (min-width:640px){.dos{grid-template-columns:1fr 1fr}}
+  .fila-btn{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .actual-box{display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+  .actual-box .tt{font-weight:700;font-size:1.05rem;margin:0 0 3px}
+  .actual-box .ss{font-family:var(--sans);font-size:.8rem;color:var(--tinta-suave);margin:0}
+  .caja{max-width:420px;margin:0 auto}
 </style>
 </head>
 <body>
 <script src="data/curriculo.js?v=10"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/core.js?v=9"></script>
+<script src="assets/core.js?v=10"></script>
 
-<main class="env" id="salida" style="padding-top:26px"><p class="sub">Cargando…</p></main>
+<main class="env" id="salida" style="padding-top:26px;padding-bottom:50px"><p class="sub">Cargando…</p></main>
 
 <script>
 var T = {
-  es: { tit: 'Mi cuenta', ruta: 'Tu cuenta', obligatorioMsg: 'Tu contraseña es temporal. Elige una nueva antes de continuar — no podrás usar el resto del sitio hasta hacerlo.',
-    nombre: 'Nombre', guardarNombre: 'Guardar nombre', cambiarPassTit: 'Cambiar contraseña',
-    nueva: 'Contraseña nueva', confirmar: 'Confirmar contraseña', cambiar: 'Cambiar contraseña',
+  es: {
+    tit: 'Mi perfil', ruta: 'Tu cuenta',
+    obligatorioMsg: 'Tu contraseña es temporal. Elige una nueva antes de continuar — no podrás usar el resto del sitio hasta hacerlo.',
+    rolAdmin: 'Administrador', rolMaestro: 'Maestro', rolEst: 'Estudiante',
+    curso: 'Curso actual', leccion: 'Lección actual', aprobadas: 'Aprobadas', promedio: 'Promedio', avance: 'Avance total', visitas: 'Lecciones vistas',
+    sinLeccion: 'Aún sin lección asignada', continuar: 'Continuar lección', irIndice: 'Ir al índice', hacerUbic: 'Hacer examen de ubicación',
+    progNiveles: 'Progreso por nivel', actividad: 'Última actividad', sinActividad: 'Sin actividad todavía',
+    ubic: 'Ubicación', ubicHecha: function (n, f) { return 'Examen del ' + f + ' — te recomendó la lección ' + n; }, ubicNo: 'Todavía no has hecho el examen de ubicación.',
+    datos: 'Datos personales', nombre: 'Nombre', nombreBloq: 'Solo tu maestro o el administrador pueden cambiar tu nombre.', guardarNombre: 'Guardar nombre',
+    correo: 'Correo electrónico', nuevoCorreo: 'Correo nuevo', cambiarCorreo: 'Cambiar correo',
+    correoAyuda: 'Te enviaremos un enlace de confirmación. El cambio se aplica cuando lo abras.',
+    correoPend: function (e) { return 'Pendiente de confirmar: ' + e; },
+    correoInvalido: 'Escribe un correo válido.', correoIgual: 'Ese ya es tu correo actual.',
+    okCorreo: function (e) { return 'Listo. Revisa ' + e + ' (y también el correo actual) y abre el enlace de confirmación.'; }, errCorreo: 'No se pudo cambiar el correo: ',
+    seguridad: 'Seguridad', cambiarPassTit: 'Cambiar contraseña', nueva: 'Contraseña nueva', confirmar: 'Confirmar contraseña', cambiar: 'Cambiar contraseña',
     corta: 'La contraseña debe tener al menos 8 caracteres.', noCoincide: 'Las contraseñas no coinciden.',
     okNombre: 'Nombre guardado.', okPass: 'Contraseña actualizada.', errPass: 'No se pudo cambiar la contraseña: ',
-    volver: 'Ir al índice', correo: 'Correo' },
-  en: { tit: 'My account', ruta: 'Your account', obligatorioMsg: "Your password is temporary. Choose a new one before continuing — you won't be able to use the rest of the site until you do.",
-    nombre: 'Name', guardarNombre: 'Save name', cambiarPassTit: 'Change password',
-    nueva: 'New password', confirmar: 'Confirm password', cambiar: 'Change password',
+    prefs: 'Preferencias', idioma: 'Idioma de las lecciones', tema: 'Tema', claro: 'Claro', oscuro: 'Oscuro', auto: 'Automático',
+    herramientas: 'Herramientas', descargar: 'Descargar mi historial', verAvance: 'Ver mi avance detallado', salir: 'Cerrar sesión',
+    gestion: 'Gestión', panelAdmin: 'Panel de administrador', panelMaestro: 'Panel de maestro', estudiantes: 'Estudiantes', maestros: 'Maestros', admins: 'Administradores',
+    guardando: 'Guardando…'
+  },
+  en: {
+    tit: 'My profile', ruta: 'Your account',
+    obligatorioMsg: "Your password is temporary. Choose a new one before continuing — you won't be able to use the rest of the site until you do.",
+    rolAdmin: 'Administrator', rolMaestro: 'Teacher', rolEst: 'Student',
+    curso: 'Current course', leccion: 'Current lesson', aprobadas: 'Passed', promedio: 'Average', avance: 'Overall progress', visitas: 'Lessons viewed',
+    sinLeccion: 'No lesson assigned yet', continuar: 'Continue lesson', irIndice: 'Go to the index', hacerUbic: 'Take the placement exam',
+    progNiveles: 'Progress by level', actividad: 'Last activity', sinActividad: 'No activity yet',
+    ubic: 'Placement', ubicHecha: function (n, f) { return 'Exam taken on ' + f + ' — it recommended lesson ' + n; }, ubicNo: "You haven't taken the placement exam yet.",
+    datos: 'Personal details', nombre: 'Name', nombreBloq: 'Only your teacher or the administrator can change your name.', guardarNombre: 'Save name',
+    correo: 'Email', nuevoCorreo: 'New email', cambiarCorreo: 'Change email',
+    correoAyuda: "We'll send a confirmation link. The change takes effect when you open it.",
+    correoPend: function (e) { return 'Waiting for confirmation: ' + e; },
+    correoInvalido: 'Enter a valid email.', correoIgual: 'That is already your current email.',
+    okCorreo: function (e) { return 'Done. Check ' + e + ' (and your current email too) and open the confirmation link.'; }, errCorreo: "Couldn't change the email: ",
+    seguridad: 'Security', cambiarPassTit: 'Change password', nueva: 'New password', confirmar: 'Confirm password', cambiar: 'Change password',
     corta: 'Password must be at least 8 characters.', noCoincide: 'Passwords do not match.',
     okNombre: 'Name saved.', okPass: 'Password updated.', errPass: "Couldn't change the password: ",
-    volver: 'Go to the index', correo: 'Email' }
+    prefs: 'Preferences', idioma: 'Lesson language', tema: 'Theme', claro: 'Light', oscuro: 'Dark', auto: 'Automatic',
+    herramientas: 'Tools', descargar: 'Download my history', verAvance: 'View my detailed progress', salir: 'Sign out',
+    gestion: 'Management', panelAdmin: 'Administrator panel', panelMaestro: 'Teacher panel', estudiantes: 'Students', maestros: 'Teachers', admins: 'Administrators',
+    guardando: 'Saving…'
+  }
 };
 
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
 INST.listo.then(function () {
-  // Nota: esta página se excluye a propósito de la redirección obligatoria de INST,
-  // así que INST.estado puede venir null si no hay sesión real.
   if (!INST.sesion) { location.href = 'login.html'; return; }
   pintar();
 });
@@ -54,48 +88,160 @@ function pintar() {
 
   if (!obligatorio) INST.barra('cuenta');
 
-  var html = '<div class="caja">' +
-    '<div class="encabezado"><p class="ruta">' + t.ruta + '</p><h1>' + t.tit + '</h1></div>' +
-    '<div id="msg"></div>' +
-    (obligatorio ? '<div class="obligatorio">' + t.obligatorioMsg + '</div>' : '');
-
-  if (!obligatorio && INST.estado) {
-    html += '<p class="sub">' + t.correo + ': ' + (INST.sesion ? INST.sesion.email : '') + '</p>' +
-      '<label class="sub">' + t.nombre + '</label>' +
-      '<input type="text" id="nombre" value="' + (INST.estado.perfil.nombre || '') + '">' +
-      '<button class="btn sec" type="button" id="guardarNombre" style="margin:0 0 24px">' + t.guardarNombre + '</button><hr>';
+  function msg(tipo, texto) {
+    var m = document.getElementById('msg');
+    m.innerHTML = '<div class="msg ' + tipo + '">' + texto + '</div>';
+    m.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  html += '<h2 style="font-size:1.05rem">' + t.cambiarPassTit + '</h2>' +
-    '<input type="password" id="nueva" placeholder="' + t.nueva + '" autocomplete="new-password">' +
-    '<input type="password" id="confirmar" placeholder="' + t.confirmar + '" autocomplete="new-password">' +
-    '<button class="btn" type="button" id="cambiar" style="width:100%">' + t.cambiar + '</button>';
+  var formPass =
+    '<div class="campo"><label>' + t.nueva + '</label><input type="password" id="nueva" autocomplete="new-password"></div>' +
+    '<div class="campo"><label>' + t.confirmar + '</label><input type="password" id="confirmar" autocomplete="new-password"></div>' +
+    '<button class="btn" type="button" id="cambiar">' + t.cambiar + '</button>';
 
-  if (!obligatorio) html += '<p class="sub" style="margin-top:20px"><a href="index.html">' + t.volver + '</a></p>';
+  if (obligatorio) {
+    document.getElementById('salida').innerHTML =
+      '<div class="caja"><div class="encabezado"><p class="ruta">' + t.ruta + '</p><h1>' + t.cambiarPassTit + '</h1></div>' +
+      '<div id="msg"></div><div class="obligatorio">' + t.obligatorioMsg + '</div>' + formPass + '</div>';
+    ligarPassword(t, msg);
+    return;
+  }
 
-  html += '</div>';
+  var e = INST.estado;
+  var rol = INST.rol();
+  var esEst = rol === 'estudiante';
+  var rolTxt = rol === 'admin' ? t.rolAdmin : (rol === 'maestro' ? t.rolMaestro : t.rolEst);
+  var nombre = e.perfil.nombre || INST.sesion.email;
+  var sg = INST.statsGlobales();
+  var niveles = INST.porNivel();
+  var totalL = INST.listaPlana().length;
+  var pctTotal = totalL ? Math.round(sg.aprobadas / totalL * 100) : 0;
+  var sug = INST.leccionSugerida();
+  var m = INST.meta(sug);
+  var tituloLec = m ? ((lang === 'en' && m.ten) ? m.ten : m.t) : '';
+  var cursoTxt = m ? ((lang === 'en' && m.nivelNombreEn) ? m.nivelNombreEn : m.nivelNombre) : '—';
+  var fmt = function (iso) { return new Date(iso).toLocaleDateString(lang); };
+
+  var html = '<div id="msg"></div>' +
+    '<div class="perfil-hero rol-' + rol + '"><span class="avatar">' + esc(INST.iniciales()) + '</span>' +
+    '<div><h1>' + esc(nombre) + '</h1><p>' + esc(INST.sesion.email) + '</p><span class="rol-badge">' + rolTxt + '</span></div></div>';
+
+  html += '<div class="stats">' +
+    '<div class="stat c1"><span class="v">' + (m ? m.n : '—') + '</span><span class="k">' + t.leccion + '</span></div>' +
+    '<div class="stat c2"><span class="v">' + sg.aprobadas + '</span><span class="k">' + t.aprobadas + ' / ' + totalL + '</span></div>' +
+    '<div class="stat c3"><span class="v">' + (sg.promedio === null ? '—' : sg.promedio + '%') + '</span><span class="k">' + t.promedio + '</span></div>' +
+    '<div class="stat c4"><span class="v">' + pctTotal + '%</span><span class="k">' + t.avance + '</span></div></div>';
+
+  html += '<div class="card"><h2>' + t.curso + '</h2><div class="actual-box"><div>' +
+    '<p class="tt">' + (m ? m.n + ' — ' + esc(tituloLec) : t.sinLeccion) + '</p>' +
+    '<p class="ss">' + esc(cursoTxt) + (m ? ' · ' + (lang === 'en' && m.moduloTituloEn ? esc(m.moduloTituloEn) : esc(m.moduloTitulo)) : '') + '</p></div>' +
+    '<a class="btn" href="leccion.html?n=' + sug + '">' + t.continuar + '</a></div></div>';
+
+  html += '<div class="card"><h2>' + t.progNiveles + '</h2>' + niveles.map(function (n) {
+    return '<div class="nivbar n' + n.id + '"><div class="t"><span>' + esc((lang === 'en' && n.nombreEn) ? n.nombreEn : n.nombre) + '</span><span>' + n.hechas + '/' + n.total + '</span></div>' +
+      '<div class="progreso"><i style="width:' + n.pct + '%"></i></div></div>';
+  }).join('') +
+    '<p class="sub" style="font-size:.82rem;margin:12px 0 0">' + t.actividad + ': ' + (sg.ultima ? fmt(sg.ultima) : t.sinActividad) + ' · ' + t.visitas + ': ' + sg.visitas + '</p></div>';
+
+  html += '<div class="card"><h2>' + t.ubic + '</h2>' +
+    (e.diagnostico
+      ? '<p style="margin:0 0 12px">' + t.ubicHecha(e.diagnostico.recomendada, e.diagnostico.fecha ? fmt(e.diagnostico.fecha) : '—') + '</p>'
+      : '<p style="margin:0 0 12px">' + t.ubicNo + '</p>') +
+    '<a class="btn sec" href="diagnostico.html">' + t.hacerUbic + '</a></div>';
+
+  html += '<div class="card"><h2>' + t.datos + '</h2><div class="dos">' +
+    '<div class="campo"><label>' + t.nombre + '</label><input type="text" id="nombre" value="' + esc(e.perfil.nombre || '') + '"' + (esEst ? ' readonly' : '') + '>' +
+    (esEst ? '<p class="ayuda">' + t.nombreBloq + '</p>' : '<button class="btn sec" type="button" id="guardarNombre" style="margin-top:10px">' + t.guardarNombre + '</button>') + '</div>' +
+    '<div class="campo"><label>' + t.correo + '</label><input type="email" id="correoActual" value="' + esc(INST.sesion.email) + '" readonly>' +
+    (INST.sesion.emailPendiente ? '<p class="ayuda"><span class="pill warn">' + esc(t.correoPend(INST.sesion.emailPendiente)) + '</span></p>' : '') + '</div></div>' +
+    '<hr style="margin:10px 0 18px">' +
+    '<div class="campo"><label>' + t.nuevoCorreo + '</label><input type="email" id="nuevoCorreo" autocomplete="email">' +
+    '<p class="ayuda">' + t.correoAyuda + '</p></div>' +
+    '<button class="btn" type="button" id="cambiarCorreo">' + t.cambiarCorreo + '</button></div>';
+
+  html += '<div class="card"><h2>' + t.seguridad + '</h2><h3>' + t.cambiarPassTit + '</h3><div class="dos">' +
+    '<div class="campo"><label>' + t.nueva + '</label><input type="password" id="nueva" autocomplete="new-password"></div>' +
+    '<div class="campo"><label>' + t.confirmar + '</label><input type="password" id="confirmar" autocomplete="new-password"></div></div>' +
+    '<button class="btn" type="button" id="cambiar">' + t.cambiar + '</button></div>';
+
+  function chips(clave, ops) {
+    return '<div class="chips">' + ops.map(function (o) {
+      return '<button type="button" data-k="' + clave + '" data-v="' + o[0] + '" aria-pressed="' + (e.config[clave] === o[0]) + '">' + o[1] + '</button>';
+    }).join('') + '</div>';
+  }
+  html += '<div class="card" id="prefs"><h2>' + t.prefs + '</h2>' +
+    '<div class="campo"><label>' + t.idioma + '</label>' + chips('idioma', [['es', 'Español'], ['en', 'English']]) + '</div>' +
+    '<div class="campo"><label>' + t.tema + '</label>' + chips('tema', [['claro', t.claro], ['oscuro', t.oscuro], ['auto', t.auto]]) + '</div></div>';
+
+  html += '<div class="card"><h2>' + t.herramientas + '</h2><div class="fila-btn">' +
+    '<a class="btn sec" href="progreso.html">' + t.verAvance + '</a>' +
+    '<button class="btn sec" type="button" id="descargar">' + t.descargar + '</button>' +
+    '<button class="btn sec" type="button" id="salir">' + t.salir + '</button></div></div>';
+
+  if (!esEst) {
+    html += '<div class="card"><h2>' + t.gestion + '</h2><div class="mini-stats" id="conteos"></div><div class="fila-btn">' +
+      (INST.esAdmin ? '<a class="btn" href="admin.html">' + t.panelAdmin + '</a>' : '') +
+      (INST.esMaestro ? '<a class="btn" href="maestro.html">' + t.panelMaestro + '</a>' : '') + '</div></div>';
+  }
+
   document.getElementById('salida').innerHTML = html;
 
-  function msg(tipo, texto) { document.getElementById('msg').innerHTML = '<div class="msg ' + tipo + '">' + texto + '</div>'; }
+  ligarPassword(t, msg);
 
-  if (!obligatorio && INST.estado) {
-    document.getElementById('guardarNombre').onclick = function () {
+  if (!esEst) {
+    document.getElementById('guardarNombre').onclick = async function () {
       INST.estado.perfil.nombre = document.getElementById('nombre').value.trim();
-      INST.guardar();
-      msg('ok', t.okNombre);
+      var ok = await INST.guardar();
+      if (ok) { msg('ok', t.okNombre); setTimeout(function () { location.reload(); }, 700); } else msg('err', t.errPass + '');
     };
+    conteos(t);
   }
 
+  document.getElementById('cambiarCorreo').onclick = async function () {
+    var nuevo = document.getElementById('nuevoCorreo').value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nuevo)) { msg('err', t.correoInvalido); return; }
+    if (nuevo === (INST.sesion.email || '').toLowerCase()) { msg('err', t.correoIgual); return; }
+    var r = await INST.sb.auth.updateUser({ email: nuevo }, { emailRedirectTo: location.origin + location.pathname });
+    if (r.error) { msg('err', t.errCorreo + esc(r.error.message)); return; }
+    msg('ok', t.okCorreo(esc(nuevo)));
+    document.getElementById('nuevoCorreo').value = '';
+  };
+
+  document.querySelectorAll('#prefs .chips button').forEach(function (b) {
+    b.onclick = function () {
+      INST.setConfig(b.dataset.k, b.dataset.v);
+      b.parentNode.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    };
+  });
+  document.getElementById('descargar').onclick = INST.exportar;
+  document.getElementById('salir').onclick = INST.cerrarSesion;
+}
+
+async function conteos(t) {
+  var cont = document.getElementById('conteos');
+  var defs = [['estudiantes', t.estudiantes, 'c1']];
+  if (INST.esAdmin) { defs.push(['maestros', t.maestros, 'c2']); defs.push(['admins', t.admins, 'c3']); }
+  var out = '';
+  for (var i = 0; i < defs.length; i++) {
+    var r = await INST.sb.from(defs[i][0]).select('user_id', { count: 'exact', head: true });
+    out += '<div class="stat ' + defs[i][2] + '"><span class="v">' + (r.count == null ? '—' : r.count) + '</span><span class="k">' + defs[i][1] + '</span></div>';
+  }
+  cont.innerHTML = out;
+}
+
+function ligarPassword(t, msg) {
   document.getElementById('cambiar').onclick = async function () {
     var nueva = document.getElementById('nueva').value;
     var confirmar = document.getElementById('confirmar').value;
     if (nueva.length < 8) { msg('err', t.corta); return; }
     if (nueva !== confirmar) { msg('err', t.noCoincide); return; }
     var r = await INST.sb.auth.updateUser({ password: nueva });
-    if (r.error) { msg('err', t.errPass + r.error.message); return; }
-    if (INST.debeCambiarPassword) { await INST.marcarPasswordCambiada(); }
+    if (r.error) { msg('err', t.errPass + esc(r.error.message)); return; }
+    var venia = INST.debeCambiarPassword;
+    if (venia) { await INST.marcarPasswordCambiada(); }
     msg('ok', t.okPass);
-    setTimeout(function () { location.href = 'index.html'; }, 900);
+    if (venia) setTimeout(function () { location.href = 'index.html'; }, 900);
+    else { document.getElementById('nueva').value = ''; document.getElementById('confirmar').value = ''; }
   };
 }
 </script>

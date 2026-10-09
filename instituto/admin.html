@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Administrador — Instituto Bíblico</title>
-<link rel="stylesheet" href="assets/instituto.css">
+<link rel="stylesheet" href="assets/instituto.css?v=10">
 <style>
   body{border-top:5px solid var(--pizarra)}
+  .stats .stat .v{font-size:1.9rem}
   fieldset{border:1px solid var(--arena);border-radius:5px;padding:16px 18px 20px;margin:0 0 24px}
   legend{font-family:var(--sans);font-size:.8rem;color:var(--tinta-suave);padding:0 6px}
   .fila{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 10px}
@@ -27,21 +28,28 @@
   .msg{font-family:var(--sans);font-size:.85rem;padding:10px 12px;border-radius:4px;margin:0 0 14px}
   .msg.ok{background:color-mix(in srgb,var(--oliva) 14%,transparent);color:var(--oliva)}
   .msg.err{background:color-mix(in srgb,var(--granate) 12%,transparent);color:var(--granate)}
-  .tarjetas{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 30px}
+  .tarjetas{margin:0 0 30px}
   .tarjeta{
-    flex:1;min-width:200px;border:1px solid var(--arena);border-radius:6px;padding:20px;
-    background:var(--papel);cursor:pointer;text-align:left;font-family:inherit;
+    border:1px solid var(--arena);border-top:4px solid var(--ct,var(--pizarra));border-radius:14px;padding:20px;
+    background:var(--papel);cursor:pointer;text-align:left;font-family:inherit;color:inherit;
+    transition:transform .15s,box-shadow .15s;
   }
-  .tarjeta:hover{background:var(--papel-2);border-color:var(--pizarra)}
+  .tarjeta:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.1)}
+  .tarjeta .ti{font-size:1.5rem;display:block;margin:0 0 8px}
   .tarjeta h3{margin:0 0 6px;font-size:1.05rem}
-  .tarjeta p{margin:0;color:var(--tinta-suave);font-size:.85rem}
+  .tarjeta p{margin:0;color:var(--tinta-suave);font-size:.85rem;font-family:var(--sans)}
+  .buscar-lista{width:100%;font-family:var(--sans);font-size:.88rem;padding:10px 12px;border:1px solid var(--arena);background:var(--papel);color:var(--tinta);border-radius:8px;margin:0 0 12px}
+  .minibar{display:inline-block;width:60px;height:6px;background:var(--arena);border-radius:99px;overflow:hidden;vertical-align:middle;margin-right:6px}
+  .minibar i{display:block;height:100%;background:var(--oliva)}
+  .tabla-wrap{overflow-x:auto}
+  fieldset{border-radius:14px}
   .volverPanel{font-family:var(--sans);font-size:.82rem;color:var(--tinta-suave);background:none;border:none;cursor:pointer;text-decoration:underline;margin:0 0 20px;padding:0}
 </style>
 </head>
 <body>
 <script src="data/curriculo.js?v=10"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/core.js?v=9"></script>
+<script src="assets/core.js?v=10"></script>
 
 <main class="env" id="salida" style="padding-top:26px"><p class="sub">Cargando…</p></main>
 
@@ -80,17 +88,49 @@ async function llamar(fn, cuerpo) {
 }
 
 function mostrarPanel() {
+  var nombre = (INST.estado.perfil.nombre || '').split(' ')[0];
   document.getElementById('salida').innerHTML =
-    '<div class="encabezado"><p class="ruta">Panel de administrador</p><h1>¿Qué quieres hacer?</h1></div>' +
+    '<div class="encabezado"><p class="ruta">Panel de administrador</p><h1>' + (nombre ? 'Hola, ' + esc(nombre) : '¿Qué quieres hacer?') + '</h1></div>' +
+    '<div class="stats" id="resumenAdmin"><div class="stat"><span class="v">…</span><span class="k">Cargando</span></div></div>' +
     '<div class="tarjetas">' +
-    '<button class="tarjeta" id="irEstudiantes"><h3>Estudiantes</h3><p>Dar de alta, asignar lecciones, calificar, ver progreso.</p></button>' +
-    '<button class="tarjeta" id="irMaestros"><h3>Maestros</h3><p>Dar de alta maestros: pueden crear estudiantes, ver notas y restablecer contraseñas.</p></button>' +
-    '<button class="tarjeta" id="irAdmins"><h3>Administradores</h3><p>Dar de alta otros administradores con control total.</p></button>' +
+    '<button class="tarjeta" id="irEstudiantes" style="--ct:var(--granate)"><span class="ti">&#127891;</span><h3>Estudiantes</h3><p>Dar de alta, cambiar correo, asignar lecciones, calificar, ver progreso.</p></button>' +
+    '<button class="tarjeta" id="irMaestros" style="--ct:var(--oliva)"><span class="ti">&#128218;</span><h3>Maestros</h3><p>Pueden crear estudiantes, ver notas y restablecer contraseñas.</p></button>' +
+    '<button class="tarjeta" id="irAdmins" style="--ct:var(--pizarra)"><span class="ti">&#128737;</span><h3>Administradores</h3><p>Otros administradores con control total.</p></button>' +
     '</div>';
   document.getElementById('irEstudiantes').onclick = panelEstudiantes;
   document.getElementById('irMaestros').onclick = function () { panelPersonal('maestro', 'maestros', 'Maestros'); };
   document.getElementById('irAdmins').onclick = function () { panelPersonal('admin', 'admins', 'Administradores'); };
+  resumenAdmin();
 }
+
+async function resumenAdmin() {
+  var est = await INST.sb.from('estudiantes').select('*');
+  var mae = await INST.sb.from('maestros').select('user_id', { count: 'exact', head: true });
+  var adm = await INST.sb.from('admins').select('user_id', { count: 'exact', head: true });
+  var lista = est.data || [];
+  var total = INST.listaPlana().length;
+  var pctSum = 0, pendientes = 0, activos = 0;
+  var hace7 = Date.now() - 7 * 86400000;
+  lista.forEach(function (e) {
+    var p = e.estado && e.estado.progreso ? Object.values(e.estado.progreso) : [];
+    pctSum += p.filter(function (x) { return x.estado === 'aprobada'; }).length / total;
+    if (e.debe_cambiar_password) pendientes++;
+    if (p.some(function (x) { return x.ultima && new Date(x.ultima).getTime() > hace7; })) activos++;
+  });
+  var prom = lista.length ? Math.round(pctSum / lista.length * 100) : 0;
+  var box = document.getElementById('resumenAdmin');
+  if (!box) return;
+  box.innerHTML =
+    '<div class="stat c1"><span class="v">' + lista.length + '</span><span class="k">Estudiantes</span></div>' +
+    '<div class="stat c2"><span class="v">' + activos + '</span><span class="k">Activos esta semana</span></div>' +
+    '<div class="stat c3"><span class="v">' + prom + '%</span><span class="k">Avance promedio</span></div>' +
+    '<div class="stat c4"><span class="v">' + pendientes + '</span><span class="k">Sin cambiar contraseña</span></div>' +
+    '<div class="stat"><span class="v">' + (mae.count == null ? '—' : mae.count) + '</span><span class="k">Maestros</span></div>' +
+    '<div class="stat"><span class="v">' + (adm.count == null ? '—' : adm.count) + '</span><span class="k">Administradores</span></div>';
+}
+
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function emailValido(x) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x); }
 
 function botonVolver() {
   return '<button type="button" class="volverPanel" id="volver">← Volver al panel</button>';
@@ -113,7 +153,7 @@ function panelEstudiantes() {
     '<div class="fila"><button class="btn peq" type="button" id="crear">Crear estudiante</button></div>' +
     '<p class="aviso">Es una contraseña TEMPORAL — se le pedirá cambiarla en su primer ingreso.</p>' +
     '</fieldset>' +
-    '<fieldset><legend>Estudiantes existentes</legend><div id="listaEstudiantes"><p class="sub">Cargando…</p></div></fieldset>' +
+    '<fieldset><legend>Estudiantes existentes</legend><input type="search" class="buscar-lista" id="filtro" placeholder="Buscar por nombre o correo"><div id="listaEstudiantes" class="tabla-wrap"><p class="sub">Cargando…</p></div></fieldset>' +
     '<div id="detalle"></div>';
   ligarVolver();
 
@@ -134,23 +174,36 @@ function panelEstudiantes() {
   };
 
   cargarEstudiantes();
+  document.getElementById('filtro').oninput = pintarLista;
 
   function msg(tipo, texto) { document.getElementById('msg').innerHTML = '<div class="msg ' + tipo + '">' + texto + '</div>'; }
 
   async function cargarEstudiantes() {
     var r = await INST.sb.from('estudiantes').select('*').order('creado_en', { ascending: false });
     estudiantes = r.data || [];
-    var filas = estudiantes.map(function (e) {
+    pintarLista();
+  }
+
+  function pintarLista() {
+    var q = (document.getElementById('filtro').value || '').trim().toLowerCase();
+    var total = INST.listaPlana().length;
+    var vistos = estudiantes.filter(function (e) {
+      return !q || ((e.nombre || '') + ' ' + (e.email || '')).toLowerCase().indexOf(q) !== -1;
+    });
+    var filas = vistos.map(function (e) {
       var p = e.estado && e.estado.progreso ? Object.values(e.estado.progreso) : [];
       var aprobadas = p.filter(function (x) { return x.estado === 'aprobada'; }).length;
-      return '<tr data-uid="' + e.user_id + '"><td>' + (e.nombre || '(sin nombre)') + '</td>' +
-        '<td>' + (e.leccion_actual || '—') + '</td><td>' + aprobadas + '</td>' +
-        '<td>' + (e.debe_cambiar_password ? '<span style="color:var(--granate)">pendiente</span>' : '<span style="color:var(--oliva)">cambiada</span>') + '</td>' +
+      var pct = Math.round(aprobadas / total * 100);
+      return '<tr data-uid="' + e.user_id + '"' + (seleccionado && seleccionado.user_id === e.user_id ? ' class="sel"' : '') + '><td>' + esc(e.nombre || '(sin nombre)') + '</td>' +
+        '<td>' + (e.email ? esc(e.email) : '<span class="sub">—</span>') + '</td>' +
+        '<td>' + (e.leccion_actual || '—') + '</td>' +
+        '<td><span class="minibar"><i style="width:' + pct + '%"></i></span>' + aprobadas + '</td>' +
+        '<td>' + (e.debe_cambiar_password ? '<span class="pill warn">pendiente</span>' : '<span class="pill ok">cambiada</span>') + '</td>' +
         '<td>' + new Date(e.creado_en).toLocaleDateString('es') + '</td></tr>';
     }).join('');
-    document.getElementById('listaEstudiantes').innerHTML = estudiantes.length
-      ? '<table class="datos"><thead><tr><th>Nombre</th><th>Lección actual</th><th>Aprobadas</th><th>Contraseña</th><th>Creado</th></tr></thead><tbody>' + filas + '</tbody></table>'
-      : '<p class="sub">Todavía no hay estudiantes.</p>';
+    document.getElementById('listaEstudiantes').innerHTML = vistos.length
+      ? '<table class="datos"><thead><tr><th>Nombre</th><th>Correo</th><th>Lección</th><th>Aprobadas</th><th>Contraseña</th><th>Creado</th></tr></thead><tbody>' + filas + '</tbody></table>'
+      : '<p class="sub">' + (estudiantes.length ? 'Sin coincidencias.' : 'Todavía no hay estudiantes.') + '</p>';
     document.querySelectorAll('#listaEstudiantes tr[data-uid]').forEach(function (tr) {
       tr.onclick = function () { seleccionar(tr.dataset.uid); };
     });
@@ -181,9 +234,12 @@ function panelEstudiantes() {
     }).join('');
 
     document.getElementById('detalle').innerHTML =
-      '<fieldset><legend>' + e.nombre + '</legend>' +
-      '<div class="fila"><label>Nombre</label><input type="text" id="dNombre" value="' + (e.nombre || '') + '">' +
+      '<fieldset><legend>' + esc(e.nombre) + '</legend>' +
+      '<div class="fila"><label>Nombre</label><input type="text" id="dNombre" value="' + esc(e.nombre || '') + '">' +
       '<button class="btn sec peq" type="button" id="guardarNombre">Guardar</button></div>' +
+      '<div class="fila"><label>Correo</label><input type="email" id="dEmail" value="' + esc(e.email || '') + '" placeholder="correo@ejemplo.com">' +
+      '<button class="btn sec peq" type="button" id="guardarEmail">Cambiar correo</button></div>' +
+      '<p class="aviso" style="margin:-4px 0 12px 120px">El cambio se aplica de inmediato: la próxima vez entrará con el correo nuevo.</p>' +
       '<div class="fila"><label>Contraseña</label>' +
       '<span class="sub">' + (e.debe_cambiar_password ? 'Sigue con la temporal — aún no la ha cambiado.' : 'Ya eligió su propia contraseña.') + '</span></div>' +
       '<div class="fila"><label></label>' +
@@ -213,6 +269,16 @@ function panelEstudiantes() {
 
     document.getElementById('guardarNombre').onclick = function () {
       actualizarFila({ nombre: document.getElementById('dNombre').value.trim() });
+    };
+
+    document.getElementById('guardarEmail').onclick = async function () {
+      var nuevo = document.getElementById('dEmail').value.trim().toLowerCase();
+      if (!emailValido(nuevo)) { msg('err', 'Escribe un correo válido.'); return; }
+      if (nuevo === (e.email || '').toLowerCase()) { msg('err', 'Ese ya es su correo actual.'); return; }
+      if (!confirm('Cambiar el correo de ' + e.nombre + ' a ' + nuevo + '. Desde ahora tendrá que entrar con ese correo. ¿Continuar?')) return;
+      var r = await llamar('admin-estudiantes', { accion: 'cambiar_email', user_id: e.user_id, email: nuevo });
+      if (r.ok) { msg('ok', 'Correo actualizado: <b>' + esc(nuevo) + '</b>'); await cargarEstudiantes(); seleccionar(e.user_id); }
+      else msg('err', esc(r.error));
     };
 
     document.getElementById('cambiarPin').onclick = async function () {
@@ -308,7 +374,7 @@ function panelPersonal(rol, tabla, titulo) {
     '<div class="fila"><button class="btn peq" type="button" id="crear">Crear</button></div>' +
     '<p class="aviso">Contraseña TEMPORAL — se le pedirá cambiarla en su primer ingreso.</p>' +
     '</fieldset>' +
-    '<fieldset><legend>Lista</legend><div id="lista"><p class="sub">Cargando…</p></div></fieldset>';
+    '<fieldset><legend>Lista</legend><div id="lista" class="tabla-wrap"><p class="sub">Cargando…</p></div></fieldset>';
   ligarVolver();
 
   function msg(tipo, texto) { document.getElementById('msg').innerHTML = '<div class="msg ' + tipo + '">' + texto + '</div>'; }
@@ -334,16 +400,28 @@ function panelPersonal(rol, tabla, titulo) {
     var r = await INST.sb.from(tabla).select('*').order('creado_en', { ascending: false });
     personas = r.data || [];
     var filas = personas.map(function (p) {
-      return '<tr><td>' + (p.nombre || '(sin nombre)') + '</td>' +
-        '<td>' + (p.debe_cambiar_password ? '<span style="color:var(--granate)">pendiente</span>' : '<span style="color:var(--oliva)">cambiada</span>') + '</td>' +
+      return '<tr><td>' + esc(p.nombre || '(sin nombre)') + '</td>' +
+        '<td>' + (p.email ? esc(p.email) : '<span class="sub">—</span>') + '</td>' +
+        '<td>' + (p.debe_cambiar_password ? '<span class="pill warn">pendiente</span>' : '<span class="pill ok">cambiada</span>') + '</td>' +
         '<td>' + new Date(p.creado_en).toLocaleDateString('es') + '</td>' +
-        '<td><button class="btn sec peq" type="button" data-uid="' + p.user_id + '" data-accion="reset">Restablecer contraseña</button> ' +
+        '<td style="white-space:nowrap"><button class="btn sec peq" type="button" data-uid="' + p.user_id + '" data-accion="email">Cambiar correo</button> ' +
+        '<button class="btn sec peq" type="button" data-uid="' + p.user_id + '" data-accion="reset">Restablecer contraseña</button> ' +
         '<button class="btn peligro peq" type="button" data-uid="' + p.user_id + '" data-accion="borrar">Eliminar</button></td></tr>';
     }).join('');
     document.getElementById('lista').innerHTML = personas.length
-      ? '<table class="datos"><thead><tr><th>Nombre</th><th>Contraseña</th><th>Creado</th><th></th></tr></thead><tbody>' + filas + '</tbody></table>'
+      ? '<table class="datos"><thead><tr><th>Nombre</th><th>Correo</th><th>Contraseña</th><th>Creado</th><th></th></tr></thead><tbody>' + filas + '</tbody></table>'
       : '<p class="sub">Todavía no hay nadie en esta lista.</p>';
 
+    document.querySelectorAll('[data-accion="email"]').forEach(function (b) {
+      b.onclick = async function () {
+        var nuevo = (prompt('Correo nuevo:') || '').trim().toLowerCase();
+        if (!nuevo) return;
+        if (!emailValido(nuevo)) { msg('err', 'Escribe un correo válido.'); return; }
+        var r = await llamar('admin-personal', { accion: 'cambiar_email', rol: rol, user_id: b.dataset.uid, email: nuevo });
+        if (r.ok) { msg('ok', 'Correo actualizado: <b>' + esc(nuevo) + '</b>'); cargar(); }
+        else msg('err', esc(r.error));
+      };
+    });
     document.querySelectorAll('[data-accion="reset"]').forEach(function (b) {
       b.onclick = async function () {
         var nueva = generarClave();

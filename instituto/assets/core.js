@@ -1,7 +1,7 @@
 (function (global) {
   'use strict';
 
-  var VERSION = 'Ver-003';
+  var VERSION = 'Ver-004';
   var SUPABASE_URL = 'https://zkmrwmondbmboxqvrdto.supabase.co';
   var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprbXJ3bW9uZGJtYm94cXZyZHRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MzUwOTMsImV4cCI6MjEwNTIxMTA5M30.JbPL9fb1oDFOcEi7aFuv84QdV53_ndUVEQObIoHO0hs';
 
@@ -67,7 +67,7 @@
       listoResolve();
       return;
     }
-    sesion = { user_id: sesionActiva.user.id, email: sesionActiva.user.email };
+    sesion = { user_id: sesionActiva.user.id, email: sesionActiva.user.email, emailPendiente: sesionActiva.user.new_email || null };
 
     var fila = await cargarFilaEstudiante(sesion.user_id);
     var admFila = await sb.from('admins').select('user_id, nombre, estado, leccion_actual, debe_cambiar_password').eq('user_id', sesion.user_id).maybeSingle();
@@ -119,11 +119,9 @@
     var copia = clonar(estado);
     delete copia.perfil;
     delete copia.leccionActual;
-    var r = await sb.from(tablaPersonal).update({
-      estado: copia,
-      leccion_actual: estado.leccionActual || null,
-      nombre: (estado.perfil && estado.perfil.nombre) || null
-    }).eq('user_id', sesion.user_id);
+    var cambios = { estado: copia, leccion_actual: estado.leccionActual || null };
+    if (tablaPersonal !== 'estudiantes') cambios.nombre = (estado.perfil && estado.perfil.nombre) || null;
+    var r = await sb.from(tablaPersonal).update(cambios).eq('user_id', sesion.user_id);
     return !r.error;
   }
 
@@ -287,34 +285,112 @@
     location.href = LOGIN_PATH;
   }
 
+  var NAV = {
+    es: { perfil: 'Mi perfil', indice: 'Índice', ubic: 'Ubicación', avance: 'Mi avance', ajustes: 'Ajustes de lectura',
+          salir: 'Cerrar sesión', admin: 'Panel de administrador', maestro: 'Panel de maestro', rolAdmin: 'Administrador',
+          rolMaestro: 'Maestro', rolEst: 'Estudiante', menu: 'Menú', cuenta: 'Cuenta', estudio: 'Estudio', gestion: 'Gestión',
+          ajTit: 'Ajustes de lectura', tema: 'Tema', tamano: 'Tamaño del texto', tipo: 'Tipografía', ancho: 'Ancho de lectura',
+          idioma: 'Idioma de las lecciones · Lesson language', historial: 'Historial', descargar: 'Descargar mi historial', cerrar: 'Cerrar',
+          claro: 'Claro', oscuro: 'Oscuro', auto: 'Automático', angosto: 'Angosto', normal: 'Normal', anchoOp: 'Ancho', ctn: 'Continuar' },
+    en: { perfil: 'My profile', indice: 'Index', ubic: 'Placement', avance: 'My progress', ajustes: 'Reading settings',
+          salir: 'Sign out', admin: 'Administrator panel', maestro: 'Teacher panel', rolAdmin: 'Administrator',
+          rolMaestro: 'Teacher', rolEst: 'Student', menu: 'Menu', cuenta: 'Account', estudio: 'Study', gestion: 'Management',
+          ajTit: 'Reading settings', tema: 'Theme', tamano: 'Text size', tipo: 'Typography', ancho: 'Reading width',
+          idioma: 'Idioma de las lecciones · Lesson language', historial: 'History', descargar: 'Download my history', cerrar: 'Close',
+          claro: 'Light', oscuro: 'Dark', auto: 'Automatic', angosto: 'Narrow', normal: 'Normal', anchoOp: 'Wide', ctn: 'Continue' }
+  };
+
+  function idiomaActual() { return (estado && estado.config && estado.config.idioma === 'en') ? 'en' : 'es'; }
+
+  function iniciales() {
+    var n = ((estado && estado.perfil && estado.perfil.nombre) || (sesion && sesion.email) || '?').trim();
+    var p = n.split(/\s+/).filter(Boolean);
+    if (p.length >= 2) return (p[0][0] + p[p.length - 1][0]).toUpperCase();
+    return n.slice(0, 2).toUpperCase();
+  }
+
+  function rolActual() { return esAdmin ? 'admin' : (esMaestro ? 'maestro' : 'estudiante'); }
+
+  function leccionSugerida() {
+    if (!estado) return '101';
+    if (estado.leccionActual) return String(estado.leccionActual);
+    if (estado.diagnostico && estado.diagnostico.recomendada) return String(estado.diagnostico.recomendada);
+    return '101';
+  }
+
+  function statsGlobales() {
+    var intentos = [], aprobadas = 0, visitas = 0, ultima = null;
+    Object.keys(estado.progreso).forEach(function (k) {
+      var p = estado.progreso[k];
+      if (p.estado === 'aprobada') aprobadas++;
+      visitas += p.visitas || 0;
+      if (p.mejor !== null && p.mejor !== undefined) intentos.push(p.mejor);
+      if (p.ultima && (!ultima || p.ultima > ultima)) ultima = p.ultima;
+    });
+    var prom = intentos.length ? Math.round(intentos.reduce(function (a, b) { return a + b; }, 0) / intentos.length) : null;
+    return { aprobadas: aprobadas, visitas: visitas, promedio: prom, ultima: ultima, calificadas: intentos.length };
+  }
+
+  function porNivel() {
+    var out = [];
+    if (!global.CURRICULO) return out;
+    global.CURRICULO.niveles.forEach(function (niv) {
+      var total = 0, hechas = 0;
+      niv.modulos.forEach(function (m) {
+        m.lecciones.forEach(function (l) {
+          total++;
+          var p = estado.progreso[String(l.n)];
+          if (p && p.estado === 'aprobada') hechas++;
+        });
+      });
+      out.push({ id: niv.id, nombre: niv.nombre, nombreEn: niv.nombreEn || null, total: total, hechas: hechas, pct: total ? Math.round(hechas / total * 100) : 0 });
+    });
+    return out;
+  }
+
   function barra(activo, contexto) {
+    var L = NAV[idiomaActual()];
+    var rol = rolActual();
+    var rolTxt = rol === 'admin' ? L.rolAdmin : (rol === 'maestro' ? L.rolMaestro : L.rolEst);
+    var nombre = (estado.perfil && estado.perfil.nombre) || (sesion && sesion.email) || '';
+    var email = (sesion && sesion.email) || '';
+    function item(href, ico, txt, clave) {
+      return '<a href="' + href + '"' + (activo === clave ? ' aria-current="page"' : '') + '><span class="ico">' + ico + '</span>' + txt + '</a>';
+    }
     var html =
       '<header class="barra' + (esAdmin ? ' modo-admin' : (esMaestro ? ' modo-maestro' : '')) + '"><div class="env">' +
-      '<a class="marca" href="index.html">Instituto Bíblico</a>' +
-      (esAdmin ? '<span class="rol-badge">Administrador</span>' : (esMaestro ? '<span class="rol-badge rol-maestro">Maestro</span>' : '')) +
+      '<a class="marca" href="index.html"><span class="marca-ico">&#10013;</span>Instituto Bíblico</a>' +
       (contexto ? '<span class="ctx">' + contexto + '</span>' : '') +
-      '<button type="button" id="btnMenu" class="hamb" aria-label="Menú" aria-expanded="false">&#9776;</button>' +
+      '<nav class="navrapida"><a href="index.html"' + (activo === 'indice' ? ' aria-current="page"' : '') + '>' + L.indice + '</a>' +
+      '<a href="progreso.html"' + (activo === 'prog' ? ' aria-current="page"' : '') + '>' + L.avance + '</a></nav>' +
+      '<button type="button" id="btnMenu" class="avatar-btn rol-' + rol + '" aria-label="' + L.menu + '" aria-expanded="false" aria-haspopup="true">' +
+      '<span class="avatar">' + iniciales() + '</span></button>' +
       '<div id="menuDrop" class="menudrop">' +
-      '<a href="index.html"' + (activo === 'indice' ? ' aria-current="page"' : '') + '>Índice</a>' +
-      '<a href="diagnostico.html"' + (activo === 'diag' ? ' aria-current="page"' : '') + '>Ubicación</a>' +
-      '<a href="progreso.html"' + (activo === 'prog' ? ' aria-current="page"' : '') + '>Mi avance</a>' +
-      '<a href="cuenta.html"' + (activo === 'cuenta' ? ' aria-current="page"' : '') + '>Mi cuenta</a>' +
-      (esAdmin ? '<a href="admin.html"' + (activo === 'admin' ? ' aria-current="page"' : '') + '>Panel de administrador</a>' : '') +
-      (esMaestro ? '<a href="maestro.html"' + (activo === 'maestro' ? ' aria-current="page"' : '') + '>Panel de maestro</a>' : '') +
-      '<button type="button" id="btnPanel">Ajustes de lectura</button>' +
-      '<button type="button" id="btnSalir">Cerrar sesión</button>' +
+      '<div class="menu-cab"><span class="avatar grande rol-' + rol + '">' + iniciales() + '</span>' +
+      '<div class="menu-id"><b>' + nombre + '</b><small>' + email + '</small><span class="rol-badge rol-' + rol + '">' + rolTxt + '</span></div></div>' +
+      '<div class="menu-sec">' + L.estudio + '</div>' +
+      item('cuenta.html', '&#128100;', L.perfil, 'cuenta') +
+      item('index.html', '&#128214;', L.indice, 'indice') +
+      item('progreso.html', '&#128200;', L.avance, 'prog') +
+      item('diagnostico.html', '&#127919;', L.ubic, 'diag') +
+      '<button type="button" id="btnPanel"><span class="ico">&#9881;</span>' + L.ajustes + '</button>' +
+      ((esAdmin || esMaestro) ? '<div class="menu-sec">' + L.gestion + '</div>' : '') +
+      (esAdmin ? item('admin.html', '&#128737;', L.admin, 'admin') : '') +
+      (esMaestro ? item('maestro.html', '&#127891;', L.maestro, 'maestro') : '') +
+      '<div class="menu-sec"></div>' +
+      '<button type="button" id="btnSalir" class="salir"><span class="ico">&#10162;</span>' + L.salir + '</button>' +
       '<span class="ver">' + VERSION + '</span>' +
       '</div></div></header>' +
-      '<div id="panel"><div class="caja" role="dialog" aria-label="Ajustes de lectura">' +
-      '<h3>Ajustes de lectura</h3>' +
-      grupo('Tema', 'tema', [['claro', 'Claro'], ['oscuro', 'Oscuro'], ['auto', 'Automático']]) +
-      grupo('Tamaño del texto', 'tamano', [['a', 'A'], ['b', 'A'], ['c', 'A'], ['d', 'A']]) +
-      grupo('Tipografía', 'tipo', [['serif', 'Serif'], ['sans', 'Sans']]) +
-      grupo('Ancho de lectura', 'ancho', [['angosto', 'Angosto'], ['normal', 'Normal'], ['ancho', 'Ancho']]) +
-      grupo('Idioma de las lecciones · Lesson language', 'idioma', [['es', 'Español'], ['en', 'English']]) +
-      '<div class="grupo"><label>Historial</label>' +
-      '<button class="btn sec" type="button" id="btnExportar">Descargar mi historial</button></div>' +
-      '<button class="btn" type="button" id="btnCerrarPanel">Cerrar</button>' +
+      '<div id="panel"><div class="caja" role="dialog" aria-label="' + L.ajTit + '">' +
+      '<h3>' + L.ajTit + '</h3>' +
+      grupo(L.tema, 'tema', [['claro', L.claro], ['oscuro', L.oscuro], ['auto', L.auto]]) +
+      grupo(L.tamano, 'tamano', [['a', 'A'], ['b', 'A'], ['c', 'A'], ['d', 'A']]) +
+      grupo(L.tipo, 'tipo', [['serif', 'Serif'], ['sans', 'Sans']]) +
+      grupo(L.ancho, 'ancho', [['angosto', L.angosto], ['normal', L.normal], ['ancho', L.anchoOp]]) +
+      grupo(L.idioma, 'idioma', [['es', 'Español'], ['en', 'English']]) +
+      '<div class="grupo"><label>' + L.historial + '</label>' +
+      '<button class="btn sec" type="button" id="btnExportar">' + L.descargar + '</button></div>' +
+      '<button class="btn" type="button" id="btnCerrarPanel">' + L.cerrar + '</button>' +
       '</div></div><div id="glosarioPop" role="tooltip"><button type="button" id="glosarioCerrar" aria-label="Cerrar">&times;</button><div id="glosarioTexto"></div></div>';
     document.body.insertAdjacentHTML('afterbegin', html);
 
@@ -326,7 +402,7 @@
       btnMenu.setAttribute('aria-expanded', String(abierto));
     };
     document.addEventListener('click', function (e) {
-      if (!menu.contains(e.target) && e.target !== btnMenu) menu.classList.remove('abierto');
+      if (!menu.contains(e.target) && !btnMenu.contains(e.target)) { menu.classList.remove('abierto'); btnMenu.setAttribute('aria-expanded', 'false'); }
     });
 
     document.getElementById('btnPanel').onclick = function () {
@@ -399,6 +475,12 @@
     barra: barra,
     glosarioActivo: glosarioActivo,
     cerrarSesion: cerrarSesion,
+    iniciales: iniciales,
+    rol: rolActual,
+    leccionSugerida: leccionSugerida,
+    statsGlobales: statsGlobales,
+    porNivel: porNivel,
+    get tablaPersonal() { return tablaPersonal; },
     lecciones: {},
     registrarLeccion: function (obj) { global.INST.lecciones[String(obj.n)] = obj; }
   };

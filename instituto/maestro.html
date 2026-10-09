@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Maestro — Instituto Bíblico</title>
-<link rel="stylesheet" href="assets/instituto.css">
+<link rel="stylesheet" href="assets/instituto.css?v=10">
 <style>
   body{border-top:5px solid var(--oliva)}
   fieldset{border:1px solid var(--arena);border-radius:5px;padding:16px 18px 20px;margin:0 0 24px}
@@ -29,7 +29,7 @@
 <body>
 <script src="data/curriculo.js?v=10"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/core.js?v=9"></script>
+<script src="assets/core.js?v=10"></script>
 
 <main class="env" id="salida" style="padding-top:26px"><p class="sub">Cargando…</p></main>
 
@@ -119,11 +119,12 @@ async function cargarEstudiantes() {
     var p = e.estado && e.estado.progreso ? Object.values(e.estado.progreso) : [];
     var aprobadas = p.filter(function (x) { return x.estado === 'aprobada'; }).length;
     return '<tr data-uid="' + e.user_id + '"><td>' + (e.nombre || '(sin nombre)') + '</td>' +
+      '<td>' + (e.email || '—') + '</td>' +
       '<td>' + (e.leccion_actual || '—') + '</td><td>' + aprobadas + '</td>' +
       '<td>' + (e.debe_cambiar_password ? '<span style="color:var(--granate)">pendiente</span>' : '<span style="color:var(--oliva)">cambiada</span>') + '</td></tr>';
   }).join('');
   document.getElementById('listaEstudiantes').innerHTML = estudiantes.length
-    ? '<table class="datos"><thead><tr><th>Nombre</th><th>Lección actual</th><th>Aprobadas</th><th>Contraseña</th></tr></thead><tbody>' + filas + '</tbody></table>'
+    ? '<table class="datos"><thead><tr><th>Nombre</th><th>Correo</th><th>Lección actual</th><th>Aprobadas</th><th>Contraseña</th></tr></thead><tbody>' + filas + '</tbody></table>'
     : '<p class="sub">Todavía no hay estudiantes.</p>';
   document.querySelectorAll('#listaEstudiantes tr[data-uid]').forEach(function (tr) {
     tr.onclick = function () { seleccionar(tr.dataset.uid); };
@@ -150,6 +151,7 @@ function pintarDetalle() {
 
   document.getElementById('detalle').innerHTML =
     '<fieldset><legend>' + e.nombre + ' — solo lectura</legend>' +
+    '<p class="sub">Correo: ' + (e.email || '—') + '</p>' +
     '<p class="sub">' + (diag ? ('Diagnóstico hecho el ' + new Date(diag.fecha).toLocaleDateString('es') + ', recomendó la lección ' + diag.recomendada + '.') : 'Sin diagnóstico.') + '</p>' +
     (filasProgreso
       ? '<table class="datos"><thead><tr><th>Lección</th><th>Estado</th><th>Mejor</th><th>Intentos</th></tr></thead><tbody>' + filasProgreso + '</tbody></table>'

@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Instituto Bíblico Intensivo</title>
-<link rel="stylesheet" href="assets/instituto.css">
+<link rel="stylesheet" href="assets/instituto.css?v=10">
 </head>
 <body>
 <script src="data/curriculo.js?v=10"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/core.js?v=9"></script>
+<script src="assets/core.js?v=10"></script>
 
 <main>
   <section class="hero">
@@ -42,6 +42,8 @@ var T = {
     nuevoAqui: 'Nuevo aquí', hacerExamen: 'Hacer el examen de ubicación', empezarEn101: 'Empezar en la 101',
     aprobadas: function (a, t) { return a + ' de ' + t + ' lecciones aprobadas.'; },
     aprobadasDe: function (h, t) { return h + ' de ' + t + ' aprobadas'; },
+    indiceTit: 'Índice del programa', indiceAyuda: 'Toca un número para ver las lecciones de ese bloque. El punto dorado marca dónde estás.',
+    estaAqui: 'estás aquí', lecciones: 'lecciones',
     porEscribir: 'por escribir', estAprobada: function (p) { return 'aprobada ' + p + '%'; }, estRepasar: 'repasar', estEnCurso: 'en curso',
     pie: function (v) { return 'Instituto Bíblico Intensivo · ' + v + ' · Tu progreso se guarda en tu cuenta y está disponible desde cualquier dispositivo.'; }
   },
@@ -54,6 +56,8 @@ var T = {
     nuevoAqui: 'New here', hacerExamen: 'Take the placement exam', empezarEn101: 'Start at 101',
     aprobadas: function (a, t) { return a + ' of ' + t + ' lessons passed.'; },
     aprobadasDe: function (h, t) { return h + ' of ' + t + ' passed'; },
+    indiceTit: 'Program index', indiceAyuda: 'Tap a number to see the lessons in that block. The gold dot marks where you are.',
+    estaAqui: 'you are here', lecciones: 'lessons',
     porEscribir: 'not yet written', estAprobada: function (p) { return 'passed ' + p + '%'; }, estRepasar: 'needs review', estEnCurso: 'in progress',
     pie: function (v) { return 'Instituto Bíblico Intensivo · ' + v + ' · Your progress is saved to your account and available on any device.'; }
   }
@@ -119,45 +123,67 @@ function estadoLeccion(n) {
   }
 })();
 
-(function mapa() {
-  var out = '';
+(function selector() {
+  var sug = String(INST.leccionSugerida());
+  var out = '<section class="selector"><h2>' + t.indiceTit + '</h2><p class="sub" style="margin:0">' + t.indiceAyuda + '</p>';
+
   CURRICULO.niveles.forEach(function (niv) {
-    var todas = [], hechas = 0;
+    var todas = 0, hechas = 0;
     niv.modulos.forEach(function (m) { m.lecciones.forEach(function (l) {
-      todas.push(l);
+      todas++;
       var p = e.progreso[String(l.n)];
       if (p && p.estado === 'aprobada') hechas++;
     }); });
 
-    out += '<section class="niv niv-' + niv.id + '" style="margin:44px 0 0">' +
-           '<h2 class="pt-' + niv.id + '" style="margin:0 0 4px">' + nombreNivel(niv) + '</h2>' +
-           '<p class="sub" style="margin:0 0 6px">' + lemaNivel(niv) + '</p>' +
-           '<p class="sub" style="font-size:.85rem;margin:0 0 10px">' + t.aprobadasDe(hechas, todas.length) + '</p>' +
-           '<div class="progreso"><i style="width:' + Math.round(hechas / todas.length * 100) + '%"></i></div>';
+    var botones = niv.modulos.map(function (m) {
+      var primera = m.lecciones[0].n;
+      var aqui = m.lecciones.some(function (l) { return String(l.n) === sug; });
+      var completo = m.lecciones.every(function (l) { var p = e.progreso[String(l.n)]; return p && p.estado === 'aprobada'; });
+      return '<button type="button" class="nb' + (aqui ? ' aqui' : '') + (completo ? ' completo' : '') + '" data-mod="' + m.id + '" aria-pressed="false" title="' + tituloMod(m).replace(/"/g, '&quot;') + '">' + primera + '</button>';
+    }).join('');
 
-    niv.modulos.forEach(function (m) {
-      var lis = m.lecciones.map(function (l) {
-        var hay = disp.indexOf(String(l.n)) !== -1;
-        var p = e.progreso[String(l.n)];
-        var cls = p && p.estado === 'aprobada' ? 'hecha' : (hay ? '' : 'pendiente');
-        var titulo = '<a href="leccion.html?n=' + l.n + '">' + tit(l) + '</a>';
-        return '<li class="' + cls + '"><span class="num">' + l.n + '</span>' + titulo +
-               '<span class="marca-est">' + (estadoLeccion(l.n) || (hay ? '' : t.porEscribir)) + '</span></li>';
-      }).join('');
-      out += '<details class="modulo" id="m' + m.id + '"><summary>' +
-             '<span class="num" style="color:var(--tinta-suave);font-family:var(--sans);font-size:.8rem">' + m.id + '</span>' +
-             '<span class="mt">' + tituloMod(m) + '</span>' +
-             '<span class="mc">' + areaMod(m) + ' · ' + m.lecciones.length + '</span>' +
-             '</summary><ul class="lecciones">' + lis + '</ul></details>';
-    });
-    out += '</section>';
+    out += '<div class="nivel-fila n' + niv.id + '" data-niv="' + niv.id + '">' +
+           '<p class="nt"><i></i>' + nombreNivel(niv) + ' <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--tinta-suave)">· ' + t.aprobadasDe(hechas, todas) + '</span></p>' +
+           '<div class="botonera">' + botones + '</div><div class="slot-mod"></div></div>';
   });
+  out += '</section>';
   document.getElementById('mapa').innerHTML = out;
 
-  if (location.hash) {
-    var d = document.querySelector(location.hash);
-    if (d) { d.open = true; d.scrollIntoView(); }
+  function modulo(id) {
+    var r = null;
+    CURRICULO.niveles.forEach(function (niv) { niv.modulos.forEach(function (m) { if (m.id === id) r = m; }); });
+    return r;
   }
+
+  function abrir(id, desdeClick) {
+    document.querySelectorAll('.nb').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+    document.querySelectorAll('.slot-mod').forEach(function (x) { x.innerHTML = ''; });
+    var btn = document.querySelector('.nb[data-mod="' + id + '"]');
+    if (!btn) return;
+    if (desdeClick && btn.dataset.abierto === '1') { btn.dataset.abierto = ''; return; }
+    document.querySelectorAll('.nb').forEach(function (b) { b.dataset.abierto = ''; });
+    btn.dataset.abierto = '1';
+    btn.setAttribute('aria-pressed', 'true');
+    var m = modulo(id);
+    var lis = m.lecciones.map(function (l) {
+      var hay = disp.indexOf(String(l.n)) !== -1;
+      var p = e.progreso[String(l.n)];
+      var cls = (p && p.estado === 'aprobada') ? 'hecha' : (hay ? '' : 'pendiente');
+      if (String(l.n) === sug) cls += ' actual';
+      var est = estadoLeccion(l.n) || (hay ? '' : t.porEscribir);
+      if (String(l.n) === sug) est = t.estaAqui + (est ? ' · ' + est : '');
+      return '<li class="' + cls + '"><a href="leccion.html?n=' + l.n + '"><span class="ln">' + l.n + '</span><span>' + tit(l) + '</span><span class="le">' + est + '</span></a></li>';
+    }).join('');
+    var slot = btn.closest('.nivel-fila').querySelector('.slot-mod');
+    slot.innerHTML = '<div class="panel-mod"><p class="pm-t">' + m.id + ' · ' + tituloMod(m) + '</p><p class="pm-s">' + areaMod(m) + ' · ' + m.lecciones.length + ' ' + t.lecciones + '</p><ul class="lec-lista">' + lis + '</ul></div>';
+  }
+
+  document.querySelectorAll('.nb').forEach(function (b) { b.onclick = function () { abrir(b.dataset.mod, true); }; });
+
+  var inicial = null;
+  if (location.hash && /^#m\d\.\d+$/.test(location.hash)) inicial = location.hash.slice(2);
+  if (!inicial) { var ms = INST.meta(sug); if (ms) inicial = ms.modulo; }
+  if (inicial) abrir(inicial, false);
 })();
 
 (function busqueda() {

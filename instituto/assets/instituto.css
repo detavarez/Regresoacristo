@@ -55,40 +55,52 @@ body{
   border-bottom:1px solid var(--arena);
   font-family:var(--sans);
 }
-.barra .env{display:flex;align-items:center;gap:10px;height:52px;position:relative}
+.barra .env{display:flex;align-items:center;gap:10px;height:56px;position:relative}
 .marca{font-family:var(--serif);font-weight:700;letter-spacing:.01em;text-decoration:none;color:var(--tinta);font-size:1.02rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:44vw;flex:0 0 auto}
 .ctx{font-family:var(--sans);font-size:.78rem;color:var(--tinta-suave);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:360px){.marca{font-size:.86rem;max-width:38vw}.ctx{display:none}}
-.rol-badge{font-family:var(--sans);font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:var(--pizarra);padding:3px 9px;border-radius:99px;flex:0 0 auto}
+.marca-ico{display:inline-grid;place-items:center;width:26px;height:26px;margin-right:8px;border-radius:7px;background:linear-gradient(135deg,var(--granate),var(--oro));color:#fff;font-size:.9rem;vertical-align:middle}
+.navrapida{display:none;margin-left:18px;gap:4px}
+.navrapida a{font-size:.86rem;text-decoration:none;color:var(--tinta-suave);padding:7px 11px;border-radius:99px}
+.navrapida a:hover{background:var(--papel-2);color:var(--tinta)}
+.navrapida a[aria-current="page"]{background:color-mix(in srgb,var(--granate) 12%,transparent);color:var(--granate);font-weight:600}
+@media (min-width:760px){.navrapida{display:flex}}
+.rol-badge{display:inline-block;font-family:var(--sans);font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:var(--oro);padding:2px 9px;border-radius:99px;margin-top:5px}
+.rol-badge.rol-admin{background:var(--pizarra)}
 .rol-badge.rol-maestro{background:var(--oliva)}
+.rol-badge.rol-estudiante{background:var(--granate)}
 .barra.modo-admin{border-bottom:2px solid var(--pizarra)}
-.barra.modo-admin .env{background:color-mix(in srgb, var(--pizarra) 6%, transparent)}
 .barra.modo-maestro{border-bottom:2px solid var(--oliva)}
-.barra.modo-maestro .env{background:color-mix(in srgb, var(--oliva) 6%, transparent)}
-.hamb{margin-left:auto;background:none;border:none;font-size:1.35rem;line-height:1;cursor:pointer;color:var(--tinta);padding:6px 4px;flex:0 0 auto}
+.avatar{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;font-family:var(--sans);font-size:.78rem;font-weight:700;color:#fff;background:var(--granate);letter-spacing:.02em}
+.avatar.rol-admin{background:var(--pizarra)}
+.avatar.rol-maestro{background:var(--oliva)}
+.avatar.grande{width:46px;height:46px;font-size:1rem;flex:0 0 auto}
+.avatar-btn{margin-left:auto;background:none;border:2px solid transparent;border-radius:50%;padding:1px;cursor:pointer;line-height:0;flex:0 0 auto}
+.avatar-btn:hover,.avatar-btn[aria-expanded="true"]{border-color:var(--arena)}
+.navrapida+.avatar-btn{margin-left:auto}
+@media (min-width:760px){.navrapida{margin-right:auto}.navrapida+.avatar-btn{margin-left:0}}
 .menudrop{
-  display:none;flex-direction:column;position:absolute;right:0;top:52px;z-index:50;
-  background:var(--papel);border:1px solid var(--arena);border-radius:5px;
-  box-shadow:0 8px 26px rgba(0,0,0,.15);min-width:190px;padding:6px;
+  display:none;flex-direction:column;position:absolute;right:20px;top:56px;z-index:50;
+  background:var(--papel);border:1px solid var(--arena);border-radius:12px;
+  box-shadow:0 14px 40px rgba(0,0,0,.18);width:min(290px,calc(100vw - 24px));padding:8px;
 }
 .menudrop.abierto{display:flex}
+.menu-cab{display:flex;gap:12px;align-items:center;padding:10px 10px 12px;border-bottom:1px solid var(--arena);margin:0 0 6px}
+.menu-id{min-width:0;display:flex;flex-direction:column;font-family:var(--sans)}
+.menu-id b{font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu-id small{font-size:.74rem;color:var(--tinta-suave);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu-id .rol-badge{align-self:flex-start}
+.menu-sec{font-family:var(--sans);font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-suave);padding:10px 11px 4px}
+.menu-sec:empty{border-top:1px solid var(--arena);margin:6px 0 2px;padding:0}
 .menudrop a,.menudrop button{
-  font-family:var(--sans);font-size:.88rem;color:var(--tinta);text-decoration:none;
-  background:none;border:none;text-align:left;cursor:pointer;padding:10px 11px;border-radius:3px;
+  display:flex;align-items:center;gap:11px;font-family:var(--sans);font-size:.9rem;color:var(--tinta);text-decoration:none;
+  background:none;border:none;text-align:left;cursor:pointer;padding:9px 11px;border-radius:8px;width:100%;
 }
+.menudrop .ico{width:20px;text-align:center;font-size:1rem;flex:0 0 auto}
 .menudrop a:hover,.menudrop button:hover{background:var(--papel-2)}
-.menudrop a[aria-current="page"]{color:var(--granate);font-weight:600}
-.ver{font-family:var(--sans);font-size:.72rem;color:var(--tinta-suave);padding:8px 11px;display:block}
-@media (min-width:760px){
-  .marca{max-width:none}
-  .hamb{display:none}
-  .menudrop{
-    display:flex !important;position:static;flex-direction:row;align-items:center;
-    border:none;box-shadow:none;background:none;padding:0;min-width:0;margin-left:auto;gap:2px;
-  }
-  .menudrop a,.menudrop button{padding:8px 10px}
-  .menudrop .ver{padding:3px 8px;border:1px solid var(--arena);border-radius:99px;font-size:.7rem;margin-left:4px}
-}
+.menudrop a[aria-current="page"]{background:color-mix(in srgb,var(--granate) 10%,transparent);color:var(--granate);font-weight:600}
+.menudrop .salir{color:var(--granate)}
+.ver{font-family:var(--sans);font-size:.7rem;color:var(--tinta-suave);padding:8px 11px 2px;display:block;text-align:center}
 
 #panel{
   display:none;position:fixed;inset:0;z-index:60;
@@ -227,3 +239,78 @@ table.datos th{font-weight:600;color:var(--tinta-suave);font-size:.78rem}
 :focus-visible{outline:2px solid var(--granate);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media print{.barra,#panel,.acciones,.pieleccion{display:none}}
+
+
+.hero{background:linear-gradient(160deg,color-mix(in srgb,var(--granate) 9%,var(--papel)) 0%,color-mix(in srgb,var(--oro) 10%,var(--papel)) 100%)}
+.btn{border-radius:99px;padding:11px 22px;background:var(--granate);border-color:var(--granate);color:#fff;font-weight:600}
+.btn.sec{background:transparent;color:var(--tinta);border-color:var(--arena)}
+.btn.sec:hover{border-color:var(--tinta);opacity:1}
+.btn.peligro{background:var(--granate)}
+
+.card{background:var(--papel);border:1px solid var(--arena);border-radius:14px;padding:20px 22px;margin:0 0 18px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.card h2{font-family:var(--sans);font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-suave);margin:0 0 14px}
+.card h3{font-family:var(--sans);font-size:.95rem;margin:0 0 8px}
+
+.perfil-hero{display:flex;gap:18px;align-items:center;padding:22px;border-radius:16px;margin:0 0 20px;color:#fff;background:linear-gradient(135deg,var(--granate),color-mix(in srgb,var(--oro) 70%,var(--granate)))}
+.perfil-hero.rol-admin{background:linear-gradient(135deg,var(--pizarra),color-mix(in srgb,var(--granate) 40%,var(--pizarra)))}
+.perfil-hero.rol-maestro{background:linear-gradient(135deg,var(--oliva),color-mix(in srgb,var(--oro) 50%,var(--oliva)))}
+.perfil-hero .avatar{width:68px;height:68px;font-size:1.5rem;background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.6);flex:0 0 auto}
+.perfil-hero h1{color:#fff;margin:0 0 2px;font-size:1.5rem}
+.perfil-hero p{margin:0;font-family:var(--sans);font-size:.85rem;opacity:.92;overflow-wrap:anywhere}
+.perfil-hero .rol-badge{background:rgba(255,255,255,.25);margin:8px 0 0}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:0 0 18px}
+.stat{border-radius:14px;padding:14px 16px;background:var(--papel-2);border:1px solid var(--arena);font-family:var(--sans)}
+.stat .v{font-family:var(--serif);font-size:1.7rem;font-weight:700;line-height:1.1;display:block}
+.stat .k{font-size:.74rem;color:var(--tinta-suave);display:block;margin-top:3px}
+.stat.c1 .v{color:var(--n1)}.stat.c2 .v{color:var(--n2)}.stat.c3 .v{color:var(--n3)}.stat.c4 .v{color:var(--n4)}
+
+.nivbar{margin:0 0 12px;font-family:var(--sans);font-size:.84rem}
+.nivbar .t{display:flex;justify-content:space-between;margin:0 0 4px}
+.nivbar .progreso{height:8px}
+.nivbar.n1 .progreso i{background:var(--n1)}.nivbar.n2 .progreso i{background:var(--n2)}.nivbar.n3 .progreso i{background:var(--n3)}.nivbar.n4 .progreso i{background:var(--n4)}
+
+.campo{margin:0 0 14px;font-family:var(--sans)}
+.campo>label{display:block;font-size:.76rem;color:var(--tinta-suave);margin:0 0 5px;font-weight:600}
+.campo input[type=text],.campo input[type=email],.campo input[type=password]{width:100%;font-family:var(--sans);font-size:.92rem;padding:11px 12px;border:1px solid var(--arena);background:var(--papel);color:var(--tinta);border-radius:8px}
+.campo input[readonly]{background:var(--papel-2);color:var(--tinta-suave)}
+.campo .ayuda{font-size:.76rem;color:var(--tinta-suave);margin:5px 0 0}
+.pill{display:inline-block;font-family:var(--sans);font-size:.72rem;padding:2px 9px;border-radius:99px;background:var(--papel-2);border:1px solid var(--arena);color:var(--tinta-suave)}
+.pill.ok{color:var(--oliva);border-color:var(--oliva)}
+.pill.warn{color:var(--granate);border-color:var(--granate)}
+
+.selector{margin:26px 0 0}
+.selector h2{margin:0 0 4px}
+.nivel-fila{margin:16px 0 0}
+.nivel-fila .nt{font-family:var(--sans);font-size:.78rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:0 0 8px;display:flex;gap:8px;align-items:center}
+.nivel-fila .nt i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.nivel-fila.n1 .nt{color:var(--n1)}.nivel-fila.n1 .nt i{background:var(--n1)}
+.nivel-fila.n2 .nt{color:var(--n2)}.nivel-fila.n2 .nt i{background:var(--n2)}
+.nivel-fila.n3 .nt{color:var(--n3)}.nivel-fila.n3 .nt i{background:var(--n3)}
+.nivel-fila.n4 .nt{color:var(--n4)}.nivel-fila.n4 .nt i{background:var(--n4)}
+.botonera{display:flex;flex-wrap:wrap;gap:8px}
+.nb{font-family:var(--sans);font-size:.86rem;font-weight:600;font-variant-numeric:tabular-nums;min-width:54px;padding:9px 12px;border-radius:10px;cursor:pointer;
+  border:1.5px solid var(--cn);color:var(--cn);background:var(--papel);position:relative}
+.nb:hover{background:color-mix(in srgb,var(--cn) 10%,var(--papel))}
+.nb[aria-pressed="true"]{background:var(--cn);color:#fff}
+.nb.aqui::after{content:"";position:absolute;top:-4px;right:-4px;width:11px;height:11px;border-radius:50%;background:var(--oro);border:2px solid var(--papel)}
+.nb.completo{background:color-mix(in srgb,var(--cn) 16%,var(--papel))}
+.nb[aria-pressed="true"].completo{background:var(--cn)}
+.n1 .nb,.nb.n1{--cn:var(--n1)}.n2 .nb,.nb.n2{--cn:var(--n2)}.n3 .nb,.nb.n3{--cn:var(--n3)}.n4 .nb,.nb.n4{--cn:var(--n4)}
+.panel-mod{margin:20px 0 0;border:1px solid var(--arena);border-radius:14px;padding:18px 20px;background:var(--papel-2);border-left:5px solid var(--cn,var(--granate))}
+.panel-mod .pm-t{font-weight:700;margin:0 0 2px}
+.panel-mod .pm-s{font-family:var(--sans);font-size:.78rem;color:var(--tinta-suave);margin:0 0 12px}
+.lec-lista{list-style:none;margin:0;padding:0;font-family:var(--sans)}
+.lec-lista li{margin:0}
+.lec-lista a{display:flex;gap:12px;align-items:center;text-decoration:none;padding:10px 10px;border-radius:9px;font-size:.92rem}
+.lec-lista a:hover{background:var(--papel)}
+.lec-lista .ln{font-weight:700;font-variant-numeric:tabular-nums;min-width:2.6em;color:var(--cn)}
+.lec-lista .le{margin-left:auto;font-size:.74rem;color:var(--tinta-suave);white-space:nowrap}
+.lec-lista .actual a{background:var(--papel);outline:2px solid var(--oro)}
+.lec-lista .hecha .ln,.lec-lista .hecha a{color:var(--oliva)}
+.lec-lista .pendiente a{color:var(--tinta-suave)}
+
+.tarjetas{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.mini-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:0 0 22px}
+.avatar-btn.rol-admin .avatar{background:var(--pizarra)}
+.avatar-btn.rol-maestro .avatar{background:var(--oliva)}
