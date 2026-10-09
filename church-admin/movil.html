@@ -79,7 +79,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <div id="loginBox" style="display:none">
   <div class="logo-i" style="margin:0 auto;width:56px;height:56px;font-size:28px">✝</div>
   <h2>MobileCash</h2>
-  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M002</div>
+  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M003</div>
   <div class="form-card">
     <div class="fgrp"><label>Correo</label><input type="email" id="lgEmail" autocomplete="username" inputmode="email"></div>
     <div class="fgrp"><label>Contraseña</label><input type="password" id="lgPass" autocomplete="current-password"></div>
@@ -90,7 +90,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 
 <div id="app" style="display:none">
 <div class="topbar">
-  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M002 · <span id="quien"></span></div></div></div>
+  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M003 · <span id="quien"></span></div></div></div>
   <div style="display:flex;gap:8px;align-items:center"><span id="dot" style="width:8px;height:8px;border-radius:50%;background:#3DAA6E;display:inline-block"></span><button class="sbtn" id="btnInstalar" style="display:none" onclick="instalarApp()">📲</button><button class="sbtn" onclick="cargar(true)">↻</button><button class="sbtn" onclick="salir()">Salir</button></div>
 </div>
 <div id="toast" class="toast"></div>
@@ -98,7 +98,6 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <div id="pg-inicio" class="page active">
   <div class="pg-title">Bienvenido 👋</div>
   <div class="pg-sub">Registra diezmos, ofrendas y donaciones</div>
-  <div class="info-card"><div class="it">📱 Cómo funciona</div><div class="ix">Cada registro queda <strong style="color:var(--warning)">PENDIENTE</strong> hasta que el tesorero lo apruebe en Church Admin. Al aprobarlo, entra a los libros.</div></div>
   <div class="stat-row" id="homeStats"></div>
   <div class="pg-sub" style="margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Acceso rápido</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -125,7 +124,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     <div class="fgrp" id="gSobre"><label>No. de sobre (opcional)</label><input type="text" id="fSobre" placeholder="S-000"></div>
     <div class="fgrp" id="gSub"><label id="lSub">Tipo</label><select id="fSub"></select></div>
     <div class="fgrp" id="gProyecto"><label>Proyecto (opcional)</label><input type="text" id="fProyecto" placeholder="Ej. Misión Norte"></div>
-    <div class="fgrp" id="gServicio"><label>Servicio</label><select id="fServicio"></select></div>
+    <div class="fgrp" id="gServicio"><label>Servicio</label><select id="fServicio" disabled></select></div>
     <div class="fgrp"><label>Método de pago</label><div class="chips" id="chips"></div></div>
     <div class="fgrp"><label>Fecha</label><input type="date" id="fFecha"></div>
     <div class="fgrp" id="gRef"><label>Referencia / # cheque / ID</label><input type="text" id="fRef" placeholder="CHQ-1234"></div>
@@ -146,10 +145,11 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 </div>
 
 <script>
-const METODOS = ['Efectivo','Cheque','Zelle','CashApp','Transferencia','Tarjeta','PayPal','Venmo','Electrónico'];
+const METODOS = ['Efectivo','Cheque'];
 const OFRENDAS = ['Ofrenda General','Misiones','Construcción','Especial','Bebés y Niños','Jóvenes'];
 const DONACIONES = ['Fondo General','Fondo de Misiones','Construcción','Educación','Ayuda Social'];
 const SERVICIOS_BASE = ['Domingo AM','Domingo PM','Miércoles','Especial'];
+let serviciosLista = [];
 let tipo = 'Diezmo', metodo = 'Efectivo', registros = [], personas = [], paginaActual = 'inicio';
 
 const $ = id => document.getElementById(id);
@@ -158,6 +158,27 @@ const hoy = () => { const d = new Date(); return new Date(d - d.getTimezoneOffse
 const money = n => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
 function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2800); }
+
+const DIAS = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+const sinAcento = x => String(x).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+function servicioDelDia(dow) {
+  const m = serviciosLista.filter(n => sinAcento(n).includes(DIAS[dow]));
+  return m.find(n => /pm/i.test(n)) || m[0] || null;
+}
+function fechaServicio(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  for (let i = 0; i < 7; i++) {
+    if (servicioDelDia(d.getDay())) break;
+    d.setDate(d.getDate() - 1);
+  }
+  return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+function servicioAuto() {
+  const f = $('fFecha').value; if (!f) return;
+  const n = servicioDelDia(new Date(f + 'T12:00:00').getDay());
+  if (n) $('fServicio').value = n;
+}
+$('fFecha').addEventListener('change', servicioAuto);
 
 function mostrar(p, desdeHistorial) {
   paginaActual = p;
@@ -224,6 +245,7 @@ async function enviar() {
   b.disabled = false;
   if (error) { toast('No se pudo enviar: ' + error.message); return; }
   ['fNombre', 'fMonto', 'fSobre', 'fRef', 'fProyecto'].forEach(i => $(i).value = '');
+  $('fFecha').value = fechaServicio(hoy()); servicioAuto();
   $('ov').classList.add('show');
   cargar();
 }
@@ -276,7 +298,9 @@ async function cargarListas() {
   let serv = SERVICIOS_BASE;
   const r = await sbCall(sb.from('tipos_servicio').select('nombre, activo').order('nombre'));
   if (!r.error && r.data && r.data.length) { const a = r.data.filter(x => x.activo !== false).map(x => x.nombre); if (a.length) serv = a; }
+  serviciosLista = serv;
   $('fServicio').innerHTML = serv.map(x => `<option>${esc(x)}</option>`).join('');
+  $('fFecha').value = fechaServicio(hoy()); servicioAuto();
 }
 
 async function iniciarApp() {
@@ -287,6 +311,8 @@ async function iniciarApp() {
   chips(); setTipo('Diezmo');
   history.replaceState({ p: 'inicio' }, '');
   await Promise.all([cargarListas(), cargar()]);
+  setInterval(() => { if (!document.hidden) cargar(); }, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) cargar(); });
 }
 
 async function entrar() {
