@@ -1306,6 +1306,18 @@
             </div>
           </div>
         </div>
+        <div class="tablaWrap" style="margin-bottom:20px;" id="bloqueSobresCfg">
+          <h3>Numeración de sobres</h3>
+          <div style="padding:14px 18px;">
+            <div id="sobEstado" style="font-size:0.9rem; margin-bottom:10px;"></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              <select id="sobDigitos" style="max-width:160px;"><option value="3">3 dígitos (101–998)</option><option value="4">4 dígitos (1001–9998)</option><option value="5">5 dígitos (10001–99998)</option></select>
+              <button type="button" class="btnSecundario" id="sobBtnCambiar" onclick="sobCambiarDigitos()">Cambiar y reasignar todos</button>
+              <button type="button" class="btnSecundario" onclick="sobAsignarFaltantes()">Asignar a quienes no tienen</button>
+              <span id="sobMsg" style="font-size:0.85rem; color:var(--text-muted);"></span>
+            </div>
+          </div>
+        </div>
         <div class="btnGrid" style="margin-bottom:20px;">
           <div class="btnCard c-pink" id="cfgTileImportar" onclick="impAbrir()"><div class="bcIcono">📥</div><div class="bcEtiqueta">Importar Excel</div><div class="bcSub">Subir diezmos, ofrendas, donaciones o gastos</div></div>
           <div class="btnCard c-red" id="cfgTilePeligro" onclick="peAbrir()"><div class="bcIcono">🗑️</div><div class="bcEtiqueta">Zona de peligro</div><div class="bcSub">Borrar datos</div></div>
@@ -2416,6 +2428,16 @@
         </div>
         <div class="full" id="campoEstadoDetalle" style="display:none;"><label for="pEstadoDetalle">Detalle del motivo</label><input type="text" id="pEstadoDetalle"></div>
 
+        <div class="seccionForm" id="secSobreForm">Sobre de ofrenda</div>
+        <div class="full" id="bloqueSobreForm">
+          <div id="sobreActualTxt" style="font-size:0.9rem; margin-bottom:6px;"></div>
+          <div class="relAgregar" id="sobreCambiar">
+            <input type="number" id="pSobreNuevo" placeholder="Nuevo número de sobre">
+            <span></span>
+            <button type="button" class="btnSecundario" onclick="cambiarSobreForm()">Cambiar</button>
+          </div>
+        </div>
+
         <div class="seccionForm">Dirección</div>
         <div><label for="pStreet">Dirección</label><input type="text" id="pStreet"></div>
         <div><label for="pApartment">Apto/Suite</label><input type="text" id="pApartment"></div>
@@ -2442,8 +2464,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-044';
-document.getElementById('versionTopbar').textContent = 'Ver-044';
+const APP_VERSION = 'church-admin Ver-045';
+document.getElementById('versionTopbar').textContent = 'Ver-045';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -3766,6 +3788,7 @@ async function cfgSincronizar() {
 }
 
 async function cfgCargar() {
+  sobCargarEstado();
   const d = (await cfgSincronizar()) || {};
   document.getElementById('cfgNombre').value = d.nombre || DC_IGLESIA_POR_DEFECTO;
   document.getElementById('cfgDireccion').value = d.direccion || '';
@@ -3787,6 +3810,56 @@ async function cfgGuardar(evt) {
   est.textContent = 'Guardado ✓';
   cfgSincronizar();
   return false;
+}
+
+async function cambiarSobreForm() {
+  const id = document.getElementById('personaId').value;
+  const nuevo = parseInt(document.getElementById('pSobreNuevo').value, 10);
+  if (!id || !nuevo) { alert('Escribe el nuevo número de sobre.'); return; }
+  const motivo = (prompt('Motivo del cambio (opcional):') || '').trim() || 'Cambio manual';
+  const { error } = await sbCall(sb.rpc('ca_sobre_cambiar', { p: id, nuevo, motivo }));
+  if (error) { alert(error.message); return; }
+  await cargarDirectorio();
+  const p = personaPorId(id);
+  document.getElementById('sobreActualTxt').textContent = 'Sobre actual: ' + (p?.sobre_actual || nuevo);
+  document.getElementById('pSobreNuevo').value = '';
+}
+
+async function sobCargarEstado() {
+  const bloque = document.getElementById('bloqueSobresCfg');
+  if (!bloque) return;
+  bloque.style.display = puede('administrarFamilias') ? '' : 'none';
+  const { data, error } = await sbCall(sb.rpc('ca_sobre_estado'));
+  const e = Array.isArray(data) ? data[0] : data;
+  const cont = document.getElementById('sobEstado');
+  if (error || !e) { cont.textContent = 'No se pudo leer el estado de los sobres.'; return; }
+  const poco = e.libres <= Math.max(10, Math.floor(e.capacidad * 0.1));
+  cont.innerHTML = `Configuración actual: <b>${e.digitos} dígitos</b> · En uso: <b>${e.usados}</b> de ${e.capacidad} · Libres: <b>${e.libres}</b>${e.sin_sobre ? ` · <b style="color:#b3261e;">${e.sin_sobre} sin sobre</b>` : ''}${poco ? '<div style="color:#b3261e; margin-top:6px;">Quedan pocos números en este rango. Conviene pasar al siguiente tamaño.</div>' : ''}`;
+  const sig = Math.min(5, e.digitos + 1);
+  document.getElementById('sobDigitos').value = String((e.libres === 0 || e.sin_sobre) && e.digitos < 5 ? sig : e.digitos);
+}
+
+async function sobCambiarDigitos() {
+  const d = parseInt(document.getElementById('sobDigitos').value, 10);
+  const msg = document.getElementById('sobMsg');
+  if (!confirm('Se reasignarán los números de sobre de TODOS los miembros (incluye inactivos) con ' + d + ' dígitos. Los números anteriores quedan guardados en el historial de cada persona. ¿Continuar?')) return;
+  msg.textContent = 'Reasignando…';
+  const { data, error } = await sbCall(sb.rpc('ca_sobre_reasignar_todos', { nuevos_digitos: d }));
+  msg.textContent = error ? error.message : 'Listo: ' + data + ' sobres reasignados.';
+  await cargarDirectorio();
+  sobCargarEstado();
+}
+
+async function sobAsignarFaltantes() {
+  const msg = document.getElementById('sobMsg');
+  const sin = cacheDirectorio.filter(p => !p.sobre_actual);
+  if (!cacheDirectorio.length) await cargarDirectorio();
+  const { data } = await sbCall(sb.from('personas').select('id').is('sobre_actual', null));
+  let n = 0;
+  for (const p of (data || [])) { const r = await sbCall(sb.rpc('ca_sobre_asignar', { p: p.id })); if (!r.error && r.data) n++; }
+  msg.textContent = n + ' sobres asignados.';
+  await cargarDirectorio();
+  sobCargarEstado();
 }
 
 async function cfgFijarPin() {
@@ -7593,6 +7666,13 @@ async function abrirFormPersona(id) {
   document.getElementById('pRelPersona').innerHTML = '<option value="">Elegir miembro…</option>' + cacheDirectorio.filter(p => p.id !== id).map(p => `<option value="${p.id}">${escV28(nombreMostrar(p))}</option>`).join('');
   pintarRelacionesForm();
 
+  const verSobre = !!id;
+  document.getElementById('secSobreForm').style.display = verSobre ? '' : 'none';
+  document.getElementById('bloqueSobreForm').style.display = verSobre ? '' : 'none';
+  document.getElementById('sobreActualTxt').textContent = persona?.sobre_actual ? 'Sobre actual: ' + persona.sobre_actual : 'Sin sobre asignado';
+  document.getElementById('sobreCambiar').style.display = puede('administrarFamilias') ? '' : 'none';
+  document.getElementById('pSobreNuevo').value = '';
+
   const selEstado = document.getElementById('pEstadoMiembro');
   selEstado.value = persona?.estado_miembro || 'Activo';
   document.getElementById('pEstadoMotivo').value = persona?.estado_motivo || 'Retirado de la iglesia';
@@ -7766,8 +7846,18 @@ function abrirPerfil(id, nuevo) {
     <div class="perfilSeccion">Familias</div>${fams}
     <div class="perfilSeccion">Parentescos</div>${relHtml}
     <div class="perfilSeccion">Información</div>
+    ${dato('Sobre actual', p.sobre_actual ? String(p.sobre_actual) : '')}<div id="perfilSobres" class="perfilDato"></div>
     ${dato('Nombre completo', p.nombre_completo)}${dato('Apodo', p.apodo)}${dato('Nacimiento', p.fecha_nacimiento)}${dato('Teléfono', p.telefono)}${dato('Correo', p.correo)}${dato('Dirección', dir)}${dato('Contacto de emergencia', emerg)}${dato('Notas', p.notas)}`;
   document.getElementById('modalPerfil').classList.add('abierto');
+  cargarSobresPerfil(id);
+}
+
+async function cargarSobresPerfil(id) {
+  const { data } = await sbCall(sb.from('sobres_historial').select('numero, desde, hasta, motivo').eq('persona_id', id).not('hasta', 'is', null).order('hasta', { ascending: false }));
+  const el = document.getElementById('perfilSobres');
+  if (!el || perfilPila[perfilPila.length - 1] !== id) return;
+  const f = x => x ? String(x).slice(0, 10) : '';
+  el.innerHTML = data && data.length ? '<span>Sobres anteriores:</span> ' + data.map(h => `${h.numero} (${f(h.desde)} a ${f(h.hasta)}${h.motivo ? ', ' + escV28(h.motivo) : ''})`).join('; ') : '';
 }
 
 function perfilVolver() {
