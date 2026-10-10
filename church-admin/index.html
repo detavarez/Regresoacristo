@@ -597,6 +597,19 @@
     .cabeceraBalance { padding: 14px 16px; }
     .cabeceraBalance .cbMonto { font-size: 1.6rem; }
   }
+  .inactivo { opacity: 0.55; }
+  .inactivo .nombre, li.inactivo, .relFila.inactivo { color: var(--text-muted); }
+  .chipsFam { display: flex; flex-wrap: wrap; margin-bottom: 8px; }
+  .chipFam { display: inline-flex; align-items: center; gap: 6px; background: rgba(128,128,128,0.15); border-radius: 14px; padding: 4px 10px; margin: 0 6px 6px 0; font-size: 0.85rem; }
+  .chipFam button { border: 0; background: none; cursor: pointer; color: inherit; font-size: 1rem; line-height: 1; padding: 0; }
+  .relFila { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(128,128,128,0.25); font-size: 0.9rem; }
+  .relAgregar { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-top: 8px; }
+  .lnkPerfil { color: var(--heading); text-decoration: underline; cursor: pointer; }
+  .perfilSeccion { font-weight: 700; color: var(--heading); margin: 18px 0 8px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .perfilDato { font-size: 0.9rem; margin: 3px 0; }
+  .perfilDato span { color: var(--text-muted); }
+  .perfilBarra { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; }
+  @media (max-width: 520px) { .relAgregar { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -2350,6 +2363,10 @@
   </div>
 </div>
 
+<div class="modalOverlay" id="modalPerfil">
+  <div class="modalCaja"><div id="perfilContenido"></div></div>
+</div>
+
 <!-- ═══════════════ MODAL: Agregar/Editar Miembro ═══════════════ -->
 <div class="modalOverlay" id="modalPersona">
   <div class="modalCaja">
@@ -2367,18 +2384,39 @@
         <div><label for="pTelefono">Teléfono</label><input type="tel" id="pTelefono"></div>
         <div class="full"><label for="pCorreo">Correo</label><input type="email" id="pCorreo"></div>
 
-        <div class="seccionForm">Familia / Hogar</div>
-        <div class="full">
-          <label for="pHousehold">Familia (household)</label>
-          <select id="pHousehold" onchange="alternarNuevaFamilia()">
-            <option value="">Sin asignar</option>
-            <option value="__nueva__">+ Crear nueva familia…</option>
-          </select>
+        <div class="seccionForm">Familias</div>
+        <div class="full" id="bloqueFamilias">
+          <div id="chipsFamilias" class="chipsFam"></div>
+          <select id="pHousehold" onchange="alternarNuevaFamilia()"></select>
+          <div id="campoNuevaFamilia" style="display:none; margin-top:8px;">
+            <label for="pNuevaFamiliaNombre">Nombre de la nueva familia</label>
+            <input type="text" id="pNuevaFamiliaNombre" placeholder="ej. Familia Tavarez">
+            <button type="button" class="btnSecundario" style="margin-top:6px;" onclick="agregarNuevaFamiliaForm()">Crear y agregar</button>
+          </div>
         </div>
-        <div class="full" id="campoNuevaFamilia" style="display:none;">
-          <label for="pNuevaFamiliaNombre">Nombre de la nueva familia</label>
-          <input type="text" id="pNuevaFamiliaNombre" placeholder="ej. Familia Tavarez">
+
+        <div class="seccionForm">Parentescos</div>
+        <div class="full" id="bloqueRelaciones">
+          <div id="listaRelacionesForm"></div>
+          <div class="relAgregar" id="relAgregar">
+            <select id="pRelParentesco"></select>
+            <select id="pRelPersona"></select>
+            <button type="button" class="btnSecundario" onclick="agregarRelacionForm()">Agregar</button>
+          </div>
         </div>
+
+        <div class="seccionForm">Estado</div>
+        <div>
+          <label for="pEstadoMiembro">Estado</label>
+          <select id="pEstadoMiembro" onchange="alternarMotivoEstado()"><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option></select>
+        </div>
+        <div id="campoEstadoMotivo" style="display:none;">
+          <label for="pEstadoMotivo">Motivo</label>
+          <select id="pEstadoMotivo" onchange="alternarMotivoEstado()"><option value="Retirado de la iglesia">Retirado de la iglesia</option><option value="Ya no es miembro">Ya no es miembro</option><option value="Fallecido">Fallecido</option><option value="Otro">Otro</option></select>
+        </div>
+        <div class="full" id="campoEstadoDetalle" style="display:none;"><label for="pEstadoDetalle">Detalle del motivo</label><input type="text" id="pEstadoDetalle"></div>
+
+        <div class="seccionForm">Dirección</div>
         <div><label for="pStreet">Dirección</label><input type="text" id="pStreet"></div>
         <div><label for="pApartment">Apto/Suite</label><input type="text" id="pApartment"></div>
         <div><label for="pCity">Ciudad</label><input type="text" id="pCity"></div>
@@ -2404,8 +2442,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-043';
-document.getElementById('versionTopbar').textContent = 'Ver-043';
+const APP_VERSION = 'church-admin Ver-044';
+document.getElementById('versionTopbar').textContent = 'Ver-044';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -3800,6 +3838,7 @@ const PERM_KEYS = [
   { key: 'exportarDatos', label: 'Exportar datos (Excel, PDF, JSON)' },
   { key: 'enviarEmail', label: 'Enviar reportes por correo' },
   { key: 'cerrarPeriodo', label: 'Cerrar o reabrir periodos contables' },
+  { key: 'administrarFamilias', label: 'Administrar familias, parentescos y reactivar miembros' },
 ];
 const PERM_POR_ROL = {
   Administrador: Object.fromEntries(PERM_KEYS.map(p => [p.key, true])),
@@ -7218,6 +7257,7 @@ async function cargarDirectorio() {
       .eq('archivado', false)
       .order('nombre_completo', { ascending: true })
   );
+  await cargarFamiliaresCache();
 
   if (error) {
     lista.innerHTML = `<div class="estadoVacio">Error al cargar: ${error.message}</div>`;
@@ -7238,7 +7278,7 @@ function renderDirectorio(personas) {
   lista.innerHTML = personas.map(p => {
     const detalles = [p.telefono, p.correo, p.households?.nombre].filter(Boolean).join(' · ');
     return `
-      <div class="cardPersona" onclick="abrirFormPersona('${p.id}')">
+      <div class="cardPersona ${p.estado_miembro === 'Inactivo' ? 'inactivo' : ''}" onclick="abrirPerfil('${p.id}', true)">
         <div>
           <div class="nombre">${nombreMostrar(p)}</div>
           <div class="detalle">${detalles || 'Sin datos de contacto'}</div>
@@ -7312,9 +7352,10 @@ async function cargarFamilias() {
   const grid = document.getElementById('gridFamilias');
   grid.innerHTML = '<div class="estadoCargando">Cargando familias…</div>';
 
-  const [households, personas] = await Promise.all([
+  const [households, personas, links] = await Promise.all([
     sbCall(sb.from('households').select('*').order('nombre', { ascending: true })),
-    sbCall(sb.from('personas').select('id, nombre_completo, nombre, apellido, household_id').eq('archivado', false)),
+    sbCall(sb.from('personas').select('id, nombre_completo, nombre, apellido, apodo, household_id, estado_miembro').eq('archivado', false)),
+    sbCall(sb.from('persona_familias').select('persona_id, household_id')),
   ]);
 
   if (households.error) {
@@ -7323,48 +7364,211 @@ async function cargarFamilias() {
   }
 
   const listaHouseholds = households.data || [];
-  const listaPersonasTodas = personas.data || [];
+  const todas = personas.data || [];
+  const enlaces = links.data || [];
+  const admin = puede('administrarFamilias');
+  const barra = admin ? '<div style="grid-column:1/-1; margin-bottom:4px;"><button class="btnAccion" onclick="crearFamiliaSuelta()">+ Nueva familia</button></div>' : '';
 
   if (listaHouseholds.length === 0) {
-    grid.innerHTML = '<div class="estadoVacio">No hay familias registradas todavía.</div>';
+    grid.innerHTML = barra + '<div class="estadoVacio">No hay familias registradas todavía.</div>';
     return;
   }
 
-  grid.innerHTML = listaHouseholds.map(h => {
-    const miembros = listaPersonasTodas.filter(p => p.household_id === h.id);
+  grid.innerHTML = barra + listaHouseholds.map(h => {
+    const ids = new Set(enlaces.filter(l => l.household_id === h.id).map(l => l.persona_id));
+    todas.filter(p => p.household_id === h.id).forEach(p => ids.add(p.id));
+    const miembros = todas.filter(p => ids.has(p.id));
     const direccion = [h.street, h.city, h.state].filter(Boolean).join(', ');
     const miembrosHtml = miembros.length
-      ? miembros.map(p => `<li>${nombreMostrar(p)}</li>`).join('')
+      ? miembros.map(p => `<li class="${p.estado_miembro === 'Inactivo' ? 'inactivo' : ''}"><a class="lnkPerfil" onclick="abrirPerfil('${p.id}', true)">${escV28(nombreMostrar(p))}</a></li>`).join('')
       : '<li style="color:var(--text-muted);">Sin miembros asignados</li>';
+    const acciones = admin ? `<div style="margin-top:10px;"><button class="btnSecundario btnPeligro" onclick="eliminarFamilia('${h.id}')">Eliminar familia</button></div>` : '';
     return `
       <div class="cardFamilia">
-        <h4>${h.nombre}</h4>
+        <h4>${escV28(h.nombre)}</h4>
         <div class="direccion">${direccion || 'Sin dirección registrada'}</div>
         <ul>${miembrosHtml}</ul>
+        ${acciones}
       </div>`;
   }).join('');
+}
+
+async function crearFamiliaSuelta() {
+  if (!puede('administrarFamilias')) return;
+  const nombre = (prompt('Nombre de la nueva familia:') || '').trim();
+  if (!nombre) return;
+  const { error } = await sbCall(sb.from('households').insert({ nombre }));
+  if (error) { alert('Error al crear la familia: ' + error.message); return; }
+  cacheHouseholds = [];
+  cargarFamilias();
+}
+
+async function eliminarFamilia(id) {
+  if (!puede('administrarFamilias')) return;
+  if (!confirm('¿Eliminar esta familia? Sus miembros NO se eliminan; solo dejan de pertenecer a ella.')) return;
+  const [pers, lnk] = await Promise.all([
+    sbCall(sb.from('personas').select('id').eq('household_id', id)),
+    sbCall(sb.from('persona_familias').select('persona_id, household_id')),
+  ]);
+  const enlaces = lnk.data || [];
+  for (const p of (pers.data || [])) {
+    const otra = enlaces.find(l => l.persona_id === p.id && l.household_id !== id);
+    const r = await sbCall(sb.from('personas').update({ household_id: otra ? otra.household_id : null }).eq('id', p.id));
+    if (r.error) { alert('Error: ' + r.error.message); return; }
+  }
+  let r = await sbCall(sb.from('persona_familias').delete().eq('household_id', id));
+  if (r.error) { alert('Error: ' + r.error.message); return; }
+  r = await sbCall(sb.from('households').delete().eq('id', id));
+  if (r.error) { alert('No se pudo eliminar la familia: ' + r.error.message); return; }
+  cacheHouseholds = [];
+  cargarFamilias();
+  cargarDirectorio();
 }
 
 // ── Formulario: agregar/editar persona ───────────────────────────────────
 let cacheHouseholds = [];
 let personaEditandoId = null;
+let cacheFamLinks = [];
+let cacheRelaciones = [];
+let formFamilias = [];
+let formRelBorrar = [];
+let formRelNuevas = [];
+const PARENTESCOS = ['Padre', 'Madre', 'Padrastro', 'Madrastra', 'Hijo', 'Hija', 'Hijastro', 'Hijastra', 'Hermano', 'Hermana', 'Esposo', 'Esposa', 'Abuelo', 'Abuela', 'Nieto', 'Nieta', 'Tío', 'Tía', 'Sobrino', 'Sobrina', 'Primo', 'Prima', 'Suegro', 'Suegra', 'Yerno', 'Nuera', 'Cuñado', 'Cuñada', 'Otro'];
+const PARENTESCO_INVERSO = { Padre: 'Hijo(a)', Madre: 'Hijo(a)', Padrastro: 'Hijastro(a)', Madrastra: 'Hijastro(a)', Hijo: 'Padre o madre', Hija: 'Padre o madre', Hijastro: 'Padrastro o madrastra', Hijastra: 'Padrastro o madrastra', Hermano: 'Hermano(a)', Hermana: 'Hermano(a)', Esposo: 'Cónyuge', Esposa: 'Cónyuge', Abuelo: 'Nieto(a)', Abuela: 'Nieto(a)', Nieto: 'Abuelo(a)', Nieta: 'Abuelo(a)', 'Tío': 'Sobrino(a)', 'Tía': 'Sobrino(a)', Sobrino: 'Tío(a)', Sobrina: 'Tío(a)', Primo: 'Primo(a)', Prima: 'Primo(a)', Suegro: 'Yerno o nuera', Suegra: 'Yerno o nuera', Yerno: 'Suegro(a)', Nuera: 'Suegro(a)', 'Cuñado': 'Cuñado(a)', 'Cuñada': 'Cuñado(a)', Otro: 'Otro' };
+const ES_CONYUGE = ['Esposo', 'Esposa', 'Cónyuge'];
+const ES_PADRE = ['Padre', 'Madre', 'Padre o madre'];
 
-async function poblarSelectHouseholds(seleccionarId) {
-  const select = document.getElementById('pHousehold');
+async function cargarFamiliaresCache() {
+  const [pf, rp] = await Promise.all([
+    sbCall(sb.from('persona_familias').select('persona_id, household_id')),
+    sbCall(sb.from('relaciones_personas').select('id, persona_id, relacionado_id, parentesco')),
+  ]);
+  cacheFamLinks = pf.data || [];
+  cacheRelaciones = rp.data || [];
+}
+
+function personaPorId(id) { return cacheDirectorio.find(p => p.id === id); }
+
+function familiasDe(pid) {
+  const ids = new Set(cacheFamLinks.filter(l => l.persona_id === pid).map(l => l.household_id));
+  const p = personaPorId(pid);
+  if (p && p.household_id) ids.add(p.household_id);
+  return [...ids];
+}
+
+function relacionesDe(pid, filas) {
+  const out = [];
+  (filas || cacheRelaciones).forEach(r => {
+    if (r.persona_id === pid) out.push({ rowId: r.id, otroId: r.relacionado_id, etiqueta: r.parentesco });
+    else if (r.relacionado_id === pid) out.push({ rowId: r.id, otroId: r.persona_id, etiqueta: PARENTESCO_INVERSO[r.parentesco] || r.parentesco });
+  });
+  return out;
+}
+
+function validarRelacion(pid, otroId, parentesco, filas) {
+  if (!otroId) return 'Elige un familiar.';
+  if (pid && otroId === pid) return 'Una persona no puede ser su propio familiar.';
+  if (filas.some(r => (r.persona_id === pid && r.relacionado_id === otroId) || (r.persona_id === otroId && r.relacionado_id === pid))) return 'Ya existe una relación entre estas dos personas.';
+  const mias = relacionesDe(pid, filas);
+  const suyas = relacionesDe(otroId, filas);
+  if ((parentesco === 'Padre' || parentesco === 'Madre') && mias.some(x => x.etiqueta === parentesco)) return 'Ya tiene registrado un(a) ' + parentesco + '.';
+  if ((parentesco === 'Padre' || parentesco === 'Madre') && mias.filter(x => ES_PADRE.includes(x.etiqueta)).length >= 2) return 'Ya tiene dos padres registrados.';
+  if ((parentesco === 'Hijo' || parentesco === 'Hija') && suyas.filter(x => ES_PADRE.includes(x.etiqueta)).length >= 2) return 'Esa persona ya tiene dos padres registrados.';
+  if (parentesco === 'Esposo' || parentesco === 'Esposa') {
+    if (mias.some(x => ES_CONYUGE.includes(x.etiqueta))) return 'Ya tiene cónyuge registrado.';
+    if (suyas.some(x => ES_CONYUGE.includes(x.etiqueta))) return 'Esa persona ya tiene cónyuge registrado.';
+  }
+  return null;
+}
+
+function filasFormActuales() {
+  const base = cacheRelaciones.filter(r => !formRelBorrar.includes(r.id));
+  const pid = personaEditandoId || '__nuevo__';
+  return base.concat(formRelNuevas.map((n, i) => ({ id: 'n' + i, persona_id: pid, relacionado_id: n.otroId, parentesco: n.parentesco })));
+}
+
+async function poblarSelectHouseholds() {
   if (cacheHouseholds.length === 0) {
     const { data } = await sbCall(sb.from('households').select('id, nombre').order('nombre', { ascending: true }));
     cacheHouseholds = data || [];
   }
-  const opcionesExistentes = cacheHouseholds.map(h =>
-    `<option value="${h.id}">${h.nombre}</option>`
-  ).join('');
-  select.innerHTML = `<option value="">Sin asignar</option>${opcionesExistentes}<option value="__nueva__">+ Crear nueva familia…</option>`;
-  select.value = seleccionarId || '';
+  const select = document.getElementById('pHousehold');
+  const libres = cacheHouseholds.filter(h => !formFamilias.includes(h.id));
+  select.innerHTML = '<option value="">+ Agregar a una familia…</option>' + libres.map(h => `<option value="${h.id}">${escV28(h.nombre)}</option>`).join('') + '<option value="__nueva__">+ Crear nueva familia…</option>';
+  select.value = '';
+}
+
+function pintarChipsFamilias() {
+  const admin = puede('administrarFamilias');
+  document.getElementById('chipsFamilias').innerHTML = formFamilias.length
+    ? formFamilias.map((id, i) => {
+        const h = cacheHouseholds.find(x => x.id === id);
+        return `<span class="chipFam">${escV28(h ? h.nombre : 'Familia')}${i === 0 ? ' (principal)' : ''}${admin ? `<button type="button" onclick="quitarFamiliaForm('${id}')">×</button>` : ''}</span>`;
+      }).join('')
+    : '<span style="color:var(--text-muted); font-size:0.85rem;">Sin familia asignada</span>';
+  document.getElementById('pHousehold').style.display = admin ? '' : 'none';
+  poblarSelectHouseholds();
+}
+
+function quitarFamiliaForm(id) {
+  formFamilias = formFamilias.filter(x => x !== id);
+  pintarChipsFamilias();
 }
 
 function alternarNuevaFamilia() {
-  const esNueva = document.getElementById('pHousehold').value === '__nueva__';
-  document.getElementById('campoNuevaFamilia').style.display = esNueva ? 'block' : 'none';
+  const v = document.getElementById('pHousehold').value;
+  if (v && v !== '__nueva__') {
+    formFamilias.push(v);
+    pintarChipsFamilias();
+    document.getElementById('campoNuevaFamilia').style.display = 'none';
+    return;
+  }
+  document.getElementById('campoNuevaFamilia').style.display = v === '__nueva__' ? 'block' : 'none';
+}
+
+async function agregarNuevaFamiliaForm() {
+  const nombre = document.getElementById('pNuevaFamiliaNombre').value.trim();
+  if (!nombre) { alert('Escribe un nombre para la nueva familia.'); return; }
+  const { data, error } = await sbCall(sb.from('households').insert({ nombre }).select().single());
+  if (error) { alert('Error al crear la familia: ' + error.message); return; }
+  cacheHouseholds = [];
+  await poblarSelectHouseholds();
+  formFamilias.push(data.id);
+  document.getElementById('pNuevaFamiliaNombre').value = '';
+  document.getElementById('campoNuevaFamilia').style.display = 'none';
+  pintarChipsFamilias();
+}
+
+function pintarRelacionesForm() {
+  const admin = puede('administrarFamilias');
+  const pid = personaEditandoId || '__nuevo__';
+  const existentes = personaEditandoId ? relacionesDe(personaEditandoId, cacheRelaciones.filter(r => !formRelBorrar.includes(r.id))) : [];
+  const filas = existentes.map(x => ({ etiqueta: x.etiqueta, otroId: x.otroId, borrar: `quitarRelacionForm('${x.rowId}')` }))
+    .concat(formRelNuevas.map((n, i) => ({ etiqueta: n.parentesco, otroId: n.otroId, borrar: `quitarRelacionNueva(${i})` })));
+  document.getElementById('listaRelacionesForm').innerHTML = filas.length
+    ? filas.map(f => { const o = personaPorId(f.otroId); return `<div class="relFila ${o && o.estado_miembro === 'Inactivo' ? 'inactivo' : ''}"><span><b>${escV28(f.etiqueta)}:</b> ${escV28(o ? nombreMostrar(o) : '—')}</span>${admin ? `<button type="button" class="btnSecundario" onclick="${f.borrar}">Quitar</button>` : ''}</div>`; }).join('')
+    : '<span style="color:var(--text-muted); font-size:0.85rem;">Sin parentescos registrados</span>';
+  document.getElementById('relAgregar').style.display = admin ? '' : 'none';
+}
+
+function quitarRelacionForm(rowId) { formRelBorrar.push(rowId); pintarRelacionesForm(); }
+function quitarRelacionNueva(i) { formRelNuevas.splice(i, 1); pintarRelacionesForm(); }
+
+function agregarRelacionForm() {
+  const parentesco = document.getElementById('pRelParentesco').value;
+  const otroId = document.getElementById('pRelPersona').value;
+  const pid = personaEditandoId || '__nuevo__';
+  const err = validarRelacion(pid, otroId, parentesco, filasFormActuales());
+  if (err) { alert(err); return; }
+  formRelNuevas.push({ otroId, parentesco });
+  document.getElementById('pRelPersona').value = '';
+  pintarRelacionesForm();
+}
+
+function alternarMotivoEstado() {
+  const inactivo = document.getElementById('pEstadoMiembro').value === 'Inactivo';
+  document.getElementById('campoEstadoMotivo').style.display = inactivo ? 'block' : 'none';
+  document.getElementById('campoEstadoDetalle').style.display = inactivo && document.getElementById('pEstadoMotivo').value === 'Otro' ? 'block' : 'none';
 }
 
 async function abrirFormPersona(id) {
@@ -7374,12 +7578,27 @@ async function abrirFormPersona(id) {
   document.getElementById('btnArchivarPersona').style.display = id ? 'inline-block' : 'none';
   document.getElementById('modalPersonaTitulo').textContent = id ? 'Editar Miembro' : 'Nuevo Miembro';
 
-  let persona = null;
-  if (id) {
-    persona = cacheDirectorio.find(p => p.id === id);
-  }
+  const persona = id ? cacheDirectorio.find(p => p.id === id) : null;
+  if (!cacheRelaciones.length && !cacheFamLinks.length) await cargarFamiliaresCache();
 
-  await poblarSelectHouseholds(persona?.household_id);
+  formRelBorrar = [];
+  formRelNuevas = [];
+  formFamilias = id ? familiasDe(id) : [];
+  if (persona && persona.household_id) formFamilias = [persona.household_id].concat(formFamilias.filter(x => x !== persona.household_id));
+
+  if (cacheHouseholds.length === 0) await poblarSelectHouseholds();
+  pintarChipsFamilias();
+
+  document.getElementById('pRelParentesco').innerHTML = PARENTESCOS.map(x => `<option value="${x}">${x}</option>`).join('');
+  document.getElementById('pRelPersona').innerHTML = '<option value="">Elegir miembro…</option>' + cacheDirectorio.filter(p => p.id !== id).map(p => `<option value="${p.id}">${escV28(nombreMostrar(p))}</option>`).join('');
+  pintarRelacionesForm();
+
+  const selEstado = document.getElementById('pEstadoMiembro');
+  selEstado.value = persona?.estado_miembro || 'Activo';
+  document.getElementById('pEstadoMotivo').value = persona?.estado_motivo || 'Retirado de la iglesia';
+  document.getElementById('pEstadoDetalle').value = persona?.estado_detalle || '';
+  selEstado.disabled = !!(persona && persona.estado_miembro === 'Inactivo' && !puede('administrarFamilias'));
+  alternarMotivoEstado();
 
   if (persona) {
     document.getElementById('personaId').value = persona.id;
@@ -7419,41 +7638,22 @@ async function guardarPersona(evt) {
   btnGuardar.textContent = 'Guardando…';
 
   try {
-    let householdId = document.getElementById('pHousehold').value;
-
-    // Crear nueva familia si se seleccionó esa opción
-    if (householdId === '__nueva__') {
-      const nombreNuevaFamilia = document.getElementById('pNuevaFamiliaNombre').value.trim();
-      if (!nombreNuevaFamilia) {
-        alert('Escribe un nombre para la nueva familia.');
-        return false;
-      }
-      const { data: nuevaFamilia, error: errFamilia } = await sbCall(
-        sb.from('households').insert({ nombre: nombreNuevaFamilia }).select().single()
-      );
-      if (errFamilia) {
-        alert('Error al crear la familia: ' + errFamilia.message);
-        return false;
-      }
-      householdId = nuevaFamilia.id;
-      cacheHouseholds = []; // forzar recarga la próxima vez
-    }
-
-    const nombre = document.getElementById('pNombre').value.trim();
-    const apellido = document.getElementById('pApellido').value.trim();
-    const segundoNombre = document.getElementById('pSegundoNombre').value.trim();
-    const segundoApellido = document.getElementById('pSegundoApellido').value.trim();
+    const idActual = document.getElementById('personaId').value;
+    const previa = idActual ? cacheDirectorio.find(p => p.id === idActual) : null;
+    const estado = document.getElementById('pEstadoMiembro').value;
+    const motivo = document.getElementById('pEstadoMotivo').value;
+    const detalle = document.getElementById('pEstadoDetalle').value.trim();
+    if (estado === 'Inactivo' && motivo === 'Otro' && !detalle) { alert('Escribe el detalle del motivo.'); return false; }
 
     const payload = {
-      nombre,
-      segundo_nombre: segundoNombre || null,
-      apellido,
-      segundo_apellido: segundoApellido || null,
+      nombre: document.getElementById('pNombre').value.trim(),
+      segundo_nombre: document.getElementById('pSegundoNombre').value.trim() || null,
+      apellido: document.getElementById('pApellido').value.trim(),
+      segundo_apellido: document.getElementById('pSegundoApellido').value.trim() || null,
       apodo: document.getElementById('pApodo').value.trim() || null,
       fecha_nacimiento: document.getElementById('pFechaNacimiento').value || null,
       telefono: document.getElementById('pTelefono').value.trim() || null,
       correo: document.getElementById('pCorreo').value.trim() || null,
-      household_id: householdId || null,
       address_mode: 'own',
       street: document.getElementById('pStreet').value.trim() || null,
       apartment: document.getElementById('pApartment').value.trim() || null,
@@ -7465,18 +7665,40 @@ async function guardarPersona(evt) {
       emergency_contact_relationship: document.getElementById('pEmergenciaRelacion').value.trim() || null,
       notas: document.getElementById('pNotas').value.trim() || null,
     };
+    const admin = puede('administrarFamilias');
+    if (admin) payload.household_id = formFamilias[0] || null;
 
-    const idActual = document.getElementById('personaId').value;
-    let resultado;
-    if (idActual) {
-      resultado = await sbCall(sb.from('personas').update(payload).eq('id', idActual));
-    } else {
-      resultado = await sbCall(sb.from('personas').insert(payload));
+    const estadoCambio = !previa ? estado !== 'Activo' : (previa.estado_miembro || 'Activo') !== estado || (estado === 'Inactivo' && (previa.estado_motivo !== motivo || (previa.estado_detalle || '') !== detalle));
+    if (estadoCambio) {
+      const u = await sb.auth.getUser();
+      payload.estado_miembro = estado;
+      payload.estado_motivo = estado === 'Inactivo' ? motivo : null;
+      payload.estado_detalle = estado === 'Inactivo' && motivo === 'Otro' ? detalle : null;
+      payload.estado_cambiado_en = new Date().toISOString();
+      payload.estado_cambiado_por = u?.data?.user?.id || null;
     }
 
-    if (resultado.error) {
-      alert('Error al guardar: ' + resultado.error.message);
-      return false;
+    let pid = idActual;
+    if (idActual) {
+      const r = await sbCall(sb.from('personas').update(payload).eq('id', idActual));
+      if (r.error) { alert('Error al guardar: ' + r.error.message); return false; }
+    } else {
+      const r = await sbCall(sb.from('personas').insert(payload).select('id').single());
+      if (r.error) { alert('Error al guardar: ' + r.error.message); return false; }
+      pid = r.data.id;
+    }
+
+    if (admin) {
+      const actuales = cacheFamLinks.filter(l => l.persona_id === pid).map(l => l.household_id);
+      const quitar = actuales.filter(h => !formFamilias.includes(h));
+      const agregar = formFamilias.filter(h => !actuales.includes(h));
+      if (quitar.length) { const r = await sbCall(sb.from('persona_familias').delete().eq('persona_id', pid).in('household_id', quitar)); if (r.error) { alert('Error en familias: ' + r.error.message); return false; } }
+      if (agregar.length) { const r = await sbCall(sb.from('persona_familias').insert(agregar.map(h => ({ persona_id: pid, household_id: h })))); if (r.error) { alert('Error en familias: ' + r.error.message); return false; } }
+      if (formRelBorrar.length) { const r = await sbCall(sb.from('relaciones_personas').delete().in('id', formRelBorrar)); if (r.error) { alert('Error en parentescos: ' + r.error.message); return false; } }
+      for (const n of formRelNuevas) {
+        const r = await sbCall(sb.from('relaciones_personas').insert({ persona_id: pid, relacionado_id: n.otroId, parentesco: n.parentesco }));
+        if (r.error) { alert('Error en parentescos: ' + r.error.message); return false; }
+      }
     }
 
     cerrarModalPersona();
@@ -7487,6 +7709,86 @@ async function guardarPersona(evt) {
   }
 
   return false;
+}
+
+let perfilPila = [];
+
+function abrirPerfil(id, nuevo) {
+  if (nuevo) perfilPila = [];
+  if (perfilPila[perfilPila.length - 1] !== id) perfilPila.push(id);
+  const p = personaPorId(id);
+  const cont = document.getElementById('perfilContenido');
+  if (!p) { cont.innerHTML = '<div class="estadoVacio">Este perfil no está disponible.</div>'; document.getElementById('modalPerfil').classList.add('abierto'); return; }
+
+  const enlace = x => { const o = personaPorId(x); return o ? `<a class="lnkPerfil ${o.estado_miembro === 'Inactivo' ? 'inactivo' : ''}" onclick="abrirPerfil('${o.id}')">${escV28(nombreMostrar(o))}</a>` : '—'; };
+  const inact = p.estado_miembro === 'Inactivo';
+
+  const fams = familiasDe(id).map(hid => {
+    const h = cacheHouseholds.find(x => x.id === hid) || (p.households && p.household_id === hid ? p.households : null);
+    const miembros = cacheDirectorio.filter(q => familiasDe(q.id).includes(hid));
+    return `<div style="margin-bottom:10px;"><b>${escV28(h?.nombre || 'Familia')}</b><div>${miembros.map(q => `<div class="${q.estado_miembro === 'Inactivo' ? 'inactivo' : ''}">${q.id === id ? escV28(nombreMostrar(q)) : enlace(q.id)}</div>`).join('')}</div></div>`;
+  }).join('') || '<div style="color:var(--text-muted);">Sin familia asignada</div>';
+
+  const rels = relacionesDe(id);
+  const grupos = [
+    ['Padres', x => ['Padre', 'Madre', 'Padre o madre', 'Padrastro', 'Madrastra', 'Padrastro o madrastra'].includes(x)],
+    ['Cónyuge', x => ES_CONYUGE.includes(x)],
+    ['Hermanos', x => x === 'Hermano(a)' || x === 'Hermano' || x === 'Hermana'],
+    ['Hijos', x => ['Hijo', 'Hija', 'Hijo(a)', 'Hijastro', 'Hijastra', 'Hijastro(a)'].includes(x)],
+  ];
+  let usados = new Set();
+  let relHtml = grupos.map(([titulo, fn]) => {
+    const f = rels.filter(r => fn(r.etiqueta));
+    f.forEach(r => usados.add(r.rowId));
+    return f.length ? `<div style="margin-bottom:8px;"><b>${titulo}</b>${f.map(r => `<div class="${personaPorId(r.otroId)?.estado_miembro === 'Inactivo' ? 'inactivo' : ''}">${enlace(r.otroId)} <span style="color:var(--text-muted);">(${escV28(r.etiqueta)})</span></div>`).join('')}</div>` : '';
+  }).join('');
+  const otros = rels.filter(r => !usados.has(r.rowId));
+  if (otros.length) relHtml += `<div><b>Otros familiares</b>${otros.map(r => `<div>${enlace(r.otroId)} <span style="color:var(--text-muted);">(${escV28(r.etiqueta)})</span></div>`).join('')}</div>`;
+  if (!relHtml) relHtml = '<div style="color:var(--text-muted);">Sin parentescos registrados</div>';
+
+  const dir = [p.street, p.apartment, p.city, p.state, p.zip].filter(Boolean).join(', ');
+  const dato = (t, v) => v ? `<div class="perfilDato"><span>${t}:</span> ${escV28(v)}</div>` : '';
+  const emerg = [p.emergency_contact_name, p.emergency_contact_phone, p.emergency_contact_relationship].filter(Boolean).join(' · ');
+  const motivo = inact ? [p.estado_motivo, p.estado_detalle].filter(Boolean).join(' — ') : '';
+
+  cont.innerHTML = `
+    <div class="perfilBarra">
+      ${perfilPila.length > 1 ? '<button class="btnSecundario" onclick="perfilVolver()">‹ Volver</button>' : '<span></span>'}
+      <span>
+        ${puede('gestionarMiembros') ? `<button class="btnSecundario" onclick="editarDesdePerfil('${id}')">Editar</button>` : ''}
+        <button class="btnSecundario" onclick="document.getElementById('modalPerfil').classList.remove('abierto')">Cerrar</button>
+      </span>
+    </div>
+    <h3 style="margin-bottom:6px;">${escV28(nombreMostrar(p))}</h3>
+    <span class="badge badge-estado-${inact ? 'Inactivo' : 'Activo'}">${inact ? 'Inactivo' : 'Activo'}</span>
+    ${motivo ? `<div class="perfilDato"><span>Motivo:</span> ${escV28(motivo)}</div>` : ''}
+    ${inact && puede('administrarFamilias') ? `<div style="margin-top:8px;"><button class="btnAccion" onclick="reactivarMiembro('${id}')">Reactivar miembro</button></div>` : ''}
+    <div class="perfilSeccion">Familias</div>${fams}
+    <div class="perfilSeccion">Parentescos</div>${relHtml}
+    <div class="perfilSeccion">Información</div>
+    ${dato('Nombre completo', p.nombre_completo)}${dato('Apodo', p.apodo)}${dato('Nacimiento', p.fecha_nacimiento)}${dato('Teléfono', p.telefono)}${dato('Correo', p.correo)}${dato('Dirección', dir)}${dato('Contacto de emergencia', emerg)}${dato('Notas', p.notas)}`;
+  document.getElementById('modalPerfil').classList.add('abierto');
+}
+
+function perfilVolver() {
+  perfilPila.pop();
+  const anterior = perfilPila.pop();
+  if (anterior) abrirPerfil(anterior);
+}
+
+function editarDesdePerfil(id) {
+  document.getElementById('modalPerfil').classList.remove('abierto');
+  abrirFormPersona(id);
+}
+
+async function reactivarMiembro(id) {
+  if (!puede('administrarFamilias')) return;
+  if (!confirm('¿Reactivar a este miembro?')) return;
+  const u = await sb.auth.getUser();
+  const r = await sbCall(sb.from('personas').update({ estado_miembro: 'Activo', estado_motivo: null, estado_detalle: null, estado_cambiado_en: new Date().toISOString(), estado_cambiado_por: u?.data?.user?.id || null }).eq('id', id));
+  if (r.error) { alert('Error: ' + r.error.message); return; }
+  await cargarDirectorio();
+  abrirPerfil(id);
 }
 
 async function archivarPersonaActual() {
