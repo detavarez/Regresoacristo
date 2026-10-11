@@ -79,7 +79,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <div id="loginBox" style="display:none">
   <div class="logo-i" style="margin:0 auto;width:56px;height:56px;font-size:28px">✝</div>
   <h2>MobileCash</h2>
-  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M005</div>
+  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M006</div>
   <div class="form-card">
     <div class="fgrp"><label>Correo</label><input type="email" id="lgEmail" autocomplete="username" inputmode="email"></div>
     <div class="fgrp"><label>Contraseña</label><input type="password" id="lgPass" autocomplete="current-password"></div>
@@ -90,7 +90,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 
 <div id="app" style="display:none">
 <div class="topbar">
-  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M005 · <span id="quien"></span></div></div></div>
+  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M006 · <span id="quien"></span></div></div></div>
   <div style="display:flex;gap:8px;align-items:center"><span id="dot" style="width:8px;height:8px;border-radius:50%;background:#3DAA6E;display:inline-block"></span><button class="sbtn" id="btnInstalar" style="display:none" onclick="instalarApp()">📲</button><button class="sbtn" onclick="cargar(true)">↻</button><button class="sbtn" onclick="salir()">Salir</button></div>
 </div>
 <div id="toast" class="toast"></div>
@@ -152,7 +152,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 
 <script>
 const METODOS_ING = ['Efectivo','Cheque'];
-const METODOS_GASTO = ['Efectivo','Cheque','Tarjeta','Electrónico'];
+const METODOS_GASTO = ['Tarjeta de banco','Tarjeta de CashApp','Electrónico','Efectivo','Cheque'];
 const CATEGORIAS_BASE = ['Servicios','Mantenimiento','Suministros','Alimentos','Transporte','Otros'];
 let METODOS = METODOS_ING;
 const OFRENDAS = ['Ofrenda General','Misiones','Construcción','Especial','Bebés y Niños','Jóvenes'];
