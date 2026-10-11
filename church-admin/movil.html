@@ -79,7 +79,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <div id="loginBox" style="display:none">
   <div class="logo-i" style="margin:0 auto;width:56px;height:56px;font-size:28px">✝</div>
   <h2>MobileCash</h2>
-  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M003</div>
+  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M004</div>
   <div class="form-card">
     <div class="fgrp"><label>Correo</label><input type="email" id="lgEmail" autocomplete="username" inputmode="email"></div>
     <div class="fgrp"><label>Contraseña</label><input type="password" id="lgPass" autocomplete="current-password"></div>
@@ -90,20 +90,21 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 
 <div id="app" style="display:none">
 <div class="topbar">
-  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M003 · <span id="quien"></span></div></div></div>
+  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M004 · <span id="quien"></span></div></div></div>
   <div style="display:flex;gap:8px;align-items:center"><span id="dot" style="width:8px;height:8px;border-radius:50%;background:#3DAA6E;display:inline-block"></span><button class="sbtn" id="btnInstalar" style="display:none" onclick="instalarApp()">📲</button><button class="sbtn" onclick="cargar(true)">↻</button><button class="sbtn" onclick="salir()">Salir</button></div>
 </div>
 <div id="toast" class="toast"></div>
 
 <div id="pg-inicio" class="page active">
   <div class="pg-title">Bienvenido 👋</div>
-  <div class="pg-sub">Registra diezmos, ofrendas y donaciones</div>
+  <div class="pg-sub">Registra diezmos, ofrendas, donaciones y gastos</div>
   <div class="stat-row" id="homeStats"></div>
   <div class="pg-sub" style="margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:600">Acceso rápido</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
     <button class="type-btn" onclick="irRegistrar('Diezmo')"><div class="ti">🙏</div><div class="tt">Diezmo</div></button>
     <button class="type-btn" onclick="irRegistrar('Ofrenda')"><div class="ti">🕊️</div><div class="tt">Ofrenda</div></button>
     <button class="type-btn" onclick="irRegistrar('Donación')"><div class="ti">💝</div><div class="tt">Donación</div></button>
+    <button class="type-btn" id="tileGasto" onclick="irRegistrar('Gasto')"><div class="ti">🧾</div><div class="tt">Gasto</div></button>
     <button class="type-btn" onclick="mostrar('pendientes')"><div class="ti">⏳</div><div class="tt">Pendientes</div><div style="font-size:10px;color:var(--muted)" id="homePend">0 en espera</div></button>
   </div>
 </div>
@@ -115,19 +116,24 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     <button class="type-btn sel" id="tb-Diezmo" onclick="setTipo('Diezmo')"><div class="ti">🙏</div><div class="tt">Diezmo</div></button>
     <button class="type-btn" id="tb-Ofrenda" onclick="setTipo('Ofrenda')"><div class="ti">🕊️</div><div class="tt">Ofrenda</div></button>
     <button class="type-btn" id="tb-Donación" onclick="setTipo('Donación')"><div class="ti">💝</div><div class="tt">Donación</div></button>
+    <button class="type-btn" id="tb-Gasto" onclick="setTipo('Gasto')"><div class="ti">🧾</div><div class="tt">Gasto</div></button>
   </div>
   <div class="form-card">
     <h3 id="frmTitulo">🙏 Registro de Diezmo</h3>
     <div class="info-card" id="frmAnon" style="display:none"><div class="ix">Las ofrendas son anónimas. No se registra ningún nombre.</div></div>
+    <div class="fgrp" id="gConcepto" style="display:none"><label>Concepto del gasto</label><input type="text" id="fConcepto" placeholder="Ej. Compra de agua para el servicio" autocomplete="off"></div>
+    <div class="fgrp" id="gCategoria" style="display:none"><label>Categoría</label><select id="fCategoria"></select></div>
+    <div class="fgrp" id="gProveedor" style="display:none"><label>Pagado a (opcional)</label><input type="text" id="fProveedor" list="dlProveedores" placeholder="Tienda o proveedor" autocomplete="off"><datalist id="dlProveedores"></datalist></div>
     <div class="fgrp" id="gNombre"><label id="lNombre">Nombre del miembro</label><input type="text" id="fNombre" list="dlPersonas" placeholder="Nombre completo" autocomplete="off"><datalist id="dlPersonas"></datalist></div>
     <div class="fgrp"><label>Monto</label><div class="amt"><span class="pfx">$</span><input type="number" id="fMonto" placeholder="0.00" min="0" step="0.01" inputmode="decimal"></div></div>
-    <div class="fgrp" id="gSobre"><label>No. de sobre (opcional)</label><input type="text" id="fSobre" placeholder="S-000"></div>
+    <div class="fgrp" id="gSobre"><label>No. de sobre (se llena solo al elegir el miembro)</label><input type="text" id="fSobre" placeholder="101" inputmode="numeric"></div>
     <div class="fgrp" id="gSub"><label id="lSub">Tipo</label><select id="fSub"></select></div>
     <div class="fgrp" id="gProyecto"><label>Proyecto (opcional)</label><input type="text" id="fProyecto" placeholder="Ej. Misión Norte"></div>
     <div class="fgrp" id="gServicio"><label>Servicio</label><select id="fServicio" disabled></select></div>
     <div class="fgrp"><label>Método de pago</label><div class="chips" id="chips"></div></div>
     <div class="fgrp"><label>Fecha</label><input type="date" id="fFecha"></div>
-    <div class="fgrp" id="gRef"><label>Referencia / # cheque / ID</label><input type="text" id="fRef" placeholder="CHQ-1234"></div>
+    <div class="fgrp" id="gRef"><label id="lRef">Referencia / # cheque / ID</label><input type="text" id="fRef" placeholder="CHQ-1234"></div>
+    <div class="fgrp" id="gFoto" style="display:none"><label>Foto del recibo (opcional)</label><input type="file" id="fFoto" accept="image/*" capture="environment" onchange="$('fotoOk').textContent = this.files[0] ? 'Foto lista ✓' : ''"><div id="fotoOk" style="font-size:12px;color:#5dd49a"></div></div>
     <button class="submit" id="btnEnviar" onclick="enviar()">✝ Enviar para aprobación</button>
   </div>
 </div>
@@ -145,7 +151,10 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 </div>
 
 <script>
-const METODOS = ['Efectivo','Cheque'];
+const METODOS_ING = ['Efectivo','Cheque'];
+const METODOS_GASTO = ['Efectivo','Cheque','Tarjeta','Electrónico'];
+const CATEGORIAS_BASE = ['Servicios','Mantenimiento','Suministros','Alimentos','Transporte','Otros'];
+let METODOS = METODOS_ING;
 const OFRENDAS = ['Ofrenda General','Misiones','Construcción','Especial','Bebés y Niños','Jóvenes'];
 const DONACIONES = ['Fondo General','Fondo de Misiones','Construcción','Educación','Ayuda Social'];
 const SERVICIOS_BASE = ['Domingo AM','Domingo PM','Miércoles','Especial'];
@@ -178,7 +187,19 @@ function servicioAuto() {
   const n = servicioDelDia(new Date(f + 'T12:00:00').getDay());
   if (n) $('fServicio').value = n;
 }
-$('fFecha').addEventListener('change', servicioAuto);
+$('fFecha').addEventListener('change', () => { if (tipo !== 'Gasto') servicioAuto(); });
+$('fNombre').addEventListener('input', () => {
+  if (tipo !== 'Diezmo') return;
+  const k = norm($('fNombre').value);
+  const m = personas.filter(p => norm(p.nombre) === k);
+  if (m.length === 1 && m[0].sobre) $('fSobre').value = m[0].sobre;
+});
+$('fSobre').addEventListener('input', () => {
+  if (tipo !== 'Diezmo') return;
+  const v = $('fSobre').value.trim();
+  const m = personas.filter(p => p.sobre && p.sobre === v);
+  if (m.length === 1) $('fNombre').value = m[0].nombre;
+});
 
 function mostrar(p, desdeHistorial) {
   paginaActual = p;
@@ -203,29 +224,85 @@ function setMetodo(m) { metodo = m; chips(); }
 
 function setTipo(t) {
   tipo = t;
-  ['Diezmo', 'Ofrenda', 'Donación'].forEach(x => $('tb-' + x).classList.toggle('sel', x === t));
-  const ico = { Diezmo: '🙏', Ofrenda: '🕊️', 'Donación': '💝' }[t];
+  const g = t === 'Gasto';
+  ['Diezmo', 'Ofrenda', 'Donación', 'Gasto'].forEach(x => $('tb-' + x).classList.toggle('sel', x === t));
+  const ico = { Diezmo: '🙏', Ofrenda: '🕊️', 'Donación': '💝', Gasto: '🧾' }[t];
   $('frmTitulo').textContent = `${ico} Registro de ${t}`;
+  METODOS = g ? METODOS_GASTO : METODOS_ING;
+  if (!METODOS.includes(metodo)) metodo = 'Efectivo';
+  chips();
+  $('gConcepto').style.display = g ? '' : 'none';
+  $('gCategoria').style.display = g ? '' : 'none';
+  $('gProveedor').style.display = g ? '' : 'none';
+  $('gFoto').style.display = g ? '' : 'none';
+  $('lRef').textContent = g ? 'Factura / # cheque / referencia' : 'Referencia / # cheque / ID';
+  $('btnEnviar').textContent = g ? '🧾 Enviar gasto para aprobación' : '✝ Enviar para aprobación';
+  if ($('fFecha').value) $('fFecha').value = g ? hoy() : fechaServicio(hoy());
+  if (!g) servicioAuto();
   $('frmAnon').style.display = t === 'Ofrenda' ? '' : 'none';
-  $('gNombre').style.display = t === 'Ofrenda' ? 'none' : '';
+  $('gNombre').style.display = (t === 'Ofrenda' || g) ? 'none' : '';
   $('lNombre').textContent = t === 'Diezmo' ? 'Nombre del miembro' : 'Nombre del donante';
   $('gSobre').style.display = t === 'Diezmo' ? '' : 'none';
-  $('gServicio').style.display = t === 'Donación' ? 'none' : '';
+  $('gServicio').style.display = (t === 'Donación' || g) ? 'none' : '';
   $('gProyecto').style.display = t === 'Donación' ? '' : 'none';
   $('gRef').style.display = t === 'Ofrenda' ? 'none' : '';
-  $('gSub').style.display = t === 'Diezmo' ? 'none' : '';
+  $('gSub').style.display = (t === 'Diezmo' || g) ? 'none' : '';
   if (t === 'Ofrenda') { $('lSub').textContent = 'Tipo de ofrenda'; $('fSub').innerHTML = OFRENDAS.map(x => `<option>${x}</option>`).join(''); }
   if (t === 'Donación') { $('lSub').textContent = 'Propósito'; $('fSub').innerHTML = DONACIONES.map(x => `<option>${x}</option>`).join(''); }
 }
 function irRegistrar(t) { setTipo(t); mostrar('registrar'); }
+
+async function comprimirFoto(file) {
+  const url = URL.createObjectURL(file);
+  const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
+  const k = Math.min(1, 1280 / Math.max(img.width, img.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  URL.revokeObjectURL(url);
+  return new Promise(r => c.toBlob(r, 'image/jpeg', 0.72));
+}
+
+async function enviarGasto(monto, fecha) {
+  const concepto = $('fConcepto').value.trim();
+  if (!concepto) { toast('Escribe el concepto del gasto.'); return; }
+  const b = $('btnEnviar'); b.disabled = true;
+  let ruta = null;
+  const f = $('fFoto').files[0];
+  if (f) {
+    try {
+      const blob = await comprimirFoto(f);
+      ruta = getSesion().usuario.id + '/' + Date.now() + '.jpg';
+      const up = await sb.storage.from('comprobantes').upload(ruta, blob, { contentType: 'image/jpeg' });
+      if (up.error) throw up.error;
+    } catch (e) {
+      b.disabled = false;
+      if (!confirm('No se pudo subir la foto (' + (e.message || 'error') + '). ¿Enviar el gasto sin foto?')) return;
+      ruta = null; b.disabled = true;
+    }
+  }
+  const fila = {
+    tipo: 'Gasto', nombre: concepto, descripcion: concepto, categoria: $('fCategoria').value || null,
+    proveedor: $('fProveedor').value.trim() || null, monto, metodo, fecha,
+    referencia: $('fRef').value.trim() || null, comprobante: ruta,
+  };
+  const { error } = await sbCall(sb.from('registros_movil').insert(fila));
+  b.disabled = false;
+  if (error) { toast('No se pudo enviar: ' + error.message); return; }
+  ['fConcepto', 'fProveedor', 'fMonto', 'fRef'].forEach(i => $(i).value = '');
+  $('fFoto').value = ''; $('fotoOk').textContent = '';
+  $('ov').classList.add('show');
+  cargar();
+}
 
 async function enviar() {
   const monto = Math.round(Number($('fMonto').value) * 100) / 100;
   const nombre = $('fNombre').value.trim();
   const fecha = $('fFecha').value;
   if (!(monto > 0)) { toast('Escribe un monto válido.'); return; }
-  if (tipo !== 'Ofrenda' && !nombre) { toast('Escribe el nombre.'); return; }
   if (!fecha) { toast('Elige la fecha.'); return; }
+  if (tipo === 'Gasto') return enviarGasto(monto, fecha);
+  if (tipo !== 'Ofrenda' && !nombre) { toast('Escribe el nombre.'); return; }
   let personaId = null;
   if (tipo !== 'Ofrenda') {
     const k = norm(nombre);
@@ -260,7 +337,7 @@ async function cancelar(id) {
 
 function item(r, conCancelar) {
   const cls = r.estado === 'Aprobado' ? 'bs' : r.estado === 'Rechazado' ? 'bd' : 'bw';
-  const det = [r.nombre, r.subtipo, r.servicio, r.metodo, r.fecha, r.no_sobre ? 'Sobre ' + r.no_sobre : '', r.referencia, r.proyecto].filter(Boolean).map(esc).join(' · ');
+  const det = [r.nombre, r.subtipo, r.categoria, r.proveedor, r.servicio, r.metodo, r.fecha, r.no_sobre ? 'Sobre ' + r.no_sobre : '', r.referencia, r.proyecto, r.comprobante ? '📎 recibo' : ''].filter(Boolean).map(esc).join(' · ');
   return `<div class="pend-item"><div class="pi-h"><div><div class="pi-type">${r.tipo} <span class="badge ${cls}">${r.estado}</span></div></div><div class="pi-amt">${money(r.monto)}</div></div><div class="pi-det">${det}</div>${conCancelar ? `<button class="cancel-btn" onclick="cancelar('${r.id}')">✕ Cancelar</button>` : ''}</div>`;
 }
 
@@ -269,8 +346,14 @@ function pintar() {
   const hist = registros.filter(r => r.estado !== 'Pendiente');
   const mes = hoy().slice(0, 7);
   const delMes = registros.filter(r => r.estado !== 'Rechazado' && String(r.fecha).startsWith(mes));
+  const vivos = registros.filter(r => r.estado !== 'Rechazado');
+  const fServ = fechaServicio(hoy());
+  const ingServ = vivos.filter(r => r.tipo !== 'Gasto' && r.fecha === fServ).reduce((s, r) => s + Number(r.monto), 0);
+  const gasHoy = vivos.filter(r => r.tipo === 'Gasto' && r.fecha === hoy()).reduce((s, r) => s + Number(r.monto), 0);
   $('homeStats').innerHTML = `<div class="stat-m"><div class="sl">Pendientes</div><div class="sv">${pend.length}</div></div>
-    <div class="stat-m"><div class="sl">Este mes</div><div class="sv">${money(delMes.reduce((s, r) => s + Number(r.monto), 0))}</div></div>`;
+    <div class="stat-m"><div class="sl">Este mes</div><div class="sv">${money(delMes.filter(r => r.tipo !== 'Gasto').reduce((s, r) => s + Number(r.monto), 0))}</div></div>
+    <div class="stat-m"><div class="sl">Ingresos del servicio</div><div class="sv">${money(ingServ)}</div></div>
+    <div class="stat-m"><div class="sl">Gastos de hoy</div><div class="sv">${money(gasHoy)}</div></div>`;
   $('homePend').textContent = pend.length + ' en espera';
   const nb = $('pendBadge'); nb.textContent = pend.length; nb.style.display = pend.length ? '' : 'none';
   $('listaPend').innerHTML = pend.length ? pend.map(r => item(r, true)).join('') : '<div class="empty">No tienes registros pendientes.</div>';
@@ -292,8 +375,13 @@ async function cargar(avisar) {
 }
 
 async function cargarListas() {
-  const { data } = await sbCall(sb.from('personas').select('id, nombre, apellido, nombre_completo').eq('archivado', false).range(0, 4999));
-  personas = (data || []).map(p => ({ id: p.id, nombre: p.nombre_completo || `${p.nombre || ''} ${p.apellido || ''}`.trim() })).filter(p => p.nombre);
+  const { data } = await sbCall(sb.from('personas').select('id, nombre, apellido, nombre_completo, sobre_actual').eq('archivado', false).range(0, 4999));
+  personas = (data || []).map(p => ({ id: p.id, nombre: p.nombre_completo || `${p.nombre || ''} ${p.apellido || ''}`.trim(), sobre: p.sobre_actual ? String(p.sobre_actual) : '' })).filter(p => p.nombre);
+  const rc = await sbCall(sb.from('cuentas').select('nombre').eq('tipo', 'Gasto').order('nombre'));
+  const cats = (!rc.error && rc.data && rc.data.length) ? rc.data.map(c => c.nombre) : CATEGORIAS_BASE;
+  $('fCategoria').innerHTML = cats.map(x => `<option>${esc(x)}</option>`).join('');
+  const ro = await sbCall(sb.from('organizaciones').select('nombre').eq('archivado', false).order('nombre'));
+  $('dlProveedores').innerHTML = ((!ro.error && ro.data) || []).map(o => `<option value="${esc(o.nombre)}">`).join('');
   $('dlPersonas').innerHTML = personas.map(p => `<option value="${esc(p.nombre)}">`).join('');
   let serv = SERVICIOS_BASE;
   const r = await sbCall(sb.from('tipos_servicio').select('nombre, activo').order('nombre'));
@@ -303,11 +391,21 @@ async function cargarListas() {
   $('fFecha').value = fechaServicio(hoy()); servicioAuto();
 }
 
+function tieneAccesoMovil() {
+  const s = getSesion();
+  return !!(s && (s.rol === 'Administrador' || (s.permisos && (s.permisos.todo || s.permisos.usarMovil))));
+}
+function puedeGastoMovil() {
+  const s = getSesion();
+  return !!(s && (s.rol === 'Administrador' || (s.permisos && (s.permisos.todo || s.permisos.gastosMovil))));
+}
+
 async function iniciarApp() {
   $('loginBox').style.display = 'none';
   $('app').style.display = '';
   $('quien').textContent = getSesion().usuario.nombre || getSesion().usuario.email || '';
   $('fFecha').value = hoy();
+  if (!puedeGastoMovil()) { $('tb-Gasto').style.display = 'none'; $('tileGasto').style.display = 'none'; }
   chips(); setTipo('Diezmo');
   history.replaceState({ p: 'inicio' }, '');
   await Promise.all([cargarListas(), cargar()]);
@@ -320,6 +418,7 @@ async function entrar() {
   const r = await iniciarSesion($('lgEmail').value.trim(), $('lgPass').value);
   b.disabled = false;
   if (!r.ok) { $('loginMsg').textContent = r.mensaje; return; }
+  if (!tieneAccesoMovil()) { await cerrarSesion(); $('loginMsg').textContent = 'No tienes autorización para usar MobileCash. Pídela al administrador.'; return; }
   iniciarApp();
 }
 async function salir() { await cerrarSesion(); location.reload(); }
@@ -338,7 +437,8 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catc
   const { data } = await sb.auth.getSession();
   if (data && data.session) {
     const r = await cargarSesion();
-    if (r.ok) { iniciarApp(); return; }
+    if (r.ok && tieneAccesoMovil()) { iniciarApp(); return; }
+    if (r.ok) { await cerrarSesion(); $('loginMsg').textContent = 'No tienes autorización para usar MobileCash. Pídela al administrador.'; }
   }
   $('loginBox').style.display = '';
 })();

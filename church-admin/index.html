@@ -1953,7 +1953,8 @@
       <input type="hidden" id="rmId">
       <div class="formGrid">
         <div class="full"><label>Registro</label><div id="rmResumen" style="font-weight:600; color:var(--heading);"></div></div>
-        <div class="full"><label>Detalle</label><div id="rmDetalle" style="color:var(--text-muted);"></div></div>
+        <div class="full"><label>Detalle</label><div id="rmDetalle" style="color:var(--text-muted);"></div>
+          <button type="button" class="btnSecundario" id="rmRecibo" style="display:none; margin-top:6px;" onclick="rmVerRecibo()">Ver foto del recibo</button></div>
         <div><label for="rmFecha">Fecha *</label><input type="date" id="rmFecha" required></div>
         <div class="full" id="rmPersonaWrap"><label for="rmPersona">Miembro *</label><select id="rmPersona"></select>
           <div id="rmPersonaAyuda" style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;"></div></div>
@@ -2493,8 +2494,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-047';
-document.getElementById('versionTopbar').textContent = 'Ver-047';
+const APP_VERSION = 'church-admin Ver-048';
+document.getElementById('versionTopbar').textContent = 'Ver-048';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -3715,9 +3716,12 @@ function rmAbrir(id) {
   if (!x) return;
   document.getElementById('rmId').value = x.id;
   document.getElementById('rmResumen').textContent = `${x.tipo} · ${formatoMoneda(x.monto)} · ${x.nombre || 'Anónima'}`;
-  document.getElementById('rmDetalle').textContent = [x.subtipo, x.metodo, x.servicio, x.no_sobre ? 'Sobre ' + x.no_sobre : '', x.referencia, x.proyecto].filter(Boolean).join(' · ') || '—';
+  document.getElementById('rmDetalle').textContent = [x.subtipo, x.categoria, x.proveedor ? 'Pagado a ' + x.proveedor : '', x.metodo, x.servicio, x.no_sobre ? 'Sobre ' + x.no_sobre : '', x.referencia, x.proyecto].filter(Boolean).join(' · ') || '—';
   document.getElementById('rmFecha').value = x.fecha;
-  const conPersona = x.tipo !== 'Ofrenda';
+  const bRec = document.getElementById('rmRecibo');
+  bRec.style.display = x.comprobante ? '' : 'none';
+  bRec.dataset.path = x.comprobante || '';
+  const conPersona = x.tipo !== 'Ofrenda' && x.tipo !== 'Gasto';
   document.getElementById('rmPersonaWrap').style.display = conPersona ? '' : 'none';
   document.getElementById('rmPersona').required = conPersona;
   if (conPersona) {
@@ -3729,6 +3733,14 @@ function rmAbrir(id) {
 }
 
 function rmCerrar() { document.getElementById('modalRegMovil').classList.remove('abierto'); }
+
+async function rmVerRecibo() {
+  const path = document.getElementById('rmRecibo').dataset.path;
+  if (!path) return;
+  const { data, error } = await sb.storage.from('comprobantes').createSignedUrl(path, 300);
+  if (error || !data) { alert('No se pudo abrir el recibo: ' + (error ? error.message : '')); return; }
+  window.open(data.signedUrl, '_blank');
+}
 
 async function rmReclamar(id, estadoNuevo) {
   const sesion = getSesion();
@@ -3746,10 +3758,11 @@ async function rmAprobar(evt) {
   const id = document.getElementById('rmId').value;
   const x = cacheRegMovil.find(r => r.id === id);
   if (!x) return false;
-  const personaId = x.tipo === 'Ofrenda' ? null : (document.getElementById('rmPersona').value || null);
+  const esGasto = x.tipo === 'Gasto';
+  const personaId = (x.tipo === 'Ofrenda' || esGasto) ? null : (document.getElementById('rmPersona').value || null);
   const fondoId = document.getElementById('rmFondo').value || null;
   const fecha = document.getElementById('rmFecha').value;
-  if (x.tipo !== 'Ofrenda' && !personaId) { alert('Selecciona un miembro.'); return false; }
+  if (x.tipo !== 'Ofrenda' && !esGasto && !personaId) { alert('Selecciona un miembro.'); return false; }
   const btn = evt.target.querySelector('button[type="submit"]');
   btn.disabled = true;
   try {
@@ -3762,21 +3775,33 @@ async function rmAprobar(evt) {
     const sub = x.subtipo || '';
     const referencia = x.referencia || (x.no_sobre ? 'Sobre ' + x.no_sobre : null);
     const nombre = personaId ? nombrePersonaPorId(personaId) : (x.nombre || '');
-    let descripcion, categoria, origen, cuentaCr;
-    if (x.tipo === 'Diezmo') { descripcion = `Diezmo — ${nombre}`; categoria = 'Diezmos'; origen = 'Diezmo'; cuentaCr = cuentaIdPorCodigo('4001'); }
+    let descripcion, categoria, origen, cuentaCr, cuentaDr = null, orgId = null;
+    if (esGasto) {
+      if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+      if (cacheOrganizacionesFinanzas.length === 0) { const r = await sbCall(sb.from('organizaciones').select('*').eq('archivado', false)); if (r.data) cacheOrganizacionesFinanzas = r.data; }
+      categoria = x.categoria || 'Otros';
+      const org = cacheOrganizacionesFinanzas.find(o => normNombre(o.nombre) === normNombre(x.proveedor));
+      orgId = org ? org.id : null;
+      descripcion = (x.descripcion || x.nombre || 'Gasto') + (x.proveedor && !org ? ' — ' + x.proveedor : '');
+      origen = 'Gasto';
+      const cg = cacheCuentas.find(c => c.tipo === 'Gasto' && c.nombre === categoria);
+      cuentaDr = cg ? cg.id : null;
+    }
+    else if (x.tipo === 'Diezmo') { descripcion = `Diezmo — ${nombre}`; categoria = 'Diezmos'; origen = 'Diezmo'; cuentaCr = cuentaIdPorCodigo('4001'); }
     else if (x.tipo === 'Ofrenda') { descripcion = `Ofrenda — ${sub}`; categoria = sub; origen = 'Ofrenda'; cuentaCr = cuentaIdPorCodigo(OFRENDA_TIPO_CUENTA[sub] || '4002'); }
     else { descripcion = `Donación — ${nombre}`; categoria = sub; origen = 'Donación'; cuentaCr = cuentaIdPorCodigo('4003'); }
 
     const { data: trans, error: errTrans } = await sbCall(sb.from('transacciones').insert({
-      fecha, descripcion, categoria, tipo: 'Ingreso', tipo_origen: origen, metodo: x.metodo, monto,
-      referencia, estado: 'Completado', fondo_id: fondoId, cuenta_cr: cuentaCr, solo_fondo: false,
+      fecha, descripcion, categoria, tipo: esGasto ? 'Egreso' : 'Ingreso', tipo_origen: origen, metodo: x.metodo, monto,
+      referencia, estado: 'Completado', fondo_id: fondoId, ...(esGasto ? { cuenta_dr: cuentaDr } : { cuenta_cr: cuentaCr }), solo_fondo: false,
       creado_por: sesion.usuario?.id || null,
     }).select().single());
     if (errTrans) { await rmDevolver(id); alert('Error al crear la transacción: ' + errTrans.message); return false; }
 
     const base = { fecha, monto, metodo: x.metodo, estado: 'Completado', transaccion_id: trans.id, creado_por: sesion.usuario?.id || null };
     let error;
-    if (x.tipo === 'Diezmo') ({ error } = await sbCall(sb.from('diezmos').insert({ ...base, persona_id: personaId, referencia })));
+    if (esGasto) ({ error } = await sbCall(sb.from('gastos').insert({ ...base, descripcion, categoria, organizacion_id: orgId })));
+    else if (x.tipo === 'Diezmo') ({ error } = await sbCall(sb.from('diezmos').insert({ ...base, persona_id: personaId, referencia })));
     else if (x.tipo === 'Ofrenda') ({ error } = await sbCall(sb.from('ofrendas').insert({ ...base, tipo: sub })));
     else ({ error } = await sbCall(sb.from('donaciones').insert({ ...base, persona_id: personaId, referencia })));
     if (error) {
@@ -3936,6 +3961,8 @@ const PERM_KEYS = [
   { grupo: 'Finanzas', key: 'importarDatos', label: 'Importar datos' },
   { grupo: 'Finanzas', key: 'exportarDatos', label: 'Exportar datos (Excel, PDF, JSON)' },
   { grupo: 'Finanzas', key: 'enviarEmail', label: 'Enviar reportes por correo' },
+  { grupo: 'Finanzas', key: 'usarMovil', label: 'Usar MobileCash (registrar diezmos, ofrendas y donaciones desde el celular)' },
+  { grupo: 'Finanzas', key: 'gastosMovil', label: 'Registrar gastos desde MobileCash' },
   { grupo: 'Miembros y familias', key: 'verMiembros', label: 'Ver miembros' },
   { grupo: 'Miembros y familias', key: 'crearMiembros', label: 'Crear miembros' },
   { grupo: 'Miembros y familias', key: 'editarMiembros', label: 'Editar miembros' },
@@ -3962,9 +3989,9 @@ const _todos = Object.fromEntries(PERM_KEYS.map(p => [p.key, true]));
 const PERM_POR_ROL = {
   Administrador: _todos,
   'Administrador delegado': { ..._todos, gestionarUsuarios: false },
-  Tesorero: { verReportes: true, agregarTrans: true, editarTrans: true, eliminarTrans: false, gestionarMiembros: true, gestionarUsuarios: false, gestionarConfig: false, verAuditoria: true, importarDatos: true, exportarDatos: true, enviarEmail: true, cerrarPeriodo: true, verMiembros: true, imprimirMiembros: true, verFamilias: true },
+  Tesorero: { verReportes: true, agregarTrans: true, editarTrans: true, eliminarTrans: false, gestionarMiembros: true, gestionarUsuarios: false, gestionarConfig: false, verAuditoria: true, importarDatos: true, exportarDatos: true, enviarEmail: true, cerrarPeriodo: true, verMiembros: true, imprimirMiembros: true, verFamilias: true, usarMovil: true, gastosMovil: true },
   'Secretaría': { verMiembros: true, crearMiembros: true, editarMiembros: true, archivarMiembros: true, imprimirMiembros: true, verFamilias: true, exportarDatos: true },
-  Colaborador: { agregarTrans: true, verMiembros: true },
+  Colaborador: { agregarTrans: true, verMiembros: true, usarMovil: true },
   Pastor: { verReportes: true, exportarDatos: true, verMiembros: true, verFamilias: true, imprimirMiembros: true },
 };
 function puedeMiembro(k) { return puede('gestionarMiembros') || puede(k); }
