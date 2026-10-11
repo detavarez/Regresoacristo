@@ -2494,8 +2494,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-048';
-document.getElementById('versionTopbar').textContent = 'Ver-048';
+const APP_VERSION = 'church-admin Ver-049';
+document.getElementById('versionTopbar').textContent = 'Ver-049';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -3961,8 +3961,7 @@ const PERM_KEYS = [
   { grupo: 'Finanzas', key: 'importarDatos', label: 'Importar datos' },
   { grupo: 'Finanzas', key: 'exportarDatos', label: 'Exportar datos (Excel, PDF, JSON)' },
   { grupo: 'Finanzas', key: 'enviarEmail', label: 'Enviar reportes por correo' },
-  { grupo: 'Finanzas', key: 'usarMovil', label: 'Usar MobileCash (registrar diezmos, ofrendas y donaciones desde el celular)' },
-  { grupo: 'Finanzas', key: 'gastosMovil', label: 'Registrar gastos desde MobileCash' },
+  { grupo: 'Finanzas', key: 'usarMovil', label: 'Usar MobileCash (diezmos, ofrendas, donaciones y gastos desde el celular)' },
   { grupo: 'Miembros y familias', key: 'verMiembros', label: 'Ver miembros' },
   { grupo: 'Miembros y familias', key: 'crearMiembros', label: 'Crear miembros' },
   { grupo: 'Miembros y familias', key: 'editarMiembros', label: 'Editar miembros' },
@@ -3989,7 +3988,7 @@ const _todos = Object.fromEntries(PERM_KEYS.map(p => [p.key, true]));
 const PERM_POR_ROL = {
   Administrador: _todos,
   'Administrador delegado': { ..._todos, gestionarUsuarios: false },
-  Tesorero: { verReportes: true, agregarTrans: true, editarTrans: true, eliminarTrans: false, gestionarMiembros: true, gestionarUsuarios: false, gestionarConfig: false, verAuditoria: true, importarDatos: true, exportarDatos: true, enviarEmail: true, cerrarPeriodo: true, verMiembros: true, imprimirMiembros: true, verFamilias: true, usarMovil: true, gastosMovil: true },
+  Tesorero: { verReportes: true, agregarTrans: true, editarTrans: true, eliminarTrans: false, gestionarMiembros: true, gestionarUsuarios: false, gestionarConfig: false, verAuditoria: true, importarDatos: true, exportarDatos: true, enviarEmail: true, cerrarPeriodo: true, verMiembros: true, imprimirMiembros: true, verFamilias: true, usarMovil: true },
   'Secretaría': { verMiembros: true, crearMiembros: true, editarMiembros: true, archivarMiembros: true, imprimirMiembros: true, verFamilias: true, exportarDatos: true },
   Colaborador: { agregarTrans: true, verMiembros: true, usarMovil: true },
   Pastor: { verReportes: true, exportarDatos: true, verMiembros: true, verFamilias: true, imprimirMiembros: true },
