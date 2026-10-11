@@ -1343,6 +1343,24 @@
           <div id="listaCatalogoMinisterios" style="padding:8px 18px;"></div>
         </div>
 
+        <div class="tablaWrap" style="margin-bottom:20px;">
+          <h3>Métodos de pago de gastos</h3>
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
+            <input type="text" id="nuevoMetodoGasto" placeholder="Nuevo método (ej. Tarjeta de banco)…" style="flex:1;">
+            <button class="btnAccion" onclick="agregarMetodoPago('Gasto')">+ Agregar</button>
+          </div>
+          <div id="listaMetodosGasto" style="padding:8px 18px;"></div>
+        </div>
+
+        <div class="tablaWrap" style="margin-bottom:20px;">
+          <h3>Métodos de pago en MobileCash (diezmos, ofrendas, donaciones)</h3>
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
+            <input type="text" id="nuevoMetodoIngreso" placeholder="Nuevo método…" style="flex:1;">
+            <button class="btnAccion" onclick="agregarMetodoPago('Ingreso')">+ Agregar</button>
+          </div>
+          <div id="listaMetodosIngreso" style="padding:8px 18px;"></div>
+        </div>
+
         <div class="tablaWrap">
           <h3>Tipos de Servicio</h3>
           <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
@@ -2494,8 +2512,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-050';
-document.getElementById('versionTopbar').textContent = 'Ver-050';
+const APP_VERSION = 'church-admin Ver-051';
+document.getElementById('versionTopbar').textContent = 'Ver-051';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -7019,6 +7037,7 @@ async function cargarGastos() {
   if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
 
   cacheGastos = data || [];
+  if (cacheMetodosPago.length === 0) await cargarMetodosPago();
   lfAplicar('gastos');
 }
 
@@ -7071,7 +7090,7 @@ function abrirFormGasto(id) {
   document.getElementById('gsFecha').value = new Date().toISOString().slice(0, 10);
   poblarSelectCategoriaGasto('gsCategoria');
   poblarSelectOrganizacion('gsOrganizacion');
-  poblarSelectMetodo('gsMetodo');
+  poblarSelectMetodoGasto('gsMetodo');
   poblarSelectEstado('gsEstado');
   poblarSelectFondos('gsFondo');
 
@@ -7089,7 +7108,7 @@ function abrirFormGasto(id) {
       document.getElementById('gsDescripcion').value = g.descripcion || '';
       poblarSelectCategoriaGasto('gsCategoria', g.categoria);
       poblarSelectOrganizacion('gsOrganizacion', g.organizacion_id);
-      poblarSelectMetodo('gsMetodo', g.metodo);
+      poblarSelectMetodoGasto('gsMetodo', g.metodo);
       poblarSelectEstado('gsEstado', g.estado);
       document.getElementById('btnEliminarGasto').style.display = 'inline-block';
       restaurarFondoDesdeTransaccion('gsFondo', g.transaccion_id);
@@ -9411,6 +9430,60 @@ async function cargarCatalogos() {
   cacheTiposServicio = tipos || [];
   renderCatalogoMinisterios();
   renderCatalogoTiposServicio();
+  await cargarMetodosPago();
+  renderMetodosPago();
+}
+
+let cacheMetodosPago = [];
+async function cargarMetodosPago() {
+  const { data } = await sbCall(sb.from('metodos_pago').select('*').order('orden', { ascending: true }).order('nombre', { ascending: true }));
+  cacheMetodosPago = data || [];
+}
+function metodosGastoActivos() {
+  const l = cacheMetodosPago.filter(m => m.uso === 'Gasto' && m.activo).map(m => m.nombre);
+  return l.length ? l : METODOS_PAGO;
+}
+function renderMetodosPago() {
+  [['Gasto', 'listaMetodosGasto'], ['Ingreso', 'listaMetodosIngreso']].forEach(([uso, id]) => {
+    const cont = document.getElementById(id);
+    const filas = cacheMetodosPago.filter(m => m.uso === uso);
+    cont.innerHTML = filas.length ? filas.map(m => `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px solid var(--border);">
+        <span class="${m.activo ? '' : 'inactivo'}">${escV28(m.nombre)}</span>
+        <span style="display:flex; gap:6px;">
+          <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="toggleMetodoPago('${m.id}', ${!m.activo})">${m.activo ? 'Activo' : 'Inactivo'}</button>
+          <button class="btnSecundario btnPeligro" style="padding:4px 12px; font-size:0.78rem;" onclick="quitarMetodoPago('${m.id}')">Quitar</button>
+        </span>
+      </div>`).join('') : '<div class="estadoVacio">Sin métodos. Se usará la lista básica.</div>';
+  });
+}
+async function agregarMetodoPago(uso) {
+  const input = document.getElementById(uso === 'Gasto' ? 'nuevoMetodoGasto' : 'nuevoMetodoIngreso');
+  const nombre = input.value.trim();
+  if (!nombre) return;
+  const orden = cacheMetodosPago.filter(m => m.uso === uso).length + 1;
+  const { error } = await sbCall(sb.from('metodos_pago').insert({ nombre, uso, orden, activo: true }));
+  if (error) { alert(/duplicate|unique/i.test(error.message) ? 'Ese método ya existe.' : 'Error al agregar: ' + error.message); return; }
+  input.value = '';
+  await cargarMetodosPago(); renderMetodosPago();
+}
+async function toggleMetodoPago(id, nuevo) {
+  const { error } = await sbCall(sb.from('metodos_pago').update({ activo: nuevo }).eq('id', id));
+  if (error) { alert('Error: ' + error.message); return; }
+  await cargarMetodosPago(); renderMetodosPago();
+}
+async function quitarMetodoPago(id) {
+  if (!confirm('¿Quitar este método de la lista? Los registros anteriores no cambian.')) return;
+  const { error } = await sbCall(sb.from('metodos_pago').delete().eq('id', id));
+  if (error) { alert('Error: ' + error.message); return; }
+  await cargarMetodosPago(); renderMetodosPago();
+}
+function poblarSelectMetodoGasto(selectId, valorActual) {
+  const lista = metodosGastoActivos().slice();
+  if (valorActual && !lista.includes(valorActual)) lista.push(valorActual);
+  const select = document.getElementById(selectId);
+  select.innerHTML = lista.map(m => `<option value="${escV28(m)}">${escV28(m)}</option>`).join('');
+  select.value = valorActual || lista[0];
 }
 
 function renderCatalogoMinisterios() {
