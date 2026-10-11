@@ -2153,21 +2153,50 @@
       <input type="hidden" id="ruUsuarioId">
       <div class="formGrid">
         <div class="full" id="ruNombreUsuario" style="font-weight:600; color: var(--heading);"></div>
-        <div>
-          <label for="ruRol">Rol en Church Admin</label>
-          <select id="ruRol" onchange="ruPintarPermisos(true)">
-            <option value="">Sin acceso</option>
-            <option value="Administrador">Administrador</option>
-            <option value="Tesorero">Tesorero</option>
-            <option value="Colaborador">Colaborador</option>
-            <option value="Pastor">Pastor</option>
-          </select>
+        <div class="full" id="ruCargoInfo" style="font-size:0.85rem; color:var(--text-muted);"></div>
+        <div class="full">
+          <label for="ruPersona">Miembro vinculado</label>
+          <select id="ruPersona"></select>
         </div>
+        <div>
+          <label for="ruRol">Nivel de acceso en Church Admin</label>
+          <select id="ruRol" onchange="ruPintarPermisos(true)"></select>
+        </div>
+        <div>
+          <label style="display:flex; gap:8px; align-items:center; margin-top:26px; font-weight:400;"><input type="checkbox" id="ruActivo"> Cuenta activa en Church Admin</label>
+        </div>
+        <div class="full"><button type="button" class="btnSecundario" onclick="ruPintarPermisos(true)">Restablecer permisos predeterminados</button></div>
         <div class="full"><label>Permisos (marca lo que esta persona puede hacer)</label><div id="ruPermisos" style="display:grid; gap:6px; margin-top:6px;"></div></div>
+        <div class="full" id="ruBloqueClave">
+          <label>Contraseña</label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btnSecundario" onclick="ruResetClave('reset_email')">Enviar enlace por correo</button>
+            <button type="button" class="btnSecundario" onclick="ruResetClave('reset_temporal')">Crear contraseña temporal</button>
+          </div>
+          <div id="ruResultado" style="font-size:0.85rem; margin-top:8px;"></div>
+        </div>
       </div>
       <div class="formAcciones">
         <button type="button" class="btnSecundario" onclick="cerrarModalRolUsuario()">Cancelar</button>
         <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modalOverlay" id="modalNuevaCuenta">
+  <div class="modalCaja">
+    <h3>Nueva cuenta para un miembro</h3>
+    <form onsubmit="return crearCuentaMiembro(event)">
+      <div class="formGrid">
+        <div class="full"><label for="ncPersona">Miembro</label><select id="ncPersona" onchange="ncElegirPersona()"></select></div>
+        <div class="full"><label for="ncCorreo">Correo de la cuenta</label><input type="email" id="ncCorreo" required></div>
+        <div class="full"><label for="ncRol">Nivel de acceso</label><select id="ncRol"></select></div>
+        <div class="full" id="ncResultado" style="font-size:0.9rem;"></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" onclick="document.getElementById('modalNuevaCuenta').classList.remove('abierto')">Cerrar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;" id="ncBtn">Crear cuenta</button>
       </div>
     </form>
   </div>
@@ -2464,8 +2493,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-045';
-document.getElementById('versionTopbar').textContent = 'Ver-045';
+const APP_VERSION = 'church-admin Ver-046';
+document.getElementById('versionTopbar').textContent = 'Ver-046';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -3899,26 +3928,46 @@ async function cfgRespaldo() {
 
 // ── Permisos individuales (Ver-043) ──
 const PERM_KEYS = [
-  { key: 'verReportes', label: 'Ver reportes (Diario, Mayor, P&L, Balance, Conciliación)' },
-  { key: 'agregarTrans', label: 'Agregar transacciones' },
-  { key: 'editarTrans', label: 'Editar transacciones' },
-  { key: 'eliminarTrans', label: 'Eliminar transacciones' },
-  { key: 'gestionarMiembros', label: 'Gestionar miembros y proveedores' },
-  { key: 'gestionarUsuarios', label: 'Gestionar usuarios' },
-  { key: 'gestionarConfig', label: 'Gestionar configuración (catálogos, fondos, bancos, presupuesto)' },
-  { key: 'verAuditoria', label: 'Ver historial de auditoría' },
-  { key: 'importarDatos', label: 'Importar datos' },
-  { key: 'exportarDatos', label: 'Exportar datos (Excel, PDF, JSON)' },
-  { key: 'enviarEmail', label: 'Enviar reportes por correo' },
-  { key: 'cerrarPeriodo', label: 'Cerrar o reabrir periodos contables' },
-  { key: 'administrarFamilias', label: 'Administrar familias, parentescos y reactivar miembros' },
+  { grupo: 'Finanzas', key: 'verReportes', label: 'Ver reportes (Diario, Mayor, P&L, Balance, Conciliación)' },
+  { grupo: 'Finanzas', key: 'agregarTrans', label: 'Agregar transacciones' },
+  { grupo: 'Finanzas', key: 'editarTrans', label: 'Editar transacciones' },
+  { grupo: 'Finanzas', key: 'eliminarTrans', label: 'Eliminar transacciones' },
+  { grupo: 'Finanzas', key: 'cerrarPeriodo', label: 'Cerrar o reabrir periodos contables' },
+  { grupo: 'Finanzas', key: 'importarDatos', label: 'Importar datos' },
+  { grupo: 'Finanzas', key: 'exportarDatos', label: 'Exportar datos (Excel, PDF, JSON)' },
+  { grupo: 'Finanzas', key: 'enviarEmail', label: 'Enviar reportes por correo' },
+  { grupo: 'Miembros y familias', key: 'verMiembros', label: 'Ver miembros' },
+  { grupo: 'Miembros y familias', key: 'crearMiembros', label: 'Crear miembros' },
+  { grupo: 'Miembros y familias', key: 'editarMiembros', label: 'Editar miembros' },
+  { grupo: 'Miembros y familias', key: 'archivarMiembros', label: 'Archivar miembros' },
+  { grupo: 'Miembros y familias', key: 'eliminarMiembros', label: 'Eliminar miembros' },
+  { grupo: 'Miembros y familias', key: 'imprimirMiembros', label: 'Imprimir miembros' },
+  { grupo: 'Miembros y familias', key: 'gestionarMiembros', label: 'Gestionar miembros y proveedores (acceso total a miembros)' },
+  { grupo: 'Miembros y familias', key: 'verFamilias', label: 'Consultar familias y parentescos' },
+  { grupo: 'Miembros y familias', key: 'administrarFamilias', label: 'Administrar familias, parentescos, sobres y reactivar miembros' },
+  { grupo: 'Sistema', key: 'gestionarUsuarios', label: 'Administrar usuarios y permisos' },
+  { grupo: 'Sistema', key: 'gestionarConfig', label: 'Gestionar configuración (catálogos, fondos, bancos, presupuesto)' },
+  { grupo: 'Sistema', key: 'verAuditoria', label: 'Ver historial de auditoría' },
 ];
+const NIVELES = [
+  { n: 1, rol: 'Administrador', nombre: 'Control completo' },
+  { n: 2, rol: 'Administrador delegado', nombre: 'Administración sin usuarios' },
+  { n: 3, rol: 'Tesorero', nombre: 'Tesorería' },
+  { n: 4, rol: 'Secretaría', nombre: 'Secretaría y miembros' },
+  { n: 5, rol: 'Colaborador', nombre: 'Captura de transacciones' },
+  { n: 6, rol: 'Pastor', nombre: 'Solo lectura' },
+];
+function nivelDeRol(rol) { const x = NIVELES.find(v => v.rol === rol); return x ? 'Nivel ' + x.n + ' · ' + x.nombre : rol; }
+const _todos = Object.fromEntries(PERM_KEYS.map(p => [p.key, true]));
 const PERM_POR_ROL = {
-  Administrador: Object.fromEntries(PERM_KEYS.map(p => [p.key, true])),
-  Tesorero: { verReportes: true, agregarTrans: true, editarTrans: true, eliminarTrans: false, gestionarMiembros: true, gestionarUsuarios: false, gestionarConfig: false, verAuditoria: true, importarDatos: true, exportarDatos: true, enviarEmail: true, cerrarPeriodo: true },
-  Colaborador: { agregarTrans: true },
-  Pastor: { verReportes: true, exportarDatos: true },
+  Administrador: _todos,
+  'Administrador delegado': { ..._todos, gestionarUsuarios: false },
+  Tesorero: { verReportes: true, agregarTrans: true, editarTrans: true, eliminarTrans: false, gestionarMiembros: true, gestionarUsuarios: false, gestionarConfig: false, verAuditoria: true, importarDatos: true, exportarDatos: true, enviarEmail: true, cerrarPeriodo: true, verMiembros: true, imprimirMiembros: true, verFamilias: true },
+  'Secretaría': { verMiembros: true, crearMiembros: true, editarMiembros: true, archivarMiembros: true, imprimirMiembros: true, verFamilias: true, exportarDatos: true },
+  Colaborador: { agregarTrans: true, verMiembros: true },
+  Pastor: { verReportes: true, exportarDatos: true, verMiembros: true, verFamilias: true, imprimirMiembros: true },
 };
+function puedeMiembro(k) { return puede('gestionarMiembros') || puede(k); }
 function puede(k) {
   const s = getSesion();
   if (!s || !s.rol) return false;
@@ -3930,8 +3979,12 @@ function ruPintarPermisos(desdeRol) {
   const u = cacheUsuarioApps.find(a => a.usuario_id === document.getElementById('ruUsuarioId').value);
   const guardados = (!desdeRol && u && u.permisos && Object.keys(u.permisos).length) ? u.permisos : null;
   const base = PERM_POR_ROL[rol] || {};
-  document.getElementById('ruPermisos').innerHTML = rol ? PERM_KEYS.map(p =>
-    `<label style="display:flex; gap:8px; align-items:flex-start; font-size:0.85rem; font-weight:400;"><input type="checkbox" id="ruPerm_${p.key}" ${(guardados ? guardados[p.key] : base[p.key]) ? 'checked' : ''}> <span>${p.label}</span></label>`).join('') : '';
+  let grupo = '';
+  document.getElementById('ruPermisos').innerHTML = rol ? PERM_KEYS.map(p => {
+    const cab = p.grupo !== grupo ? `<div style="font-weight:700; font-size:0.78rem; text-transform:uppercase; margin-top:8px; color:var(--heading);">${p.grupo}</div>` : '';
+    grupo = p.grupo;
+    return cab + `<label style="display:flex; gap:8px; align-items:flex-start; font-size:0.85rem; font-weight:400;"><input type="checkbox" id="ruPerm_${p.key}" ${(guardados ? guardados[p.key] : base[p.key]) ? 'checked' : ''}> <span>${p.label}</span></label>`;
+  }).join('') : '';
 }
 // Oculta tarjetas según permisos
 const FIN_PERM_TAB = { diario: 'verReportes', mayor: 'verReportes', balance: 'verReportes', comprobacion: 'verReportes', reportes: 'verReportes', reportesHub: 'verReportes', conciliacion: 'verReportes', declaraciones: 'verReportes', cierre: 'cerrarPeriodo', ajustes: 'agregarTrans', auditoria: 'verAuditoria', configIr: 'gestionarConfig' };
@@ -7648,7 +7701,7 @@ async function abrirFormPersona(id) {
   personaEditandoId = id || null;
   document.getElementById('formPersona').reset();
   document.getElementById('campoNuevaFamilia').style.display = 'none';
-  document.getElementById('btnArchivarPersona').style.display = id ? 'inline-block' : 'none';
+  document.getElementById('btnArchivarPersona').style.display = (id && puedeMiembro('archivarMiembros')) ? 'inline-block' : 'none';
   document.getElementById('modalPersonaTitulo').textContent = id ? 'Editar Miembro' : 'Nuevo Miembro';
 
   const persona = id ? cacheDirectorio.find(p => p.id === id) : null;
@@ -7835,7 +7888,8 @@ function abrirPerfil(id, nuevo) {
     <div class="perfilBarra">
       ${perfilPila.length > 1 ? '<button class="btnSecundario" onclick="perfilVolver()">‹ Volver</button>' : '<span></span>'}
       <span>
-        ${puede('gestionarMiembros') ? `<button class="btnSecundario" onclick="editarDesdePerfil('${id}')">Editar</button>` : ''}
+        ${puedeMiembro('imprimirMiembros') ? `<button class="btnSecundario" onclick="imprimirPerfil()">Imprimir</button>` : ''}
+        ${(puedeMiembro('editarMiembros') || puedeMiembro('archivarMiembros') || puede('administrarFamilias')) ? `<button class="btnSecundario" onclick="editarDesdePerfil('${id}')">Editar</button>` : ''}
         <button class="btnSecundario" onclick="document.getElementById('modalPerfil').classList.remove('abierto')">Cerrar</button>
       </span>
     </div>
@@ -7858,6 +7912,17 @@ async function cargarSobresPerfil(id) {
   if (!el || perfilPila[perfilPila.length - 1] !== id) return;
   const f = x => x ? String(x).slice(0, 10) : '';
   el.innerHTML = data && data.length ? '<span>Sobres anteriores:</span> ' + data.map(h => `${h.numero} (${f(h.desde)} a ${f(h.hasta)}${h.motivo ? ', ' + escV28(h.motivo) : ''})`).join('; ') : '';
+}
+
+function imprimirPerfil() {
+  const w = window.open('', '_blank');
+  if (!w) { alert('El navegador bloqueó la ventana de impresión.'); return; }
+  const cont = document.getElementById('perfilContenido').cloneNode(true);
+  cont.querySelectorAll('button').forEach(b => b.remove());
+  w.document.write('<html><head><meta charset="utf-8"><title>Perfil</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}.perfilSeccion{font-weight:700;margin:16px 0 6px;text-transform:uppercase;font-size:12px}.perfilDato{font-size:14px;margin:3px 0}a{color:#111;text-decoration:none}.inactivo{color:#777}</style></head><body>' + cont.innerHTML + '</body></html>');
+  w.document.close();
+  w.focus();
+  w.print();
 }
 
 function perfilVolver() {
@@ -8984,13 +9049,16 @@ function cambiarSubtabAdmin(tab) {
 }
 
 // ── Usuarios y Roles ──────────────────────────────────────────────────────
+let cacheCargos = [];
+
 async function cargarUsuariosAdmin() {
   const lista = document.getElementById('listaUsuariosAdmin');
   lista.innerHTML = '<div class="estadoCargando">Cargando usuarios…</div>';
 
-  const [{ data: usuarios, error: errU }, { data: apps, error: errA }] = await Promise.all([
+  const [{ data: usuarios, error: errU }, { data: apps, error: errA }, { data: cargos }] = await Promise.all([
     sbCall(sb.from('usuarios').select('*').order('nombre', { ascending: true })),
     sbCall(sb.from('usuario_apps').select('*').eq('app', 'church_admin')),
+    sbCall(sb.from('miembros_iglesia').select('persona_id, rol')),
   ]);
 
   if (errU || errA) {
@@ -9000,6 +9068,7 @@ async function cargarUsuariosAdmin() {
 
   cacheUsuariosAdmin = usuarios || [];
   cacheUsuarioApps = apps || [];
+  cacheCargos = cargos || [];
   renderResumenRoles();
   renderUsuariosAdmin();
 }
@@ -9007,19 +9076,12 @@ async function cargarUsuariosAdmin() {
 function renderResumenRoles() {
   const cont = document.getElementById('resumenRoles');
   const conteos = {};
-  cacheUsuarioApps.forEach(a => {
-    conteos[a.rol] = (conteos[a.rol] || 0) + 1;
-  });
-
+  cacheUsuarioApps.forEach(a => { conteos[a.rol] = (conteos[a.rol] || 0) + 1; });
   const roles = Object.keys(conteos);
-  if (roles.length === 0) {
-    cont.innerHTML = '';
-    return;
-  }
-
+  if (roles.length === 0) { cont.innerHTML = ''; return; }
   cont.innerHTML = roles.map(rol => `
     <div class="tarjetaResumen">
-      <div class="etiqueta">${rol}</div>
+      <div class="etiqueta">${escV28(nivelDeRol(rol))}</div>
       <div class="monto">${conteos[rol]}</div>
     </div>`).join('');
 }
@@ -9029,31 +9091,58 @@ function rolDeUsuario(usuarioId) {
   return fila ? fila.rol : null;
 }
 
+function cargoDePersona(personaId) {
+  const c = cacheCargos.find(x => x.persona_id === personaId);
+  return c && c.rol ? c.rol : '';
+}
+
 function renderUsuariosAdmin() {
   const lista = document.getElementById('listaUsuariosAdmin');
+  const barra = `<div style="margin-bottom:10px;"><button class="btnAccion" onclick="abrirNuevaCuenta()">+ Nueva cuenta para un miembro</button></div>`;
   if (cacheUsuariosAdmin.length === 0) {
-    lista.innerHTML = '<div class="estadoVacio">No hay usuarios registrados.</div>';
+    lista.innerHTML = barra + '<div class="estadoVacio">No hay usuarios registrados.</div>';
     return;
   }
-  lista.innerHTML = cacheUsuariosAdmin.map(u => {
-    const rol = rolDeUsuario(u.id);
+  lista.innerHTML = barra + cacheUsuariosAdmin.map(u => {
+    const fila = cacheUsuarioApps.find(a => a.usuario_id === u.id);
+    const rol = fila ? fila.rol : null;
+    const cargo = u.persona_id ? cargoDePersona(u.persona_id) : '';
+    const estado = fila && fila.activo === false ? ' · Acceso desactivado' : (u.activo === false ? ' · Cuenta inactiva' : '');
     return `
       <div class="tarjetaSeguimiento" onclick="abrirModalRolUsuario('${u.id}')">
         <div>
-          <div class="nombrePersona">${u.nombre || u.correo}</div>
-          <div class="metaLinea">${u.correo}${u.activo === false ? ' · Cuenta inactiva' : ''}</div>
+          <div class="nombrePersona">${escV28(u.nombre || u.correo)}</div>
+          <div class="metaLinea">${escV28(u.correo)}${cargo ? ' · Cargo: ' + escV28(cargo) : ''}${estado}</div>
         </div>
-        ${rol ? `<span class="badge badge-tipo">${rol}</span>` : `<span class="badge badge-estado-Inactivo">Sin acceso</span>`}
+        ${rol ? `<span class="badge badge-tipo">${escV28(nivelDeRol(rol))}</span>` : `<span class="badge badge-estado-Inactivo">Sin acceso</span>`}
       </div>`;
   }).join('');
 }
 
-function abrirModalRolUsuario(usuarioId) {
+function ruOpcionesNivel(incluirSinAcceso) {
+  const soyAdmin = getSesion()?.rol === 'Administrador';
+  return (incluirSinAcceso ? '<option value="">Sin acceso</option>' : '') + NIVELES.filter(x => soyAdmin || x.rol !== 'Administrador').map(x => `<option value="${x.rol}">Nivel ${x.n} · ${x.nombre}</option>`).join('');
+}
+
+async function abrirModalRolUsuario(usuarioId) {
   const u = cacheUsuariosAdmin.find(x => x.id === usuarioId);
   if (!u) return;
+  const fila = cacheUsuarioApps.find(a => a.usuario_id === usuarioId);
   document.getElementById('ruUsuarioId').value = usuarioId;
   document.getElementById('ruNombreUsuario').textContent = `${u.nombre || u.correo} (${u.correo})`;
-  document.getElementById('ruRol').value = rolDeUsuario(usuarioId) || '';
+  document.getElementById('ruResultado').textContent = '';
+  const selRol = document.getElementById('ruRol');
+  selRol.innerHTML = ruOpcionesNivel(true);
+  const rolActual = fila ? fila.rol : '';
+  if (rolActual && !Array.from(selRol.options).some(o => o.value === rolActual)) selRol.insertAdjacentHTML('beforeend', `<option value="${escV28(rolActual)}">${escV28(nivelDeRol(rolActual))}</option>`);
+  selRol.value = rolActual;
+  document.getElementById('ruActivo').checked = fila ? fila.activo !== false : true;
+  if (!cacheDirectorio.length) await cargarDirectorio();
+  const sel = document.getElementById('ruPersona');
+  sel.innerHTML = '<option value="">Sin vincular</option>' + cacheDirectorio.filter(p => p.id === u.persona_id || !cacheUsuariosAdmin.some(x => x.persona_id === p.id)).map(p => `<option value="${p.id}">${escV28(nombreMostrar(p))}</option>`).join('');
+  sel.value = u.persona_id || '';
+  const cargo = u.persona_id ? cargoDePersona(u.persona_id) : '';
+  document.getElementById('ruCargoInfo').textContent = cargo ? 'Cargo en la iglesia: ' + cargo + ' (el cargo es independiente de los permisos de la app)' : 'El cargo en la iglesia es independiente de los permisos de la app.';
   ruPintarPermisos(false);
   document.getElementById('modalRolUsuario').classList.add('abierto');
 }
@@ -9066,14 +9155,16 @@ async function guardarRolUsuario(evt) {
   evt.preventDefault();
   const usuarioId = document.getElementById('ruUsuarioId').value;
   const nuevoRol = document.getElementById('ruRol').value;
+  const activo = document.getElementById('ruActivo').checked;
+  const personaId = document.getElementById('ruPersona').value || null;
   const filaExistente = cacheUsuarioApps.find(a => a.usuario_id === usuarioId);
 
   const sesion = getSesion();
   const esMiPropioUsuario = sesion.usuario?.id === usuarioId;
-  const meQuitoAdministrador = esMiPropioUsuario && filaExistente?.rol === 'Administrador' && nuevoRol !== 'Administrador';
+  const meQuitoAdministrador = esMiPropioUsuario && filaExistente?.rol === 'Administrador' && (nuevoRol !== 'Administrador' || !activo);
 
   if (meQuitoAdministrador) {
-    const confirmado = confirm('⚠️ Estás a punto de quitarte tu propio rol de Administrador. Si continúas, podrías perder acceso a esta sección. ¿Seguro que quieres continuar?');
+    const confirmado = confirm('Estás a punto de quitarte tu propio acceso de Administrador. Si continúas, podrías perder acceso a esta sección. ¿Seguro que quieres continuar?');
     if (!confirmado) return false;
   }
 
@@ -9081,22 +9172,78 @@ async function guardarRolUsuario(evt) {
   PERM_KEYS.forEach(p => { const c = document.getElementById('ruPerm_' + p.key); if (c) permisosNuevos[p.key] = c.checked; });
   let error;
   if (!nuevoRol) {
-    // "Sin acceso" — quitar el registro si existía
     if (filaExistente) {
       ({ error } = await sbCall(sb.from('usuario_apps').delete().eq('usuario_id', usuarioId).eq('app', 'church_admin')));
     }
   } else if (filaExistente) {
-    ({ error } = await sbCall(
-      sb.from('usuario_apps').update({ rol: nuevoRol, permisos: permisosNuevos }).eq('usuario_id', usuarioId).eq('app', 'church_admin')
-    ));
+    ({ error } = await sbCall(sb.from('usuario_apps').update({ rol: nuevoRol, permisos: permisosNuevos, activo }).eq('usuario_id', usuarioId).eq('app', 'church_admin')));
   } else {
-    ({ error } = await sbCall(
-      sb.from('usuario_apps').insert({ usuario_id: usuarioId, app: 'church_admin', rol: nuevoRol, permisos: permisosNuevos, activo: true })
-    ));
+    ({ error } = await sbCall(sb.from('usuario_apps').insert({ usuario_id: usuarioId, app: 'church_admin', rol: nuevoRol, permisos: permisosNuevos, activo })));
   }
-
   if (error) { alert('Error al guardar: ' + error.message); return false; }
+
+  const actual = cacheUsuariosAdmin.find(x => x.id === usuarioId);
+  if ((actual?.persona_id || null) !== personaId) {
+    const r = await sbCall(sb.from('usuarios').update({ persona_id: personaId }).eq('id', usuarioId));
+    if (r.error) { alert('Se guardó el acceso, pero no el vínculo con el miembro: ' + r.error.message); }
+  }
   cerrarModalRolUsuario();
+  cargarUsuariosAdmin();
+  return false;
+}
+
+async function llamarAdminUsuarios(body) {
+  const { data, error } = await sb.functions.invoke('admin-usuarios', { body });
+  if (error) {
+    let msg = error.message || 'Error';
+    try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) { /* sin detalle */ }
+    if (/Failed to send|not found|404/i.test(msg)) msg = 'La función que crea cuentas todavía no está instalada en Supabase.';
+    return { error: msg };
+  }
+  if (data && data.error) return { error: data.error };
+  return { data };
+}
+
+async function ruResetClave(accion) {
+  const usuarioId = document.getElementById('ruUsuarioId').value;
+  const out = document.getElementById('ruResultado');
+  if (accion === 'reset_temporal' && !confirm('Se cambiará la contraseña actual de esta persona por una temporal. ¿Continuar?')) return;
+  out.textContent = 'Procesando…';
+  const r = await llamarAdminUsuarios({ accion, usuario_id: usuarioId });
+  if (r.error) { out.textContent = r.error; return; }
+  out.innerHTML = accion === 'reset_email' ? 'Enlace enviado a ' + escV28(r.data.correo) + '.' : 'Contraseña temporal: <b>' + escV28(r.data.password_temporal) + '</b> (cópiala ahora; no se vuelve a mostrar).';
+}
+
+async function abrirNuevaCuenta() {
+  if (!cacheDirectorio.length) await cargarDirectorio();
+  const libres = cacheDirectorio.filter(p => !cacheUsuariosAdmin.some(u => u.persona_id === p.id));
+  document.getElementById('ncPersona').innerHTML = '<option value="">Elegir miembro…</option>' + libres.map(p => `<option value="${p.id}">${escV28(nombreMostrar(p))}</option>`).join('');
+  document.getElementById('ncRol').innerHTML = ruOpcionesNivel(false);
+  document.getElementById('ncRol').value = 'Colaborador';
+  document.getElementById('ncCorreo').value = '';
+  document.getElementById('ncResultado').textContent = '';
+  document.getElementById('modalNuevaCuenta').classList.add('abierto');
+}
+
+function ncElegirPersona() {
+  const p = personaPorId(document.getElementById('ncPersona').value);
+  if (p && p.correo) document.getElementById('ncCorreo').value = p.correo;
+}
+
+async function crearCuentaMiembro(evt) {
+  evt.preventDefault();
+  const personaId = document.getElementById('ncPersona').value;
+  const p = personaPorId(personaId);
+  const rol = document.getElementById('ncRol').value;
+  if (!p) { alert('Elige un miembro.'); return false; }
+  const btn = document.getElementById('ncBtn');
+  btn.disabled = true;
+  const out = document.getElementById('ncResultado');
+  out.textContent = 'Creando cuenta…';
+  const r = await llamarAdminUsuarios({ accion: 'crear', persona_id: personaId, correo: document.getElementById('ncCorreo').value, nombre: nombreMostrar(p), rol, permisos: PERM_POR_ROL[rol] || {} });
+  btn.disabled = false;
+  if (r.error) { out.textContent = r.error; return false; }
+  out.innerHTML = 'Cuenta creada. Contraseña temporal: <b>' + escV28(r.data.password_temporal) + '</b><br>Cópiala ahora; no se vuelve a mostrar.';
   cargarUsuariosAdmin();
   return false;
 }
