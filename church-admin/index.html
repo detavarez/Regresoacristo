@@ -2493,8 +2493,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-046';
-document.getElementById('versionTopbar').textContent = 'Ver-046';
+const APP_VERSION = 'church-admin Ver-047';
+document.getElementById('versionTopbar').textContent = 'Ver-047';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -5206,7 +5206,7 @@ async function cargarDepositos() {
   if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
 
   cacheDepositos = data || [];
-  renderDepositos(cacheDepositos);
+  lfAplicar('depositos');
 }
 
 async function cargarListaCuentasSilencioso() {
@@ -6407,6 +6407,145 @@ function poblarSelectPersonas(selectId, valorActual) {
   if (valorActual) select.value = valorActual;
 }
 
+// ── Listas: filtros, totales, orden, imprimir, Excel ──
+const LF_CFG = {
+  diezmos: { cache: () => cacheDiezmos, cont: 'listaDiezmos', buscador: 'buscadorDiezmos', titulo: 'Diezmos', nombre: d => nombrePersonaPorId(d.persona_id), detalle: d => [d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDiezmos, render: () => renderDiezmos },
+  ofrendas: { cache: () => cacheOfrendas, cont: 'listaOfrendas', titulo: 'Ofrendas', nombre: o => o.tipo || 'Ofrenda', detalle: o => [o.metodo, o.estado].filter(Boolean).join(' · '), resumen: () => renderResumenOfrendas, render: () => renderOfrendas },
+  donaciones: { cache: () => cacheDonaciones, cont: 'listaDonaciones', buscador: 'buscadorDonaciones', titulo: 'Donaciones', nombre: d => nombrePersonaPorId(d.persona_id), detalle: d => [d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDonaciones, render: () => renderDonaciones },
+  gastos: { cache: () => cacheGastos, cont: 'listaGastos', buscador: 'buscadorGastos', titulo: 'Gastos', nombre: g => g.descripcion || '—', detalle: g => [g.categoria, g.metodo, g.estado].filter(Boolean).join(' · '), resumen: () => renderResumenGastos, render: () => renderGastos },
+  depositos: { cache: () => cacheDepositos, cont: 'listaDepositos', titulo: 'Depósitos', nombre: d => d.notas || 'Depósito', detalle: d => nombreCuentaPorId(d.cuenta_origen_id) + ' → ' + nombreCuentaPorId(d.cuenta_destino_id), resumen: null, render: () => renderDepositos },
+};
+const lfEstado = {};
+
+function lfSt(k) { return lfEstado[k] || (lfEstado[k] = { desde: '', hasta: '', anio: '', orden: 'fecha_desc', q: '' }); }
+
+function lfMontar(k) {
+  const cfg = LF_CFG[k];
+  const cont = document.getElementById(cfg.cont);
+  if (!cont || document.getElementById('lfBarra_' + k)) return;
+  const anios = [...new Set(cfg.cache().map(r => String(r.fecha || '').slice(0, 4)).filter(Boolean))].sort().reverse();
+  const barra = document.createElement('div');
+  barra.id = 'lfBarra_' + k;
+  barra.style.cssText = 'display:grid; gap:8px; margin-bottom:12px;';
+  barra.innerHTML = `
+    <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+      <button type="button" class="btnSecundario" onclick="lfRango('${k}','hoy')">Hoy</button>
+      <button type="button" class="btnSecundario" onclick="lfRango('${k}','semana')">Semana</button>
+      <button type="button" class="btnSecundario" onclick="lfRango('${k}','mes')">Mes</button>
+      <button type="button" class="btnSecundario" onclick="lfRango('${k}','anio')">Año</button>
+      <button type="button" class="btnSecundario" onclick="lfRango('${k}','limpiar')">Limpiar</button>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px;">
+      <div><label style="font-size:0.75rem;">Desde</label><input type="date" id="lfDesde_${k}" onchange="lfCambio('${k}')"></div>
+      <div><label style="font-size:0.75rem;">Hasta</label><input type="date" id="lfHasta_${k}" onchange="lfCambio('${k}')"></div>
+      <div><label style="font-size:0.75rem;">Año</label><select id="lfAnio_${k}" onchange="lfCambio('${k}')"><option value="">Todos</option>${anios.map(a => `<option value="${a}">${a}</option>`).join('')}</select></div>
+      <div><label style="font-size:0.75rem;">Ordenar</label><select id="lfOrden_${k}" onchange="lfCambio('${k}')"><option value="fecha_desc">Fecha: reciente primero</option><option value="fecha_asc">Fecha: antigua primero</option><option value="monto_desc">Monto: mayor primero</option><option value="monto_asc">Monto: menor primero</option><option value="nombre_asc">Nombre A–Z</option></select></div>
+      ${cfg.buscador ? '' : `<div><label style="font-size:0.75rem;">Buscar</label><input type="text" id="lfQ_${k}" placeholder="Buscar…" oninput="lfCambio('${k}')"></div>`}
+    </div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+      <button type="button" class="btnSecundario" onclick="lfImprimir('${k}')">Imprimir</button>
+      <button type="button" class="btnSecundario" onclick="lfExcel('${k}')">Excel</button>
+    </div>`;
+  cont.parentNode.insertBefore(barra, cont);
+  const tot = document.createElement('div');
+  tot.id = 'lfTot_' + k;
+  tot.style.cssText = 'margin-top:10px; padding:10px 14px; font-weight:700; border-top:2px solid rgba(128,128,128,0.4); display:flex; justify-content:space-between;';
+  cont.parentNode.insertBefore(tot, cont.nextSibling);
+}
+
+function lfCambio(k) {
+  const st = lfSt(k);
+  st.desde = document.getElementById('lfDesde_' + k).value;
+  st.hasta = document.getElementById('lfHasta_' + k).value;
+  st.anio = document.getElementById('lfAnio_' + k).value;
+  st.orden = document.getElementById('lfOrden_' + k).value;
+  const q = document.getElementById('lfQ_' + k);
+  if (q) st.q = q.value.trim().toLowerCase();
+  if (st.anio && !st.desde && !st.hasta) { /* el año filtra por sí solo */ }
+  lfAplicar(k);
+}
+
+function lfRango(k, tipo) {
+  const hoy = new Date();
+  const f = d => d.toISOString().slice(0, 10);
+  let desde = '', hasta = '';
+  if (tipo === 'hoy') { desde = hasta = f(hoy); }
+  else if (tipo === 'semana') { const d = new Date(hoy); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); desde = f(d); hasta = f(hoy); }
+  else if (tipo === 'mes') { desde = f(new Date(hoy.getFullYear(), hoy.getMonth(), 1)); hasta = f(hoy); }
+  else if (tipo === 'anio') { desde = hoy.getFullYear() + '-01-01'; hasta = f(hoy); }
+  document.getElementById('lfDesde_' + k).value = desde;
+  document.getElementById('lfHasta_' + k).value = hasta;
+  if (tipo === 'limpiar') {
+    document.getElementById('lfAnio_' + k).value = '';
+    document.getElementById('lfOrden_' + k).value = 'fecha_desc';
+    const q = document.getElementById('lfQ_' + k); if (q) q.value = '';
+    const cfg = LF_CFG[k]; if (cfg.buscador) document.getElementById(cfg.buscador).value = '';
+  } else { document.getElementById('lfAnio_' + k).value = ''; }
+  lfCambio(k);
+}
+
+function lfFiltrar(k) {
+  const cfg = LF_CFG[k];
+  const st = lfSt(k);
+  const q = cfg.buscador ? (document.getElementById(cfg.buscador).value || '').trim().toLowerCase() : st.q;
+  let filas = cfg.cache().filter(r => {
+    const fe = String(r.fecha || '').slice(0, 10);
+    if (st.desde && fe < st.desde) return false;
+    if (st.hasta && fe > st.hasta) return false;
+    if (st.anio && fe.slice(0, 4) !== st.anio) return false;
+    if (q && !(cfg.nombre(r) + ' ' + cfg.detalle(r)).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const [campo, dir] = st.orden.split('_');
+  const m = dir === 'asc' ? 1 : -1;
+  filas = filas.slice().sort((a, b) => {
+    if (campo === 'monto') return m * ((Number(a.monto) || 0) - (Number(b.monto) || 0));
+    if (campo === 'nombre') return String(cfg.nombre(a)).localeCompare(String(cfg.nombre(b)), 'es');
+    return m * String(a.fecha || '').localeCompare(String(b.fecha || ''));
+  });
+  return filas;
+}
+
+function lfAplicar(k) {
+  const cfg = LF_CFG[k];
+  lfMontar(k);
+  const filas = lfFiltrar(k);
+  if (cfg.resumen) cfg.resumen()(filas);
+  cfg.render()(filas);
+  const total = filas.reduce((s, r) => s + (Number(r.monto) || 0), 0);
+  const t = document.getElementById('lfTot_' + k);
+  if (t) t.innerHTML = `<span>Total (${filas.length} registros)</span><span>${formatoMoneda(total)}</span>`;
+}
+
+function lfImprimir(k) {
+  const cfg = LF_CFG[k];
+  const filas = lfFiltrar(k);
+  const total = filas.reduce((s, r) => s + (Number(r.monto) || 0), 0);
+  const st = lfSt(k);
+  const rango = st.anio ? 'Año ' + st.anio : (st.desde || st.hasta ? (st.desde || '…') + ' a ' + (st.hasta || '…') : 'Todas las fechas');
+  const w = window.open('', '_blank');
+  if (!w) { alert('El navegador bloqueó la ventana de impresión.'); return; }
+  w.document.write(`<html><head><meta charset="utf-8"><title>${cfg.titulo}</title><style>body{font-family:Arial,sans-serif;padding:20px;color:#111}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #bbb;padding:5px 7px;text-align:left}td.m,th.m{text-align:right}tfoot td{font-weight:700}</style></head><body><h2>${cfg.titulo}</h2><div style="margin-bottom:10px;font-size:12px">${escV28(rango)}</div><table><thead><tr><th>#</th><th>Fecha</th><th>Nombre</th><th>Detalle</th><th class="m">Monto</th></tr></thead><tbody>${filas.map((r, i) => `<tr><td>${i + 1}</td><td>${formatoFecha(r.fecha)}</td><td>${escV28(cfg.nombre(r))}</td><td>${escV28(cfg.detalle(r))}</td><td class="m">${formatoMoneda(r.monto)}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="4">Total (${filas.length})</td><td class="m">${formatoMoneda(total)}</td></tr></tfoot></table></body></html>`);
+  w.document.close();
+  w.focus();
+  w.print();
+}
+
+function lfExcel(k) {
+  const cfg = LF_CFG[k];
+  const filas = lfFiltrar(k);
+  const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const lineas = [['#', 'Fecha', 'Nombre', 'Detalle', 'Monto'].map(esc).join(',')].concat(filas.map((r, i) => [i + 1, String(r.fecha || '').slice(0, 10), cfg.nombre(r), cfg.detalle(r), Number(r.monto) || 0].map(esc).join(',')));
+  const total = filas.reduce((s, r) => s + (Number(r.monto) || 0), 0);
+  lineas.push(['', '', '', 'Total', total].map(esc).join(','));
+  const blob = new Blob(['\ufeff' + lineas.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = cfg.titulo + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
 // ── DIEZMOS ──
 async function cargarDiezmos() {
   const lista = document.getElementById('listaDiezmos');
@@ -6419,17 +6558,17 @@ async function cargarDiezmos() {
   if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
 
   cacheDiezmos = data || [];
-  renderResumenDiezmos();
-  renderDiezmos(cacheDiezmos);
+  lfAplicar('diezmos');
 }
 
-function renderResumenDiezmos() {
-  const total = cacheDiezmos.reduce((acc, d) => acc + (Number(d.monto) || 0), 0);
-  const contribuyentes = new Set(cacheDiezmos.map(d => d.persona_id).filter(Boolean)).size;
+function renderResumenDiezmos(filas) {
+  const _f = filas || cacheDiezmos;
+  const total = _f.reduce((acc, d) => acc + (Number(d.monto) || 0), 0);
+  const contribuyentes = new Set(_f.map(d => d.persona_id).filter(Boolean)).size;
   document.getElementById('resumenDiezmos').innerHTML = `
     <div class="tarjetaResumen ingreso"><div class="etiqueta">Total registrado</div><div class="monto">${formatoMoneda(total)}</div></div>
     <div class="tarjetaResumen"><div class="etiqueta">Contribuyentes</div><div class="monto">${contribuyentes}</div></div>
-    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${cacheDiezmos.length}</div></div>`;
+    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${_f.length}</div></div>`;
 }
 
 function renderDiezmos(filas) {
@@ -6445,11 +6584,7 @@ function renderDiezmos(filas) {
     </div>`).join('');
 }
 
-function filtrarDiezmos() {
-  const q = document.getElementById('buscadorDiezmos').value.trim().toLowerCase();
-  if (!q) { renderDiezmos(cacheDiezmos); return; }
-  renderDiezmos(cacheDiezmos.filter(d => nombrePersonaPorId(d.persona_id).toLowerCase().includes(q)));
-}
+function filtrarDiezmos() { lfAplicar('diezmos'); }
 
 function abrirFormDiezmo(id) {
   document.getElementById('formDiezmo').reset();
@@ -6567,16 +6702,16 @@ async function cargarOfrendas() {
   if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
 
   cacheOfrendas = data || [];
-  renderResumenOfrendas();
-  renderOfrendas(cacheOfrendas);
+  lfAplicar('ofrendas');
 }
 
-function renderResumenOfrendas() {
-  const total = cacheOfrendas.reduce((acc, o) => acc + (Number(o.monto) || 0), 0);
+function renderResumenOfrendas(filas) {
+  const _f = filas || cacheOfrendas;
+  const total = _f.reduce((acc, o) => acc + (Number(o.monto) || 0), 0);
   document.getElementById('resumenOfrendas').innerHTML = `
     <div class="tarjetaResumen ingreso"><div class="etiqueta">Total registrado</div><div class="monto">${formatoMoneda(total)}</div></div>
-    <div class="tarjetaResumen"><div class="etiqueta">Tipos usados</div><div class="monto">${new Set(cacheOfrendas.map(o => o.tipo)).size}</div></div>
-    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${cacheOfrendas.length}</div></div>`;
+    <div class="tarjetaResumen"><div class="etiqueta">Tipos usados</div><div class="monto">${new Set(_f.map(o => o.tipo)).size}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${_f.length}</div></div>`;
 }
 
 function renderOfrendas(filas) {
@@ -6703,17 +6838,17 @@ async function cargarDonaciones() {
   if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
 
   cacheDonaciones = data || [];
-  renderResumenDonaciones();
-  renderDonaciones(cacheDonaciones);
+  lfAplicar('donaciones');
 }
 
-function renderResumenDonaciones() {
-  const total = cacheDonaciones.reduce((acc, d) => acc + (Number(d.monto) || 0), 0);
-  const donantes = new Set(cacheDonaciones.map(d => d.persona_id).filter(Boolean)).size;
+function renderResumenDonaciones(filas) {
+  const _f = filas || cacheDonaciones;
+  const total = _f.reduce((acc, d) => acc + (Number(d.monto) || 0), 0);
+  const donantes = new Set(_f.map(d => d.persona_id).filter(Boolean)).size;
   document.getElementById('resumenDonaciones').innerHTML = `
     <div class="tarjetaResumen ingreso"><div class="etiqueta">Total registrado</div><div class="monto">${formatoMoneda(total)}</div></div>
     <div class="tarjetaResumen"><div class="etiqueta">Donantes únicos</div><div class="monto">${donantes}</div></div>
-    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${cacheDonaciones.length}</div></div>`;
+    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${_f.length}</div></div>`;
 }
 
 function renderDonaciones(filas) {
@@ -6729,11 +6864,7 @@ function renderDonaciones(filas) {
     </div>`).join('');
 }
 
-function filtrarDonaciones() {
-  const q = document.getElementById('buscadorDonaciones').value.trim().toLowerCase();
-  if (!q) { renderDonaciones(cacheDonaciones); return; }
-  renderDonaciones(cacheDonaciones.filter(d => nombrePersonaPorId(d.persona_id).toLowerCase().includes(q)));
-}
+function filtrarDonaciones() { lfAplicar('donaciones'); }
 
 async function abrirFormDonacion(id) {
   document.getElementById('formDonacion').reset();
@@ -6862,16 +6993,16 @@ async function cargarGastos() {
   if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
 
   cacheGastos = data || [];
-  renderResumenGastos();
-  renderGastos(cacheGastos);
+  lfAplicar('gastos');
 }
 
-function renderResumenGastos() {
-  const total = cacheGastos.reduce((acc, g) => acc + (Number(g.monto) || 0), 0);
+function renderResumenGastos(filas) {
+  const _f = filas || cacheGastos;
+  const total = _f.reduce((acc, g) => acc + (Number(g.monto) || 0), 0);
   document.getElementById('resumenGastos').innerHTML = `
     <div class="tarjetaResumen egreso"><div class="etiqueta">Total registrado</div><div class="monto">${formatoMoneda(total)}</div></div>
-    <div class="tarjetaResumen"><div class="etiqueta">Categorías usadas</div><div class="monto">${new Set(cacheGastos.map(g => g.categoria)).size}</div></div>
-    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${cacheGastos.length}</div></div>`;
+    <div class="tarjetaResumen"><div class="etiqueta">Categorías usadas</div><div class="monto">${new Set(_f.map(g => g.categoria)).size}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${_f.length}</div></div>`;
 }
 
 function nombreOrgPorId(id) {
@@ -6892,11 +7023,7 @@ function renderGastos(filas) {
     </div>`).join('');
 }
 
-function filtrarGastos() {
-  const q = document.getElementById('buscadorGastos').value.trim().toLowerCase();
-  if (!q) { renderGastos(cacheGastos); return; }
-  renderGastos(cacheGastos.filter(g => (g.descripcion || '').toLowerCase().includes(q)));
-}
+function filtrarGastos() { lfAplicar('gastos'); }
 
 function poblarSelectCategoriaGasto(selectId, valorActual) {
   const select = document.getElementById(selectId);
