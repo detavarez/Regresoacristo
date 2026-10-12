@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Administrador — Instituto Bíblico</title>
 <link rel="stylesheet" href="assets/instituto.css?v=10">
+<script src="assets/i18n.js?v=1"></script>
 <style>
   body{border-top:5px solid var(--pizarra)}
   .stats .stat .v{font-size:1.9rem}
@@ -199,7 +200,7 @@ function panelEstudiantes() {
         '<td>' + (e.leccion_actual || '—') + '</td>' +
         '<td><span class="minibar"><i style="width:' + pct + '%"></i></span>' + aprobadas + '</td>' +
         '<td>' + (e.debe_cambiar_password ? '<span class="pill warn">pendiente</span>' : '<span class="pill ok">cambiada</span>') + '</td>' +
-        '<td>' + new Date(e.creado_en).toLocaleDateString('es') + '</td></tr>';
+        '<td>' + new Date(e.creado_en).toLocaleDateString(window.I18N ? I18N.lang : 'es') + '</td></tr>';
     }).join('');
     document.getElementById('listaEstudiantes').innerHTML = vistos.length
       ? '<table class="datos"><thead><tr><th>Nombre</th><th>Correo</th><th>Lección</th><th>Aprobadas</th><th>Contraseña</th><th>Creado</th></tr></thead><tbody>' + filas + '</tbody></table>'
@@ -211,7 +212,7 @@ function panelEstudiantes() {
 
   function llenarSelectLecciones(sel, valor) {
     sel.innerHTML = INST.listaPlana().map(function (l) {
-      return '<option value="' + l.n + '"' + (String(l.n) === String(valor) ? ' selected' : '') + '>' + l.n + ' — ' + l.t + '</option>';
+      return '<option value="' + l.n + '"' + (String(l.n) === String(valor) ? ' selected' : '') + '>' + l.n + ' — ' + ((window.I18N && I18N.lang === 'en' && l.ten) ? l.ten : l.t) + '</option>';
     }).join('');
   }
 
@@ -229,7 +230,7 @@ function panelEstudiantes() {
 
     var filasProgreso = Object.keys(progreso).sort().map(function (k) {
       var p = progreso[k], m = INST.meta(k);
-      return '<tr><td>' + k + (m ? ' — ' + m.t : '') + '</td><td>' + p.estado + '</td>' +
+      return '<tr><td>' + k + (m ? ' — ' + ((window.I18N && I18N.lang === 'en' && m.ten) ? m.ten : m.t) : '') + '</td><td>' + (window.I18N ? I18N.tr(p.estado) : p.estado) + '</td>' +
         '<td>' + (p.mejor !== null ? p.mejor + '%' : '—') + '</td><td>' + (p.intentos ? p.intentos.length : 0) + '</td></tr>';
     }).join('');
 
@@ -248,7 +249,7 @@ function panelEstudiantes() {
       '<button class="btn peq" type="button" id="asignar">Asignar</button>' +
       '<button class="btn sec peq" type="button" id="quitar">Quitar</button></div>' +
       '<div class="fila"><button class="btn peligro peq" type="button" id="borrarDiag">Borrar diagnóstico</button>' +
-      '<span class="aviso">' + (diag ? ('Hecho el ' + new Date(diag.fecha).toLocaleDateString('es') + ', recomendó la ' + diag.recomendada) : 'Sin diagnóstico') + '</span></div>' +
+      '<span class="aviso">' + (diag ? ('Hecho el ' + new Date(diag.fecha).toLocaleDateString(window.I18N ? I18N.lang : 'es') + ', recomendó la ' + diag.recomendada) : 'Sin diagnóstico') + '</span></div>' +
       '<h3 style="font-size:.95rem">Progreso por lección</h3>' +
       (filasProgreso
         ? '<table class="datos"><thead><tr><th>Lección</th><th>Estado</th><th>Mejor</th><th>Intentos</th></tr></thead><tbody>' + filasProgreso + '</tbody></table>'
@@ -403,7 +404,7 @@ function panelPersonal(rol, tabla, titulo) {
       return '<tr><td>' + esc(p.nombre || '(sin nombre)') + '</td>' +
         '<td>' + (p.email ? esc(p.email) : '<span class="sub">—</span>') + '</td>' +
         '<td>' + (p.debe_cambiar_password ? '<span class="pill warn">pendiente</span>' : '<span class="pill ok">cambiada</span>') + '</td>' +
-        '<td>' + new Date(p.creado_en).toLocaleDateString('es') + '</td>' +
+        '<td>' + new Date(p.creado_en).toLocaleDateString(window.I18N ? I18N.lang : 'es') + '</td>' +
         '<td style="white-space:nowrap"><button class="btn sec peq" type="button" data-uid="' + p.user_id + '" data-accion="email">Cambiar correo</button> ' +
         '<button class="btn sec peq" type="button" data-uid="' + p.user_id + '" data-accion="reset">Restablecer contraseña</button> ' +
         '<button class="btn peligro peq" type="button" data-uid="' + p.user_id + '" data-accion="borrar">Eliminar</button></td></tr>';

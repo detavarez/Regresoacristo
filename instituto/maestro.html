@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Maestro — Instituto Bíblico</title>
 <link rel="stylesheet" href="assets/instituto.css?v=10">
+<script src="assets/i18n.js?v=1"></script>
 <style>
   body{border-top:5px solid var(--oliva)}
   fieldset{border:1px solid var(--arena);border-radius:5px;padding:16px 18px 20px;margin:0 0 24px}
@@ -145,14 +146,14 @@ function pintarDetalle() {
 
   var filasProgreso = Object.keys(progreso).sort().map(function (k) {
     var p = progreso[k], m = INST.meta(k);
-    return '<tr><td>' + k + (m ? ' — ' + m.t : '') + '</td><td>' + p.estado + '</td>' +
+    return '<tr><td>' + k + (m ? ' — ' + ((window.I18N && I18N.lang === 'en' && m.ten) ? m.ten : m.t) : '') + '</td><td>' + (window.I18N ? I18N.tr(p.estado) : p.estado) + '</td>' +
       '<td>' + (p.mejor !== null ? p.mejor + '%' : '—') + '</td><td>' + (p.intentos ? p.intentos.length : 0) + '</td></tr>';
   }).join('');
 
   document.getElementById('detalle').innerHTML =
     '<fieldset><legend>' + e.nombre + ' — solo lectura</legend>' +
     '<p class="sub">Correo: ' + (e.email || '—') + '</p>' +
-    '<p class="sub">' + (diag ? ('Diagnóstico hecho el ' + new Date(diag.fecha).toLocaleDateString('es') + ', recomendó la lección ' + diag.recomendada + '.') : 'Sin diagnóstico.') + '</p>' +
+    '<p class="sub">' + (diag ? ('Diagnóstico hecho el ' + new Date(diag.fecha).toLocaleDateString(window.I18N ? I18N.lang : 'es') + ', recomendó la lección ' + diag.recomendada + '.') : 'Sin diagnóstico.') + '</p>' +
     (filasProgreso
       ? '<table class="datos"><thead><tr><th>Lección</th><th>Estado</th><th>Mejor</th><th>Intentos</th></tr></thead><tbody>' + filasProgreso + '</tbody></table>'
       : '<p class="sub">Sin lecciones registradas.</p>') +

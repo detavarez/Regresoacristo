@@ -128,6 +128,15 @@
   function aplicarConfig() {
     var h = document.documentElement;
     var conf = estado ? estado.config : BASE.config;
+    if (estado) {
+      var quiere = conf.idioma === 'en' ? 'en' : 'es';
+      try {
+        if (localStorage.getItem('inst_lang') !== quiere) {
+          localStorage.setItem('inst_lang', quiere);
+          if (global.I18N && global.I18N.lang !== quiere) { location.reload(); return; }
+        }
+      } catch (e) {}
+    }
     var t = conf.tema;
     if (t === 'auto') {
       t = global.matchMedia && global.matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
@@ -141,6 +150,7 @@
 
   function setConfig(k, v) {
     estado.config[k] = v;
+    if (k === 'idioma') { try { localStorage.setItem('inst_lang', v); } catch (e) {} }
     aplicarConfig();
     if (k === 'idioma') {
       guardar().then(function () { location.reload(); });
@@ -359,7 +369,7 @@
     }
     var html =
       '<header class="barra' + (esAdmin ? ' modo-admin' : (esMaestro ? ' modo-maestro' : '')) + '"><div class="env">' +
-      '<a class="marca" href="index.html"><span class="marca-ico">&#10013;</span>Instituto Bíblico</a>' +
+      '<a class="marca" href="index.html"><span class="marca-ico">&#10013;</span>' + (idiomaActual() === 'en' ? 'Bible Institute' : 'Instituto Bíblico') + '</a>' +
       (contexto ? '<span class="ctx">' + contexto + '</span>' : '') +
       '<nav class="navrapida"><a href="index.html"' + (activo === 'indice' ? ' aria-current="page"' : '') + '>' + L.indice + '</a>' +
       '<a href="progreso.html"' + (activo === 'prog' ? ' aria-current="page"' : '') + '>' + L.avance + '</a></nav>' +

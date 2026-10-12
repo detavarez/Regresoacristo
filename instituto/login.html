@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Entrar — Instituto Bíblico</title>
 <link rel="stylesheet" href="assets/instituto.css?v=10">
+<script src="assets/i18n.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   .caja-login{max-width:340px;margin:16vh auto 0;padding:0 20px}
@@ -27,6 +28,7 @@
   <div id="err"></div>
   <button class="btn" type="button" id="entrar">Entrar</button>
   <p style="text-align:center;margin:16px 0 0"><button type="button" id="olvide" style="background:none;border:none;font-family:var(--sans);font-size:.8rem;color:var(--tinta-suave);text-decoration:underline;cursor:pointer">¿Olvidaste tu contraseña?</button></p>
+  <p style="text-align:center;margin:10px 0 0;font-family:var(--sans);font-size:.8rem"><a href="#" id="langEs">Español</a> · <a href="#" id="langEn">English</a></p>
 </main>
 
 <script>
@@ -65,6 +67,9 @@ async function intentar() {
   }
   irAdentro();
 }
+
+document.getElementById('langEs').onclick = function (e) { e.preventDefault(); I18N.set('es'); };
+document.getElementById('langEn').onclick = function (e) { e.preventDefault(); I18N.set('en'); };
 
 document.getElementById('olvide').onclick = async function () {
   var correo = prompt('¿A qué correo te enviamos el enlace para restablecer tu contraseña?', email.value.trim());
