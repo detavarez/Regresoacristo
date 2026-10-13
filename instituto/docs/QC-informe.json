@@ -1,0 +1,1024 @@
+{
+  "resumen": {
+    "escritas": 41,
+    "previstas": 247
+  },
+  "filas": [
+    {
+      "n": 101,
+      "nivel": 1,
+      "titulo": "¿Qué es la Biblia? Composición, autores, idiomas y unidad",
+      "es": 2749,
+      "en": 2603,
+      "ratio": 0.95,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 7,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 2749 palabras (piso 3000)",
+        "EN: 2603 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "revisar contra Constitución 3.3: bautismo en el Espíritu / lenguas; escatología detallada; elección / seguridad eterna"
+      ]
+    },
+    {
+      "n": 102,
+      "nivel": 1,
+      "titulo": "Cómo está organizada: Antiguo y Nuevo Testamento, secciones y géneros",
+      "es": 2220,
+      "en": 2125,
+      "ratio": 0.96,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 5,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 2220 palabras (piso 3000)",
+        "EN: 2125 palabras (piso 3000)"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": []
+    },
+    {
+      "n": 103,
+      "nivel": 1,
+      "titulo": "La historia bíblica en seis actos: el mapa completo",
+      "es": 2523,
+      "en": 2413,
+      "ratio": 0.96,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 2523 palabras (piso 3000)",
+        "EN: 2413 palabras (piso 3000)",
+        "falta sección de errores frecuentes",
+        "falta caso para pensar (nota)"
+      ],
+      "avisos": [
+        "sin términos de glosario"
+      ],
+      "info": []
+    },
+    {
+      "n": 104,
+      "nivel": 1,
+      "titulo": "Acto 1 — Creación: un mundo bueno y un ser humano con encargo",
+      "es": 2688,
+      "en": 2544,
+      "ratio": 0.95,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 2,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 2688 palabras (piso 3000)",
+        "EN: 2544 palabras (piso 3000)"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "revisar contra Constitución 3.3: escatología detallada"
+      ]
+    },
+    {
+      "n": 105,
+      "nivel": 1,
+      "titulo": "Acto 2 — Caída: qué se rompió y hasta dónde llegó la ruptura",
+      "es": 2440,
+      "en": 2280,
+      "ratio": 0.93,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 2,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 2440 palabras (piso 3000)",
+        "EN: 2280 palabras (piso 3000)"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": []
+    },
+    {
+      "n": 106,
+      "nivel": 1,
+      "titulo": "Acto 3 — Israel: promesa, pacto, fracaso y esperanza",
+      "es": 2172,
+      "en": 2046,
+      "ratio": 0.94,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 1,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 2172 palabras (piso 3000)",
+        "EN: 2046 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "revisar contra Constitución 3.3: elección / seguridad eterna"
+      ]
+    },
+    {
+      "n": 107,
+      "nivel": 1,
+      "titulo": "Acto 4 — Cristo: el cumplimiento que Israel no pudo lograr",
+      "es": 2394,
+      "en": 1628,
+      "ratio": 0.68,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 4,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 2394 palabras (piso 3000)",
+        "EN: 1628 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "desequilibrio EN/ES = 0.68",
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": []
+    },
+    {
+      "n": 108,
+      "nivel": 1,
+      "titulo": "Actos 5 y 6 — Iglesia y nueva creación: dónde estamos y hacia dónde va",
+      "es": 2071,
+      "en": 1965,
+      "ratio": 0.95,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 2071 palabras (piso 3000)",
+        "EN: 1965 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro",
+        "sin términos de glosario"
+      ],
+      "info": [
+        "revisar contra Constitución 3.3: bautismo en el Espíritu / lenguas; escatología detallada"
+      ]
+    },
+    {
+      "n": 109,
+      "nivel": 1,
+      "titulo": "El mapa del mundo bíblico: de Mesopotamia a Roma",
+      "es": 1665,
+      "en": 1536,
+      "ratio": 0.92,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 1,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1665 palabras (piso 3000)",
+        "EN: 1536 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)",
+        "revisar contra Constitución 3.3: elección / seguridad eterna"
+      ]
+    },
+    {
+      "n": 110,
+      "nivel": 1,
+      "titulo": "Línea de tiempo del Antiguo Testamento",
+      "es": 1365,
+      "en": 1279,
+      "ratio": 0.94,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1365 palabras (piso 3000)",
+        "EN: 1279 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "sin términos de glosario"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 111,
+      "nivel": 1,
+      "titulo": "Línea de tiempo del Nuevo Testamento",
+      "es": 1246,
+      "en": 1133,
+      "ratio": 0.91,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1246 palabras (piso 3000)",
+        "EN: 1133 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "sin términos de glosario"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 112,
+      "nivel": 1,
+      "titulo": "Los cuatro siglos entre los Testamentos: introducción",
+      "es": 1361,
+      "en": 1298,
+      "ratio": 0.95,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 4,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1361 palabras (piso 3000)",
+        "EN: 1298 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 113,
+      "nivel": 1,
+      "titulo": "Pentateuco: qué hace cada uno de los cinco libros",
+      "es": 1626,
+      "en": 1518,
+      "ratio": 0.93,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 2,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1626 palabras (piso 3000)",
+        "EN: 1518 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "revisar contra Constitución 3.3: bautismo en el Espíritu / lenguas"
+      ]
+    },
+    {
+      "n": 114,
+      "nivel": 1,
+      "titulo": "Libros históricos: de Josué a Ester",
+      "es": 1195,
+      "en": 1128,
+      "ratio": 0.94,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 1,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1195 palabras (piso 3000)",
+        "EN: 1128 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)",
+        "revisar contra Constitución 3.3: elección / seguridad eterna"
+      ]
+    },
+    {
+      "n": 115,
+      "nivel": 1,
+      "titulo": "Poéticos y sapienciales: Job a Cantares",
+      "es": 1538,
+      "en": 1421,
+      "ratio": 0.92,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1538 palabras (piso 3000)",
+        "EN: 1421 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro",
+        "sin términos de glosario"
+      ],
+      "info": []
+    },
+    {
+      "n": 116,
+      "nivel": 1,
+      "titulo": "Profetas mayores: Isaías a Daniel",
+      "es": 1367,
+      "en": 1277,
+      "ratio": 0.93,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 3,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1367 palabras (piso 3000)",
+        "EN: 1277 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 117,
+      "nivel": 1,
+      "titulo": "Profetas menores: los doce",
+      "es": 1285,
+      "en": 1224,
+      "ratio": 0.95,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1285 palabras (piso 3000)",
+        "EN: 1224 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro",
+        "sin términos de glosario"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 118,
+      "nivel": 1,
+      "titulo": "Evangelios y Hechos: cuatro retratos y una continuación",
+      "es": 1304,
+      "en": 1205,
+      "ratio": 0.92,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 1,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1304 palabras (piso 3000)",
+        "EN: 1205 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)",
+        "revisar contra Constitución 3.3: elección / seguridad eterna"
+      ]
+    },
+    {
+      "n": 119,
+      "nivel": 1,
+      "titulo": "Cartas de Pablo: a quién, por qué y en qué orden",
+      "es": 1261,
+      "en": 1164,
+      "ratio": 0.92,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1261 palabras (piso 3000)",
+        "EN: 1164 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro",
+        "sin términos de glosario"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 120,
+      "nivel": 1,
+      "titulo": "Epístolas generales y Apocalipsis",
+      "es": 1440,
+      "en": 1359,
+      "ratio": 0.94,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 1,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1440 palabras (piso 3000)",
+        "EN: 1359 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 121,
+      "nivel": 1,
+      "titulo": "Cómo ubicar un pasaje: capítulos, versículos y referencias cruzadas",
+      "es": 1215,
+      "en": 1144,
+      "ratio": 0.94,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 2,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1215 palabras (piso 3000)",
+        "EN: 1144 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 122,
+      "nivel": 1,
+      "titulo": "Libros apócrifos y deuterocanónicos: qué son y por qué no están en esta Biblia",
+      "es": 1191,
+      "en": 1122,
+      "ratio": 0.94,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 4,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1191 palabras (piso 3000)",
+        "EN: 1122 palabras (piso 3000)",
+        "falta sección de errores frecuentes",
+        "falta caso para pensar (nota)"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": []
+    },
+    {
+      "n": 123,
+      "nivel": 1,
+      "titulo": "Adán, Caín, Noé y Babel: la humanidad antes de Abraham",
+      "es": 1992,
+      "en": 1865,
+      "ratio": 0.94,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1992 palabras (piso 3000)",
+        "EN: 1865 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro",
+        "sin términos de glosario"
+      ],
+      "info": [
+        "revisar contra Constitución 3.3: bautismo en el Espíritu / lenguas"
+      ]
+    },
+    {
+      "n": 124,
+      "nivel": 1,
+      "titulo": "Abraham, Isaac y Jacob: la familia de la promesa",
+      "es": 1465,
+      "en": 1330,
+      "ratio": 0.91,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1465 palabras (piso 3000)",
+        "EN: 1330 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "sin términos de glosario"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 125,
+      "nivel": 1,
+      "titulo": "José y la bajada a Egipto",
+      "es": 1394,
+      "en": 1252,
+      "ratio": 0.9,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1394 palabras (piso 3000)",
+        "EN: 1252 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "sin términos de glosario"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 126,
+      "nivel": 1,
+      "titulo": "Moisés, el Éxodo y el Sinaí",
+      "es": 1351,
+      "en": 1256,
+      "ratio": 0.93,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 2,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1351 palabras (piso 3000)",
+        "EN: 1256 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 127,
+      "nivel": 1,
+      "titulo": "Josué, los jueces y Samuel",
+      "es": 1343,
+      "en": 1239,
+      "ratio": 0.92,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 1,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1343 palabras (piso 3000)",
+        "EN: 1239 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 128,
+      "nivel": 1,
+      "titulo": "Saúl, David y Salomón",
+      "es": 1265,
+      "en": 1211,
+      "ratio": 0.96,
+      "quizEs": 10,
+      "quizEn": 10,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1265 palabras (piso 3000)",
+        "EN: 1211 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "sin términos de glosario"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)",
+        "revisar contra Constitución 3.3: elección / seguridad eterna"
+      ]
+    },
+    {
+      "n": 129,
+      "nivel": 1,
+      "titulo": "El reino dividido, los profetas y el exilio",
+      "es": 1288,
+      "en": 1198,
+      "ratio": 0.93,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1288 palabras (piso 3000)",
+        "EN: 1198 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro",
+        "sin términos de glosario"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 130,
+      "nivel": 1,
+      "titulo": "El retorno: Esdras, Nehemías y la espera",
+      "es": 1018,
+      "en": 981,
+      "ratio": 0.96,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1018 palabras (piso 3000)",
+        "EN: 981 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro",
+        "sin términos de glosario"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 131,
+      "nivel": 1,
+      "titulo": "Jesús: nacimiento, ministerio, muerte y resurrección",
+      "es": 1109,
+      "en": 1063,
+      "ratio": 0.96,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1109 palabras (piso 3000)",
+        "EN: 1063 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro",
+        "sin términos de glosario"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)",
+        "revisar contra Constitución 3.3: demonios y creyentes"
+      ]
+    },
+    {
+      "n": 132,
+      "nivel": 1,
+      "titulo": "Los apóstoles y la expansión de la Iglesia",
+      "es": 1099,
+      "en": 1045,
+      "ratio": 0.95,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1099 palabras (piso 3000)",
+        "EN: 1045 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "sin términos de glosario"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)",
+        "revisar contra Constitución 3.3: bautismo en el Espíritu / lenguas; demonios y creyentes"
+      ]
+    },
+    {
+      "n": 133,
+      "nivel": 1,
+      "titulo": "Dios: quién dice la Biblia que es",
+      "es": 1183,
+      "en": 1070,
+      "ratio": 0.9,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 8,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1183 palabras (piso 3000)",
+        "EN: 1070 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 134,
+      "nivel": 1,
+      "titulo": "La Trinidad: introducción a un Dios en tres personas",
+      "es": 1557,
+      "en": 1443,
+      "ratio": 0.93,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 1,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1557 palabras (piso 3000)",
+        "EN: 1443 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": []
+    },
+    {
+      "n": 135,
+      "nivel": 1,
+      "titulo": "Jesucristo: plenamente Dios y plenamente hombre",
+      "es": 1201,
+      "en": 1123,
+      "ratio": 0.94,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 2,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1201 palabras (piso 3000)",
+        "EN: 1123 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 136,
+      "nivel": 1,
+      "titulo": "El Espíritu Santo: persona, no fuerza",
+      "es": 1174,
+      "en": 1097,
+      "ratio": 0.93,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 1,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1174 palabras (piso 3000)",
+        "EN: 1097 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)",
+        "revisar contra Constitución 3.3: bautismo en el Espíritu / lenguas; elección / seguridad eterna"
+      ]
+    },
+    {
+      "n": 137,
+      "nivel": 1,
+      "titulo": "El ser humano: imagen de Dios y realidad del pecado",
+      "es": 1293,
+      "en": 1193,
+      "ratio": 0.92,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 2,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1293 palabras (piso 3000)",
+        "EN: 1193 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 138,
+      "nivel": 1,
+      "titulo": "La salvación: el evangelio explicado paso a paso",
+      "es": 1263,
+      "en": 1162,
+      "ratio": 0.92,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 6,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1263 palabras (piso 3000)",
+        "EN: 1162 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 139,
+      "nivel": 1,
+      "titulo": "La Iglesia: qué es, para qué existe, cómo se reúne",
+      "es": 1209,
+      "en": 1079,
+      "ratio": 0.89,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 2,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1209 palabras (piso 3000)",
+        "EN: 1079 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)"
+      ]
+    },
+    {
+      "n": 140,
+      "nivel": 1,
+      "titulo": "Las últimas cosas: introducción y advertencia sobre la especulación",
+      "es": 1283,
+      "en": 1182,
+      "ratio": 0.92,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 0,
+      "estado": "HEREDADA",
+      "errores": [
+        "ES: 1283 palabras (piso 3000)",
+        "EN: 1182 palabras (piso 3000)",
+        "falta sección de errores frecuentes"
+      ],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro",
+        "sin términos de glosario"
+      ],
+      "info": [
+        "sin bloque de posturas (válido solo si no hay tema debatido)",
+        "revisar contra Constitución 3.3: escatología detallada"
+      ]
+    },
+    {
+      "n": 141,
+      "nivel": 1,
+      "titulo": "Ángeles, demonios y el mundo espiritual: lo que el texto afirma y lo que no",
+      "es": 4296,
+      "en": 4191,
+      "ratio": 0.98,
+      "quizEs": 11,
+      "quizEn": 11,
+      "ejEs": 6,
+      "ejEn": 6,
+      "glosario": 4,
+      "estado": "CUMPLE",
+      "errores": [],
+      "avisos": [
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
+      ],
+      "info": [
+        "revisar contra Constitución 3.3: demonios y creyentes"
+      ]
+    }
+  ]
+}
