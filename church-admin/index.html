@@ -628,19 +628,7 @@
 
 <!-- ═══════════════ PANTALLA DE LOGIN ═══════════════ -->
 <div id="pantallaLogin">
-  <form class="tarjetaLogin" id="formLoginPin" onsubmit="return manejarLoginPin(event)">
-    <h1>Church Admin</h1>
-    <p class="subtitulo">Iglesia Regreso a Cristo</p>
-    <div class="mensajeError" id="mensajeErrorLoginPin"></div>
-    <div class="campo">
-      <label for="inputPin">PIN</label>
-      <input type="password" inputmode="numeric" pattern="[0-9]*" id="inputPin" maxlength="6" autocomplete="current-password" required style="letter-spacing:10px; font-size:1.5rem; text-align:center;">
-    </div>
-    <button type="submit" class="btnPrincipal" id="btnLoginPin">Ingresar</button>
-    <button type="button" class="btnSecundario" style="width:100%; margin-top:10px;" onclick="mostrarLoginClasico()">¿No eres tú? Usar correo y contraseña</button>
-  </form>
-
-  <form class="tarjetaLogin" id="formLogin" style="display:none;" onsubmit="return manejarLogin(event)">
+  <form class="tarjetaLogin" id="formLogin" onsubmit="return manejarLogin(event)">
     <h1>Church Admin</h1>
     <p class="subtitulo">Iglesia Regreso a Cristo</p>
     <div class="mensajeError" id="mensajeErrorLogin"></div>
@@ -653,8 +641,55 @@
       <input type="password" id="inputPassword" autocomplete="current-password" required>
     </div>
     <button type="submit" class="btnPrincipal" id="btnLogin">Ingresar</button>
-    <button type="button" class="btnSecundario" style="width:100%; margin-top:10px;" onclick="mostrarLoginPin()">Volver al PIN</button>
   </form>
+</div>
+
+<div id="pantallaBloqueo" style="display:none; position:fixed; inset:0; z-index:5000; align-items:center; justify-content:center; padding:20px; background:linear-gradient(160deg, var(--navy) 0%, var(--navy-light) 100%);">
+  <div class="tarjetaLogin">
+    <h1>Aplicación bloqueada</h1>
+    <p class="subtitulo" id="bloqueoNombre"></p>
+    <div class="mensajeError" id="bloqueoMsg"></div>
+    <div id="bloqueoPinBox">
+      <div class="campo"><label for="bloqueoPin">PIN de 4 números</label>
+        <input type="password" inputmode="numeric" pattern="[0-9]*" id="bloqueoPin" maxlength="4" autocomplete="off" oninput="if(this.value.length===4) bloqueoVerificarPin()" style="letter-spacing:14px; font-size:1.6rem; text-align:center;">
+      </div>
+    </div>
+    <form id="bloqueoClaveBox" style="display:none;" onsubmit="return bloqueoVerificarClave(event)">
+      <div class="campo"><label for="bloqueoClave">Contraseña</label><input type="password" id="bloqueoClave" autocomplete="current-password"></div>
+      <button type="submit" class="btnPrincipal" id="btnBloqueoClave">Desbloquear</button>
+    </form>
+    <button type="button" class="btnSecundario" id="btnBioDesbloquear" style="width:100%; margin-top:10px; display:none;" onclick="bioDesbloquear()">Usar huella o rostro</button>
+    <button type="button" class="btnSecundario" id="btnBloqueoAlterna" style="width:100%; margin-top:10px;" onclick="bloqueoAlternar()">Usar mi contraseña</button>
+    <button type="button" class="btnSecundario" style="width:100%; margin-top:10px;" onclick="manejarLogout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="modalOverlay" id="modalSeguridad">
+  <div class="modalCaja">
+    <h3>Mi seguridad</h3>
+    <div id="segIntro" style="display:none; font-size:0.9rem; margin-bottom:10px;">Puedes usar un PIN de 4 números para desbloquear la aplicación más rápido. Es opcional: si prefieres, usarás tu contraseña.</div>
+    <div class="mensajeError" id="segMsg" style="background:rgba(31,169,113,0.15); color:var(--heading);"></div>
+    <div class="perfilSeccion">PIN de 4 números</div>
+    <div id="segPinEstado" style="font-size:0.9rem; margin-bottom:8px;"></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <input type="password" inputmode="numeric" maxlength="4" id="segPin1" placeholder="PIN nuevo" autocomplete="off">
+      <input type="password" inputmode="numeric" maxlength="4" id="segPin2" placeholder="Repetir PIN" autocomplete="off">
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+      <button type="button" class="btnAccion" onclick="segGuardarPin()">Guardar PIN</button>
+      <button type="button" class="btnSecundario" id="segBtnNoPin" onclick="segNoUsarPin()">No usar PIN</button>
+    </div>
+    <div class="perfilSeccion">Huella o rostro</div>
+    <div id="segBioEstado" style="font-size:0.9rem; margin-bottom:8px;"></div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button type="button" class="btnAccion" id="segBtnBioOn" onclick="bioActivar()">Activar huella o rostro</button>
+      <button type="button" class="btnSecundario" id="segBtnBioOff" onclick="bioQuitar()">Desactivar</button>
+    </div>
+    <div class="formAcciones" style="margin-top:18px;">
+      <button type="button" class="btnSecundario" onclick="segBloquearAhora()">Bloquear ahora</button>
+      <button type="button" class="btnSecundario" onclick="document.getElementById('modalSeguridad').classList.remove('abierto')">Cerrar</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════ SHELL PRINCIPAL ═══════════════ -->
@@ -663,7 +698,7 @@
     <div class="marca">Church <span>Admin</span> <span style="font-size:0.7rem; font-weight:600; opacity:0.85; margin-left:6px;" id="versionTopbar"></span></div>
     <div class="usuarioInfo">
       <button class="btnTopIcono" id="btnInstalar" style="display:none;" onclick="instalarApp()" title="Instalar en el celular" aria-label="Instalar">📲</button><button class="btnTopIcono" onclick="abrirBusquedaGlobal()" title="Búsqueda global" aria-label="Búsqueda global">🔍</button><button class="btnTopIcono" id="btnTema" onclick="alternarTema()" title="Tema claro/oscuro" aria-label="Tema">🌙</button>
-      <span id="nombreUsuarioTop"></span>
+      <button class="btnTopIcono" onclick="abrirSeguridad(false)" title="Mi seguridad y bloqueo" aria-label="Mi seguridad">🔒</button><span id="nombreUsuarioTop"></span>
       <button onclick="manejarLogout()">Cerrar sesión</button>
     </div>
   </div>
@@ -1319,6 +1354,16 @@
             </div>
           </div>
         </div>
+        <div class="tablaWrap" style="margin-bottom:20px;" id="bloqueBloqueoCfg">
+          <h3>Bloqueo automático por inactividad</h3>
+          <div style="padding:14px 18px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input type="number" id="cfgBloqueoMin" min="0" max="240" style="max-width:110px;"> <span style="font-size:0.9rem;">minutos sin actividad (0 = nunca)</span>
+            <button type="button" class="btnPrincipal" style="width:auto;" onclick="cfgGuardarBloqueo()">Guardar</button>
+            <span id="cfgBloqueoMsg" style="font-size:0.85rem; color:var(--text-muted);"></span>
+          </div>
+          <div style="padding:0 18px 14px; font-size:0.78rem; color:var(--text-muted);">Al bloquearse, la sesión sigue abierta; se desbloquea con PIN, huella o rostro, o con la contraseña.</div>
+        </div>
+
         <div class="tablaWrap" style="margin-bottom:20px;" id="bloqueImportCfg">
           <h3>Importación de correos (Cash App y Zelle)</h3>
           <div style="padding:14px 18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
@@ -2541,48 +2586,211 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-053';
-document.getElementById('versionTopbar').textContent = 'Ver-053';
+const APP_VERSION = 'church-admin Ver-054';
+document.getElementById('versionTopbar').textContent = 'Ver-054';
 
-// ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
-// NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
-// más de un usuario con acceso a Church Admin, este correo fijo necesitará
-// convertirse en un selector de persona antes del PIN.
-const EMAIL_CUENTA_PRINCIPAL = 'detavarez77@gmail.com';
+// ── Seguridad: bloqueo, PIN y biometría (la sesión de Supabase nunca se cierra al bloquear) ──
+let bloqueoMin = 5;
+let bloqueado = false;
+let estadoPin = { tiene_pin: false, preguntado: true };
+let tBloqueo = null;
+let segModoClave = false;
+const LS_ACT = 'ca_ultima_actividad';
+const LS_BLOQ = 'ca_bloqueada';
 
-async function manejarLoginPin(evt) {
-  evt.preventDefault();
-  const pin = document.getElementById('inputPin').value.trim();
-  const btn = document.getElementById('btnLoginPin');
-  const msg = document.getElementById('mensajeErrorLoginPin');
+function segUid() { return getSesion()?.usuario?.id || ''; }
+function bytesAB64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+function b64ABytes(b64) { const s = atob(b64.replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(s, c => c.charCodeAt(0)); }
+function bioGuardada() { return !!localStorage.getItem('ca_bio_' + segUid()); }
+function bioSoportada() { return !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create); }
 
-  msg.style.display = 'none';
-  btn.disabled = true;
-  btn.textContent = 'Ingresando…';
-
-  const resultado = await iniciarSesion(EMAIL_CUENTA_PRINCIPAL, pin);
-
-  if (!resultado.ok) {
-    msg.textContent = resultado.mensaje;
-    msg.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = 'Ingresar';
-    document.getElementById('inputPin').value = '';
-    return false;
+async function iniciarSeguridad(sesionNueva) {
+  const cfg = await sbCall(sb.from('config_iglesia').select('bloqueo_minutos').eq('id', 1).maybeSingle());
+  if (!cfg.error && cfg.data && typeof cfg.data.bloqueo_minutos === 'number') bloqueoMin = cfg.data.bloqueo_minutos;
+  const est = await sbCall(sb.rpc('ca_pin_estado'));
+  if (!est.error && est.data) estadoPin = est.data;
+  if (sesionNueva) {
+    localStorage.removeItem(LS_BLOQ);
+    localStorage.setItem(LS_ACT, String(Date.now()));
+  } else {
+    const last = Number(localStorage.getItem(LS_ACT)) || Date.now();
+    if (localStorage.getItem(LS_BLOQ) === '1' || (bloqueoMin > 0 && Date.now() - last > bloqueoMin * 60000)) { bloquearApp(); return; }
   }
+  marcarActividad();
+  if (!estadoPin.preguntado) abrirSeguridad(true);
+}
 
-  mostrarApp();
+function marcarActividad() {
+  if (bloqueado) return;
+  localStorage.setItem(LS_ACT, String(Date.now()));
+  clearTimeout(tBloqueo);
+  if (bloqueoMin > 0) tBloqueo = setTimeout(bloquearApp, bloqueoMin * 60000);
+}
+let _ultimaMarca = 0;
+['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, () => {
+  const t = Date.now();
+  if (t - _ultimaMarca > 3000 && getSesion()?.usuario) { _ultimaMarca = t; marcarActividad(); }
+}, { passive: true }));
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || bloqueado || !getSesion()?.usuario) return;
+  const last = Number(localStorage.getItem(LS_ACT)) || 0;
+  if (bloqueoMin > 0 && Date.now() - last > bloqueoMin * 60000) bloquearApp();
+});
+
+function bloquearApp() {
+  if (bloqueado || !getSesion()?.usuario) return;
+  bloqueado = true;
+  clearTimeout(tBloqueo);
+  localStorage.setItem(LS_BLOQ, '1');
+  document.querySelectorAll('.modalOverlay.abierto').forEach(m => m.classList.remove('abierto'));
+  const u = getSesion().usuario;
+  document.getElementById('bloqueoNombre').textContent = u.nombre || u.correo || '';
+  document.getElementById('bloqueoMsg').style.display = 'none';
+  document.getElementById('bloqueoPin').value = '';
+  document.getElementById('bloqueoClave').value = '';
+  segModoClave = !estadoPin.tiene_pin;
+  bloqueoPintar();
+  document.getElementById('pantallaBloqueo').style.display = 'flex';
+  if (!segModoClave) setTimeout(() => document.getElementById('bloqueoPin').focus(), 100);
+}
+
+function bloqueoPintar() {
+  document.getElementById('bloqueoPinBox').style.display = segModoClave ? 'none' : 'block';
+  document.getElementById('bloqueoClaveBox').style.display = segModoClave ? 'block' : 'none';
+  document.getElementById('btnBloqueoAlterna').style.display = estadoPin.tiene_pin ? '' : 'none';
+  document.getElementById('btnBloqueoAlterna').textContent = segModoClave ? 'Usar mi PIN' : 'Usar mi contraseña';
+  document.getElementById('btnBioDesbloquear').style.display = (bioGuardada() && bioSoportada()) ? '' : 'none';
+}
+function bloqueoAlternar() { segModoClave = !segModoClave; document.getElementById('bloqueoMsg').style.display = 'none'; bloqueoPintar(); }
+function bloqueoError(t) { const m = document.getElementById('bloqueoMsg'); m.textContent = t; m.style.display = 'block'; }
+
+function desbloquear() {
+  bloqueado = false;
+  localStorage.removeItem(LS_BLOQ);
+  document.getElementById('pantallaBloqueo').style.display = 'none';
+  marcarActividad();
+}
+
+async function bloqueoVerificarPin() {
+  const pin = document.getElementById('bloqueoPin').value.trim();
+  if (!/^[0-9]{4}$/.test(pin)) return;
+  const r = await sbCall(sb.rpc('ca_pin_verificar', { p: pin }));
+  document.getElementById('bloqueoPin').value = '';
+  if (r.error) { bloqueoError('No se pudo verificar el PIN. Usa tu contraseña.'); segModoClave = true; bloqueoPintar(); return; }
+  const d = r.data || {};
+  if (d.ok) { desbloquear(); return; }
+  if (d.sin_pin) { estadoPin.tiene_pin = false; segModoClave = true; bloqueoPintar(); bloqueoError('No hay un PIN activo. Usa tu contraseña.'); return; }
+  if (d.bloqueado) { segModoClave = true; bloqueoPintar(); bloqueoError('Demasiados intentos con el PIN. Usa tu contraseña o espera ' + Math.ceil((d.segundos || 300) / 60) + ' min.'); return; }
+  bloqueoError('PIN incorrecto. Intentos restantes: ' + d.restantes);
+}
+
+async function bloqueoVerificarClave(evt) {
+  evt.preventDefault();
+  const clave = document.getElementById('bloqueoClave').value;
+  const correo = getSesion()?.usuario?.correo;
+  if (!clave || !correo) return false;
+  const btn = document.getElementById('btnBloqueoClave');
+  btn.disabled = true;
+  const { error } = await sbCall(sb.auth.signInWithPassword({ email: correo, password: clave }));
+  btn.disabled = false;
+  document.getElementById('bloqueoClave').value = '';
+  if (error) { bloqueoError('Contraseña incorrecta.'); return false; }
+  desbloquear();
   return false;
 }
 
-function mostrarLoginClasico() {
-  document.getElementById('formLoginPin').style.display = 'none';
-  document.getElementById('formLogin').style.display = 'block';
+// ── Biometría (huella / rostro del dispositivo) ──
+async function bioActivar() {
+  const u = getSesion()?.usuario;
+  if (!u) return;
+  if (!bioSoportada()) { segMensaje('Este dispositivo o navegador no permite huella o rostro.'); return; }
+  try {
+    const disponible = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if (!disponible) { segMensaje('Este dispositivo no tiene huella o rostro configurados.'); return; }
+    const reto = crypto.getRandomValues(new Uint8Array(32));
+    const cred = await navigator.credentials.create({ publicKey: {
+      challenge: reto,
+      rp: { name: 'Church Admin', id: location.hostname },
+      user: { id: new TextEncoder().encode(String(u.id).replace(/-/g, '').slice(0, 32)), name: u.correo || 'usuario', displayName: u.nombre || u.correo || 'Usuario' },
+      pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+      authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
+      timeout: 60000, attestation: 'none',
+    } });
+    localStorage.setItem('ca_bio_' + u.id, bytesAB64(cred.rawId));
+    segMensaje('Listo: ya puedes desbloquear con huella o rostro en este dispositivo.');
+    segPintar();
+  } catch (e) {
+    segMensaje('No se pudo activar: ' + (e && e.name === 'NotAllowedError' ? 'cancelado o sin permiso.' : (e.message || 'error')));
+  }
+}
+function bioQuitar() { localStorage.removeItem('ca_bio_' + segUid()); segMensaje('Se desactivó la huella o rostro en este dispositivo.'); segPintar(); }
+async function bioDesbloquear() {
+  const id = localStorage.getItem('ca_bio_' + segUid());
+  if (!id) { bloqueoPintar(); return; }
+  try {
+    await navigator.credentials.get({ publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      allowCredentials: [{ type: 'public-key', id: b64ABytes(id), transports: ['internal'] }],
+      userVerification: 'required', timeout: 60000, rpId: location.hostname,
+    } });
+    desbloquear();
+  } catch (e) {
+    bloqueoError(e && e.name === 'NotAllowedError' ? 'No se reconoció la huella o el rostro. Usa tu PIN o contraseña.' : 'No se pudo usar la huella o el rostro.');
+  }
 }
 
-function mostrarLoginPin() {
-  document.getElementById('formLogin').style.display = 'none';
-  document.getElementById('formLoginPin').style.display = 'block';
+// ── Pantalla "Mi seguridad" ──
+function segMensaje(t) { const m = document.getElementById('segMsg'); m.textContent = t; m.style.display = 'block'; }
+function segPintar() {
+  document.getElementById('segPinEstado').textContent = estadoPin.tiene_pin ? 'PIN activado.' : 'No usas PIN: para desbloquear escribirás tu contraseña.';
+  document.getElementById('segBtnNoPin').style.display = estadoPin.tiene_pin ? '' : 'none';
+  document.getElementById('segBioEstado').textContent = !bioSoportada() ? 'Este navegador no permite huella o rostro.' : (bioGuardada() ? 'Activada en este dispositivo.' : 'No activada en este dispositivo.');
+  document.getElementById('segBtnBioOn').style.display = (bioSoportada() && !bioGuardada()) ? '' : 'none';
+  document.getElementById('segBtnBioOff').style.display = bioGuardada() ? '' : 'none';
+}
+function abrirSeguridad(primeraVez) {
+  document.getElementById('segIntro').style.display = primeraVez ? 'block' : 'none';
+  document.getElementById('segMsg').style.display = 'none';
+  document.getElementById('segPin1').value = '';
+  document.getElementById('segPin2').value = '';
+  segPintar();
+  document.getElementById('modalSeguridad').classList.add('abierto');
+}
+async function segGuardarPin() {
+  const a = document.getElementById('segPin1').value.trim(), b = document.getElementById('segPin2').value.trim();
+  if (!/^[0-9]{4}$/.test(a)) { segMensaje('El PIN debe tener exactamente 4 números.'); return; }
+  if (a !== b) { segMensaje('Los dos PIN no coinciden.'); return; }
+  const r = await sbCall(sb.rpc('ca_pin_fijar', { p: a }));
+  if (r.error) { segMensaje('No se pudo guardar: ' + r.error.message); return; }
+  estadoPin = { tiene_pin: true, preguntado: true };
+  document.getElementById('segPin1').value = ''; document.getElementById('segPin2').value = '';
+  segMensaje('PIN guardado.');
+  segPintar();
+}
+async function segNoUsarPin() {
+  const r = await sbCall(sb.rpc('ca_pin_no_usar'));
+  if (r.error) { segMensaje('No se pudo guardar: ' + r.error.message); return; }
+  estadoPin = { tiene_pin: false, preguntado: true };
+  segMensaje('Listo: no se usará PIN.');
+  segPintar();
+}
+function segBloquearAhora() { document.getElementById('modalSeguridad').classList.remove('abierto'); bloquearApp(); }
+
+async function cfgGuardarBloqueo() {
+  const v = parseInt(document.getElementById('cfgBloqueoMin').value, 10);
+  const out = document.getElementById('cfgBloqueoMsg');
+  if (isNaN(v) || v < 0 || v > 240) { out.textContent = 'Escribe un número entre 0 y 240.'; return; }
+  const r = await sbCall(sb.rpc('ca_bloqueo_fijar', { minutos: v }));
+  if (r.error) { out.textContent = r.error.message; return; }
+  bloqueoMin = v;
+  marcarActividad();
+  out.textContent = v === 0 ? 'Bloqueo automático desactivado.' : 'Guardado: se bloqueará tras ' + v + ' min sin actividad.';
+}
+async function cfgCargarBloqueo() {
+  const b = document.getElementById('bloqueBloqueoCfg');
+  if (!b) return;
+  b.style.display = puede('gestionarConfig') ? '' : 'none';
+  document.getElementById('cfgBloqueoMin').value = bloqueoMin;
 }
 
 // ── Login ──────────────────────────────────────────────────────────────
@@ -2607,18 +2815,23 @@ async function manejarLogin(evt) {
     return false;
   }
 
+  btn.disabled = false;
+  btn.textContent = 'Ingresar';
   mostrarApp();
+  iniciarSeguridad(true);
   return false;
 }
 
 async function manejarLogout() {
+  clearTimeout(tBloqueo);
+  bloqueado = false;
+  localStorage.removeItem(LS_BLOQ);
+  document.getElementById('pantallaBloqueo').style.display = 'none';
   await cerrarSesion();
   document.getElementById('pantallaApp').style.display = 'none';
   document.getElementById('pantallaLogin').style.display = 'flex';
   document.getElementById('inputEmail').value = '';
   document.getElementById('inputPassword').value = '';
-  document.getElementById('inputPin').value = '';
-  mostrarLoginPin();
 }
 
 function mostrarApp() {
@@ -3895,6 +4108,7 @@ async function cfgSincronizar() {
 }
 
 async function cfgCargar() {
+  cfgCargarBloqueo();
   sobCargarEstado();
   paCargarImportacion();
   const d = (await cfgSincronizar()) || {};
@@ -10127,6 +10341,7 @@ async function actualizarResumenPastoral() {
   const resultado = await cargarSesion();
   if (resultado.ok) {
     mostrarApp();
+    iniciarSeguridad(false);
   }
 })();
 </script>
