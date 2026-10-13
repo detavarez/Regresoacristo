@@ -1,0 +1,29 @@
+name: QC Instituto Bíblico
+
+# Se ejecuta cuando cambia algo dentro de instituto/. No afecta a otros proyectos del repo.
+on:
+  push:
+    paths:
+      - 'instituto/**'
+  pull_request:
+    paths:
+      - 'instituto/**'
+
+jobs:
+  qc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Ejecutar QC (Constitución §4 y §7.6)
+        run: node instituto/tools/qc.js
+      - name: Subir informe y cola como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qc-instituto
+          path: |
+            instituto/docs/QC-informe.md
+            instituto/docs/COLA-AMPLIACION.md
