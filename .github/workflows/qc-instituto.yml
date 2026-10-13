@@ -2,12 +2,15 @@ name: QC Instituto Bíblico
 
 # Se ejecuta cuando cambia algo dentro de instituto/. No afecta a otros proyectos del repo.
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'instituto/**'
+      - '.github/workflows/qc-instituto.yml'
   pull_request:
     paths:
       - 'instituto/**'
+      - '.github/workflows/qc-instituto.yml'
 
 jobs:
   qc:
