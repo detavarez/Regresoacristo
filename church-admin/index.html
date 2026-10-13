@@ -1367,6 +1367,12 @@
         </div>
 
         <div class="tablaWrap" style="margin-bottom:20px;">
+          <h3>Fondo y categoría predeterminados</h3>
+          <div style="padding:8px 18px; font-size:0.8rem; color:var(--text-muted);">Lo que aparece ya elegido al registrar cada tipo de transacción. Siempre se puede cambiar en cada registro.</div>
+          <div id="listaDefaultsTx" style="padding:8px 18px;"></div>
+        </div>
+
+        <div class="tablaWrap" style="margin-bottom:20px;">
           <h3>Métodos de pago de gastos</h3>
           <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
             <input type="text" id="nuevoMetodoGasto" placeholder="Nuevo método (ej. Tarjeta de banco)…" style="flex:1;">
@@ -2535,8 +2541,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-052';
-document.getElementById('versionTopbar').textContent = 'Ver-052';
+const APP_VERSION = 'church-admin Ver-053';
+document.getElementById('versionTopbar').textContent = 'Ver-053';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -2715,7 +2721,15 @@ function mostrarDashboard() {
   document.getElementById('vistaDashboard').style.display = 'block';
 }
 
+let cacheDefaultsTx = [];
+async function cargarDefaultsTx() {
+  const { data } = await sbCall(sb.from('defaults_transaccion').select('*'));
+  cacheDefaultsTx = data || [];
+}
+function defaultTx(tipo) { return cacheDefaultsTx.find(d => d.tipo === tipo) || {}; }
+
 function mostrarFinanzas() {
+  cargarDefaultsTx();
   document.getElementById('vistaDashboard').style.display = 'none';
   document.getElementById('vistaFinanzas').style.display = 'block';
   finMostrarInicio();
@@ -3767,7 +3781,7 @@ function rmAbrir(id) {
     poblarSelectPersonas('rmPersona', x.persona_id || '');
     document.getElementById('rmPersonaAyuda').textContent = x.persona_id ? 'El nombre coincide con un miembro.' : `Escribió: “${x.nombre || ''}”. Elige el miembro correcto.`;
   }
-  poblarSelectFondos('rmFondo');
+  poblarSelectFondos('rmFondo', defaultTx(x.tipo === 'Donación' ? 'Donación' : x.tipo).fondo_id);
   document.getElementById('modalRegMovil').classList.add('abierto');
 }
 
@@ -4374,7 +4388,7 @@ function trAbrirRecibo(id) {
   let iglesia = DC_IGLESIA_POR_DEFECTO;
   try { iglesia = localStorage.getItem('dcIglesiaNombre') || iglesia; } catch (e) { /* sin almacenamiento */ }
   const titulo = t.tipo === 'Ingreso' ? 'Comprobante de ingreso' : (t.tipo === 'Egreso' ? 'Comprobante de egreso' : 'Comprobante');
-  const filas = [['Fecha', formatoFecha(t.fecha)], ['Concepto', t.descripcion], ['Categoría', t.categoria], ['Origen', t.tipo_origen], ['Método', t.metodo], ['Referencia', t.referencia], ['Estado', t.estado]]
+  const filas = [['Fecha', formatoFecha(t.fecha)], ['Concepto', t.descripcion], ['Categoría', t.categoria], ['Método', t.metodo], ['Referencia', t.referencia], ['Estado', t.estado]]
     .filter(f => f[1]);
   document.getElementById('reciboContenido').innerHTML = `
     <div style="text-align:center; margin-bottom:14px;"><div style="font-size:1.15rem; font-weight:700;">${escV28(iglesia)}</div>
@@ -4382,7 +4396,10 @@ function trAbrirRecibo(id) {
     <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">${filas.map(f => `<tr><td style="padding:6px 0; border-bottom:1px solid #ddd; color:#555; width:34%;">${f[0]}</td><td style="padding:6px 0; border-bottom:1px solid #ddd;">${escV28(f[1])}</td></tr>`).join('')}
       <tr><td style="padding:10px 0; font-weight:700;">Monto</td><td style="padding:10px 0; font-weight:700; font-size:1.15rem;">${formatoMoneda(t.monto)}</td></tr></table>
     <div style="font-size:0.72rem; color:#777; margin-top:14px;">Documento generado el ${escV28(formatoFecha(new Date().toISOString().slice(0, 10)))}.</div>`;
-  document.getElementById('modalRecibo').classList.add('abierto');
+  const mr = document.getElementById('modalRecibo');
+  document.body.appendChild(mr);
+  mr.style.zIndex = '3000';
+  mr.classList.add('abierto');
 }
 function cerrarRecibo() { document.getElementById('modalRecibo').classList.remove('abierto'); }
 function imprimirRecibo() {
@@ -4638,7 +4655,7 @@ let lcCargado = false;
 function lcActivoPorMetodo(m) {
   const x = String(m || '').toLowerCase();
   if (x === 'efectivo') return '1001';
-  if (x === 'cashapp') return '1005';
+  if (x.includes('cashapp') || x.includes('cash app')) return '1005';
   return '1002';
 }
 function lcIngresoPorOrigen(t) {
@@ -5691,8 +5708,8 @@ async function generarRecurrenteAhora(id) {
 // hasta que se aprueba aquí; al aprobar se crea el mismo registro que crearía el formulario manual.
 let cachePagosEntrantes = [];
 const PA_FUENTES = {
-  cashapp: { etiqueta: 'Cash App', metodo: 'CashApp' },
-  zelle:   { etiqueta: 'Zelle',    metodo: 'Electrónico' },
+  cashapp: { etiqueta: 'Cash App', metodo: 'Cash App' },
+  zelle:   { etiqueta: 'Zelle',    metodo: 'Zelle' },
 };
 
 async function paActualizarInsignia() {
@@ -6442,7 +6459,7 @@ let cacheOfrendas = [];
 let cacheDonaciones = [];
 let cacheGastos = [];
 let cacheFondos = [];
-const METODOS_PAGO = ['Efectivo', 'Electrónico', 'Tarjeta de banco', 'Tarjeta de CashApp', 'Tarjeta', 'CashApp', 'Cheque', 'Otro'];
+const METODOS_PAGO = ['Efectivo', 'Electrónico', 'Zelle', 'Cash App', 'Tarjeta de banco', 'Tarjeta de CashApp', 'Tarjeta', 'Cheque', 'Otro'];
 const ESTADOS_FIN = ['Completado', 'Pendiente', 'Cancelado'];
 const OFRENDA_TIPOS = ['Ofrenda General', 'Misiones', 'Construcción', 'Especial', 'Bebés y Niños', 'Jóvenes'];
 const OFRENDA_TIPO_CUENTA = { 'Misiones': '4006', 'Construcción': '4007' };
@@ -6685,7 +6702,7 @@ function abrirFormDiezmo(id) {
   poblarSelectPersonas('dzPersona');
   poblarSelectMetodo('dzMetodo');
   poblarSelectEstado('dzEstado');
-  poblarSelectFondos('dzFondo');
+  poblarSelectFondos('dzFondo', defaultTx('Diezmo').fondo_id);
 
   const form = document.getElementById('formDiezmo');
   form.dataset.editId = '';
@@ -6825,7 +6842,7 @@ function abrirFormOfrenda(id) {
   poblarSelectOfrendaTipo('ofTipo');
   poblarSelectMetodo('ofMetodo');
   poblarSelectEstado('ofEstado');
-  poblarSelectFondos('ofFondo');
+  poblarSelectFondos('ofFondo', defaultTx('Ofrenda').fondo_id);
 
   const form = document.getElementById('formOfrenda');
   form.dataset.editId = '';
@@ -6966,7 +6983,7 @@ async function abrirFormDonacion(id) {
   poblarSelectProposito('dnProposito');
   poblarSelectMetodo('dnMetodo');
   poblarSelectEstado('dnEstado');
-  poblarSelectFondos('dnFondo');
+  poblarSelectFondos('dnFondo', defaultTx('Donación').fondo_id);
 
   const form = document.getElementById('formDonacion');
   form.dataset.editId = '';
@@ -7135,11 +7152,11 @@ function abrirFormGasto(id) {
   document.getElementById('formGasto').reset();
   document.getElementById('btnEliminarGasto').style.display = 'none';
   document.getElementById('gsFecha').value = new Date().toISOString().slice(0, 10);
-  poblarSelectCategoriaGasto('gsCategoria');
+  poblarSelectCategoriaGasto('gsCategoria', defaultTx('Gasto').categoria);
   poblarSelectOrganizacion('gsOrganizacion');
   poblarSelectMetodoGasto('gsMetodo');
   poblarSelectEstado('gsEstado');
-  poblarSelectFondos('gsFondo');
+  poblarSelectFondos('gsFondo', defaultTx('Gasto').fondo_id);
 
   const form = document.getElementById('formGasto');
   form.dataset.editId = '';
@@ -9479,6 +9496,33 @@ async function cargarCatalogos() {
   renderCatalogoTiposServicio();
   await cargarMetodosPago();
   renderMetodosPago();
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  if (cacheFondos.length === 0) { const rf = await sbCall(sb.from('fondos').select('*').order('nombre')); if (rf.data) cacheFondos = rf.data; }
+  await cargarDefaultsTx();
+  renderDefaultsTx();
+}
+
+function renderDefaultsTx() {
+  const cont = document.getElementById('listaDefaultsTx');
+  const tipos = ['Diezmo', 'Ofrenda', 'Donación', 'Otro Ingreso', 'Gasto'];
+  cont.innerHTML = tipos.map(t => {
+    const d = defaultTx(t);
+    const fondos = '<option value="">Sin predeterminado</option>' + cacheFondos.map(f => `<option value="${f.id}" ${d.fondo_id === f.id ? 'selected' : ''}>${escV28(f.nombre)}</option>`).join('');
+    const cats = t === 'Gasto' ? '<option value="">Sin predeterminada</option>' + cacheCuentas.filter(c => c.tipo === 'Gasto').map(c => `<option value="${escV28(c.nombre)}" ${d.categoria === c.nombre ? 'selected' : ''}>${escV28(c.nombre)}</option>`).join('') : '';
+    return `<div style="display:grid; grid-template-columns:110px 1fr ${t === 'Gasto' ? '1fr' : ''}; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
+      <b style="font-size:0.88rem;">${t}</b>
+      <select onchange="guardarDefaultTx('${t}', 'fondo_id', this.value)">${fondos}</select>
+      ${t === 'Gasto' ? `<select onchange="guardarDefaultTx('${t}', 'categoria', this.value)">${cats}</select>` : ''}
+    </div>`;
+  }).join('');
+}
+async function guardarDefaultTx(tipo, campo, valor) {
+  const actual = defaultTx(tipo);
+  const fila = { tipo, categoria: actual.categoria || null, fondo_id: actual.fondo_id || null };
+  fila[campo] = valor || null;
+  const { error } = await sbCall(sb.from('defaults_transaccion').upsert(fila, { onConflict: 'tipo' }));
+  if (error) { alert('Error al guardar: ' + error.message); return; }
+  await cargarDefaultsTx();
 }
 
 let cacheMetodosPago = [];

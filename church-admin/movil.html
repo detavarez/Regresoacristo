@@ -79,7 +79,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <div id="loginBox" style="display:none">
   <div class="logo-i" style="margin:0 auto;width:56px;height:56px;font-size:28px">✝</div>
   <h2>MobileCash</h2>
-  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M007</div>
+  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M008</div>
   <div class="form-card">
     <div class="fgrp"><label>Correo</label><input type="email" id="lgEmail" autocomplete="username" inputmode="email"></div>
     <div class="fgrp"><label>Contraseña</label><input type="password" id="lgPass" autocomplete="current-password"></div>
@@ -90,7 +90,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 
 <div id="app" style="display:none">
 <div class="topbar">
-  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M007 · <span id="quien"></span></div></div></div>
+  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M008 · <span id="quien"></span></div></div></div>
   <div style="display:flex;gap:8px;align-items:center"><span id="dot" style="width:8px;height:8px;border-radius:50%;background:#3DAA6E;display:inline-block"></span><button class="sbtn" id="btnInstalar" style="display:none" onclick="instalarApp()">📲</button><button class="sbtn" onclick="cargar(true)">↻</button><button class="sbtn" onclick="salir()">Salir</button></div>
 </div>
 <div id="toast" class="toast"></div>
@@ -389,6 +389,8 @@ async function cargarListas() {
   const rc = await sbCall(sb.from('cuentas').select('nombre').eq('tipo', 'Gasto').order('nombre'));
   const cats = (!rc.error && rc.data && rc.data.length) ? rc.data.map(c => c.nombre) : CATEGORIAS_BASE;
   $('fCategoria').innerHTML = cats.map(x => `<option>${esc(x)}</option>`).join('');
+  const rd = await sbCall(sb.from('defaults_transaccion').select('categoria').eq('tipo', 'Gasto').maybeSingle());
+  if (!rd.error && rd.data && rd.data.categoria && cats.includes(rd.data.categoria)) $('fCategoria').value = rd.data.categoria;
   const ro = await sbCall(sb.from('organizaciones').select('nombre').eq('archivado', false).order('nombre'));
   $('dlProveedores').innerHTML = ((!ro.error && ro.data) || []).map(o => `<option value="${esc(o.nombre)}">`).join('');
   $('dlPersonas').innerHTML = personas.map(p => `<option value="${esc(p.nombre)}">`).join('');
