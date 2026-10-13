@@ -990,6 +990,7 @@
           <button class="btnAccion" onclick="abrirFormCampana()">+ Nueva Campaña</button>
         </div>
         <div class="grid-resumen" id="resumenCampanas" style="margin-bottom:20px;"></div>
+        <div id="atrasadasCampanas"></div>
         <div id="listaCampanas"><div class="estadoCargando">Cargando campañas…</div></div>
       </div>
 
@@ -1745,7 +1746,7 @@
       </div>
     </form>
     <div id="listaPromesas"></div>
-    <div class="formAcciones"><button type="button" class="btnSecundario" onclick="cerrarModalPromesas()">Cerrar</button></div>
+    <div class="formAcciones"><button type="button" class="btnSecundario" onclick="imprimirResumenCampana(campanaActualId)">Imprimir resumen</button><button type="button" class="btnSecundario" id="btnCerrarCampanaModal" onclick="alternarCampanaActiva(campanaActualId)">Cerrar campaña</button><button type="button" class="btnSecundario" onclick="cerrarModalPromesas()">Cerrar</button></div>
   </div>
 </div>
 
@@ -1755,6 +1756,7 @@
     <h3 id="modalPagoPromesaTitulo">Registrar pago</h3>
     <form id="formPagoPromesa" onsubmit="return guardarPagoPromesa(event)">
       <input type="hidden" id="pgPromesaId">
+      <input type="hidden" id="pgPagoId">
       <div class="formGrid">
         <div><label for="pgFecha">Fecha *</label><input type="date" id="pgFecha" required></div>
         <div><label for="pgMonto">Monto *</label><input type="number" id="pgMonto" step="0.01" min="0.01" required></div>
@@ -2587,8 +2589,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-055';
-document.getElementById('versionTopbar').textContent = 'Ver-055';
+const APP_VERSION = 'church-admin Ver-056';
+document.getElementById('versionTopbar').textContent = 'Ver-056';
 
 // ── Seguridad: bloqueo, PIN y biometría (la sesión de Supabase nunca se cierra al bloquear) ──
 let bloqueoMin = 5;
@@ -3456,6 +3458,80 @@ function totalesCampana(campanaId) {
   };
 }
 
+// ── Campañas: estados, atrasadas, cerrar, imprimir (Ver-056) ──
+function hoyISO() { return new Date().toISOString().slice(0, 10); }
+function estadoPromesa(p, c) {
+  const prometido = Number(p.monto_prometido) || 0;
+  const pagado = pagadoDePromesa(p.id);
+  if (prometido > 0 && pagado >= prometido - 0.005) return 'Completo';
+  const hoy = hoyISO();
+  if (c && c.fecha_fin && hoy > c.fecha_fin) return 'Atrasado';
+  if (c && c.fecha_inicio && c.fecha_fin && c.fecha_fin > c.fecha_inicio) {
+    const total = new Date(c.fecha_fin) - new Date(c.fecha_inicio);
+    const corrido = Math.min(Math.max(new Date(hoy) - new Date(c.fecha_inicio), 0), total);
+    if (pagado + 0.005 < prometido * (corrido / total)) return 'Atrasado';
+  }
+  return 'Al día';
+}
+function atrasoDePromesa(p, c) {
+  const prometido = Number(p.monto_prometido) || 0;
+  const pagado = pagadoDePromesa(p.id);
+  const hoy = hoyISO();
+  let esperado = prometido;
+  if (c && c.fecha_fin && hoy <= c.fecha_fin && c.fecha_inicio && c.fecha_fin > c.fecha_inicio) {
+    const total = new Date(c.fecha_fin) - new Date(c.fecha_inicio);
+    esperado = prometido * (Math.min(Math.max(new Date(hoy) - new Date(c.fecha_inicio), 0), total) / total);
+  }
+  return Math.max(esperado - pagado, 0);
+}
+function estadoCampana(c) {
+  const proms = cachePromesas.filter(p => p.campana_id === c.id);
+  if (!c.activo) return 'Cerrada';
+  if (proms.length === 0) return 'Al día';
+  const ests = proms.map(p => estadoPromesa(p, c));
+  if (ests.every(e => e === 'Completo')) return 'Completo';
+  return ests.includes('Atrasado') ? 'Atrasado' : 'Al día';
+}
+function claseEstado(e) { return e === 'Atrasado' ? 'badge-prioridad-Urgente' : 'badge-tipo'; }
+
+function renderAtrasadasCampanas() {
+  const cont = document.getElementById('atrasadasCampanas');
+  const filas = [];
+  cacheCampanas.filter(c => c.activo).forEach(c => {
+    cachePromesas.filter(p => p.campana_id === c.id).forEach(p => {
+      if (estadoPromesa(p, c) === 'Atrasado') filas.push({ c, p, atraso: atrasoDePromesa(p, c) });
+    });
+  });
+  if (!filas.length) { cont.innerHTML = ''; return; }
+  filas.sort((a, b) => b.atraso - a.atraso);
+  cont.innerHTML = `<div class="tablaWrap" style="margin-bottom:20px;"><h3>Promesas atrasadas (${filas.length})</h3><div style="padding:6px 18px;">${filas.map(f => `
+    <div class="relFila"><span><b>${escV28(nombrePersonaPorId(f.p.persona_id))}</b> · ${escV28(f.c.nombre)}</span><span>Pagó ${formatoMoneda(pagadoDePromesa(f.p.id))} de ${formatoMoneda(f.p.monto_prometido)} · Atraso <b>${formatoMoneda(f.atraso)}</b></span></div>`).join('')}</div></div>`;
+}
+
+async function alternarCampanaActiva(id) {
+  const c = cacheCampanas.find(x => x.id === id);
+  if (!c) return;
+  const cerrar = !!c.activo;
+  if (!confirm(cerrar ? '¿Cerrar esta campaña? Dejará de aparecer entre las activas; los datos se conservan.' : '¿Reabrir esta campaña?')) return;
+  const { error } = await sbCall(sb.from('campanas').update({ activo: !cerrar }).eq('id', id));
+  if (error) { alert('Error: ' + error.message); return; }
+  await cargarCampanas();
+  if (document.getElementById('modalPromesas').classList.contains('abierto')) renderPromesas();
+}
+
+function imprimirResumenCampana(id) {
+  const c = cacheCampanas.find(x => x.id === id);
+  if (!c) return;
+  const t = totalesCampana(c.id);
+  const base = Number(c.meta) > 0 ? Number(c.meta) : t.prometido;
+  const proms = cachePromesas.filter(p => p.campana_id === c.id).sort((a, b) => nombrePersonaPorId(a.persona_id).localeCompare(nombrePersonaPorId(b.persona_id)));
+  const w = window.open('', '_blank');
+  if (!w) { alert('El navegador bloqueó la ventana de impresión.'); return; }
+  const filas = proms.map(p => { const pg = pagadoDePromesa(p.id), pr = Number(p.monto_prometido) || 0; return `<tr><td>${escV28(nombrePersonaPorId(p.persona_id))}</td><td class="m">${formatoMoneda(pr)}</td><td class="m">${formatoMoneda(pg)}</td><td class="m">${formatoMoneda(Math.max(pr - pg, 0))}</td><td>${estadoPromesa(p, c)}</td></tr>`; }).join('');
+  w.document.write(`<html><head><meta charset="utf-8"><title>${escV28(c.nombre)}</title><style>body{font-family:Arial,sans-serif;padding:20px;color:#111}table{border-collapse:collapse;width:100%;font-size:12px;margin-top:12px}th,td{border:1px solid #bbb;padding:5px 7px;text-align:left}td.m,th.m{text-align:right}</style></head><body><h2>${escV28(c.nombre)}</h2><div style="font-size:13px;line-height:1.6">${[c.fecha_inicio ? 'Inicio: ' + formatoFecha(c.fecha_inicio) : '', c.fecha_fin ? 'Fin: ' + formatoFecha(c.fecha_fin) : ''].filter(Boolean).join(' · ')}<br>Meta: <b>${base > 0 ? formatoMoneda(base) : '—'}</b> · Prometido: <b>${formatoMoneda(t.prometido)}</b> · Recibido: <b>${formatoMoneda(t.recibido)}</b> · Restante para la meta: <b>${formatoMoneda(Math.max(base - t.recibido, 0))}</b> · Estado: <b>${estadoCampana(c)}</b></div><table><thead><tr><th>Persona</th><th class="m">Prometido</th><th class="m">Pagado</th><th class="m">Pendiente</th><th>Estado</th></tr></thead><tbody>${filas}</tbody></table></body></html>`);
+  w.document.close(); w.focus(); w.print();
+}
+
 async function cargarCampanas() {
   const lista = document.getElementById('listaCampanas');
   lista.innerHTML = '<div class="estadoCargando">Cargando campañas…</div>';
@@ -3484,21 +3560,26 @@ function renderCampanas() {
     <div class="tarjetaResumen ingreso"><div class="etiqueta">Total recibido</div><div class="monto">${formatoMoneda(tot.recibido)}</div></div>`;
 
   if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay campañas para mostrar.</div>'; return; }
+  renderAtrasadasCampanas();
   lista.innerHTML = filas.map(c => {
     const t = totalesCampana(c.id);
     const base = Number(c.meta) > 0 ? Number(c.meta) : t.prometido;
     const pct = base > 0 ? Math.round((t.recibido / base) * 100) : 0;
+    const est = estadoCampana(c);
     const fechas = [c.fecha_inicio ? formatoFecha(c.fecha_inicio) : null, c.fecha_fin ? formatoFecha(c.fecha_fin) : null].filter(Boolean).join(' → ');
     return `
     <div class="tarjetaSeguimiento" onclick="abrirModalPromesas('${c.id}')">
       <div style="flex:1;">
-        <div class="nombrePersona">${escV28(c.nombre)}${c.activo ? '' : ' <span style="font-weight:400; color:var(--text-muted); font-size:0.78rem;">(inactiva)</span>'}</div>
+        <div class="nombrePersona">${escV28(c.nombre)}</div>
         <div class="metaLinea">${fechas ? fechas + ' · ' : ''}${t.n} promesa${t.n === 1 ? '' : 's'} · Prometido ${formatoMoneda(t.prometido)} · Recibido ${formatoMoneda(t.recibido)}${Number(c.meta) > 0 ? ' · Meta ' + formatoMoneda(c.meta) : ''}</div>
+        <div class="metaLinea">Restante para la meta: <b>${formatoMoneda(Math.max(base - t.recibido, 0))}</b></div>
         <div style="height:6px; background:var(--bg); border-radius:3px; overflow:hidden; margin-top:4px;"><div style="height:100%; width:${Math.min(pct, 100)}%; background:var(--navy);"></div></div>
       </div>
       <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        <span class="badge ${claseEstado(est)}">${est}</span>
         <span class="badge badge-tipo">${pct}%</span>
         <button class="btnSecundario" style="padding:2px 10px; font-size:0.78rem;" onclick="event.stopPropagation(); abrirFormCampana('${c.id}')">Editar</button>
+        <button class="btnSecundario" style="padding:2px 10px; font-size:0.78rem;" onclick="event.stopPropagation(); alternarCampanaActiva('${c.id}')">${c.activo ? 'Cerrar' : 'Reabrir'}</button>
       </div>
     </div>`;
   }).join('');
@@ -3588,6 +3669,8 @@ function renderPromesas() {
   if (!c) return;
   document.getElementById('modalPromesasTitulo').textContent = c.nombre;
   const t = totalesCampana(c.id);
+  const bc = document.getElementById('btnCerrarCampanaModal');
+  if (bc) bc.textContent = c.activo ? 'Cerrar campaña' : 'Reabrir campaña';
   document.getElementById('promesasResumen').textContent =
     `${t.n} promesa${t.n === 1 ? '' : 's'} · Prometido ${formatoMoneda(t.prometido)} · Recibido ${formatoMoneda(t.recibido)} · Pendiente ${formatoMoneda(Math.max(t.prometido - t.recibido, 0))}`;
 
@@ -3598,7 +3681,8 @@ function renderPromesas() {
   cont.innerHTML = proms.map(p => {
     const pagado = pagadoDePromesa(p.id);
     const prometido = Number(p.monto_prometido) || 0;
-    const estado = pagado <= 0 ? 'Sin pagos' : (pagado >= prometido ? 'Cumplida' : 'Parcial');
+    const estado = estadoPromesa(p, c);
+    const pctP = prometido > 0 ? Math.min(Math.round((pagado / prometido) * 100), 100) : 0;
     const pagos = cachePagosPromesa.filter(g => g.promesa_id === p.id);
     return `
     <div style="border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; margin-bottom:10px; background:var(--surface);">
@@ -3607,9 +3691,10 @@ function renderPromesas() {
           <div class="nombrePersona">${escV28(nombrePersonaPorId(p.persona_id))}</div>
           <div class="metaLinea">Prometido ${formatoMoneda(prometido)} · Pagado ${formatoMoneda(pagado)} · Pendiente ${formatoMoneda(Math.max(prometido - pagado, 0))}${p.notas ? ' · ' + escV28(p.notas) : ''}</div>
         </div>
-        <span class="badge ${estado === 'Cumplida' ? 'badge-tipo' : (estado === 'Parcial' ? 'badge-tipo' : 'badge-prioridad-Urgente')}">${estado}</span>
+        <span class="badge ${claseEstado(estado)}">${estado}</span>
       </div>
-      ${pagos.map(g => `<div class="metaLinea" style="margin:2px 0 0 8px;">• ${formatoFecha(g.fecha)} · ${formatoMoneda(g.monto)} · ${escV28(g.metodo || '—')} <a href="#" style="color:var(--danger); text-decoration:none;" onclick="eliminarPagoPromesa('${g.id}'); return false;">✕</a></div>`).join('')}
+      <div style="height:6px; background:var(--bg); border-radius:3px; overflow:hidden; margin:6px 0;"><div style="height:100%; width:${pctP}%; background:${estado === 'Completo' ? '#1fa971' : 'var(--navy)'};"></div></div>
+      ${pagos.map(g => `<div class="metaLinea" style="margin:2px 0 0 8px;">• ${formatoFecha(g.fecha)} · ${formatoMoneda(g.monto)} · ${escV28(g.metodo || '—')} <a href="#" style="color:var(--heading); text-decoration:none;" onclick="abrirFormPagoPromesa('${p.id}', '${g.id}'); return false;" title="Editar pago">✎</a> <a href="#" style="color:var(--danger); text-decoration:none;" onclick="eliminarPagoPromesa('${g.id}'); return false;" title="Borrar pago">✕</a></div>`).join('')}
       <div style="display:flex; gap:8px; margin-top:8px;">
         <button class="btnAccion" style="padding:4px 12px; font-size:0.8rem;" onclick="abrirFormPagoPromesa('${p.id}')">+ Pago</button>
         <button class="btnSecundario" style="padding:4px 12px; font-size:0.8rem;" onclick="editarPromesa('${p.id}')">Editar</button>
@@ -3679,17 +3764,26 @@ async function eliminarPromesa(id) {
   renderPromesas();
 }
 
-async function abrirFormPagoPromesa(promesaId) {
+async function abrirFormPagoPromesa(promesaId, pagoId) {
   if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
   await asegurarFondosFinanzas();
   document.getElementById('formPagoPromesa').reset();
   document.getElementById('pgPromesaId').value = promesaId;
+  document.getElementById('pgPagoId').value = pagoId || '';
   document.getElementById('pgFecha').value = new Date().toISOString().slice(0, 10);
   poblarSelectMetodo('pgMetodo');
   poblarSelectFondos('pgFondo');
   const p = cachePromesas.find(x => x.id === promesaId);
   const resta = p ? Math.max((Number(p.monto_prometido) || 0) - pagadoDePromesa(p.id), 0) : 0;
-  if (resta > 0) document.getElementById('pgMonto').value = resta.toFixed(2);
+  if (pagoId) {
+    const g = cachePagosPromesa.find(x => x.id === pagoId);
+    if (g) {
+      document.getElementById('pgFecha').value = g.fecha;
+      document.getElementById('pgMonto').value = g.monto;
+      poblarSelectMetodo('pgMetodo', g.metodo);
+      restaurarFondoDesdeTransaccion('pgFondo', g.transaccion_id);
+    }
+  } else if (resta > 0) document.getElementById('pgMonto').value = resta.toFixed(2);
   document.getElementById('modalPagoPromesaTitulo').textContent = 'Registrar pago — ' + (p ? nombrePersonaPorId(p.persona_id) : '');
   document.getElementById('modalPagoPromesa').classList.add('abierto');
 }
@@ -3706,6 +3800,18 @@ async function guardarPagoPromesa(evt) {
   const metodo = document.getElementById('pgMetodo').value;
   const fondoId = document.getElementById('pgFondo').value || null;
   if (monto <= 0) { alert('El monto debe ser mayor que 0.'); return false; }
+
+  const pagoId = document.getElementById('pgPagoId').value;
+  if (pagoId) {
+    const g = cachePagosPromesa.find(x => x.id === pagoId);
+    const r = await sbCall(sb.from('pagos_promesa').update({ fecha, monto, metodo }).eq('id', pagoId));
+    if (r.error) { alert('Error al guardar el pago: ' + r.error.message); return false; }
+    if (g && g.transaccion_id) await sbCall(sb.from('transacciones').update({ fecha, monto, metodo, fondo_id: fondoId }).eq('id', g.transaccion_id));
+    cerrarModalPagoPromesa();
+    await recargarPromesasYPagos();
+    renderPromesas();
+    return false;
+  }
 
   const { data: trans, error: errT } = await sbCall(
     sb.from('transacciones').insert({
@@ -7647,14 +7753,16 @@ async function cargarPresupuesto() {
     const pct = f.presupuesto > 0 ? Math.round((f.real / f.presupuesto) * 100) : null;
     const excedido = f.presupuesto > 0 && f.real > f.presupuesto;
     const ancho = pct === null ? 0 : Math.min(pct, 100);
+    const estadoP = pct === null ? '' : (pct >= 90 ? 'Crítico' : (pct >= 70 ? 'Alerta' : 'Normal'));
+    const colorP = estadoP === 'Crítico' ? 'var(--danger)' : (estadoP === 'Alerta' ? '#e0a100' : 'var(--navy)');
     return `
     <div class="tarjetaSeguimiento" ${f.id ? `onclick="abrirFormPresupuesto('${f.id}')"` : ''}>
       <div style="flex:1;">
         <div class="nombrePersona">${f.categoria}${f.id ? '' : ' <span style="font-weight:400; color:var(--text-muted); font-size:0.78rem;">(sin presupuesto)</span>'}</div>
-        <div class="metaLinea">Gastado ${formatoMoneda(f.real)}${f.presupuesto > 0 ? ' de ' + formatoMoneda(f.presupuesto) + ' · ' + pct + '%' : ''}</div>
-        ${f.presupuesto > 0 ? `<div style="height:6px; background:var(--bg); border-radius:3px; overflow:hidden; margin-top:4px;"><div style="height:100%; width:${ancho}%; background:${excedido ? 'var(--danger)' : 'var(--navy)'};"></div></div>` : ''}
+        <div class="metaLinea">Gastado ${formatoMoneda(f.real)}${f.presupuesto > 0 ? ' de ' + formatoMoneda(f.presupuesto) + ' · ' + pct + '% · Disponible ' + formatoMoneda(f.presupuesto - f.real) : ''}</div>
+        ${f.presupuesto > 0 ? `<div style="height:6px; background:var(--bg); border-radius:3px; overflow:hidden; margin-top:4px;"><div style="height:100%; width:${ancho}%; background:${colorP};"></div></div>` : ''}
       </div>
-      <span class="badge ${excedido ? 'badge-prioridad-Urgente' : 'badge-tipo'}">${f.presupuesto > 0 ? (excedido ? 'Excedido ' : 'Resta ') + formatoMoneda(Math.abs(f.presupuesto - f.real)) : formatoMoneda(f.real)}</span>
+      <span class="badge ${estadoP === 'Crítico' ? 'badge-prioridad-Urgente' : 'badge-tipo'}">${f.presupuesto > 0 ? estadoP + ' · ' + (excedido ? 'Excedido ' : 'Resta ') + formatoMoneda(Math.abs(f.presupuesto - f.real)) : formatoMoneda(f.real)}</span>
     </div>`;
   }).join('');
 }
