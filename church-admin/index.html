@@ -610,6 +610,18 @@
   .perfilDato span { color: var(--text-muted); }
   .perfilBarra { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; }
   @media (max-width: 520px) { .relAgregar { grid-template-columns: 1fr; } }
+  .menu3 { position: relative; display: inline-block; }
+  .btnTresPuntos { background: none; border: 1px solid var(--border); border-radius: 8px; width: 36px; height: 36px; font-size: 1.25rem; line-height: 1; cursor: pointer; color: var(--heading); }
+  .menu3Lista { position: absolute; right: 0; top: 40px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; min-width: 230px; box-shadow: 0 6px 18px rgba(0,0,0,0.18); z-index: 60; display: none; }
+  .menu3Lista.abierto { display: block; }
+  .menu3Lista button { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 10px 14px; cursor: pointer; font-size: 0.9rem; color: var(--text); }
+  .menu3Lista button:hover { background: rgba(128,128,128,0.12); }
+  .dotEstado { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #9aa3ad; }
+  .dotEstado.ok { background: #1fa971; }
+  .dotEstado.mal { background: #d93025; }
+  .tarjetaModulo { position: relative; }
+  .bcBadge.contador { position: absolute; top: 8px; right: 8px; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 50%; background: #d93025; color: #fff; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 0; animation: parpadeo 1.1s ease-in-out infinite; }
+  @keyframes parpadeo { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
 </style>
 </head>
 <body>
@@ -680,7 +692,11 @@
         <div class="tarjetaModulo c-pink" onclick="mostrarComunicaciones()"><div class="icono">📣</div><h3>Comunicaciones</h3><p>Anuncios y mensajes</p></div>
         <div class="tarjetaModulo c-amber" onclick="mostrarAsistencia()"><div class="icono">✅</div><h3>Asistencia</h3><p>Registro de servicios y reuniones</p></div>
         <div class="tarjetaModulo c-blue" onclick="mostrarGrupos()"><div class="icono">👥</div><h3>Grupos Pequeños</h3><p>Células, líderes y miembros</p></div>
-        <div class="tarjetaModulo c-red" onclick="mostrarAdministracion()"><div class="icono">⚙️</div><h3>Administración</h3><p>Usuarios, roles y catálogos</p></div>
+      </div>
+
+      <div class="grupoTitulo" style="margin-top:26px;">Administración</div>
+      <div class="grid-modulos">
+        <div class="tarjetaModulo c-red" onclick="mostrarAdministracion()"><div class="icono">⚙️</div><h3>Administración</h3><p>Usuarios, roles, catálogos y configuración</p></div>
       </div>
 
       <div class="panelEstado" id="panelEstadoConexion">
@@ -790,18 +806,15 @@
 
       <!-- Sub-vista: Por aprobar (Cash App / Zelle) — Ver-034 -->
       <div id="subvistaFinPorAprobar" style="display:none;">
-        <div class="barraAcciones"><a class="btnSecundario" href="movil.html" target="_blank" style="text-decoration:none;">📱 Abrir app móvil</a></div>
-        <div id="paImportBar" class="barraAcciones" style="display:none; align-items:center; gap:10px;">
-          <span id="paImportEstado" style="font-size:0.9rem; font-weight:600;"></span>
-          <button type="button" class="btnSecundario" id="paBtnImport" onclick="paAlternarImportacion()"></button>
-          <span style="font-size:0.78rem; color:var(--text-muted);">Pausada, los correos nuevos no se pierden: entran al reactivarla.</span>
+        <div class="barraAcciones" style="justify-content:flex-end; align-items:center; margin-bottom:10px;">
+          <span id="paImportDot" class="dotEstado" title="Importación de correos"></span>
+          <div class="menu3">
+            <button type="button" class="btnTresPuntos" onclick="toggleMenu3(this)" aria-label="Más opciones">⋯</button>
+            <div class="menu3Lista"><button type="button" id="paMenuResueltos" onclick="paAlternarVerResueltos()">Ver también aprobados y rechazados</button></div>
+          </div>
+          <input type="checkbox" id="paVerResueltos" style="display:none;">
         </div>
         <div class="grid-resumen" id="resumenPorAprobar" style="margin-bottom:20px;"></div>
-        <div class="barraAcciones">
-          <label style="display:flex; align-items:center; gap:8px; font-size:0.88rem; color:var(--text-muted);">
-            <input type="checkbox" id="paVerResueltos" onchange="cargarPorAprobar()"> Ver también aprobados y rechazados
-          </label>
-        </div>
         <div id="listaPorAprobar"><div class="estadoCargando">Cargando pagos…</div></div>
       </div>
 
@@ -1306,6 +1319,16 @@
             </div>
           </div>
         </div>
+        <div class="tablaWrap" style="margin-bottom:20px;" id="bloqueImportCfg">
+          <h3>Importación de correos (Cash App y Zelle)</h3>
+          <div style="padding:14px 18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <span id="cfgImportDot" class="dotEstado"></span>
+            <span id="cfgImportTxt" style="font-size:0.9rem;"></span>
+            <button type="button" class="btnSecundario" id="cfgImportBtn" onclick="paAlternarImportacion()"></button>
+          </div>
+          <div style="padding:0 18px 14px; font-size:0.78rem; color:var(--text-muted);">Si la pausas, los correos nuevos no se pierden: entran al reactivarla.</div>
+        </div>
+
         <div class="tablaWrap" style="margin-bottom:20px;" id="bloqueSobresCfg">
           <h3>Numeración de sobres</h3>
           <div style="padding:14px 18px;">
@@ -2512,8 +2535,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-051';
-document.getElementById('versionTopbar').textContent = 'Ver-051';
+const APP_VERSION = 'church-admin Ver-052';
+document.getElementById('versionTopbar').textContent = 'Ver-052';
 
 // ── Login por PIN (usa la misma cuenta de Supabase; el PIN es la contraseña) ──
 // NOTA: hoy solo hay una cuenta (detavarez77@gmail.com). Si en el futuro hay
@@ -2719,7 +2742,7 @@ const FIN_TARJETAS = [
     { tab: 'recurrentes', icono: '🔁', etiqueta: 'Gastos Recurrentes', sub: 'Renta, salarios y gastos fijos', color: 'c-red', tabla: 'recurrentes' },
     { tab: 'declaraciones', icono: '📄', etiqueta: 'Declaraciones de Donación', sub: 'Resumen anual por donante', color: 'c-gold' },
   ]},
-  { grupo: 'Administración', items: [
+  { grupo: 'Proveedores y presupuesto', items: [
     { tab: 'proveedores', icono: '🏢', etiqueta: 'Proveedores', sub: 'Registro de proveedores', color: 'c-teal', tabla: 'organizaciones' },
     { tab: 'presupuesto', icono: '📋', etiqueta: 'Presupuesto', sub: 'Control presupuestal', color: 'c-amber' },
   ]},
@@ -2740,7 +2763,6 @@ const FIN_TARJETAS = [
   ]},
   { grupo: 'Sistema', items: [
     { tab: 'reportesHub', icono: '📈', etiqueta: 'Reportes', sub: 'Todos los reportes en un lugar', color: 'c-teal' },
-    { tab: 'configIr', icono: '⚙️', etiqueta: 'Configuración', sub: 'Datos, listas, importar y más', color: 'c-pink' },
   ]},
 ];
 
@@ -3861,6 +3883,7 @@ async function cfgSincronizar() {
 
 async function cfgCargar() {
   sobCargarEstado();
+  paCargarImportacion();
   const d = (await cfgSincronizar()) || {};
   document.getElementById('cfgNombre').value = d.nombre || DC_IGLESIA_POR_DEFECTO;
   document.getElementById('cfgDireccion').value = d.direccion || '';
@@ -5683,6 +5706,7 @@ async function paActualizarInsignia() {
     const b = document.getElementById(id);
     if (!b) return;
     b.textContent = n;
+    b.classList.add('contador');
     b.style.display = n > 0 ? '' : 'none';
   });
 }
@@ -5729,7 +5753,7 @@ function paRender() {
     ...cacheRegMovil.map(x => ({ src: 'm', x })),
   ].sort((a, b) => String(b.x.fecha).localeCompare(String(a.x.fecha)) || String(b.x.creado_en).localeCompare(String(a.x.creado_en)));
   if (items.length === 0) {
-    lista.innerHTML = '<div class="estadoVacio">Nada por aprobar. Aquí aparecen solos los pagos de Cash App y Zelle y lo que se registra desde el celular.</div>';
+    lista.innerHTML = '';
     return;
   }
   lista.innerHTML = items.map(({ src, x }) => {
@@ -5905,14 +5929,37 @@ async function paReabrir(id) {
 // NO avanza su marca, así que los correos recibidos durante la pausa se importan al reactivar.
 let paImportActiva = true;
 async function paCargarImportacion() {
-  const bar = document.getElementById('paImportBar');
   const { data, error } = await sbCall(sb.from('ajustes_ingest').select('activo').eq('id', 1).maybeSingle());
-  if (error || !data) { bar.style.display = 'none'; return; }
-  paImportActiva = data.activo === true;
-  bar.style.display = 'flex';
-  const e = document.getElementById('paImportEstado');
-  e.textContent = paImportActiva ? '🟢 Importación de correos: activa' : '🔴 Importación de correos: pausada';
-  document.getElementById('paBtnImport').textContent = paImportActiva ? 'Pausar importación' : 'Reanudar importación';
+  const leyo = !error && !!data;
+  if (leyo) paImportActiva = data.activo === true;
+  const ok = leyo && paImportActiva;
+  const msg = ok ? 'Importación de correos: conectada y funcionando' : (leyo ? 'Importación de correos: pausada' : 'Importación de correos: sin conexión');
+  ['paImportDot', 'cfgImportDot'].forEach(id => {
+    const d = document.getElementById(id);
+    if (!d) return;
+    d.classList.toggle('ok', ok);
+    d.classList.toggle('mal', !ok);
+    d.title = msg;
+  });
+  const t = document.getElementById('cfgImportTxt');
+  if (t) t.textContent = msg.replace('Importación de correos: ', 'Estado: ');
+  const bt = document.getElementById('cfgImportBtn');
+  if (bt) bt.textContent = paImportActiva ? 'Pausar aprobaciones automáticas' : 'Reanudar aprobaciones automáticas';
+}
+function toggleMenu3(btn) {
+  const l = btn.nextElementSibling;
+  document.querySelectorAll('.menu3Lista.abierto').forEach(x => { if (x !== l) x.classList.remove('abierto'); });
+  l.classList.toggle('abierto');
+}
+document.addEventListener('click', e => {
+  if (e.target.closest('.btnTresPuntos')) return;
+  document.querySelectorAll('.menu3Lista.abierto').forEach(x => x.classList.remove('abierto'));
+});
+function paAlternarVerResueltos() {
+  const c = document.getElementById('paVerResueltos');
+  c.checked = !c.checked;
+  document.getElementById('paMenuResueltos').textContent = c.checked ? 'Ocultar aprobados y rechazados' : 'Ver también aprobados y rechazados';
+  cargarPorAprobar();
 }
 async function paAlternarImportacion() {
   const nuevo = !paImportActiva;
@@ -6473,6 +6520,10 @@ function lfMontar(k) {
   barra.style.cssText = 'display:grid; gap:8px; margin-bottom:12px;';
   barra.innerHTML = `
     <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+      <span class="menu3" style="margin-left:auto; order:2;">
+        <button type="button" class="btnTresPuntos" onclick="toggleMenu3(this)" aria-label="Más opciones">⋯</button>
+        <div class="menu3Lista"><button type="button" onclick="lfImprimir('${k}')">Imprimir</button><button type="button" onclick="lfExcel('${k}')">Excel</button></div>
+      </span>
       <button type="button" class="btnSecundario" onclick="lfRango('${k}','hoy')">Hoy</button>
       <button type="button" class="btnSecundario" onclick="lfRango('${k}','semana')">Semana</button>
       <button type="button" class="btnSecundario" onclick="lfRango('${k}','mes')">Mes</button>
@@ -6486,10 +6537,7 @@ function lfMontar(k) {
       <div><label style="font-size:0.75rem;">Ordenar</label><select id="lfOrden_${k}" onchange="lfCambio('${k}')"><option value="fecha_desc">Fecha: reciente primero</option><option value="fecha_asc">Fecha: antigua primero</option><option value="monto_desc">Monto: mayor primero</option><option value="monto_asc">Monto: menor primero</option><option value="nombre_asc">Nombre A–Z</option></select></div>
       ${cfg.buscador ? '' : `<div><label style="font-size:0.75rem;">Buscar</label><input type="text" id="lfQ_${k}" placeholder="Buscar…" oninput="lfCambio('${k}')"></div>`}
     </div>
-    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-      <button type="button" class="btnSecundario" onclick="lfImprimir('${k}')">Imprimir</button>
-      <button type="button" class="btnSecundario" onclick="lfExcel('${k}')">Excel</button>
-    </div>`;
+    `;
   cont.parentNode.insertBefore(barra, cont);
   const tot = document.createElement('div');
   tot.id = 'lfTot_' + k;
