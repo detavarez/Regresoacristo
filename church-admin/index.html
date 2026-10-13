@@ -2147,7 +2147,8 @@
       <div class="formGrid">
         <div><label for="dzFecha">Fecha *</label><input type="date" id="dzFecha" required></div>
         <div><label for="dzMonto">Monto *</label><input type="number" id="dzMonto" step="0.01" min="0" required></div>
-        <div class="full"><label for="dzPersona">Miembro *</label><select id="dzPersona" required></select></div>
+        <div class="full"><label for="dzPersona">Miembro *</label><select id="dzPersona" required onchange="dzElegirPersona()"></select></div>
+        <div><label for="dzSobre">Sobre #</label><input type="text" id="dzSobre" inputmode="numeric" placeholder="Se llena solo" oninput="dzElegirSobre()"></div>
         <div><label for="dzMetodo">Método</label><select id="dzMetodo"></select></div>
         <div><label for="dzFondo">Fondo</label><select id="dzFondo"></select></div>
         <div><label for="dzEstado">Estado</label><select id="dzEstado"></select></div>
@@ -2586,8 +2587,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-054';
-document.getElementById('versionTopbar').textContent = 'Ver-054';
+const APP_VERSION = 'church-admin Ver-055';
+document.getElementById('versionTopbar').textContent = 'Ver-055';
 
 // ── Seguridad: bloqueo, PIN y biometría (la sesión de Supabase nunca se cierra al bloquear) ──
 let bloqueoMin = 5;
@@ -4067,7 +4068,7 @@ async function rmAprobar(evt) {
     const base = { fecha, monto, metodo: x.metodo, estado: 'Completado', transaccion_id: trans.id, creado_por: sesion.usuario?.id || null };
     let error;
     if (esGasto) ({ error } = await sbCall(sb.from('gastos').insert({ ...base, descripcion, categoria, organizacion_id: orgId })));
-    else if (x.tipo === 'Diezmo') ({ error } = await sbCall(sb.from('diezmos').insert({ ...base, persona_id: personaId, referencia })));
+    else if (x.tipo === 'Diezmo') ({ error } = await sbCall(sb.from('diezmos').insert({ ...base, persona_id: personaId, referencia, no_sobre: x.no_sobre || (personaPorId(personaId) || {}).sobre_actual?.toString() || null })));
     else if (x.tipo === 'Ofrenda') ({ error } = await sbCall(sb.from('ofrendas').insert({ ...base, tipo: sub })));
     else ({ error } = await sbCall(sb.from('donaciones').insert({ ...base, persona_id: personaId, referencia })));
     if (error) {
@@ -4602,7 +4603,7 @@ function trAbrirRecibo(id) {
   let iglesia = DC_IGLESIA_POR_DEFECTO;
   try { iglesia = localStorage.getItem('dcIglesiaNombre') || iglesia; } catch (e) { /* sin almacenamiento */ }
   const titulo = t.tipo === 'Ingreso' ? 'Comprobante de ingreso' : (t.tipo === 'Egreso' ? 'Comprobante de egreso' : 'Comprobante');
-  const filas = [['Fecha', formatoFecha(t.fecha)], ['Concepto', t.descripcion], ['Categoría', t.categoria], ['Método', t.metodo], ['Referencia', t.referencia], ['Estado', t.estado]]
+  const filas = [['Fecha', formatoFecha(t.fecha)], ['Concepto', t.descripcion], ['Sobre #', (cacheDiezmos.find(d => String(d.transaccion_id) === String(t.id)) || {}).no_sobre], ['Categoría', t.categoria], ['Método', t.metodo], ['Referencia', t.referencia], ['Estado', t.estado]]
     .filter(f => f[1]);
   document.getElementById('reciboContenido').innerHTML = `
     <div style="text-align:center; margin-bottom:14px;"><div style="font-size:1.15rem; font-weight:700;">${escV28(iglesia)}</div>
@@ -6730,7 +6731,7 @@ function poblarSelectPersonas(selectId, valorActual) {
 
 // ── Listas: filtros, totales, orden, imprimir, Excel ──
 const LF_CFG = {
-  diezmos: { cache: () => cacheDiezmos, cont: 'listaDiezmos', buscador: 'buscadorDiezmos', titulo: 'Diezmos', nombre: d => nombrePersonaPorId(d.persona_id), detalle: d => [d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDiezmos, render: () => renderDiezmos },
+  diezmos: { cache: () => cacheDiezmos, cont: 'listaDiezmos', buscador: 'buscadorDiezmos', titulo: 'Diezmos', nombre: d => nombrePersonaPorId(d.persona_id), detalle: d => [d.no_sobre ? 'Sobre ' + d.no_sobre : '', d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDiezmos, render: () => renderDiezmos },
   ofrendas: { cache: () => cacheOfrendas, cont: 'listaOfrendas', titulo: 'Ofrendas', nombre: o => o.tipo || 'Ofrenda', detalle: o => [o.metodo, o.estado].filter(Boolean).join(' · '), resumen: () => renderResumenOfrendas, render: () => renderOfrendas },
   donaciones: { cache: () => cacheDonaciones, cont: 'listaDonaciones', buscador: 'buscadorDonaciones', titulo: 'Donaciones', nombre: d => nombrePersonaPorId(d.persona_id), detalle: d => [d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDonaciones, render: () => renderDonaciones },
   gastos: { cache: () => cacheGastos, cont: 'listaGastos', buscador: 'buscadorGastos', titulo: 'Gastos', nombre: g => g.descripcion || '—', detalle: g => [g.categoria, g.metodo, g.estado].filter(Boolean).join(' · '), resumen: () => renderResumenGastos, render: () => renderGastos },
@@ -6900,7 +6901,7 @@ function renderDiezmos(filas) {
     <div class="tarjetaSeguimiento" onclick="abrirFormDiezmo('${d.id}')">
       <div>
         <div class="nombrePersona">${nombrePersonaPorId(d.persona_id)}</div>
-        <div class="metaLinea">${formatoFecha(d.fecha)} · ${d.metodo || '—'}${d.referencia ? ' · ' + d.referencia : ''} · ${d.estado || ''}</div>
+        <div class="metaLinea">${formatoFecha(d.fecha)}${d.no_sobre ? ' · Sobre ' + escV28(d.no_sobre) : ''} · ${d.metodo || '—'}${d.referencia ? ' · ' + d.referencia : ''} · ${d.estado || ''}</div>
       </div>
       <span class="badge badge-tipo">${formatoMoneda(d.monto)}</span>
     </div>`).join('');
@@ -6908,12 +6909,24 @@ function renderDiezmos(filas) {
 
 function filtrarDiezmos() { lfAplicar('diezmos'); }
 
+function dzElegirPersona() {
+  const p = personaPorId(document.getElementById('dzPersona').value);
+  document.getElementById('dzSobre').value = p && p.sobre_actual ? String(p.sobre_actual) : '';
+}
+function dzElegirSobre() {
+  const v = document.getElementById('dzSobre').value.trim();
+  if (!v) return;
+  const p = cacheDirectorio.find(x => x.sobre_actual && String(x.sobre_actual) === v);
+  if (p) document.getElementById('dzPersona').value = p.id;
+}
+
 function abrirFormDiezmo(id) {
   document.getElementById('formDiezmo').reset();
   document.getElementById('btnEliminarDiezmo').style.display = 'none';
   document.getElementById('btnReciboDiezmo').style.display = 'none';
   document.getElementById('dzFecha').value = new Date().toISOString().slice(0, 10);
   poblarSelectPersonas('dzPersona');
+  document.getElementById('dzSobre').value = '';
   poblarSelectMetodo('dzMetodo');
   poblarSelectEstado('dzEstado');
   poblarSelectFondos('dzFondo', defaultTx('Diezmo').fondo_id);
@@ -6930,6 +6943,7 @@ function abrirFormDiezmo(id) {
       document.getElementById('dzFecha').value = d.fecha;
       document.getElementById('dzMonto').value = d.monto;
       document.getElementById('dzPersona').value = d.persona_id || '';
+      document.getElementById('dzSobre').value = d.no_sobre || '';
       poblarSelectMetodo('dzMetodo', d.metodo);
       poblarSelectEstado('dzEstado', d.estado);
       document.getElementById('dzReferencia').value = d.referencia || '';
@@ -6957,6 +6971,7 @@ async function guardarDiezmo(evt) {
     metodo: document.getElementById('dzMetodo').value,
     referencia: document.getElementById('dzReferencia').value.trim() || null,
     estado: document.getElementById('dzEstado').value,
+    no_sobre: document.getElementById('dzSobre').value.trim() || null,
   };
   const nombrePersona = nombrePersonaPorId(personaId);
   const fondoId = document.getElementById('dzFondo').value || null;
