@@ -1296,16 +1296,14 @@
           </form>
         </div>
         <div class="tablaWrap" style="margin-bottom:20px;">
-          <h3>Página del pastor (PIN)</h3>
-          <div style="padding:14px 18px;">
-            <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:10px;">Una página aparte, <b>pastor.html</b>, que solo muestra el resumen (balance, diezmos, ofrendas, asistencia). Entra con un PIN de 4 números, sin cuenta. Después de 5 intentos fallidos se bloquea 15 minutos.</div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-              <input type="password" id="cfgPinPastor" inputmode="numeric" maxlength="4" placeholder="PIN nuevo (4 números)" style="max-width:200px;">
-              <button type="button" class="btnPrincipal" style="width:auto;" onclick="cfgFijarPin()">Guardar PIN</button>
-              <a class="btnSecundario" href="pastor.html" target="_blank" style="text-decoration:none;">Abrir página</a>
-              <span id="cfgPinEstado" style="font-size:0.85rem; color:var(--text-muted);"></span>
-            </div>
+          <h3>Accesos a las aplicaciones</h3>
+          <div style="padding:14px 18px; font-size:0.88rem;">Cada una se abre por separado en el navegador y se puede instalar como app (botón 📲 dentro de la app, o "Agregar a pantalla de inicio"). Usan tu misma cuenta y la misma seguridad (PIN, huella o contraseña).</div>
+          <div style="padding:0 18px 14px; display:flex; gap:8px; flex-wrap:wrap;">
+            <a class="btnSecundario" href="./" target="_blank" style="text-decoration:none;">Programa completo</a>
+            <a class="btnSecundario" href="../pastor/" target="_blank" style="text-decoration:none;">Resumen del Pastor</a>
+            <a class="btnSecundario" href="../movil/" target="_blank" style="text-decoration:none;">MobileCash</a>
           </div>
+          <div style="padding:0 18px 14px; font-size:0.78rem; color:var(--text-muted);">El acceso al Resumen del Pastor se da por usuario en Usuarios ("Puede entrar al Resumen del Pastor"); esa persona no entra al programa completo.</div>
         </div>
         <div class="tablaWrap" style="margin-bottom:20px;" id="bloqueSaldosCfg">
           <h3>Saldos iniciales y trabajo histórico</h3>
@@ -2264,6 +2262,7 @@
         <div>
           <label style="display:flex; gap:8px; align-items:center; margin-top:26px; font-weight:400;"><input type="checkbox" id="ruActivo"> Cuenta activa en Church Admin</label>
         </div>
+        <div class="full"><label style="display:flex; gap:8px; align-items:center; font-weight:400;"><input type="checkbox" id="ruPastorApp"> Puede entrar al Resumen del Pastor (app aparte)</label></div>
         <div class="full"><button type="button" class="btnSecundario" onclick="ruPintarPermisos(true)">Restablecer permisos predeterminados</button></div>
         <div class="full"><label>Permisos (marca lo que esta persona puede hacer)</label><div id="ruPermisos" style="display:grid; gap:6px; margin-top:6px;"></div></div>
         <div class="full" id="ruBloqueClave">
@@ -2592,8 +2591,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-058';
-document.getElementById('versionTopbar').textContent = 'Ver-058';
+const APP_VERSION = 'church-admin Ver-059';
+document.getElementById('versionTopbar').textContent = 'Ver-059';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -4111,15 +4110,6 @@ async function sobAsignarFaltantes() {
   msg.textContent = n + ' sobres asignados.';
   await cargarDirectorio();
   sobCargarEstado();
-}
-
-async function cfgFijarPin() {
-  const pin = document.getElementById('cfgPinPastor').value.trim();
-  const est = document.getElementById('cfgPinEstado');
-  if (!/^[0-9]{4}$/.test(pin)) { est.textContent = 'Deben ser 4 números.'; return; }
-  const { error } = await sbCall(sb.rpc('fijar_pin_pastor', { p_pin: pin }));
-  est.textContent = error ? 'Error: ' + error.message : 'PIN guardado ✓';
-  if (!error) document.getElementById('cfgPinPastor').value = '';
 }
 
 async function cfgRespaldo() {
@@ -9624,15 +9614,17 @@ function cambiarSubtabAdmin(tab) {
 
 // ── Usuarios y Roles ──────────────────────────────────────────────────────
 let cacheCargos = [];
+let cachePastorApps = [];
 
 async function cargarUsuariosAdmin() {
   const lista = document.getElementById('listaUsuariosAdmin');
   lista.innerHTML = '<div class="estadoCargando">Cargando usuarios…</div>';
 
-  const [{ data: usuarios, error: errU }, { data: apps, error: errA }, { data: cargos }] = await Promise.all([
+  const [{ data: usuarios, error: errU }, { data: apps, error: errA }, { data: cargos }, { data: appsPastor }] = await Promise.all([
     sbCall(sb.from('usuarios').select('*').order('nombre', { ascending: true })),
     sbCall(sb.from('usuario_apps').select('*').eq('app', 'church_admin')),
     sbCall(sb.from('miembros_iglesia').select('persona_id, rol')),
+    sbCall(sb.from('usuario_apps').select('usuario_id, activo').eq('app', 'pastor_overview')),
   ]);
 
   if (errU || errA) {
@@ -9643,6 +9635,7 @@ async function cargarUsuariosAdmin() {
   cacheUsuariosAdmin = usuarios || [];
   cacheUsuarioApps = apps || [];
   cacheCargos = cargos || [];
+  cachePastorApps = appsPastor || [];
   renderResumenRoles();
   renderUsuariosAdmin();
 }
@@ -9711,6 +9704,7 @@ async function abrirModalRolUsuario(usuarioId) {
   if (rolActual && !Array.from(selRol.options).some(o => o.value === rolActual)) selRol.insertAdjacentHTML('beforeend', `<option value="${escV28(rolActual)}">${escV28(nivelDeRol(rolActual))}</option>`);
   selRol.value = rolActual;
   document.getElementById('ruActivo').checked = fila ? fila.activo !== false : true;
+  document.getElementById('ruPastorApp').checked = cachePastorApps.some(x => x.usuario_id === usuarioId && x.activo !== false);
   if (!cacheDirectorio.length) await cargarDirectorio();
   const sel = document.getElementById('ruPersona');
   sel.innerHTML = '<option value="">Sin vincular</option>' + cacheDirectorio.filter(p => p.id === u.persona_id || !cacheUsuariosAdmin.some(x => x.persona_id === p.id)).map(p => `<option value="${p.id}">${escV28(nombreMostrar(p))}</option>`).join('');
@@ -9756,6 +9750,15 @@ async function guardarRolUsuario(evt) {
   }
   if (error) { alert('Error al guardar: ' + error.message); return false; }
 
+  const quierePastor = document.getElementById('ruPastorApp').checked;
+  const tienePastor = cachePastorApps.some(x => x.usuario_id === usuarioId);
+  if (quierePastor && !tienePastor) {
+    const r = await sbCall(sb.from('usuario_apps').insert({ usuario_id: usuarioId, app: 'pastor_overview', rol: 'Pastor', permisos: {}, activo: true }));
+    if (r.error) alert('Se guardó el acceso, pero no el del Resumen del Pastor: ' + r.error.message);
+  } else if (!quierePastor && tienePastor) {
+    const r = await sbCall(sb.from('usuario_apps').delete().eq('usuario_id', usuarioId).eq('app', 'pastor_overview'));
+    if (r.error) alert('No se pudo quitar el acceso al Resumen del Pastor: ' + r.error.message);
+  }
   const actual = cacheUsuariosAdmin.find(x => x.id === usuarioId);
   if ((actual?.persona_id || null) !== personaId) {
     const r = await sbCall(sb.from('usuarios').update({ persona_id: personaId }).eq('id', usuarioId));
