@@ -902,7 +902,8 @@
         <div class="barraAcciones" style="align-items:center;">
           <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="repDesde" onchange="cargarReporteResultados()"></label>
           <label style="font-size:0.8rem; color: var(--text-muted);">Hasta <input type="date" id="repHasta" onchange="cargarReporteResultados()"></label>
-          <select id="repAtajo" onchange="aplicarAtajoReporte()">
+          <select id="repPeriodo" onchange="aplicarPeriodoReporte()"></select>
+          <select id="repAtajo" style="display:none;" onchange="aplicarAtajoReporte()">
             <option value="">Atajos…</option>
             <option value="mes">Este mes</option>
             <option value="trimestre">Este trimestre</option>
@@ -910,7 +911,7 @@
             <option value="anioAnterior">Año anterior</option>
           </select>
           <div style="flex:1;"></div>
-          <button class="btnSecundario" onclick="exportarReporteCSV()">⬇ Exportar</button>
+          <div class="menu3"><button type="button" class="btnTresPuntos" onclick="toggleMenu3(this)" aria-label="Más opciones">⋯</button><div class="menu3Lista"><button type="button" onclick="imprimirReporte()">Imprimir</button><button type="button" onclick="exportarReporteCSV()">Excel</button></div></div>
         </div>
         <div class="grid-resumen" id="resumenReporte"></div>
         <div class="tablaWrap" style="margin-bottom:20px;">
@@ -1680,19 +1681,21 @@
 <!-- ═══════════════ MODAL: Conciliación ═══════════════ -->
 <div class="modalOverlay" id="modalConciliacion">
   <div class="modalCaja">
-    <h3 id="modalConciliacionTitulo">Nueva Conciliación</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;"><h3 id="modalConciliacionTitulo" style="margin:0;">Nueva Conciliación</h3><div class="menu3"><button type="button" class="btnTresPuntos" onclick="toggleMenu3(this)" aria-label="Más opciones">⋯</button><div class="menu3Lista"><button type="button" onclick="cnImprimir()">Imprimir</button><button type="button" onclick="cnExcel()">Excel</button></div></div></div>
     <form id="formConciliacion" onsubmit="return guardarConciliacion(event)">
       <input type="hidden" id="cnId">
       <div class="formGrid">
-        <div><label for="cnBanco">Banco / Cuenta *</label><select id="cnBanco" required></select></div>
-        <div><label for="cnFecha">Fecha del estado de cuenta *</label><input type="date" id="cnFecha" required onchange="actualizarDiferenciaConciliacion()"></div>
+        <div><label for="cnBanco">Banco / Cuenta *</label><select id="cnBanco" required onchange="cnCargarMovs()"></select></div>
+        <div><label for="cnFecha">Fecha de corte del estado de cuenta *</label><input type="date" id="cnFecha" required onchange="cnCargarMovs()"></div>
         <div><label for="cnSaldoEstado">Saldo según estado de cuenta *</label><input type="number" id="cnSaldoEstado" step="0.01" required oninput="actualizarDiferenciaConciliacion()"></div>
-        <div><label for="cnSaldoSistema">Saldo según el sistema *</label><input type="number" id="cnSaldoSistema" step="0.01" required oninput="actualizarDiferenciaConciliacion()"></div>
+        <div><label for="cnSaldoSistema">Saldo conciliado (sistema)</label><input type="number" id="cnSaldoSistema" step="0.01" readonly></div>
         <div class="full">
-          <button type="button" class="btnSecundario" onclick="sugerirSaldoSistema()">Calcular saldo sugerido</button>
-          <div id="cnSugerenciaInfo" style="font-size:0.78rem; color:var(--text-muted); margin-top:6px;">Sugerido = ingresos menos egresos completados que no son en efectivo, hasta la fecha. No incluye saldo inicial ni separa por banco; ajústalo si hace falta.</div>
+          <label>Marca lo que aparece en el estado de cuenta</label>
+          <div style="display:flex; gap:6px; margin-bottom:6px;"><button type="button" class="btnSecundario" style="padding:2px 10px; font-size:0.78rem;" onclick="cnMarcarTodo(true)">Marcar todo</button><button type="button" class="btnSecundario" style="padding:2px 10px; font-size:0.78rem;" onclick="cnMarcarTodo(false)">Desmarcar</button></div>
+          <div id="cnMovs"></div>
+          <div id="cnResumenMovs" style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;"></div>
         </div>
-        <div class="full"><label>Diferencia (estado de cuenta − sistema)</label><div id="cnDiferencia" style="font-weight:600; font-size:1.1rem;">—</div></div>
+        <div class="full"><label>Diferencia (estado de cuenta − conciliado)</label><div id="cnDiferencia" style="font-weight:600; font-size:1.1rem;">—</div></div>
         <div class="full"><label for="cnNotas">Notas</label><input type="text" id="cnNotas" placeholder="Cheques en tránsito, depósitos pendientes…"></div>
       </div>
       <div class="formAcciones">
@@ -2591,8 +2594,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-059';
-document.getElementById('versionTopbar').textContent = 'Ver-059';
+const APP_VERSION = 'church-admin Ver-060';
+document.getElementById('versionTopbar').textContent = 'Ver-060';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -3184,7 +3187,6 @@ function abrirFormConciliacion(id) {
       document.getElementById('cnBanco').value = r.banco_id || '';
       document.getElementById('cnFecha').value = r.fecha;
       document.getElementById('cnSaldoEstado').value = r.saldo_estado_cuenta ?? '';
-      document.getElementById('cnSaldoSistema').value = r.saldo_sistema ?? '';
       document.getElementById('cnNotas').value = r.notas || '';
       document.getElementById('btnEliminarConciliacion').style.display = 'inline-block';
     }
@@ -3193,6 +3195,7 @@ function abrirFormConciliacion(id) {
   }
   actualizarDiferenciaConciliacion();
   document.getElementById('modalConciliacion').classList.add('abierto');
+  cnCargarMovs();
 }
 
 function cerrarModalConciliacion() { document.getElementById('modalConciliacion').classList.remove('abierto'); }
@@ -3207,20 +3210,74 @@ function actualizarDiferenciaConciliacion() {
   el.style.color = Math.abs(dif) < 0.005 ? 'green' : 'var(--danger)';
 }
 
-async function sugerirSaldoSistema() {
-  const hasta = document.getElementById('cnFecha').value;
-  if (!hasta) { alert('Indica primero la fecha del estado de cuenta.'); return; }
-  const info = document.getElementById('cnSugerenciaInfo');
-  info.textContent = 'Calculando…';
-  const { data, error } = await sbCall(
-    sb.from('transacciones').select('tipo, monto').in('tipo', ['Ingreso', 'Egreso'])
-      .eq('estado', 'Completado').eq('solo_fondo', false).neq('metodo', 'Efectivo').lte('fecha', hasta).range(0, 9999)
-  );
-  if (error) { info.textContent = 'Error al calcular: ' + error.message; return; }
-  const neto = (data || []).reduce((acc, t) => acc + (t.tipo === 'Ingreso' ? 1 : -1) * (Number(t.monto) || 0), 0);
-  document.getElementById('cnSaldoSistema').value = (Math.round(neto * 100) / 100).toFixed(2);
-  info.textContent = `Sugerido con ${data.length} movimientos no en efectivo hasta ${formatoFecha(hasta)}. No incluye saldo inicial ni separa por banco; ajústalo si hace falta.`;
+// ── Conciliación bancaria por transacción (Ver-060) ──
+let cnMovs = [];
+let cnApertura = 0;
+let cnPrevios = new Set();
+
+function cnCodigoBanco(bancoId) {
+  const b = cacheBancos.find(x => x.id === bancoId);
+  const c = b && cacheCuentas.find(x => String(x.id) === String(b.cuenta_id));
+  return c ? c.codigo : null;
+}
+
+async function cnCargarMovs(marcadosGuardados) {
+  const bancoId = document.getElementById('cnBanco').value;
+  const fecha = document.getElementById('cnFecha').value;
+  const cont = document.getElementById('cnMovs');
+  if (!bancoId || !fecha) { cont.innerHTML = '<div style="font-size:0.85rem; color:var(--text-muted);">Elige el banco y la fecha del estado de cuenta para ver los movimientos.</div>'; cnMovs = []; cnRecalcular(); return; }
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  const codigo = cnCodigoBanco(bancoId);
+  if (!codigo) { cont.innerHTML = '<div class="estadoVacio">Este banco no tiene una cuenta contable asignada (Bancos).</div>'; cnMovs = []; return; }
+  cont.innerHTML = '<div class="estadoCargando">Cargando movimientos…</div>';
+  const idEdicion = document.getElementById('cnId').value;
+  const [tr, cfg, si, prev] = await Promise.all([
+    sbCall(sb.from('transacciones').select('id, historico, fecha, descripcion, categoria, referencia, tipo, tipo_origen, metodo, monto, solo_fondo, cuenta_dr, cuenta_cr').lte('fecha', fecha).order('fecha', { ascending: true }).range(0, 9999)),
+    sbCall(sb.from('config_iglesia').select('fecha_corte').eq('id', 1).maybeSingle()),
+    sbCall(sb.from('saldos_iniciales').select('saldo_corte').eq('cuenta_codigo', codigo).maybeSingle()),
+    sbCall(sb.from('reconciliacion_items').select('transaccion_id, reconciliacion_id').eq('cuenta_codigo', codigo)),
+  ]);
+  if (tr.error) { cont.innerHTML = `<div class="estadoVacio">Error: ${escV28(tr.error.message)}</div>`; return; }
+  const corte = cfg.data && cfg.data.fecha_corte;
+  cnApertura = corte ? (Number(si.data && si.data.saldo_corte) || 0) : 0;
+  cnPrevios = new Set((prev.data || []).filter(x => x.reconciliacion_id !== idEdicion).map(x => String(x.transaccion_id)));
+  const guardados = new Set(marcadosGuardados || (prev.data || []).filter(x => x.reconciliacion_id === idEdicion).map(x => String(x.transaccion_id)));
+  cnMovs = (tr.data || []).map(t => { const a = lcAsiento(t); return a ? { ...a, id: String(t.id), hist: !!t.historico } : null; })
+    .filter(a => a && (a.dr === codigo || a.cr === codigo) && !a.hist && (!corte || a.fecha > corte))
+    .map(a => ({ id: a.id, fecha: a.fecha, desc: a.desc, ref: a.ref, efecto: ((a.dr === codigo ? a.c : 0) - (a.cr === codigo ? a.c : 0)) / 100, previo: cnPrevios.has(a.id), marcado: cnPrevios.has(a.id) || guardados.has(a.id) }));
+  cont.innerHTML = cnMovs.length ? `<div style="max-height:280px; overflow:auto; border:1px solid var(--border); border-radius:8px;">${cnMovs.map((m, i) => `
+    <label class="relFila" style="padding:6px 10px; cursor:${m.previo ? 'default' : 'pointer'}; opacity:${m.previo ? 0.6 : 1};">
+      <span style="display:flex; gap:8px; align-items:center;"><input type="checkbox" ${m.marcado ? 'checked' : ''} ${m.previo ? 'disabled' : ''} onchange="cnMarcar(${i}, this.checked)"> <span>${formatoFecha(m.fecha)} · ${escV28(m.desc)}${m.previo ? ' <i>(ya conciliado)</i>' : ''}</span></span>
+      <span class="${m.efecto >= 0 ? 'montoIngreso' : 'montoEgreso'}">${formatoMoneda(m.efecto)}</span>
+    </label>`).join('')}</div>` : '<div style="font-size:0.85rem; color:var(--text-muted);">No hay movimientos de esta cuenta hasta esa fecha.</div>';
+  cnRecalcular();
+}
+function cnMarcar(i, v) { cnMovs[i].marcado = v; cnRecalcular(); }
+function cnMarcarTodo(v) { cnMovs.forEach(m => { if (!m.previo) m.marcado = v; }); cnCargarMovsRepintar(); }
+function cnCargarMovsRepintar() { document.querySelectorAll('#cnMovs input[type=checkbox]').forEach((c, i) => { if (cnMovs[i] && !c.disabled) c.checked = cnMovs[i].marcado; }); cnRecalcular(); }
+function cnRecalcular() {
+  const conc = cnApertura + cnMovs.filter(m => m.marcado).reduce((s, m) => s + m.efecto, 0);
+  const pend = cnMovs.filter(m => !m.marcado).reduce((s, m) => s + m.efecto, 0);
+  document.getElementById('cnSaldoSistema').value = (Math.round(conc * 100) / 100).toFixed(2);
+  document.getElementById('cnResumenMovs').textContent = `Saldo inicial ${formatoMoneda(cnApertura)} · Marcados ${cnMovs.filter(m => m.marcado).length} de ${cnMovs.length} · Pendientes (en tránsito) ${formatoMoneda(pend)}`;
   actualizarDiferenciaConciliacion();
+}
+function cnLineasExport() {
+  const banco = nombreBancoPorId(document.getElementById('cnBanco').value);
+  const fecha = document.getElementById('cnFecha').value;
+  return { banco, fecha, estado: document.getElementById('cnSaldoEstado').value, sistema: document.getElementById('cnSaldoSistema').value, dif: document.getElementById('cnDiferencia').textContent };
+}
+function cnExcel() {
+  const x = cnLineasExport();
+  const filas = [['Banco', x.banco], ['Fecha', x.fecha], ['Saldo estado de cuenta', x.estado], ['Saldo conciliado (sistema)', x.sistema], ['Diferencia', x.dif], [], ['Fecha', 'Descripción', 'Monto', 'Conciliado']].concat(cnMovs.map(m => [m.fecha, m.desc, m.efecto.toFixed(2), m.marcado ? 'Sí' : 'No']));
+  csvDescargar(`conciliacion_${x.banco}_${x.fecha}.csv`, [], filas);
+}
+function cnImprimir() {
+  const x = cnLineasExport();
+  const w = window.open('', '_blank');
+  if (!w) { alert('El navegador bloqueó la ventana de impresión.'); return; }
+  w.document.write(`<html><head><meta charset="utf-8"><title>Conciliación</title><style>body{font-family:Arial,sans-serif;padding:20px;color:#111}table{border-collapse:collapse;width:100%;font-size:12px;margin-top:10px}th,td{border:1px solid #bbb;padding:5px 7px;text-align:left}td.m,th.m{text-align:right}</style></head><body><h2>Conciliación bancaria — ${escV28(x.banco)}</h2><div style="font-size:13px;line-height:1.6">Fecha del estado: <b>${x.fecha}</b><br>Saldo según estado de cuenta: <b>${formatoMoneda(x.estado)}</b><br>Saldo conciliado (sistema): <b>${formatoMoneda(x.sistema)}</b><br>Diferencia: <b>${escV28(x.dif)}</b></div><table><thead><tr><th>Fecha</th><th>Descripción</th><th class="m">Monto</th><th>Conciliado</th></tr></thead><tbody>${cnMovs.map(m => `<tr><td>${formatoFecha(m.fecha)}</td><td>${escV28(m.desc)}</td><td class="m">${formatoMoneda(m.efecto)}</td><td>${m.marcado ? 'Sí' : 'No (en tránsito)'}</td></tr>`).join('')}</tbody></table></body></html>`);
+  w.document.close(); w.focus(); w.print();
 }
 
 async function guardarConciliacion(evt) {
@@ -3238,13 +3295,23 @@ async function guardarConciliacion(evt) {
     notas: document.getElementById('cnNotas').value.trim() || null,
   };
   if (!payload.banco_id) { alert('Selecciona un banco.'); return false; }
-  let error;
+  let error, recId = id;
   if (id) ({ error } = await sbCall(sb.from('reconciliaciones').update(payload).eq('id', id)));
   else {
     payload.creado_por = getSesion().usuario?.id || null;
-    ({ error } = await sbCall(sb.from('reconciliaciones').insert(payload)));
+    const ins = await sbCall(sb.from('reconciliaciones').insert(payload).select('id').single());
+    error = ins.error; recId = ins.data && ins.data.id;
   }
   if (error) { alert('Error al guardar: ' + error.message); return false; }
+  const codigo = cnCodigoBanco(payload.banco_id);
+  if (recId && codigo) {
+    await sbCall(sb.from('reconciliacion_items').delete().eq('reconciliacion_id', recId));
+    const items = cnMovs.filter(m => m.marcado && !m.previo).map(m => ({ reconciliacion_id: recId, transaccion_id: m.id, cuenta_codigo: codigo, monto: Math.round(m.efecto * 100) / 100 }));
+    if (items.length) {
+      const ri = await sbCall(sb.from('reconciliacion_items').insert(items));
+      if (ri.error) { alert('La conciliación se guardó, pero no el detalle de movimientos: ' + ri.error.message); }
+    }
+  }
   cerrarModalConciliacion();
   cargarConciliacion();
   return false;
@@ -7673,62 +7740,156 @@ function aplicarAtajoReporte(forzado) {
   if (typeof forzado !== 'string') cargarReporteResultados();
 }
 
+// ── Estado de resultados: periodos, comparación, presupuesto y detalle (Ver-060) ──
+let repDetalleMapa = {};
+
+function repIso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function repPoblarPeriodos() {
+  const sel = document.getElementById('repPeriodo');
+  if (sel.options.length) return;
+  const hoy = new Date(), y = hoy.getFullYear();
+  let h = '<optgroup label="Año">';
+  for (let a = y; a >= y - 3; a--) h += `<option value="A:${a}">${a}</option>`;
+  h += '</optgroup><optgroup label="Trimestre">';
+  for (let a = y; a >= y - 1; a--) for (let q = 4; q >= 1; q--) { if (a === y && (q - 1) * 3 > hoy.getMonth()) continue; h += `<option value="T:${a}-${q}">T${q} ${a}</option>`; }
+  h += '</optgroup><optgroup label="Mes">';
+  for (let i = 0; i < 24; i++) { const d = new Date(y, hoy.getMonth() - i, 1); h += `<option value="M:${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}">${NOMBRES_MESES[d.getMonth()]} ${d.getFullYear()}</option>`; }
+  h += '</optgroup><option value="custom">Personalizado</option>';
+  sel.innerHTML = h;
+}
+function aplicarPeriodoReporte() {
+  const v = document.getElementById('repPeriodo').value;
+  if (v === 'custom') return;
+  const [t, val] = v.split(':');
+  let d, h;
+  if (t === 'A') { d = new Date(+val, 0, 1); h = new Date(+val, 11, 31); }
+  else if (t === 'T') { const [a, q] = val.split('-').map(Number); d = new Date(a, (q - 1) * 3, 1); h = new Date(a, q * 3, 0); }
+  else { const [a, m] = val.split('-').map(Number); d = new Date(a, m - 1, 1); h = new Date(a, m, 0); }
+  document.getElementById('repDesde').value = repIso(d);
+  document.getElementById('repHasta').value = repIso(h);
+  cargarReporteResultados();
+}
+function repSincronizarSelect() {
+  repPoblarPeriodos();
+  const desde = document.getElementById('repDesde').value, hasta = document.getElementById('repHasta').value;
+  const sel = document.getElementById('repPeriodo');
+  const hallado = Array.from(sel.options).find(o => {
+    if (o.value === 'custom') return false;
+    const [t, val] = o.value.split(':');
+    let d, h;
+    if (t === 'A') { d = new Date(+val, 0, 1); h = new Date(+val, 11, 31); }
+    else if (t === 'T') { const [a, q] = val.split('-').map(Number); d = new Date(a, (q - 1) * 3, 1); h = new Date(a, q * 3, 0); }
+    else { const [a, m] = val.split('-').map(Number); d = new Date(a, m - 1, 1); h = new Date(a, m, 0); }
+    return repIso(d) === desde && repIso(h) === hasta;
+  });
+  sel.value = hallado ? hallado.value : 'custom';
+}
+function repPeriodoAnterior(desde, hasta) {
+  const d = new Date(desde + 'T00:00:00'), h = new Date(hasta + 'T00:00:00');
+  const alineado = d.getDate() === 1 && new Date(h.getFullYear(), h.getMonth() + 1, 0).getDate() === h.getDate();
+  if (alineado) {
+    const meses = (h.getFullYear() - d.getFullYear()) * 12 + h.getMonth() - d.getMonth() + 1;
+    return [repIso(new Date(d.getFullYear(), d.getMonth() - meses, 1)), repIso(new Date(d.getFullYear(), d.getMonth(), 0))];
+  }
+  const dias = Math.round((h - d) / 86400000) + 1;
+  const nh = new Date(d.getTime() - 86400000);
+  return [repIso(new Date(nh.getTime() - (dias - 1) * 86400000)), repIso(nh)];
+}
+function repPresupuestoProrrateado(lineas, desde, hasta) {
+  const out = {};
+  const d = new Date(desde + 'T00:00:00'), h = new Date(hasta + 'T00:00:00');
+  for (let y = d.getFullYear(); y <= h.getFullYear(); y++) {
+    const ini = new Date(Math.max(d, new Date(y, 0, 1))), fin = new Date(Math.min(h, new Date(y, 11, 31)));
+    const dias = Math.round((fin - ini) / 86400000) + 1;
+    const diasAnio = Math.round((new Date(y, 11, 31) - new Date(y, 0, 1)) / 86400000) + 1;
+    lineas.filter(l => l.anio === y).forEach(l => { out[l.categoria] = (out[l.categoria] || 0) + (Number(l.monto_anual) || 0) * dias / diasAnio; });
+  }
+  return out;
+}
+function repToggleDetalle(clave) {
+  const el = document.getElementById('repDet_' + clave);
+  if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+
 async function cargarReporteResultados() {
+  repPoblarPeriodos();
   const desde = document.getElementById('repDesde').value;
   const hasta = document.getElementById('repHasta').value;
   const cont = document.getElementById('repResultados');
   const contMes = document.getElementById('repPorMes');
   if (!desde || !hasta) return;
+  repSincronizarSelect();
   cont.innerHTML = '<div class="estadoCargando">Cargando…</div>';
   contMes.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+  const [pDesde, pHasta] = repPeriodoAnterior(desde, hasta);
+  const anios = [...new Set([+desde.slice(0, 4), +hasta.slice(0, 4)])];
+  const consulta = (a, b) => sbCall(sb.from('transacciones').select('id, fecha, descripcion, categoria, tipo, monto').in('tipo', ['Ingreso', 'Egreso']).eq('solo_fondo', false).gte('fecha', a).lte('fecha', b).range(0, 9999));
+  const [rAct, rPrev, rPres] = await Promise.all([
+    consulta(desde, hasta), consulta(pDesde, pHasta),
+    sbCall(sb.from('presupuesto').select('anio, categoria, monto_anual').in('anio', anios)),
+  ]);
+  if (rAct.error) { cont.innerHTML = `<div class="estadoVacio">Error: ${escV28(rAct.error.message)}</div>`; contMes.innerHTML = ''; return; }
 
-  const { data, error } = await sbCall(
-    sb.from('transacciones').select('fecha, categoria, tipo, monto')
-      .in('tipo', ['Ingreso', 'Egreso']).eq('solo_fondo', false)
-      .gte('fecha', desde).lte('fecha', hasta).range(0, 9999)
-  );
-  if (error) { cont.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; contMes.innerHTML = ''; return; }
-
-  const filas = data || [];
+  const filas = rAct.data || [];
   cacheFilasReporte = [];
+  repDetalleMapa = {};
   let totIng = 0, totEgr = 0;
-  const ing = {}, egr = {}, meses = {};
+  const ing = {}, egr = {}, meses = {}, prevIng = {}, prevEgr = {};
   filas.forEach(t => {
     const monto = Number(t.monto) || 0;
     const cat = t.categoria || 'Sin categoría';
     const mes = (t.fecha || '').slice(0, 7);
     if (!meses[mes]) meses[mes] = { ing: 0, egr: 0 };
+    const clave = (esIngreso(t.tipo) ? 'I' : 'E') + '|' + cat;
+    (repDetalleMapa[clave] = repDetalleMapa[clave] || []).push(t);
     if (esIngreso(t.tipo)) { ing[cat] = (ing[cat] || 0) + monto; totIng += monto; meses[mes].ing += monto; }
     else { egr[cat] = (egr[cat] || 0) + monto; totEgr += monto; meses[mes].egr += monto; }
   });
+  let prevTotIng = 0, prevTotEgr = 0;
+  (rPrev.data || []).forEach(t => {
+    const monto = Number(t.monto) || 0, cat = t.categoria || 'Sin categoría';
+    if (esIngreso(t.tipo)) { prevIng[cat] = (prevIng[cat] || 0) + monto; prevTotIng += monto; } else { prevEgr[cat] = (prevEgr[cat] || 0) + monto; prevTotEgr += monto; }
+  });
+  const pres = repPresupuestoProrrateado(rPres.data || [], desde, hasta);
 
   document.getElementById('resumenReporte').innerHTML = `
     <div class="tarjetaResumen ingreso"><div class="etiqueta">Ingresos</div><div class="monto">${formatoMoneda(totIng)}</div></div>
     <div class="tarjetaResumen egreso"><div class="etiqueta">Egresos</div><div class="monto">${formatoMoneda(totEgr)}</div></div>
     <div class="tarjetaResumen"><div class="etiqueta">Resultado neto</div><div class="monto">${formatoMoneda(totIng - totEgr)}</div></div>`;
 
-  if (filas.length === 0) {
+  if (filas.length === 0 && !(rPrev.data || []).length) {
     cont.innerHTML = '<div class="estadoVacio">Sin movimientos en este rango.</div>';
     contMes.innerHTML = '<div class="estadoVacio">Sin movimientos en este rango.</div>';
     return;
   }
 
-  const ordenar = (obj) => Object.keys(obj).sort((a, b) => obj[b] - obj[a]);
-  const catsIng = ordenar(ing), catsEgr = ordenar(egr);
-  catsIng.forEach(c => cacheFilasReporte.push(['Ingreso', c, ing[c]]));
-  catsEgr.forEach(c => cacheFilasReporte.push(['Egreso', c, egr[c]]));
+  const pct = (v, t) => t > 0 ? (v / t * 100).toFixed(1) + '%' : '—';
+  const variacion = (a, p) => p > 0 ? ((a - p) / p * 100).toFixed(1) + '%' : (a > 0 ? 'nuevo' : '—');
+  const ordenar = (obj, obj2) => [...new Set([...Object.keys(obj), ...Object.keys(obj2)])].sort((a, b) => (obj[b] || 0) - (obj[a] || 0));
+  const catsIng = ordenar(ing, prevIng), catsEgr = ordenar(egr, prevEgr);
+  catsIng.forEach(c => cacheFilasReporte.push(['Ingreso', c, ing[c] || 0, pct(ing[c] || 0, totIng), prevIng[c] || 0, variacion(ing[c] || 0, prevIng[c] || 0), '']));
+  catsEgr.forEach(c => cacheFilasReporte.push(['Egreso', c, egr[c] || 0, pct(egr[c] || 0, totEgr), prevEgr[c] || 0, variacion(egr[c] || 0, prevEgr[c] || 0), pres[c] != null ? pres[c].toFixed(2) : '']));
 
-  const filaCat = (c, v, clase) => `<tr><td>${c}</td><td class="${clase}">${formatoMoneda(v)}</td></tr>`;
+  const detalle = (clave) => {
+    const lista = (repDetalleMapa[clave] || []).slice().sort((a, b) => b.fecha.localeCompare(a.fecha));
+    return `<tr id="repDet_${btoa(unescape(encodeURIComponent(clave))).replace(/=/g, '')}" style="display:none;"><td colspan="6" style="background:rgba(128,128,128,0.08); padding:8px 14px;">${lista.length ? lista.slice(0, 200).map(t => `<div class="relFila"><span>${formatoFecha(t.fecha)} · ${escV28(t.descripcion || '')}</span><span>${formatoMoneda(t.monto)}</span></div>`).join('') + (lista.length > 200 ? `<div style="font-size:0.8rem;">…y ${lista.length - 200} más</div>` : '') : '<div style="font-size:0.85rem;">Sin movimientos en este periodo.</div>'}</td></tr>`;
+  };
+  const claveId = (k) => btoa(unescape(encodeURIComponent(k))).replace(/=/g, '');
+  const filaCat = (c, v, p, tot, clase, tipoK, presVal) => {
+    const clave = tipoK + '|' + c;
+    return `<tr style="cursor:pointer;" onclick="repToggleDetalle('${claveId(clave)}')"><td>${escV28(c)}</td><td class="${clase}">${formatoMoneda(v)}</td><td>${pct(v, tot)}</td><td>${formatoMoneda(p)}</td><td>${variacion(v, p)}</td><td>${presVal != null ? formatoMoneda(presVal) : '—'}</td></tr>${detalle(clave)}`;
+  };
   cont.innerHTML = `
-    <table class="tablaTrans"><thead><tr><th>Concepto</th><th>Monto</th></tr></thead><tbody>
-      <tr><td colspan="2" style="font-weight:700; color: var(--heading);">Ingresos</td></tr>
-      ${catsIng.map(c => filaCat(c, ing[c], 'montoIngreso')).join('') || '<tr><td colspan="2" style="color:var(--text-muted);">—</td></tr>'}
-      <tr><td style="font-weight:700;">Total ingresos</td><td class="montoIngreso">${formatoMoneda(totIng)}</td></tr>
-      <tr><td colspan="2" style="font-weight:700; color: var(--heading);">Egresos</td></tr>
-      ${catsEgr.map(c => filaCat(c, egr[c], 'montoEgreso')).join('') || '<tr><td colspan="2" style="color:var(--text-muted);">—</td></tr>'}
-      <tr><td style="font-weight:700;">Total egresos</td><td class="montoEgreso">${formatoMoneda(totEgr)}</td></tr>
-      <tr><td style="font-weight:700;">Resultado neto</td><td style="font-weight:700;">${formatoMoneda(totIng - totEgr)}</td></tr>
-    </tbody></table>`;
+    <div style="overflow-x:auto;"><table class="tablaTrans"><thead><tr><th>Concepto</th><th>Monto</th><th>% del total</th><th>Periodo anterior<br><span style="font-weight:400; font-size:0.72rem;">${formatoFecha(pDesde)} a ${formatoFecha(pHasta)}</span></th><th>Var %</th><th>Presupuesto</th></tr></thead><tbody>
+      <tr><td colspan="6" style="font-weight:700; color: var(--heading);">Ingresos</td></tr>
+      ${catsIng.map(c => filaCat(c, ing[c] || 0, prevIng[c] || 0, totIng, 'montoIngreso', 'I', null)).join('') || '<tr><td colspan="6" style="color:var(--text-muted);">—</td></tr>'}
+      <tr><td style="font-weight:700;">Total ingresos</td><td class="montoIngreso">${formatoMoneda(totIng)}</td><td>100%</td><td>${formatoMoneda(prevTotIng)}</td><td>${variacion(totIng, prevTotIng)}</td><td></td></tr>
+      <tr><td colspan="6" style="font-weight:700; color: var(--heading);">Egresos</td></tr>
+      ${catsEgr.map(c => filaCat(c, egr[c] || 0, prevEgr[c] || 0, totEgr, 'montoEgreso', 'E', pres[c] != null ? pres[c] : null)).join('') || '<tr><td colspan="6" style="color:var(--text-muted);">—</td></tr>'}
+      <tr><td style="font-weight:700;">Total egresos</td><td class="montoEgreso">${formatoMoneda(totEgr)}</td><td>100%</td><td>${formatoMoneda(prevTotEgr)}</td><td>${variacion(totEgr, prevTotEgr)}</td><td>${Object.keys(pres).length ? formatoMoneda(Object.values(pres).reduce((a, b) => a + b, 0)) : ''}</td></tr>
+      <tr><td style="font-weight:700;">Resultado neto</td><td style="font-weight:700;">${formatoMoneda(totIng - totEgr)}</td><td></td><td>${formatoMoneda(prevTotIng - prevTotEgr)}</td><td>${variacion(totIng - totEgr, prevTotIng - prevTotEgr)}</td><td></td></tr>
+    </tbody></table></div>
+    <div style="padding:6px 14px; font-size:0.78rem; color:var(--text-muted);">Toca una categoría para ver sus movimientos. El presupuesto se prorratea por días del periodo.</div>`;
 
   const clavesMes = Object.keys(meses).sort();
   contMes.innerHTML = `
@@ -7741,12 +7902,23 @@ async function cargarReporteResultados() {
     </tbody></table>`;
 }
 
+
 function exportarReporteCSV() {
   if (cacheFilasReporte.length === 0) { alert('No hay datos que exportar en este rango.'); return; }
   const desde = document.getElementById('repDesde').value;
   const hasta = document.getElementById('repHasta').value;
-  csvDescargar(`estado_resultados_${desde}_a_${hasta}.csv`, ['Tipo', 'Categoría', 'Monto'], cacheFilasReporte);
+  csvDescargar(`estado_resultados_${desde}_a_${hasta}.csv`, ['Tipo', 'Categoría', 'Monto', '% del total', 'Periodo anterior', 'Var %', 'Presupuesto'], cacheFilasReporte);
 }
+function imprimirReporte() {
+  const desde = document.getElementById('repDesde').value, hasta = document.getElementById('repHasta').value;
+  const w = window.open('', '_blank');
+  if (!w) { alert('El navegador bloqueó la ventana de impresión.'); return; }
+  const tabla = document.getElementById('repResultados').cloneNode(true);
+  tabla.querySelectorAll('tr[id^="repDet_"]').forEach(r => r.remove());
+  w.document.write(`<html><head><meta charset="utf-8"><title>Estado de resultados</title><style>body{font-family:Arial,sans-serif;padding:20px;color:#111}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #bbb;padding:5px 7px;text-align:left}</style></head><body><h2>Estado de resultados</h2><div style="font-size:12px;margin-bottom:10px">${formatoFecha(desde)} a ${formatoFecha(hasta)}</div>${tabla.innerHTML}</body></html>`);
+  w.document.close(); w.focus(); w.print();
+}
+
 
 // ── Navegación: Secretaría ───────────────────────────────────────────────
 let cacheFamiliasCargadas = false;
