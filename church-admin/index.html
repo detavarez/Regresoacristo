@@ -1306,12 +1306,6 @@
           </div>
           <div style="padding:0 18px 14px; font-size:0.78rem; color:var(--text-muted);">El acceso al Resumen del Pastor se da por usuario en Usuarios ("Puede entrar al Resumen del Pastor"); esa persona no entra al programa completo.</div>
         </div>
-        <div class="tablaWrap" style="margin-bottom:20px;" id="bloqueSaldosCfg">
-          <h3>Saldos iniciales y trabajo histórico</h3>
-          <div style="padding:14px 18px; font-size:0.9rem;">Define cuánto dinero hay hoy en cada cuenta para empezar a usar el programa, y registra aparte los movimientos anteriores sin afectar esos saldos.</div>
-          <div style="padding:0 18px 14px;"><button type="button" class="btnPrincipal" style="width:auto;" onclick="mostrarHistorico()">Abrir saldos y trabajo histórico</button></div>
-        </div>
-
         <div class="tablaWrap" style="margin-bottom:20px;" id="bloqueBloqueoCfg">
           <h3>Bloqueo automático por inactividad</h3>
           <div style="padding:14px 18px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -1405,51 +1399,6 @@
     </div>
 
     <!-- ═══ Vista: Grupos Pequeños ═══ -->
-    <!-- ═══ Vista: Saldos iniciales y trabajo histórico ═══ -->
-    <div id="vistaHistorico" style="display:none;">
-      <button class="btnVolver" onclick="volverDeHistorico()">← Volver</button>
-      <h2>Saldos iniciales y trabajo histórico</h2>
-      <p class="fecha">Los saldos de hoy arrancan el programa. Los movimientos históricos se guardan marcados y no cambian los saldos actuales.</p>
-
-      <div class="tablaWrap" style="margin-bottom:20px;">
-        <h3>1. Saldos</h3>
-        <div style="padding:14px 18px; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px;">
-          <div><label for="hiFechaCorte">Fecha de corte (saldos de hoy)</label><input type="date" id="hiFechaCorte"></div>
-          <div><label for="hiFechaInicio">Inicio del periodo histórico</label><input type="date" id="hiFechaInicio"></div>
-        </div>
-        <div style="padding:0 18px;" id="hiSaldos"></div>
-        <div style="padding:12px 18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-          <button type="button" class="btnPrincipal" style="width:auto;" onclick="hiGuardarSaldos()">Guardar saldos</button>
-          <span id="hiMsg" style="font-size:0.85rem; color:var(--text-muted);"></span>
-        </div>
-        <div style="padding:0 18px 14px; font-size:0.78rem; color:var(--text-muted);">Diferencia = saldo de hoy − (saldo al inicio del periodo + movimientos del periodo). Cuando llegue a 0 en todas las cuentas, el trabajo histórico está completo.</div>
-      </div>
-
-      <div class="tablaWrap" style="margin-bottom:20px;">
-        <h3>2. Registrar un movimiento histórico</h3>
-        <div id="hiFormAviso" style="display:none; padding:10px 18px; color:var(--danger); font-size:0.88rem;">Guarda primero los saldos y la fecha de corte.</div>
-        <form onsubmit="return hiGuardarMov(event)" style="padding:14px 18px;">
-          <div class="formGrid">
-            <div><label for="hiTipo">Tipo</label><select id="hiTipo" onchange="hiPintarForm()"><option>Ingreso</option><option>Egreso</option><option>Transferencia</option></select></div>
-            <div><label for="hiFecha">Fecha</label><input type="date" id="hiFecha" required></div>
-            <div><label for="hiMonto">Monto</label><input type="number" step="0.01" min="0" id="hiMonto" required></div>
-            <div><label for="hiCuenta" id="hiLblCuenta">Cuenta</label><select id="hiCuenta"></select></div>
-            <div id="hiBloqueDestino" style="display:none;"><label for="hiCuentaDestino">Entra a la cuenta</label><select id="hiCuentaDestino"></select></div>
-            <div id="hiBloqueCategoria"><label for="hiCategoria">Categoría</label><select id="hiCategoria"></select></div>
-            <div><label for="hiMetodo">Método</label><select id="hiMetodo"></select></div>
-            <div class="full"><label for="hiDescripcion">Descripción</label><input type="text" id="hiDescripcion"></div>
-          </div>
-          <div class="formAcciones"><span id="hiMovMsg" style="font-size:0.85rem; margin-right:auto;"></span><button type="submit" class="btnPrincipal" style="width:auto;" id="hiBtnMov">Guardar movimiento</button></div>
-        </form>
-      </div>
-
-      <div class="tablaWrap" style="margin-bottom:20px;">
-        <h3>3. Movimientos históricos registrados</h3>
-        <div style="padding:8px 18px;" id="hiLista"></div>
-      </div>
-      <div style="margin-bottom:30px;"><button type="button" class="btnSecundario" onclick="hiTerminar()">Ya terminé el trabajo histórico</button></div>
-    </div>
-
     <div id="vistaGrupos" style="display:none;">
       <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
       <h2>Grupos Pequeños</h2>
@@ -2594,8 +2543,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-060';
-document.getElementById('versionTopbar').textContent = 'Ver-060';
+const APP_VERSION = 'church-admin Ver-061';
+document.getElementById('versionTopbar').textContent = 'Ver-061';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -9602,170 +9551,6 @@ async function eliminarAsistencia() {
 // ── Administración ────────────────────────────────────────────────────────
 let cacheUsuariosAdmin = [];
 let cacheUsuarioApps = [];
-
-// ── Saldos iniciales y trabajo histórico (Ver-057) ──
-const HI_CUENTAS = [
-  { cod: '1001', nombre: 'Efectivo' },
-  { cod: '1002', nombre: 'Banco — Checking' },
-  { cod: '1003', nombre: 'Banco — Savings' },
-  { cod: '1005', nombre: 'Cash App' },
-];
-let hiCfg = { fecha_corte: null, fecha_inicio_historico: null };
-let hiSaldos = {};
-let hiTrans = [];
-
-function mostrarHistorico() {
-  document.getElementById('vistaAdministracion').style.display = 'none';
-  document.getElementById('vistaHistorico').style.display = 'block';
-  hiCargar();
-}
-function volverDeHistorico() {
-  document.getElementById('vistaHistorico').style.display = 'none';
-  document.getElementById('vistaAdministracion').style.display = 'block';
-  cambiarSubtabAdmin('config');
-}
-function hiCodId(cod) { const c = cacheCuentas.find(x => x.codigo === cod); return c ? c.id : null; }
-function hiNum(v) { return Math.round((Number(v) || 0) * 100) / 100; }
-
-async function hiCargar() {
-  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
-  const [cfg, si, tr] = await Promise.all([
-    sbCall(sb.from('config_iglesia').select('fecha_corte, fecha_inicio_historico').eq('id', 1).maybeSingle()),
-    sbCall(sb.from('saldos_iniciales').select('*')),
-    sbCall(sb.from('transacciones').select('id, fecha, descripcion, categoria, referencia, tipo, tipo_origen, metodo, monto, solo_fondo, cuenta_dr, cuenta_cr, historico').order('fecha', { ascending: true }).range(0, 9999)),
-  ]);
-  hiCfg = (cfg.data) || { fecha_corte: null, fecha_inicio_historico: null };
-  hiSaldos = {};
-  (si.data || []).forEach(r => { hiSaldos[r.cuenta_codigo] = r; });
-  hiTrans = tr.data || [];
-  document.getElementById('hiFechaCorte').value = hiCfg.fecha_corte || new Date().toISOString().slice(0, 10);
-  document.getElementById('hiFechaInicio').value = hiCfg.fecha_inicio_historico || '';
-  document.getElementById('hiFecha').max = hiCfg.fecha_corte || '';
-  hiPintarSaldos();
-  hiPintarForm();
-  hiPintarLista();
-}
-
-function hiAsientos() { return hiTrans.map(lcAsiento).filter(Boolean); }
-
-function hiPintarSaldos() {
-  const corte = hiCfg.fecha_corte, ini = hiCfg.fecha_inicio_historico;
-  const asientos = hiAsientos();
-  const efecto = (a, cod) => (a.dr === cod ? a.c : 0) - (a.cr === cod ? a.c : 0);
-  const filas = HI_CUENTAS.map(h => {
-    const r = hiSaldos[h.cod] || { saldo_corte: 0, saldo_hist_inicial: 0 };
-    const mov = asientos.filter(a => corte && a.fecha <= corte && (!ini || a.fecha >= ini)).reduce((s, a) => s + efecto(a, h.cod), 0) / 100;
-    const vivo = hiNum(r.saldo_corte) + asientos.filter(a => corte && a.fecha > corte).reduce((s, a) => s + efecto(a, h.cod), 0) / 100;
-    const dif = hiNum(r.saldo_corte) - (hiNum(r.saldo_hist_inicial) + mov);
-    return { h, r, mov, vivo, dif };
-  });
-  document.getElementById('hiSaldos').innerHTML = `<div style="overflow-x:auto;"><table class="tablaTrans"><thead><tr><th>Cuenta</th><th style="text-align:right;">Saldo de hoy (real)</th><th style="text-align:right;">Saldo al inicio del periodo histórico</th><th style="text-align:right;">Movimientos del periodo</th><th style="text-align:right;">Diferencia</th><th style="text-align:right;">Saldo vivo ahora</th></tr></thead><tbody>
-    ${filas.map(f => `<tr><td><b>${f.h.nombre}</b></td>
-      <td style="text-align:right;"><input type="number" step="0.01" id="hiCorte_${f.h.cod}" value="${hiNum(f.r.saldo_corte)}" style="max-width:130px; text-align:right;"></td>
-      <td style="text-align:right;"><input type="number" step="0.01" id="hiHist_${f.h.cod}" value="${hiNum(f.r.saldo_hist_inicial)}" style="max-width:130px; text-align:right;"></td>
-      <td style="text-align:right;">${formatoMoneda(f.mov)}</td>
-      <td style="text-align:right; font-weight:700; color:${Math.abs(f.dif) < 0.005 ? '#1f7a4d' : 'var(--danger)'};">${Math.abs(f.dif) < 0.005 ? '0.00 ✓' : formatoMoneda(f.dif)}</td>
-      <td style="text-align:right;">${corte ? formatoMoneda(f.vivo) : '—'}</td></tr>`).join('')}
-  </tbody></table></div>`;
-}
-
-async function hiGuardarSaldos() {
-  const msg = document.getElementById('hiMsg');
-  const corte = document.getElementById('hiFechaCorte').value;
-  const ini = document.getElementById('hiFechaInicio').value || null;
-  if (!corte) { msg.textContent = 'Elige la fecha de corte.'; return; }
-  if (ini && ini > corte) { msg.textContent = 'El inicio del periodo histórico debe ser anterior a la fecha de corte.'; return; }
-  if (hiCfg.fecha_corte && hiCfg.fecha_corte !== corte && !confirm('Cambiar la fecha de corte mueve el arranque de los saldos vivos. ¿Continuar?')) return;
-  if (!hiCfg.fecha_corte && !confirm('A partir del ' + corte + ' el programa tomará estos saldos como punto de partida. Los movimientos anteriores quedan como histórico y no cambian los saldos. ¿Continuar?')) return;
-  const filas = HI_CUENTAS.map(h => ({ cuenta_codigo: h.cod, saldo_corte: hiNum(document.getElementById('hiCorte_' + h.cod).value), saldo_hist_inicial: hiNum(document.getElementById('hiHist_' + h.cod).value), actualizado_en: new Date().toISOString() }));
-  const r1 = await sbCall(sb.from('config_iglesia').update({ fecha_corte: corte, fecha_inicio_historico: ini }).eq('id', 1));
-  if (r1.error) { msg.textContent = 'Error: ' + r1.error.message; return; }
-  const r2 = await sbCall(sb.from('saldos_iniciales').upsert(filas, { onConflict: 'cuenta_codigo' }));
-  if (r2.error) { msg.textContent = 'Error: ' + r2.error.message; return; }
-  msg.textContent = 'Guardado.';
-  lcCargado = false;
-  await hiCargar();
-}
-
-function hiPintarForm() {
-  const tipo = document.getElementById('hiTipo').value;
-  document.getElementById('hiBloqueDestino').style.display = tipo === 'Transferencia' ? '' : 'none';
-  document.getElementById('hiBloqueCategoria').style.display = tipo === 'Transferencia' ? 'none' : '';
-  document.getElementById('hiLblCuenta').textContent = tipo === 'Transferencia' ? 'Sale de la cuenta' : (tipo === 'Ingreso' ? 'Entra a la cuenta' : 'Sale de la cuenta');
-  const opts = HI_CUENTAS.map(h => `<option value="${h.cod}">${h.nombre}</option>`).join('');
-  const sel = document.getElementById('hiCuenta'), sel2 = document.getElementById('hiCuentaDestino');
-  const v1 = sel.value, v2 = sel2.value;
-  sel.innerHTML = opts; sel2.innerHTML = opts;
-  if (v1) sel.value = v1;
-  sel2.value = v2 || '1002';
-  const cats = cacheCuentas.filter(c => c.tipo === (tipo === 'Ingreso' ? 'Ingreso' : 'Gasto')).sort((a, b) => a.codigo.localeCompare(b.codigo));
-  const vc = document.getElementById('hiCategoria').value;
-  document.getElementById('hiCategoria').innerHTML = cats.map(c => `<option value="${c.codigo}">${escV28(c.nombre)}</option>`).join('');
-  if (vc) document.getElementById('hiCategoria').value = vc;
-  const m = document.getElementById('hiMetodo'), vm = m.value;
-  m.innerHTML = METODOS_PAGO.map(x => `<option value="${escV28(x)}">${escV28(x)}</option>`).join('');
-  if (vm) m.value = vm;
-  const ok = !!hiCfg.fecha_corte;
-  document.getElementById('hiFormAviso').style.display = ok ? 'none' : 'block';
-  document.getElementById('hiBtnMov').disabled = !ok;
-}
-
-async function hiGuardarMov(evt) {
-  evt.preventDefault();
-  const tipo = document.getElementById('hiTipo').value;
-  const fecha = document.getElementById('hiFecha').value;
-  const monto = hiNum(document.getElementById('hiMonto').value);
-  const cuenta = document.getElementById('hiCuenta').value;
-  const desc = document.getElementById('hiDescripcion').value.trim();
-  const out = document.getElementById('hiMovMsg');
-  if (!hiCfg.fecha_corte) { out.textContent = 'Guarda primero los saldos y la fecha de corte.'; return false; }
-  if (!fecha || fecha > hiCfg.fecha_corte) { out.textContent = 'La fecha debe ser igual o anterior al ' + hiCfg.fecha_corte + '.'; return false; }
-  if (!(monto > 0)) { out.textContent = 'Escribe un monto mayor que 0.'; return false; }
-  const u = await sb.auth.getUser();
-  const base = { fecha, monto, metodo: document.getElementById('hiMetodo').value, estado: 'Completado', tipo_origen: 'Histórico', historico: true, solo_fondo: false, creado_por: u?.data?.user?.id || null };
-  let fila;
-  if (tipo === 'Transferencia') {
-    const dest = document.getElementById('hiCuentaDestino').value;
-    if (dest === cuenta) { out.textContent = 'El origen y el destino deben ser distintos.'; return false; }
-    fila = { ...base, tipo: 'Transferencia', categoria: 'Transferencia', descripcion: desc || 'Transferencia histórica', cuenta_cr: hiCodId(cuenta), cuenta_dr: hiCodId(dest) };
-  } else {
-    const catCod = document.getElementById('hiCategoria').value;
-    const cat = cacheCuentas.find(c => c.codigo === catCod);
-    if (!cat) { out.textContent = 'Elige la categoría.'; return false; }
-    fila = tipo === 'Ingreso'
-      ? { ...base, tipo: 'Ingreso', categoria: cat.nombre, descripcion: desc || cat.nombre, cuenta_dr: hiCodId(cuenta), cuenta_cr: cat.id }
-      : { ...base, tipo: 'Egreso', categoria: cat.nombre, descripcion: desc || cat.nombre, cuenta_dr: cat.id, cuenta_cr: hiCodId(cuenta) };
-  }
-  const r = await sbCall(sb.from('transacciones').insert(fila));
-  if (r.error) { out.textContent = 'Error: ' + r.error.message; return false; }
-  out.textContent = 'Guardado. Puedes seguir con la siguiente.';
-  document.getElementById('hiMonto').value = '';
-  document.getElementById('hiDescripcion').value = '';
-  lcCargado = false;
-  await hiCargar();
-  return false;
-}
-
-async function hiBorrar(id) {
-  if (!confirm('¿Borrar este movimiento histórico?')) return;
-  const r = await sbCall(sb.from('transacciones').delete().eq('id', id).eq('historico', true));
-  if (r.error) { alert('Error: ' + r.error.message); return; }
-  lcCargado = false;
-  await hiCargar();
-}
-
-function hiPintarLista() {
-  const filas = hiTrans.filter(t => t.historico).sort((a, b) => b.fecha.localeCompare(a.fecha));
-  const nombreCuenta = id => { const c = cacheCuentas.find(x => String(x.id) === String(id)); return c ? c.nombre : '—'; };
-  document.getElementById('hiLista').innerHTML = filas.length ? `<div style="overflow-x:auto;"><table class="tablaTrans"><thead><tr><th>Fecha</th><th>Descripción</th><th>Tipo</th><th>Cuenta / Categoría</th><th style="text-align:right;">Monto</th><th></th></tr></thead><tbody>${filas.slice(0, 300).map(t => `<tr><td>${formatoFecha(t.fecha)}</td><td>${escV28(t.descripcion || '')}</td><td>${t.tipo}</td><td>${escV28(nombreCuenta(t.cuenta_dr))} ← ${escV28(nombreCuenta(t.cuenta_cr))}</td><td style="text-align:right;">${formatoMoneda(t.monto)}</td><td><button class="btnSecundario btnPeligro" style="padding:2px 10px; font-size:0.78rem;" onclick="hiBorrar('${t.id}')">Borrar</button></td></tr>`).join('')}</tbody></table></div><div style="padding:8px 0; font-size:0.85rem;">${filas.length} movimiento${filas.length === 1 ? '' : 's'} histórico${filas.length === 1 ? '' : 's'}</div>` : '<div class="estadoVacio">Aún no hay movimientos históricos.</div>';
-}
-
-async function hiTerminar() {
-  if (!confirm('¿Terminaste el trabajo histórico? Los movimientos y saldos se conservan; solo se oculta el acceso a esta página.')) return;
-  const r = await sbCall(sb.from('config_iglesia').update({ trabajo_historico_activo: false }).eq('id', 1));
-  if (r.error) { alert('Error: ' + r.error.message); return; }
-  volverDeHistorico();
-}
 
 function mostrarAdministracion() {
   document.getElementById('vistaDashboard').style.display = 'none';

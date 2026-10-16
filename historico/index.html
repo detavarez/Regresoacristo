@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Trabajo histórico — Church Admin</title>
+<style>
+  :root { --navy:#0f2445; --navy-light:#1a3a6b; --bg:#f4f6f9; --surface:#fff; --text:#1a2433; --muted:#6b7686; --border:#dbe1ea; --ok:#1f7a4d; --bad:#b3261e; --heading:#0f2445; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; background:var(--bg); color:var(--text); }
+  .top { background:var(--navy); color:#fff; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .top b { font-size:1.05rem; }
+  .top button { background:rgba(255,255,255,.15); color:#fff; border:0; border-radius:8px; padding:8px 12px; font-size:1rem; cursor:pointer; }
+  main { max-width:900px; margin:0 auto; padding:16px; }
+  .aviso { background:#fff7e0; border:1px solid #f0d98a; border-radius:10px; padding:12px 14px; font-size:.9rem; margin-bottom:16px; }
+  .paso { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:18px; overflow:hidden; }
+  .paso h2 { margin:0; padding:12px 16px; font-size:1rem; background:rgba(15,36,69,.06); color:var(--heading); }
+  .paso .cuerpo { padding:14px 16px; }
+  .ayuda { font-size:.85rem; color:var(--muted); margin:0 0 10px; }
+  label { display:block; font-size:.8rem; color:var(--muted); margin:8px 0 3px; }
+  input, select { width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-size:1rem; background:#fff; color:var(--text); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; }
+  table { width:100%; border-collapse:collapse; font-size:.9rem; }
+  th, td { padding:8px 6px; border-bottom:1px solid var(--border); text-align:left; }
+  td.m, th.m { text-align:right; }
+  .btn { background:var(--navy); color:#fff; border:0; border-radius:8px; padding:11px 18px; font-size:1rem; cursor:pointer; margin-top:12px; }
+  .btn2 { background:#fff; color:var(--navy); border:1px solid var(--navy); }
+  .msg { margin-top:10px; font-size:.9rem; }
+  .ok { color:var(--ok); } .mal { color:var(--bad); }
+  .tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .tabs button { border:1px solid var(--border); background:#fff; border-radius:20px; padding:8px 14px; cursor:pointer; font-size:.9rem; }
+  .tabs button.sel { background:var(--navy); color:#fff; border-color:var(--navy); }
+  .fila { display:grid; grid-template-columns:1fr 120px; gap:8px; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); }
+  .fila.ya { opacity:.5; }
+  .listaMiembros { max-height:420px; overflow:auto; border:1px solid var(--border); border-radius:8px; padding:0 10px; }
+  .dif0 { color:var(--ok); font-weight:700; } .difX { color:var(--bad); font-weight:700; }
+  #login { max-width:360px; margin:40px auto; }
+  .oculto { display:none; }
+</style>
+<script>const APP_SLUG = 'church_admin';</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="../shared/supabase-client.js"></script>
+<script src="../shared/auth.js"></script>
+<script src="../shared/seguridad.js"></script>
+</head>
+<body>
+<div class="top"><b>Trabajo histórico</b><span><button id="btnBloq" class="oculto" onclick="SEG.bloquear()" aria-label="Bloquear">🔒</button> <button id="btnPerfil" class="oculto" onclick="SEG.abrirPerfil(false)" aria-label="Mi perfil">👤</button></span></div>
+
+<div id="login" class="oculto">
+  <h2>Trabajo histórico</h2>
+  <form onsubmit="return entrarLogin(event)">
+    <label for="lgEmail">Correo</label><input type="email" id="lgEmail" autocomplete="username" required>
+    <label for="lgPass">Contraseña</label><input type="password" id="lgPass" autocomplete="current-password" required>
+    <button class="btn" type="submit" id="lgBtn" style="width:100%">Entrar</button>
+    <div id="lgMsg" class="msg mal"></div>
+  </form>
+</div>
+
+<main id="contenido" class="oculto">
+  <div class="aviso"><b>Página temporal.</b> Aquí pones los números de hoy y registras lo atrasado. Todo lo que guardes queda en el programa como cualquier otra transacción, pero no cambia lo que hay hoy en cada cuenta. Cuando todas las diferencias del Paso 4 estén en cero, la página ya no hace falta y se puede eliminar.</div>
+
+  <section class="paso">
+    <h2>Paso 1 — Lo que hay HOY en cada cuenta</h2>
+    <div class="cuerpo">
+      <p class="ayuda">Escribe el dinero real que hay hoy. El programa arranca desde estos números.</p>
+      <div class="grid"><div><label for="fCorte">Fecha de hoy</label><input type="date" id="fCorte"></div></div>
+      <div class="grid" id="saldosHoy"></div>
+      <button class="btn" onclick="guardarPaso1()">Guardar Paso 1</button>
+      <div class="msg" id="msg1"></div>
+    </div>
+  </section>
+
+  <section class="paso">
+    <h2>Paso 2 — Dónde empieza lo atrasado</h2>
+    <div class="cuerpo">
+      <p class="ayuda">Elige desde qué fecha vas a registrar lo atrasado y cuánto había en cada cuenta ese día (por ejemplo, según el estado de cuenta del banco).</p>
+      <div class="grid"><div><label for="fInicio">Fecha de inicio</label><input type="date" id="fInicio"></div></div>
+      <div class="grid" id="saldosInicio"></div>
+      <button class="btn" onclick="guardarPaso2()">Guardar Paso 2</button>
+      <div class="msg" id="msg2"></div>
+    </div>
+  </section>
+
+  <section class="paso">
+    <h2>Paso 3 — Registrar lo atrasado</h2>
+    <div class="cuerpo">
+      <div class="tabs" id="tabs"></div>
+      <div id="panel"></div>
+      <div class="msg" id="msg3"></div>
+      <div id="sesion"></div>
+    </div>
+  </section>
+
+  <section class="paso">
+    <h2>Paso 4 — Cuadre</h2>
+    <div class="cuerpo">
+      <p class="ayuda">Al inicio + entradas − salidas debe ser igual a lo que hay hoy. La diferencia debe quedar en cero en las cuatro cuentas.</p>
+      <div style="overflow-x:auto" id="cuadre"></div>
+      <div class="msg" id="msg4"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+
+const CUENTAS = [
+  { cod: '1001', nombre: 'Efectivo' },
+  { cod: '1002', nombre: 'Banco — Checking' },
+  { cod: '1003', nombre: 'Banco — Savings' },
+  { cod: '1005', nombre: 'Cash App' },
+];
+const METODOS = ['Efectivo', 'Cheque', 'Zelle', 'Cash App', 'Electrónico', 'Tarjeta de banco', 'Tarjeta de CashApp', 'Otro'];
+const OFRENDA_TIPOS = ['Ofrenda General', 'Misiones', 'Construcción', 'Especial', 'Bebés y Niños', 'Jóvenes'];
+const OFRENDA_TIPO_CUENTA = { 'Misiones': '4006', 'Construcción': '4007' };
+const PROPOSITOS = ['Fondo General', 'Fondo de Misiones', 'Construcción', 'Educación', 'Ayuda Social'];
+
+let cacheCuentas = [], cacheFondos = [], cachePersonas = [], cacheOrgs = [], cacheDefaults = [], cacheTrans = [];
+let cfg = { fecha_corte: null, fecha_inicio_historico: null };
+let saldos = {};
+let tabActual = 'diezmos';
+let hechos = [];
+
+const $ = id => document.getElementById(id);
+const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const formatoMoneda = n => (Number(n) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+const num = v => Math.round((Number(v) || 0) * 100) / 100;
+function cuentaId(cod) { const c = cacheCuentas.find(x => x.codigo === cod); return c ? c.id : null; }
+function nombrePersona(p) { return p.apodo ? `${p.apodo} ${p.apellido || ''}`.trim() : (p.nombre_completo || `${p.nombre || ''} ${p.apellido || ''}`.trim()); }
+function defecto(tipo) { return cacheDefaults.find(d => d.tipo === tipo) || {}; }
+function fondoPorDefecto(tipo) {
+  const d = defecto(tipo).fondo_id;
+  if (d && cacheFondos.some(f => f.id === d)) return d;
+  const g = cacheFondos.find(f => /fondo general/i.test(f.nombre));
+  return g ? g.id : (cacheFondos[0] ? cacheFondos[0].id : '');
+}
+const opcionesFondo = sel => cacheFondos.map(f => `<option value="${f.id}" ${f.id === sel ? 'selected' : ''}>${esc(f.nombre)}</option>`).join('');
+const opcionesMetodo = sel => METODOS.map(m => `<option ${m === (sel || 'Efectivo') ? 'selected' : ''}>${esc(m)}</option>`).join('');
+
+function lcActivoPorMetodo(m) {
+  const x = String(m || '').toLowerCase();
+  if (x === 'efectivo') return '1001';
+  if (x.includes('cashapp') || x.includes('cash app')) return '1005';
+  return '1002';
+}
+function lcIngresoPorOrigen(t) {
+  const o = String(t.tipo_origen || '').toLowerCase(), c = String(t.categoria || '').toLowerCase();
+  if (o.includes('diezmo')) return '4001';
+  if (o.includes('ofrenda')) return c.includes('misi') ? '4006' : (c.includes('construc') ? '4007' : '4002');
+  if (o.includes('donaci')) return '4003';
+  if (o.includes('promesa')) return '4008';
+  if (o.includes('ajuste')) return '4009';
+  if (o.includes('venta') || o.includes('evento')) return '4004';
+  return '4005';
+}
+function lcGastoPorCategoria(t) {
+  const c = `${t.categoria || ''} ${t.descripcion || ''}`.toLowerCase();
+  if (String(t.tipo_origen || '').toLowerCase().includes('ajuste')) return '5009';
+  if (c.includes('administrativ')) return '5004';
+  if (c.includes('evento')) return '5006';
+  if (c.includes('misi')) return '5005';
+  if (c.includes('construc')) return '5008';
+  if (c.includes('personal') || c.includes('salario') || c.includes('pastor')) return '5001';
+  if (c.includes('servicio') || c.includes('luz') || c.includes('agua') || c.includes('internet')) return '5002';
+  if (c.includes('manten') || c.includes('repar')) return '5003';
+  return '5007';
+}
+function lcCodigoDeId(id) { const c = cacheCuentas.find(x => String(x.id) === String(id)); return c ? c.codigo : null; }
+
+function lcAsiento(t) {
+  if (t.solo_fondo) return null;
+  const sdr = t.cuenta_dr ? lcCodigoDeId(t.cuenta_dr) : null;
+  const scr = t.cuenta_cr ? lcCodigoDeId(t.cuenta_cr) : null;
+  let dr = sdr, cr = scr;
+  if (t.tipo === 'Ingreso') { dr = dr || lcActivoPorMetodo(t.metodo); cr = cr || lcIngresoPorOrigen(t); }
+  else if (t.tipo === 'Egreso') { dr = dr || lcGastoPorCategoria(t); cr = cr || lcActivoPorMetodo(t.metodo); }
+  else if (!(dr && cr)) return null;
+  const monto = Math.round((Number(t.monto) || 0) * 100);
+  if (!dr || !cr || monto <= 0) return null;
+  return { id: t.id, hist: !!t.historico, fecha: t.fecha, desc: t.descripcion || t.categoria || '', ref: t.referencia || '', dr, cr, c: monto, derivado: !(sdr && scr) };
+}
+
+
+
+async function cargarTodo() {
+  const [cu, fo, pe, og, de, cf, si, tr] = await Promise.all([
+    sbCall(sb.from('cuentas').select('*')),
+    sbCall(sb.from('fondos').select('*').eq('activo', true).order('nombre')),
+    sbCall(sb.from('personas').select('id, nombre, apellido, apodo, nombre_completo, sobre_actual').eq('archivado', false).range(0, 4999)),
+    sbCall(sb.from('organizaciones').select('id, nombre').eq('archivado', false).order('nombre')),
+    sbCall(sb.from('defaults_transaccion').select('*')),
+    sbCall(sb.from('config_iglesia').select('fecha_corte, fecha_inicio_historico').eq('id', 1).maybeSingle()),
+    sbCall(sb.from('saldos_iniciales').select('*')),
+    sbCall(sb.from('transacciones').select('id, fecha, descripcion, categoria, referencia, tipo, tipo_origen, metodo, monto, solo_fondo, cuenta_dr, cuenta_cr, historico').order('fecha', { ascending: true }).range(0, 9999)),
+  ]);
+  cacheCuentas = cu.data || []; cacheFondos = fo.data || [];
+  cachePersonas = (pe.data || []).sort((a, b) => nombrePersona(a).localeCompare(nombrePersona(b), 'es'));
+  cacheOrgs = og.data || []; cacheDefaults = de.data || [];
+  cfg = cf.data || { fecha_corte: null, fecha_inicio_historico: null };
+  saldos = {}; (si.data || []).forEach(r => { saldos[r.cuenta_codigo] = r; });
+  cacheTrans = tr.data || [];
+}
+
+function pintarSaldos() {
+  $('fCorte').value = cfg.fecha_corte || new Date().toISOString().slice(0, 10);
+  $('fInicio').value = cfg.fecha_inicio_historico || '';
+  const caja = (pref, campo) => CUENTAS.map(c => `<div><label for="${pref}${c.cod}">${c.nombre}</label><input type="number" step="0.01" id="${pref}${c.cod}" value="${num((saldos[c.cod] || {})[campo])}"></div>`).join('');
+  $('saldosHoy').innerHTML = caja('h_', 'saldo_corte');
+  $('saldosInicio').innerHTML = caja('i_', 'saldo_hist_inicial');
+}
+
+async function guardarPaso1() {
+  const corte = $('fCorte').value;
+  if (!corte) { $('msg1').textContent = 'Elige la fecha de hoy.'; $('msg1').className = 'msg mal'; return; }
+  if (cfg.fecha_corte && cfg.fecha_corte !== corte && !confirm('Cambiar la fecha mueve el punto de arranque del programa. ¿Continuar?')) return;
+  if (!cfg.fecha_corte && !confirm('A partir de ' + corte + ' el programa tomará estos números como punto de partida. ¿Continuar?')) return;
+  const filas = CUENTAS.map(c => ({ cuenta_codigo: c.cod, saldo_corte: num($('h_' + c.cod).value), saldo_hist_inicial: num((saldos[c.cod] || {}).saldo_hist_inicial), actualizado_en: new Date().toISOString() }));
+  const r1 = await sbCall(sb.from('config_iglesia').update({ fecha_corte: corte }).eq('id', 1));
+  if (r1.error) { $('msg1').textContent = 'Error: ' + r1.error.message; $('msg1').className = 'msg mal'; return; }
+  const r2 = await sbCall(sb.from('saldos_iniciales').upsert(filas, { onConflict: 'cuenta_codigo' }));
+  if (r2.error) { $('msg1').textContent = 'Error: ' + r2.error.message; $('msg1').className = 'msg mal'; return; }
+  $('msg1').textContent = 'Guardado.'; $('msg1').className = 'msg ok';
+  await refrescar();
+}
+async function guardarPaso2() {
+  const ini = $('fInicio').value;
+  if (!ini) { $('msg2').textContent = 'Elige la fecha de inicio.'; $('msg2').className = 'msg mal'; return; }
+  if (cfg.fecha_corte && ini >= cfg.fecha_corte) { $('msg2').textContent = 'La fecha de inicio debe ser anterior a la fecha de hoy del Paso 1.'; $('msg2').className = 'msg mal'; return; }
+  const filas = CUENTAS.map(c => ({ cuenta_codigo: c.cod, saldo_corte: num((saldos[c.cod] || {}).saldo_corte), saldo_hist_inicial: num($('i_' + c.cod).value), actualizado_en: new Date().toISOString() }));
+  const r1 = await sbCall(sb.from('config_iglesia').update({ fecha_inicio_historico: ini }).eq('id', 1));
+  if (r1.error) { $('msg2').textContent = 'Error: ' + r1.error.message; $('msg2').className = 'msg mal'; return; }
+  const r2 = await sbCall(sb.from('saldos_iniciales').upsert(filas, { onConflict: 'cuenta_codigo' }));
+  if (r2.error) { $('msg2').textContent = 'Error: ' + r2.error.message; $('msg2').className = 'msg mal'; return; }
+  $('msg2').textContent = 'Guardado.'; $('msg2').className = 'msg ok';
+  await refrescar();
+}
+
+function pintarCuadre() {
+  const corte = cfg.fecha_corte, ini = cfg.fecha_inicio_historico;
+  if (!corte || !ini) { $('cuadre').innerHTML = '<p class="ayuda">Completa los Pasos 1 y 2 para ver el cuadre.</p>'; return; }
+  const asientos = cacheTrans.map(lcAsiento).filter(Boolean).filter(a => a.fecha >= ini && a.fecha <= corte);
+  let todoCero = true;
+  const filas = CUENTAS.map(c => {
+    const entra = asientos.filter(a => a.dr === c.cod).reduce((s, a) => s + a.c, 0) / 100;
+    const sale = asientos.filter(a => a.cr === c.cod).reduce((s, a) => s + a.c, 0) / 100;
+    const inicio = num((saldos[c.cod] || {}).saldo_hist_inicial), hoy = num((saldos[c.cod] || {}).saldo_corte);
+    const debe = inicio + entra - sale, dif = Math.round((hoy - debe) * 100) / 100;
+    if (Math.abs(dif) >= 0.005) todoCero = false;
+    return `<tr><td><b>${c.nombre}</b></td><td class="m">${formatoMoneda(inicio)}</td><td class="m">${formatoMoneda(entra)}</td><td class="m">${formatoMoneda(sale)}</td><td class="m">${formatoMoneda(debe)}</td><td class="m">${formatoMoneda(hoy)}</td><td class="m ${Math.abs(dif) < 0.005 ? 'dif0' : 'difX'}">${Math.abs(dif) < 0.005 ? '0.00 ✓' : formatoMoneda(dif)}</td></tr>`;
+  }).join('');
+  $('cuadre').innerHTML = `<table><thead><tr><th>Cuenta</th><th class="m">Al inicio</th><th class="m">+ Entradas</th><th class="m">− Salidas</th><th class="m">Debería haber</th><th class="m">Hoy hay</th><th class="m">Diferencia</th></tr></thead><tbody>${filas}</tbody></table>`;
+  $('msg4').textContent = todoCero ? 'Todo cuadra. Ya terminaste: esta página se puede eliminar.' : 'Si una diferencia no es cero, falta registrar movimientos (o hay uno de más) en esa cuenta.';
+  $('msg4').className = 'msg ' + (todoCero ? 'ok' : '');
+}
+
+// ───────── Paso 3 ─────────
+const TABS = [['diezmos', 'Diezmos'], ['ofrendas', 'Ofrendas'], ['donaciones', 'Donaciones'], ['gastos', 'Gastos'], ['entre', 'Entre cuentas']];
+function pintarTabs() {
+  $('tabs').innerHTML = TABS.map(([k, t]) => `<button class="${k === tabActual ? 'sel' : ''}" onclick="irTab('${k}')">${t}</button>`).join('');
+  const hoy = cfg.fecha_corte || '';
+  const f = `<div><label for="pFecha">Fecha</label><input type="date" id="pFecha" max="${hoy}" onchange="${tabActual === 'diezmos' ? 'marcarYaRegistrados()' : ''}"></div>`;
+  let h = '';
+  if (!cfg.fecha_corte) h = '<p class="ayuda mal">Primero guarda el Paso 1.</p>';
+  else if (tabActual === 'diezmos') {
+    h = `<p class="ayuda">Escoge la fecha y el método; los nombres ya están en la lista. Escribe solo los montos de quienes dieron ese día.</p>
+      <div class="grid">${f}<div><label for="pMetodo">Método</label><select id="pMetodo">${opcionesMetodo('Efectivo')}</select></div><div><label for="pFondo">Fondo</label><select id="pFondo">${opcionesFondo(fondoPorDefecto('Diezmo'))}</select></div></div>
+      <label for="pBuscar">Buscar nombre</label><input type="text" id="pBuscar" placeholder="Escribe para filtrar la lista" oninput="filtrarMiembros()">
+      <div class="listaMiembros" id="listaMiembros">${cachePersonas.map(p => `<div class="fila" data-id="${p.id}" data-txt="${esc(nombrePersona(p).toLowerCase())}"><span>${esc(nombrePersona(p))}${p.sobre_actual ? ' <small style="color:var(--muted)">· sobre ' + p.sobre_actual + '</small>' : ''}<small class="yaTxt" style="color:var(--bad)"></small></span><input type="number" step="0.01" min="0" inputmode="decimal" placeholder="0.00" data-monto></div>`).join('')}</div>
+      <button class="btn" onclick="guardarDiezmos()">Guardar diezmos</button>`;
+  } else if (tabActual === 'ofrendas') {
+    h = `<div class="grid">${f}<div><label for="pTipo">Tipo de ofrenda</label><select id="pTipo">${OFRENDA_TIPOS.map(t => `<option>${esc(t)}</option>`).join('')}</select></div><div><label for="pMonto">Monto</label><input type="number" step="0.01" min="0" id="pMonto" inputmode="decimal"></div><div><label for="pMetodo">Método</label><select id="pMetodo">${opcionesMetodo('Efectivo')}</select></div><div><label for="pFondo">Fondo</label><select id="pFondo">${opcionesFondo(fondoPorDefecto('Ofrenda'))}</select></div></div>
+      <button class="btn" onclick="guardarOfrenda()">Guardar ofrenda</button>`;
+  } else if (tabActual === 'donaciones') {
+    h = `<div class="grid">${f}<div><label for="pPersona">Donante</label><select id="pPersona"><option value="">Elegir…</option>${cachePersonas.map(p => `<option value="${p.id}">${esc(nombrePersona(p))}</option>`).join('')}</select></div><div><label for="pProp">Propósito</label><select id="pProp">${PROPOSITOS.map(t => `<option>${esc(t)}</option>`).join('')}</select></div><div><label for="pMonto">Monto</label><input type="number" step="0.01" min="0" id="pMonto" inputmode="decimal"></div><div><label for="pMetodo">Método</label><select id="pMetodo">${opcionesMetodo('Efectivo')}</select></div><div><label for="pFondo">Fondo</label><select id="pFondo">${opcionesFondo(fondoPorDefecto('Donación'))}</select></div><div><label for="pRef">Referencia</label><input type="text" id="pRef"></div></div>
+      <button class="btn" onclick="guardarDonacion()">Guardar donación</button>`;
+  } else if (tabActual === 'gastos') {
+    const cats = cacheCuentas.filter(c => c.tipo === 'Gasto').sort((a, b) => a.codigo.localeCompare(b.codigo));
+    const dc = defecto('Gasto').categoria;
+    h = `<div class="grid">${f}<div><label for="pDesc">Descripción</label><input type="text" id="pDesc"></div><div><label for="pCat">Categoría</label><select id="pCat">${cats.map(c => `<option ${c.nombre === dc ? 'selected' : ''}>${esc(c.nombre)}</option>`).join('')}</select></div><div><label for="pOrg">Pagado a (opcional)</label><select id="pOrg"><option value="">—</option>${cacheOrgs.map(o => `<option value="${o.id}">${esc(o.nombre)}</option>`).join('')}</select></div><div><label for="pMonto">Monto</label><input type="number" step="0.01" min="0" id="pMonto" inputmode="decimal"></div><div><label for="pMetodo">Método</label><select id="pMetodo">${opcionesMetodo('Efectivo')}</select></div><div><label for="pFondo">Sale del fondo</label><select id="pFondo">${opcionesFondo(fondoPorDefecto('Gasto'))}</select></div><div><label for="pRef">Factura / referencia</label><input type="text" id="pRef"></div></div>
+      <button class="btn" onclick="guardarGasto()">Guardar gasto</button>`;
+  } else {
+    const op = CUENTAS.map(c => `<option value="${c.cod}">${c.nombre}</option>`).join('');
+    h = `<p class="ayuda">Para dinero que pasó de una cuenta a otra (por ejemplo, un depósito del efectivo al banco).</p><div class="grid">${f}<div><label for="pMonto">Monto</label><input type="number" step="0.01" min="0" id="pMonto" inputmode="decimal"></div><div><label for="pDe">Sale de</label><select id="pDe">${op}</select></div><div><label for="pA">Entra a</label><select id="pA">${op}</select></div><div><label for="pDesc">Nota</label><input type="text" id="pDesc"></div></div>
+      <button class="btn" onclick="guardarEntre()">Guardar movimiento</button>`;
+  }
+  $('panel').innerHTML = h;
+  if (cfg.fecha_corte && $('pFecha')) { $('pFecha').value = ultimaFecha || ''; if (tabActual === 'diezmos') marcarYaRegistrados(); }
+}
+let ultimaFecha = '';
+function irTab(k) { tabActual = k; $('msg3').textContent = ''; pintarTabs(); }
+function filtrarMiembros() {
+  const q = $('pBuscar').value.trim().toLowerCase();
+  document.querySelectorAll('#listaMiembros .fila').forEach(f => { f.style.display = !q || f.dataset.txt.includes(q) ? '' : 'none'; });
+}
+async function marcarYaRegistrados() {
+  const fecha = $('pFecha').value;
+  document.querySelectorAll('#listaMiembros .fila').forEach(f => { f.classList.remove('ya'); f.querySelector('.yaTxt').textContent = ''; });
+  if (!fecha) return;
+  const { data } = await sbCall(sb.from('diezmos').select('persona_id, monto').eq('fecha', fecha));
+  (data || []).forEach(d => { const f = document.querySelector(`#listaMiembros .fila[data-id="${d.persona_id}"]`); if (f) { f.classList.add('ya'); f.querySelector('.yaTxt').textContent = ' · ya registrado ' + formatoMoneda(d.monto); } });
+}
+
+function fechaValida() {
+  const f = $('pFecha').value;
+  if (!f) { aviso('Elige la fecha.', true); return null; }
+  if (f > cfg.fecha_corte) { aviso('La fecha debe ser anterior o igual a la fecha de hoy del Paso 1 (' + cfg.fecha_corte + ').', true); return null; }
+  if (cfg.fecha_inicio_historico && f < cfg.fecha_inicio_historico && !confirm('Esta fecha es anterior al inicio del periodo (' + cfg.fecha_inicio_historico + '); no entra en el cuadre. ¿Guardar de todos modos?')) return null;
+  ultimaFecha = f;
+  return f;
+}
+function aviso(t, mal) { $('msg3').textContent = t; $('msg3').className = 'msg ' + (mal ? 'mal' : 'ok'); }
+
+async function crearTrans(fila) {
+  const u = await sb.auth.getUser();
+  return sbCall(sb.from('transacciones').insert({ ...fila, solo_fondo: false, estado: 'Completado', creado_por: (u.data && u.data.user && u.data.user.id) || null }).select().single());
+}
+async function crearModulo(tabla, fila, transId, etiqueta) {
+  const u = await sb.auth.getUser();
+  const r = await sbCall(sb.from(tabla).insert({ ...fila, transaccion_id: transId, estado: 'Completado', creado_por: (u.data && u.data.user && u.data.user.id) || null }).select('id').single());
+  if (r.error) { await sbCall(sb.from('transacciones').delete().eq('id', transId)); return { error: r.error }; }
+  hechos.unshift({ tabla, id: r.data.id, trans: transId, texto: etiqueta });
+  return {};
+}
+
+async function guardarDiezmos() {
+  const fecha = fechaValida(); if (!fecha) return;
+  const metodo = $('pMetodo').value, fondo = $('pFondo').value || null;
+  const filas = [...document.querySelectorAll('#listaMiembros .fila')].map(f => ({ id: f.dataset.id, ya: f.classList.contains('ya'), monto: num(f.querySelector('[data-monto]').value), el: f })).filter(x => x.monto > 0);
+  if (!filas.length) { aviso('Escribe al menos un monto.', true); return; }
+  const dup = filas.filter(x => x.ya);
+  if (dup.length && !confirm(dup.length + ' persona(s) ya tienen un diezmo ese día. ¿Guardar también esos?')) return;
+  let ok = 0, fallos = 0;
+  for (const x of filas) {
+    const p = cachePersonas.find(q => q.id === x.id); const nombre = nombrePersona(p);
+    const t = await crearTrans({ fecha, descripcion: `Diezmo — ${nombre}`, categoria: 'Diezmos', tipo: 'Ingreso', tipo_origen: 'Diezmo', metodo, monto: x.monto, fondo_id: fondo, cuenta_cr: cuentaId('4001') });
+    if (t.error) { fallos++; continue; }
+    const m = await crearModulo('diezmos', { fecha, monto: x.monto, persona_id: x.id, metodo, no_sobre: p.sobre_actual ? String(p.sobre_actual) : null }, t.data.id, `Diezmo ${nombre} ${formatoMoneda(x.monto)} (${fecha})`);
+    if (m.error) fallos++; else { ok++; x.el.querySelector('[data-monto]').value = ''; }
+  }
+  aviso(ok + ' diezmo(s) guardado(s)' + (fallos ? ', ' + fallos + ' con error' : '') + '.', fallos > 0);
+  await refrescar(); marcarYaRegistrados();
+}
+async function guardarOfrenda() {
+  const fecha = fechaValida(); if (!fecha) return;
+  const monto = num($('pMonto').value); if (!(monto > 0)) { aviso('Escribe el monto.', true); return; }
+  const tipo = $('pTipo').value, metodo = $('pMetodo').value, fondo = $('pFondo').value || null;
+  const t = await crearTrans({ fecha, descripcion: `Ofrenda — ${tipo}`, categoria: tipo, tipo: 'Ingreso', tipo_origen: 'Ofrenda', metodo, monto, fondo_id: fondo, cuenta_cr: cuentaId(OFRENDA_TIPO_CUENTA[tipo] || '4002') });
+  if (t.error) { aviso('Error: ' + t.error.message, true); return; }
+  const m = await crearModulo('ofrendas', { fecha, monto, tipo, metodo }, t.data.id, `Ofrenda ${tipo} ${formatoMoneda(monto)} (${fecha})`);
+  if (m.error) { aviso('Error: ' + m.error.message, true); return; }
+  $('pMonto').value = ''; aviso('Ofrenda guardada.'); await refrescar();
+}
+async function guardarDonacion() {
+  const fecha = fechaValida(); if (!fecha) return;
+  const pid = $('pPersona').value; if (!pid) { aviso('Elige el donante.', true); return; }
+  const monto = num($('pMonto').value); if (!(monto > 0)) { aviso('Escribe el monto.', true); return; }
+  const p = cachePersonas.find(q => q.id === pid), prop = $('pProp').value, metodo = $('pMetodo').value, fondo = $('pFondo').value || null, ref = $('pRef').value.trim() || null;
+  const t = await crearTrans({ fecha, descripcion: `Donación — ${nombrePersona(p)}`, categoria: prop, tipo: 'Ingreso', tipo_origen: 'Donación', metodo, monto, referencia: ref, fondo_id: fondo, cuenta_cr: cuentaId('4003') });
+  if (t.error) { aviso('Error: ' + t.error.message, true); return; }
+  const m = await crearModulo('donaciones', { fecha, monto, persona_id: pid, metodo, referencia: ref }, t.data.id, `Donación ${nombrePersona(p)} ${formatoMoneda(monto)} (${fecha})`);
+  if (m.error) { aviso('Error: ' + m.error.message, true); return; }
+  $('pMonto').value = ''; $('pRef').value = ''; aviso('Donación guardada.'); await refrescar();
+}
+async function guardarGasto() {
+  const fecha = fechaValida(); if (!fecha) return;
+  const monto = num($('pMonto').value); if (!(monto > 0)) { aviso('Escribe el monto.', true); return; }
+  const desc = $('pDesc').value.trim(); if (!desc) { aviso('Escribe la descripción.', true); return; }
+  const categoria = $('pCat').value, metodo = $('pMetodo').value, fondo = $('pFondo').value || null, org = $('pOrg').value || null, ref = $('pRef').value.trim() || null;
+  const cg = cacheCuentas.find(c => c.tipo === 'Gasto' && c.nombre === categoria);
+  const t = await crearTrans({ fecha, descripcion: desc, categoria, tipo: 'Egreso', tipo_origen: 'Gasto', metodo, monto, referencia: ref, fondo_id: fondo, cuenta_dr: cg ? cg.id : null });
+  if (t.error) { aviso('Error: ' + t.error.message, true); return; }
+  const m = await crearModulo('gastos', { fecha, monto, descripcion: desc, categoria, organizacion_id: org, metodo }, t.data.id, `Gasto ${desc} ${formatoMoneda(monto)} (${fecha})`);
+  if (m.error) { aviso('Error: ' + m.error.message, true); return; }
+  $('pMonto').value = ''; $('pDesc').value = ''; $('pRef').value = ''; aviso('Gasto guardado.'); await refrescar();
+}
+async function guardarEntre() {
+  const fecha = fechaValida(); if (!fecha) return;
+  const monto = num($('pMonto').value); if (!(monto > 0)) { aviso('Escribe el monto.', true); return; }
+  const de = $('pDe').value, a = $('pA').value; if (de === a) { aviso('Las dos cuentas deben ser distintas.', true); return; }
+  const nom = c => CUENTAS.find(x => x.cod === c).nombre;
+  const t = await crearTrans({ fecha, descripcion: $('pDesc').value.trim() || `Transferencia ${nom(de)} → ${nom(a)}`, categoria: 'Transferencia', tipo: 'Transferencia', tipo_origen: 'Transferencia', metodo: 'Transferencia', monto, cuenta_cr: cuentaId(de), cuenta_dr: cuentaId(a) });
+  if (t.error) { aviso('Error: ' + t.error.message, true); return; }
+  hechos.unshift({ tabla: null, id: null, trans: t.data.id, texto: `Entre cuentas ${nom(de)} → ${nom(a)} ${formatoMoneda(monto)} (${fecha})` });
+  $('pMonto').value = ''; aviso('Movimiento guardado.'); await refrescar();
+}
+async function deshacer(i) {
+  const h = hechos[i]; if (!h || !confirm('¿Deshacer: ' + h.texto + '?')) return;
+  if (h.tabla) await sbCall(sb.from(h.tabla).delete().eq('id', h.id));
+  await sbCall(sb.from('transacciones').delete().eq('id', h.trans));
+  hechos.splice(i, 1); await refrescar();
+}
+function pintarSesion() {
+  $('sesion').innerHTML = hechos.length ? `<h3 style="font-size:.95rem;margin:16px 0 6px">Guardado en esta sesión</h3>${hechos.slice(0, 40).map((h, i) => `<div class="fila" style="grid-template-columns:1fr auto"><span style="font-size:.88rem">${esc(h.texto)}</span><button class="btn btn2" style="margin:0;padding:4px 10px;font-size:.8rem" onclick="deshacer(${i})">Deshacer</button></div>`).join('')}` : '';
+}
+
+async function refrescar() { await cargarTodo(); pintarSaldos(); pintarTabs(); pintarCuadre(); pintarSesion(); }
+
+// ───────── Acceso ─────────
+function permitido() { const s = getSesion(); return !!(s && (s.rol === 'Administrador' || (s.permisos && (s.permisos.todo || s.permisos.gestionarConfig)))); }
+async function iniciarPagina() {
+  if (!permitido()) { $('contenido').classList.add('oculto'); $('login').classList.remove('oculto'); $('lgMsg').textContent = 'No tienes autorización para esta página.'; return; }
+  $('login').classList.add('oculto'); $('contenido').classList.remove('oculto');
+  $('btnBloq').classList.remove('oculto'); $('btnPerfil').classList.remove('oculto');
+  await refrescar();
+}
+async function entrarLogin(evt) {
+  evt.preventDefault(); $('lgBtn').disabled = true; $('lgMsg').textContent = '';
+  const r = await iniciarSesion($('lgEmail').value.trim(), $('lgPass').value);
+  $('lgBtn').disabled = false;
+  if (!r.ok) { $('lgMsg').textContent = r.mensaje; return false; }
+  await SEG.sesionIniciada({ nueva: true });
+  await iniciarPagina();
+  return false;
+}
+async function salirSesion() { SEG.detener(); await cerrarSesion(); location.reload(); }
+window.addEventListener('popstate', () => { if (history.state && history.state.ca === 'lock') SEG.lockPorAtras(); });
+SEG.init({ cerrarSesion: salirSesion, nombreApp: 'Trabajo histórico' });
+(async function () {
+  const { data } = await sb.auth.getSession();
+  if (data && data.session) {
+    const r = await cargarSesion();
+    if (r.ok) { await SEG.sesionIniciada({ nueva: false }); await iniciarPagina(); return; }
+  }
+  $('login').classList.remove('oculto');
+})();
+</script>
+</body>
+</html>
