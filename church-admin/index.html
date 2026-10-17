@@ -13,6 +13,7 @@
 <script>const APP_SLUG = 'church_admin';</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="../shared/supabase-client.js"></script>
+<script src="../shared/dialogos.js"></script>
 <script src="../shared/auth.js"></script>
 <script src="../shared/seguridad.js"></script>
 <script src="../shared/instalar.js"></script>
@@ -2544,8 +2545,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-062';
-document.getElementById('versionTopbar').textContent = 'Ver-062';
+const APP_VERSION = 'church-admin Ver-063';
+document.getElementById('versionTopbar').textContent = 'Ver-063';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -3293,7 +3294,7 @@ async function guardarConciliacion(evt) {
 
 async function eliminarConciliacion() {
   const id = document.getElementById('cnId').value;
-  if (!id || !confirm('¿Eliminar esta conciliación?')) return;
+  if (!id || !await confirmar('¿Eliminar esta conciliación?')) return;
   const { error } = await sbCall(sb.from('reconciliaciones').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalConciliacion();
@@ -3374,7 +3375,7 @@ async function alternarCampanaActiva(id) {
   const c = cacheCampanas.find(x => x.id === id);
   if (!c) return;
   const cerrar = !!c.activo;
-  if (!confirm(cerrar ? '¿Cerrar esta campaña? Dejará de aparecer entre las activas; los datos se conservan.' : '¿Reabrir esta campaña?')) return;
+  if (!await confirmar(cerrar ? '¿Cerrar esta campaña? Dejará de aparecer entre las activas; los datos se conservan.' : '¿Reabrir esta campaña?')) return;
   const { error } = await sbCall(sb.from('campanas').update({ activo: !cerrar }).eq('id', id));
   if (error) { alert('Error: ' + error.message); return; }
   await cargarCampanas();
@@ -3497,7 +3498,7 @@ async function eliminarCampana() {
     alert('Esta campaña tiene promesas. Elimina primero sus promesas (o márcala como inactiva).');
     return;
   }
-  if (!confirm('¿Eliminar esta campaña?')) return;
+  if (!await confirmar('¿Eliminar esta campaña?')) return;
   const { error } = await sbCall(sb.from('campanas').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalCampana();
@@ -3614,7 +3615,7 @@ async function eliminarPromesa(id) {
   const msg = pagos.length
     ? `Esta promesa tiene ${pagos.length} pago(s) registrado(s). Eliminarla también borra esos pagos y sus transacciones. ¿Continuar?`
     : '¿Eliminar esta promesa?';
-  if (!confirm(msg)) return;
+  if (!await confirmar(msg)) return;
   for (const g of pagos) {
     const { error: eg } = await sbCall(sb.from('pagos_promesa').delete().eq('id', g.id));
     if (eg) { alert('Error al eliminar un pago: ' + eg.message); await recargarPromesasYPagos(); renderPromesas(); return; }
@@ -3706,7 +3707,7 @@ async function guardarPagoPromesa(evt) {
 }
 
 async function eliminarPagoPromesa(id) {
-  if (!confirm('¿Eliminar este pago? También borra la transacción vinculada.')) return;
+  if (!await confirmar('¿Eliminar este pago? También borra la transacción vinculada.')) return;
   const g = cachePagosPromesa.find(x => x.id === id);
   const { error } = await sbCall(sb.from('pagos_promesa').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
@@ -4056,7 +4057,7 @@ async function rmAprobar(evt) {
 
 async function rmRechazar() {
   const id = document.getElementById('rmId').value;
-  if (!id || !confirm('¿Rechazar este registro? No se creará nada en los libros.')) return;
+  if (!id || !await confirmar('¿Rechazar este registro? No se creará nada en los libros.')) return;
   const { data, error } = await rmReclamar(id, 'Rechazado');
   if (error) { alert('Error: ' + error.message); return; }
   if (!data || data.length === 0) alert('Este registro ya fue procesado.');
@@ -4107,7 +4108,7 @@ async function cambiarSobreForm() {
   const id = document.getElementById('personaId').value;
   const nuevo = parseInt(document.getElementById('pSobreNuevo').value, 10);
   if (!id || !nuevo) { alert('Escribe el nuevo número de sobre.'); return; }
-  const motivo = (prompt('Motivo del cambio (opcional):') || '').trim() || 'Cambio manual';
+  const motivo = (await pedir('Motivo del cambio (opcional):') || '').trim() || 'Cambio manual';
   const { error } = await sbCall(sb.rpc('ca_sobre_cambiar', { p: id, nuevo, motivo }));
   if (error) { alert(error.message); return; }
   await cargarDirectorio();
@@ -4133,7 +4134,7 @@ async function sobCargarEstado() {
 async function sobCambiarDigitos() {
   const d = parseInt(document.getElementById('sobDigitos').value, 10);
   const msg = document.getElementById('sobMsg');
-  if (!confirm('Se reasignarán los números de sobre de TODOS los miembros (incluye inactivos) con ' + d + ' dígitos. Los números anteriores quedan guardados en el historial de cada persona. ¿Continuar?')) return;
+  if (!await confirmar('Se reasignarán los números de sobre de TODOS los miembros (incluye inactivos) con ' + d + ' dígitos. Los números anteriores quedan guardados en el historial de cada persona. ¿Continuar?')) return;
   msg.textContent = 'Reasignando…';
   const { data, error } = await sbCall(sb.rpc('ca_sobre_reasignar_todos', { nuevos_digitos: d }));
   msg.textContent = error ? error.message : 'Listo: ' + data + ' sobres reasignados.';
@@ -4311,7 +4312,7 @@ async function impEjecutar() {
     buenas.push({ fecha, monto, personaId, metodo: (col('metodo') && f[col('metodo')]) || 'Efectivo', ref: col('referencia') ? String(f[col('referencia')] || '') || null : null, sub: col('subtipo') ? String(f[col('subtipo')] || '') : '', desc: col('descripcion') ? String(f[col('descripcion')] || '') : '', cat: col('categoria') ? String(f[col('categoria')] || '') : '', nombre: col('nombre') ? String(f[col('nombre')] || '') : '' });
   });
   if (!buenas.length) { alert('Ninguna fila se puede importar.\n\n' + malas.slice(0, 10).join('\n')); return; }
-  if (!confirm(`Se importarán ${buenas.length} registros de ${tipo}.` + (malas.length ? `\n${malas.length} filas se omiten:\n` + malas.slice(0, 8).join('\n') : '') + '\n\n¿Continuar?')) return;
+  if (!await confirmar(`Se importarán ${buenas.length} registros de ${tipo}.` + (malas.length ? `\n${malas.length} filas se omiten:\n` + malas.slice(0, 8).join('\n') : '') + '\n\n¿Continuar?')) return;
   const sesion = getSesion(), fondoId = document.getElementById('impFondo').value || null, uid = sesion.usuario?.id || null;
   const filasTrans = buenas.map(b => {
     const nombre = b.personaId ? nombrePersonaPorId(b.personaId) : '';
@@ -4357,7 +4358,7 @@ async function peBorrar() {
   const sel = [...document.querySelectorAll('.peChk:checked')].map(c => c.value);
   if (!sel.length) { alert('Marca qué quieres borrar.'); return; }
   if (document.getElementById('peConfirmar').value.trim() !== 'BORRAR') { alert('Escribe BORRAR (en mayúsculas) para confirmar.'); return; }
-  if (!confirm('Se descargará un respaldo y luego se borrará: ' + sel.join(', ') + '.\nEsto NO se puede deshacer. ¿Seguro?')) return;
+  if (!await confirmar('Se descargará un respaldo y luego se borrará: ' + sel.join(', ') + '.\nEsto NO se puede deshacer. ¿Seguro?')) return;
   await cfgRespaldo();
   const orden = ['diezmos', 'ofrendas', 'donaciones', 'gastos', 'registros_movil', 'pagos_entrantes', 'transacciones'].filter(t => sel.includes(t));
   const fallos = [];
@@ -4763,7 +4764,7 @@ async function ajGuardar(evt) {
 }
 
 async function ajEliminar(id) {
-  if (!confirm('¿Borrar este ajuste?')) return;
+  if (!await confirmar('¿Borrar este ajuste?')) return;
   const { error } = await sbCall(sb.from('transacciones').delete().eq('id', id));
   if (error) { alert('Error: ' + error.message); return; }
   cargarAjustes();
@@ -4802,7 +4803,7 @@ async function cargarCierre() {
 }
 
 async function cieCerrar(mes) {
-  if (!confirm(`¿Cerrar ${mes.slice(0, 7)}? No se podrán crear, editar ni borrar transacciones de ese mes hasta reabrirlo.`)) return;
+  if (!await confirmar(`¿Cerrar ${mes.slice(0, 7)}? No se podrán crear, editar ni borrar transacciones de ese mes hasta reabrirlo.`)) return;
   const sesion = getSesion();
   const { error } = await sbCall(sb.from('periodos_cerrados').insert({ mes, cerrado_por: sesion.usuario?.id ? String(sesion.usuario.id) : null }));
   if (error) { alert('Error: ' + error.message); return; }
@@ -4810,7 +4811,7 @@ async function cieCerrar(mes) {
 }
 
 async function cieReabrir(mes) {
-  if (!confirm(`¿Reabrir ${mes.slice(0, 7)}? Volverá a permitir cambios en ese mes.`)) return;
+  if (!await confirmar(`¿Reabrir ${mes.slice(0, 7)}? Volverá a permitir cambios en ese mes.`)) return;
   const { error } = await sbCall(sb.from('periodos_cerrados').delete().eq('mes', mes));
   if (error) { alert('Error: ' + error.message); return; }
   cargarCierre();
@@ -5201,7 +5202,7 @@ async function libroEliminar() {
   const key = document.getElementById('lbKey').value;
   const cfg = LIBROS[key];
   const id = document.getElementById('lbId').value;
-  if (!id || !confirm('¿Eliminar este registro? Esto también borra la transacción vinculada.')) return;
+  if (!id || !await confirmar('¿Eliminar este registro? Esto también borra la transacción vinculada.')) return;
   const r = libroDatos[key].find(x => x.id === id);
   const { error } = await sbCall(sb.from(cfg.tabla).delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
@@ -5286,7 +5287,7 @@ async function guardarProveedor(evt) {
 
 async function eliminarProveedor() {
   const id = document.getElementById('pvId').value;
-  if (!id || !confirm('¿Eliminar este proveedor? Si ya tiene gastos asociados, mejor archívalo.')) return;
+  if (!id || !await confirmar('¿Eliminar este proveedor? Si ya tiene gastos asociados, mejor archívalo.')) return;
   const { error } = await sbCall(sb.from('organizaciones').delete().eq('id', id));
   if (error) { alert('No se pudo eliminar (probablemente tiene registros asociados). Archívalo en su lugar.\n\n' + error.message); return; }
   cacheOrganizacionesFinanzas = [];
@@ -5361,7 +5362,7 @@ async function guardarBanco(evt) {
 
 async function eliminarBanco() {
   const id = document.getElementById('bcId').value;
-  if (!id || !confirm('¿Eliminar esta cuenta bancaria? Si ya tiene conciliaciones, mejor márcala como inactiva.')) return;
+  if (!id || !await confirmar('¿Eliminar esta cuenta bancaria? Si ya tiene conciliaciones, mejor márcala como inactiva.')) return;
   const { error } = await sbCall(sb.from('bancos').delete().eq('id', id));
   if (error) { alert('No se pudo eliminar (probablemente tiene conciliaciones). Márcala como inactiva.\n\n' + error.message); return; }
   cerrarModalBanco();
@@ -5457,7 +5458,7 @@ async function guardarTransferencia(evt) {
 }
 
 async function eliminarTransferencia(id) {
-  if (!confirm('¿Eliminar esta transferencia? Los saldos de los fondos vuelven a como estaban.')) return;
+  if (!await confirmar('¿Eliminar esta transferencia? Los saldos de los fondos vuelven a como estaban.')) return;
   const t = cacheTransferencias.find(x => x.id === id);
   const { error } = await sbCall(sb.from('transferencias').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
@@ -5589,7 +5590,7 @@ async function guardarDeposito(evt) {
 
 async function eliminarDeposito() {
   const id = document.getElementById('formDeposito').dataset.editId;
-  if (!id || !confirm('¿Eliminar este depósito? Esto también borra la transacción vinculada.')) return;
+  if (!id || !await confirmar('¿Eliminar este depósito? Esto también borra la transacción vinculada.')) return;
 
   const d = cacheDepositos.find(x => x.id === id);
   const { error } = await sbCall(sb.from('depositos').delete().eq('id', id));
@@ -5694,7 +5695,7 @@ async function guardarCuenta(evt) {
 
 async function eliminarCuenta() {
   const id = document.getElementById('cnCuentaId').value;
-  if (!id || !confirm('¿Eliminar esta cuenta? Si está en uso por transacciones existentes, puede fallar.')) return;
+  if (!id || !await confirmar('¿Eliminar esta cuenta? Si está en uso por transacciones existentes, puede fallar.')) return;
   const { error } = await sbCall(sb.from('cuentas').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalCuenta();
@@ -5840,7 +5841,7 @@ async function guardarRecurrente(evt) {
 
 async function eliminarRecurrente() {
   const id = document.getElementById('rcRecurrenteId').value;
-  if (!id || !confirm('¿Eliminar esta plantilla recurrente?')) return;
+  if (!id || !await confirmar('¿Eliminar esta plantilla recurrente?')) return;
   const { error } = await sbCall(sb.from('recurrentes').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalRecurrente();
@@ -5861,7 +5862,7 @@ function avanzarFecha(fechaStr, frecuencia) {
 async function generarRecurrenteAhora(id) {
   const r = cacheRecurrentes.find(x => x.id === id);
   if (!r) return;
-  if (!confirm(`¿Generar el movimiento de "${r.descripcion}" por ${formatoMoneda(r.monto)} con fecha ${formatoFecha(r.proxima_fecha)}?`)) return;
+  if (!await confirmar(`¿Generar el movimiento de "${r.descripcion}" por ${formatoMoneda(r.monto)} con fecha ${formatoFecha(r.proxima_fecha)}?`)) return;
 
   const sesion = getSesion();
   const { error: errTrans } = await sbCall(
@@ -6115,7 +6116,7 @@ async function paAprobar(evt) {
 
 async function paRechazar() {
   const id = document.getElementById('paId').value;
-  if (!id || !confirm('¿Rechazar este pago? No se creará ningún registro en los libros.')) return;
+  if (!id || !await confirmar('¿Rechazar este pago? No se creará ningún registro en los libros.')) return;
   const { data, error } = await paReclamar(id, 'Rechazado');
   if (error) { alert('Error: ' + error.message); return; }
   if (!data || data.length === 0) alert('Este pago ya fue procesado por otra persona.');
@@ -6124,7 +6125,7 @@ async function paRechazar() {
 }
 
 async function paReabrir(id) {
-  if (!confirm('¿Devolver este pago rechazado a "Por aprobar"?')) return;
+  if (!await confirmar('¿Devolver este pago rechazado a "Por aprobar"?')) return;
   await paDevolver(id);
   cargarPorAprobar();
 }
@@ -6168,7 +6169,7 @@ function paAlternarVerResueltos() {
 }
 async function paAlternarImportacion() {
   const nuevo = !paImportActiva;
-  if (!nuevo && !confirm('¿Pausar la importación? Los pagos nuevos no aparecerán en "Por aprobar" hasta que la reanudes (no se pierden).')) return;
+  if (!nuevo && !await confirmar('¿Pausar la importación? Los pagos nuevos no aparecerán en "Por aprobar" hasta que la reanudes (no se pierden).')) return;
   const sesion = getSesion();
   const { error } = await sbCall(sb.from('ajustes_ingest').update({
     activo: nuevo, actualizado_por: sesion.usuario?.id ? String(sesion.usuario.id) : null, actualizado_en: new Date().toISOString(),
@@ -6577,7 +6578,7 @@ async function blEliminar() {
   const a = cacheBolsaAportes.find(r => String(r.id) === String(blEditandoId));
   if (!a) return;
   const aviso = a.pago_entrante_id ? '\n\nEste aporte vino de un pago de Cash App/Zelle que ya figura como aprobado; eliminarlo no lo devuelve a "Por aprobar".' : '';
-  if (!confirm('¿Eliminar este aporte?' + aviso)) return;
+  if (!await confirmar('¿Eliminar este aporte?' + aviso)) return;
   const { error } = await sbCall(sb.from('bolsa_aportes').delete().eq('id', a.id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   blCerrar();
@@ -6625,7 +6626,7 @@ async function blCrear() {
 async function blRenombrar(id) {
   const b = cacheBolsas.find(x => String(x.id) === String(id));
   if (!b) return;
-  const nuevo = (prompt('Nuevo nombre de la bolsa:', b.nombre) || '').trim().replace(/\s+/g, ' ').slice(0, 60);
+  const nuevo = (await pedir('Nuevo nombre de la bolsa:', b.nombre) || '').trim().replace(/\s+/g, ' ').slice(0, 60);
   if (!nuevo || nuevo === b.nombre) return;
   const { error } = await sbCall(sb.from('bolsas').update({ nombre: nuevo }).eq('id', id));
   if (error) { alert(blMensajeError(error)); return; }
@@ -6993,7 +6994,7 @@ async function guardarDiezmo(evt) {
 
 async function eliminarDiezmo() {
   const id = document.getElementById('formDiezmo').dataset.editId;
-  if (!id || !confirm('¿Eliminar este diezmo? Esto también borra la transacción vinculada.')) return;
+  if (!id || !await confirmar('¿Eliminar este diezmo? Esto también borra la transacción vinculada.')) return;
   const d = cacheDiezmos.find(x => x.id === id);
   const { error } = await sbCall(sb.from('diezmos').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
@@ -7128,7 +7129,7 @@ async function guardarOfrenda(evt) {
 
 async function eliminarOfrenda() {
   const id = document.getElementById('formOfrenda').dataset.editId;
-  if (!id || !confirm('¿Eliminar esta ofrenda? Esto también borra la transacción vinculada.')) return;
+  if (!id || !await confirmar('¿Eliminar esta ofrenda? Esto también borra la transacción vinculada.')) return;
   const o = cacheOfrendas.find(x => x.id === id);
   const { error } = await sbCall(sb.from('ofrendas').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
@@ -7279,7 +7280,7 @@ async function guardarDonacion(evt) {
 
 async function eliminarDonacion() {
   const id = document.getElementById('formDonacion').dataset.editId;
-  if (!id || !confirm('¿Eliminar esta donación? Esto también borra la transacción vinculada.')) return;
+  if (!id || !await confirmar('¿Eliminar esta donación? Esto también borra la transacción vinculada.')) return;
   const d = cacheDonaciones.find(x => x.id === id);
   const { error } = await sbCall(sb.from('donaciones').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
@@ -7446,7 +7447,7 @@ async function guardarGasto(evt) {
 
 async function eliminarGasto() {
   const id = document.getElementById('formGasto').dataset.editId;
-  if (!id || !confirm('¿Eliminar este gasto? Esto también borra la transacción vinculada.')) return;
+  if (!id || !await confirmar('¿Eliminar este gasto? Esto también borra la transacción vinculada.')) return;
   const g = cacheGastos.find(x => x.id === id);
   const { error } = await sbCall(sb.from('gastos').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
@@ -7682,7 +7683,7 @@ async function guardarPresupuesto(evt) {
 
 async function eliminarPresupuesto() {
   const id = document.getElementById('prLineaId').value;
-  if (!id || !confirm('¿Eliminar esta línea de presupuesto?')) return;
+  if (!id || !await confirmar('¿Eliminar esta línea de presupuesto?')) return;
   const { error } = await sbCall(sb.from('presupuesto').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalPresupuesto();
@@ -8067,7 +8068,7 @@ async function cargarFamilias() {
 
 async function crearFamiliaSuelta() {
   if (!puede('administrarFamilias')) return;
-  const nombre = (prompt('Nombre de la nueva familia:') || '').trim();
+  const nombre = (await pedir('Nombre de la nueva familia:') || '').trim();
   if (!nombre) return;
   const { error } = await sbCall(sb.from('households').insert({ nombre }));
   if (error) { alert('Error al crear la familia: ' + error.message); return; }
@@ -8077,7 +8078,7 @@ async function crearFamiliaSuelta() {
 
 async function eliminarFamilia(id) {
   if (!puede('administrarFamilias')) return;
-  if (!confirm('¿Eliminar esta familia? Sus miembros NO se eliminan; solo dejan de pertenecer a ella.')) return;
+  if (!await confirmar('¿Eliminar esta familia? Sus miembros NO se eliminan; solo dejan de pertenecer a ella.')) return;
   const [pers, lnk] = await Promise.all([
     sbCall(sb.from('personas').select('id').eq('household_id', id)),
     sbCall(sb.from('persona_familias').select('persona_id, household_id')),
@@ -8484,7 +8485,7 @@ function editarDesdePerfil(id) {
 
 async function reactivarMiembro(id) {
   if (!puede('administrarFamilias')) return;
-  if (!confirm('¿Reactivar a este miembro?')) return;
+  if (!await confirmar('¿Reactivar a este miembro?')) return;
   const u = await sb.auth.getUser();
   const r = await sbCall(sb.from('personas').update({ estado_miembro: 'Activo', estado_motivo: null, estado_detalle: null, estado_cambiado_en: new Date().toISOString(), estado_cambiado_por: u?.data?.user?.id || null }).eq('id', id));
   if (r.error) { alert('Error: ' + r.error.message); return; }
@@ -8495,7 +8496,7 @@ async function reactivarMiembro(id) {
 async function archivarPersonaActual() {
   const idActual = document.getElementById('personaId').value;
   if (!idActual) return;
-  if (!confirm('¿Archivar este miembro? No se elimina, solo deja de aparecer en el directorio activo.')) return;
+  if (!await confirmar('¿Archivar este miembro? No se elimina, solo deja de aparecer en el directorio activo.')) return;
 
   const { error } = await sbCall(
     sb.from('personas').update({ archivado: true, archivado_en: new Date().toISOString() }).eq('id', idActual)
@@ -8756,7 +8757,7 @@ async function guardarSeguimiento(evt) {
 async function eliminarSeguimiento() {
   const id = document.getElementById('seguimientoId').value;
   if (!id) return;
-  if (!confirm('¿Eliminar este seguimiento? Esta acción no se puede deshacer.')) return;
+  if (!await confirmar('¿Eliminar este seguimiento? Esta acción no se puede deshacer.')) return;
 
   const { error } = await sbCall(sb.from('seguimientos_pastorales').delete().eq('id', id));
   if (error) {
@@ -8990,7 +8991,7 @@ async function guardarVoluntario(evt) {
 async function eliminarVoluntario() {
   const id = document.getElementById('vAsignacionId').value;
   if (!id) return;
-  if (!confirm('¿Eliminar esta asignación? Esta acción no se puede deshacer.')) return;
+  if (!await confirmar('¿Eliminar esta asignación? Esta acción no se puede deshacer.')) return;
 
   const { error } = await sbCall(sb.from('voluntarios_asignaciones').delete().eq('id', id));
   if (error) {
@@ -9135,7 +9136,7 @@ async function guardarAnuncio(evt) {
 
 async function eliminarAnuncio() {
   const id = document.getElementById('aAnuncioId').value;
-  if (!id || !confirm('¿Eliminar este anuncio?')) return;
+  if (!id || !await confirmar('¿Eliminar este anuncio?')) return;
   const { error } = await sbCall(sb.from('anuncios').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalAnuncio();
@@ -9252,7 +9253,7 @@ async function guardarMensaje(evt) {
 
 async function eliminarMensaje() {
   const id = document.getElementById('mMensajeId').value;
-  if (!id || !confirm('¿Eliminar este registro de mensaje?')) return;
+  if (!id || !await confirmar('¿Eliminar este registro de mensaje?')) return;
   const { error } = await sbCall(sb.from('mensajes_enviados').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalMensaje();
@@ -9566,7 +9567,7 @@ async function guardarAsistencia(evt) {
 
 async function eliminarAsistencia() {
   const id = document.getElementById('asRegistroId').value;
-  if (!id || !confirm('¿Eliminar este registro de asistencia? Esto también borra las personas marcadas.')) return;
+  if (!id || !await confirmar('¿Eliminar este registro de asistencia? Esto también borra las personas marcadas.')) return;
   const { error } = await sbCall(sb.from('asistencia_registros').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalAsistencia();
@@ -9714,7 +9715,7 @@ async function guardarRolUsuario(evt) {
   const meQuitoAdministrador = esMiPropioUsuario && filaExistente?.rol === 'Administrador' && (nuevoRol !== 'Administrador' || !activo);
 
   if (meQuitoAdministrador) {
-    const confirmado = confirm('Estás a punto de quitarte tu propio acceso de Administrador. Si continúas, podrías perder acceso a esta sección. ¿Seguro que quieres continuar?');
+    const confirmado = await confirmar('Estás a punto de quitarte tu propio acceso de Administrador. Si continúas, podrías perder acceso a esta sección. ¿Seguro que quieres continuar?');
     if (!confirmado) return false;
   }
 
@@ -9766,7 +9767,7 @@ async function llamarAdminUsuarios(body) {
 async function ruResetClave(accion) {
   const usuarioId = document.getElementById('ruUsuarioId').value;
   const out = document.getElementById('ruResultado');
-  if (accion === 'reset_temporal' && !confirm('Se cambiará la contraseña actual de esta persona por una temporal. ¿Continuar?')) return;
+  if (accion === 'reset_temporal' && !await confirmar('Se cambiará la contraseña actual de esta persona por una temporal. ¿Continuar?')) return;
   out.textContent = 'Procesando…';
   const r = await llamarAdminUsuarios({ accion, usuario_id: usuarioId });
   if (r.error) { out.textContent = r.error; return; }
@@ -9887,7 +9888,7 @@ async function toggleMetodoPago(id, nuevo) {
   await cargarMetodosPago(); renderMetodosPago();
 }
 async function quitarMetodoPago(id) {
-  if (!confirm('¿Quitar este método de la lista? Los registros anteriores no cambian.')) return;
+  if (!await confirmar('¿Quitar este método de la lista? Los registros anteriores no cambian.')) return;
   const { error } = await sbCall(sb.from('metodos_pago').delete().eq('id', id));
   if (error) { alert('Error: ' + error.message); return; }
   await cargarMetodosPago(); renderMetodosPago();
@@ -10144,7 +10145,7 @@ async function guardarGrupo(evt) {
 
 async function eliminarGrupo() {
   const id = document.getElementById('gGrupoId').value;
-  if (!id || !confirm('¿Eliminar este grupo? Esto también borra la lista de miembros asignados.')) return;
+  if (!id || !await confirmar('¿Eliminar este grupo? Esto también borra la lista de miembros asignados.')) return;
   const { error } = await sbCall(sb.from('grupos_pequenos').delete().eq('id', id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
   cerrarModalGrupo();

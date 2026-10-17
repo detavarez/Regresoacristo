@@ -41,6 +41,7 @@
 <script>const APP_SLUG = 'church_admin';</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="../shared/supabase-client.js"></script>
+<script src="../shared/dialogos.js"></script>
 <script src="../shared/auth.js"></script>
 <script src="../shared/seguridad.js"></script>
 </head>
@@ -212,8 +213,8 @@ function pintarSaldos() {
 async function guardarPaso1() {
   const corte = $('fCorte').value;
   if (!corte) { $('msg1').textContent = 'Elige la fecha de hoy.'; $('msg1').className = 'msg mal'; return; }
-  if (cfg.fecha_corte && cfg.fecha_corte !== corte && !confirm('Cambiar la fecha mueve el punto de arranque del programa. ¿Continuar?')) return;
-  if (!cfg.fecha_corte && !confirm('A partir de ' + corte + ' el programa tomará estos números como punto de partida. ¿Continuar?')) return;
+  if (cfg.fecha_corte && cfg.fecha_corte !== corte && !await confirmar('Cambiar la fecha mueve el punto de arranque del programa. ¿Continuar?')) return;
+  if (!cfg.fecha_corte && !await confirmar('A partir de ' + corte + ' el programa tomará estos números como punto de partida. ¿Continuar?')) return;
   const filas = CUENTAS.map(c => ({ cuenta_codigo: c.cod, saldo_corte: num($('h_' + c.cod).value), saldo_hist_inicial: num((saldos[c.cod] || {}).saldo_hist_inicial), actualizado_en: new Date().toISOString() }));
   const r1 = await sbCall(sb.from('config_iglesia').update({ fecha_corte: corte }).eq('id', 1));
   if (r1.error) { $('msg1').textContent = 'Error: ' + r1.error.message; $('msg1').className = 'msg mal'; return; }
@@ -300,11 +301,11 @@ async function marcarYaRegistrados() {
   (data || []).forEach(d => { const f = document.querySelector(`#listaMiembros .fila[data-id="${d.persona_id}"]`); if (f) { f.classList.add('ya'); f.querySelector('.yaTxt').textContent = ' · ya registrado ' + formatoMoneda(d.monto); } });
 }
 
-function fechaValida() {
+async function fechaValida() {
   const f = $('pFecha').value;
   if (!f) { aviso('Elige la fecha.', true); return null; }
   if (f > cfg.fecha_corte) { aviso('La fecha debe ser anterior o igual a la fecha de hoy del Paso 1 (' + cfg.fecha_corte + ').', true); return null; }
-  if (cfg.fecha_inicio_historico && f < cfg.fecha_inicio_historico && !confirm('Esta fecha es anterior al inicio del periodo (' + cfg.fecha_inicio_historico + '); no entra en el cuadre. ¿Guardar de todos modos?')) return null;
+  if (cfg.fecha_inicio_historico && f < cfg.fecha_inicio_historico && !await confirmar('Esta fecha es anterior al inicio del periodo (' + cfg.fecha_inicio_historico + '); no entra en el cuadre. ¿Guardar de todos modos?')) return null;
   ultimaFecha = f;
   return f;
 }
@@ -323,12 +324,12 @@ async function crearModulo(tabla, fila, transId, etiqueta) {
 }
 
 async function guardarDiezmos() {
-  const fecha = fechaValida(); if (!fecha) return;
+  const fecha = await fechaValida(); if (!fecha) return;
   const metodo = $('pMetodo').value, fondo = $('pFondo').value || null;
   const filas = [...document.querySelectorAll('#listaMiembros .fila')].map(f => ({ id: f.dataset.id, ya: f.classList.contains('ya'), monto: num(f.querySelector('[data-monto]').value), el: f })).filter(x => x.monto > 0);
   if (!filas.length) { aviso('Escribe al menos un monto.', true); return; }
   const dup = filas.filter(x => x.ya);
-  if (dup.length && !confirm(dup.length + ' persona(s) ya tienen un diezmo ese día. ¿Guardar también esos?')) return;
+  if (dup.length && !await confirmar(dup.length + ' persona(s) ya tienen un diezmo ese día. ¿Guardar también esos?')) return;
   let ok = 0, fallos = 0;
   for (const x of filas) {
     const p = cachePersonas.find(q => q.id === x.id); const nombre = nombrePersona(p);
@@ -341,7 +342,7 @@ async function guardarDiezmos() {
   await refrescar(); marcarYaRegistrados();
 }
 async function guardarOfrenda() {
-  const fecha = fechaValida(); if (!fecha) return;
+  const fecha = await fechaValida(); if (!fecha) return;
   const monto = num($('pMonto').value); if (!(monto > 0)) { aviso('Escribe el monto.', true); return; }
   const tipo = $('pTipo').value, metodo = $('pMetodo').value, fondo = $('pFondo').value || null;
   const t = await crearTrans({ fecha, descripcion: `Ofrenda — ${tipo}`, categoria: tipo, tipo: 'Ingreso', tipo_origen: 'Ofrenda', metodo, monto, fondo_id: fondo, cuenta_cr: cuentaId(OFRENDA_TIPO_CUENTA[tipo] || '4002') });
@@ -351,7 +352,7 @@ async function guardarOfrenda() {
   $('pMonto').value = ''; aviso('Ofrenda guardada.'); await refrescar();
 }
 async function guardarDonacion() {
-  const fecha = fechaValida(); if (!fecha) return;
+  const fecha = await fechaValida(); if (!fecha) return;
   const pid = $('pPersona').value; if (!pid) { aviso('Elige el donante.', true); return; }
   const monto = num($('pMonto').value); if (!(monto > 0)) { aviso('Escribe el monto.', true); return; }
   const p = cachePersonas.find(q => q.id === pid), prop = $('pProp').value, metodo = $('pMetodo').value, fondo = $('pFondo').value || null, ref = $('pRef').value.trim() || null;
@@ -362,7 +363,7 @@ async function guardarDonacion() {
   $('pMonto').value = ''; $('pRef').value = ''; aviso('Donación guardada.'); await refrescar();
 }
 async function guardarGasto() {
-  const fecha = fechaValida(); if (!fecha) return;
+  const fecha = await fechaValida(); if (!fecha) return;
   const monto = num($('pMonto').value); if (!(monto > 0)) { aviso('Escribe el monto.', true); return; }
   const desc = $('pDesc').value.trim(); if (!desc) { aviso('Escribe la descripción.', true); return; }
   const categoria = $('pCat').value, metodo = $('pMetodo').value, fondo = $('pFondo').value || null, org = $('pOrg').value || null, ref = $('pRef').value.trim() || null;
@@ -374,7 +375,7 @@ async function guardarGasto() {
   $('pMonto').value = ''; $('pDesc').value = ''; $('pRef').value = ''; aviso('Gasto guardado.'); await refrescar();
 }
 async function guardarEntre() {
-  const fecha = fechaValida(); if (!fecha) return;
+  const fecha = await fechaValida(); if (!fecha) return;
   const monto = num($('pMonto').value); if (!(monto > 0)) { aviso('Escribe el monto.', true); return; }
   const de = $('pDe').value, a = $('pA').value; if (de === a) { aviso('Las dos cuentas deben ser distintas.', true); return; }
   const nom = c => CUENTAS.find(x => x.cod === c).nombre;
@@ -384,7 +385,7 @@ async function guardarEntre() {
   $('pMonto').value = ''; aviso('Movimiento guardado.'); await refrescar();
 }
 async function deshacer(i) {
-  const h = hechos[i]; if (!h || !confirm('¿Deshacer: ' + h.texto + '?')) return;
+  const h = hechos[i]; if (!h || !await confirmar('¿Deshacer: ' + h.texto + '?')) return;
   if (h.tabla) await sbCall(sb.from(h.tabla).delete().eq('id', h.id));
   await sbCall(sb.from('transacciones').delete().eq('id', h.trans));
   hechos.splice(i, 1); await refrescar();

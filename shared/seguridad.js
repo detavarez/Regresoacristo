@@ -137,7 +137,7 @@
     $('segCambiarClave').onclick = cambiarClave;
     $('segBloquearAhora').onclick = () => { cerrarPerfil(); bloquear(); };
     $('segCerrarSesion').onclick = async () => {
-      if (!confirm('¿Cerrar la sesión? Tendrás que entrar de nuevo con tu email y contraseña.')) return;
+      if (!await confirmar('¿Cerrar la sesión? Tendrás que entrar de nuevo con tu email y contraseña.')) return;
       cerrarPerfil();
       detenerTodo();
       if (cfg.cerrarSesion) await cfg.cerrarSesion();
@@ -422,9 +422,9 @@
       if (e.persisted && usuario() && !bloqueado) bloquear();
     });
     if (global.sb && sb.auth && sb.auth.onAuthStateChange) {
-      sb.auth.onAuthStateChange(evento => {
+      sb.auth.onAuthStateChange(async evento => {
         if (evento === 'PASSWORD_RECOVERY') {
-          const n = prompt('Escribe tu nueva contraseña (mínimo 8 caracteres):');
+          const n = await pedir('Escribe tu nueva contraseña (mínimo 8 caracteres):', '', 'password');
           if (n && n.length >= 8) sb.auth.updateUser({ password: n }).then(r => alert(r.error ? 'No se pudo cambiar: ' + r.error.message : 'Contraseña cambiada.'));
         }
       });
