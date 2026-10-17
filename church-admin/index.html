@@ -772,6 +772,7 @@
         <div class="barraAcciones">
           <button class="btnAccion" onclick="abrirFormDeposito()">+ Nuevo Depósito</button>
         </div>
+        <div class="grid-resumen" id="resumenDepositos" style="margin-bottom:16px;"></div>
         <div id="listaDepositos"><div class="estadoCargando">Cargando depósitos…</div></div>
       </div>
 
@@ -1835,8 +1836,12 @@
       <div class="formGrid">
         <div><label for="dpFecha">Fecha *</label><input type="date" id="dpFecha" required></div>
         <div><label for="dpMonto">Monto *</label><input type="number" id="dpMonto" step="0.01" min="0" required></div>
+        <div><label for="dpBanco">Banco</label><select id="dpBanco" onchange="dpElegirBanco()"></select></div>
+        <div><label for="dpMetodo">Método</label><select id="dpMetodo"></select></div>
         <div><label for="dpCuentaOrigen">Cuenta de origen *</label><select id="dpCuentaOrigen" required></select></div>
         <div><label for="dpCuentaDestino">Cuenta de destino *</label><select id="dpCuentaDestino" required></select></div>
+        <div><label for="dpReferencia">Referencia</label><input type="text" id="dpReferencia" placeholder="Ej. # de depósito o cheque"></div>
+        <div><label for="dpEstado">Estado</label><select id="dpEstado"><option>Confirmado</option><option>En proceso</option></select></div>
         <div class="full"><label for="dpNotas">Notas</label><input type="text" id="dpNotas" placeholder="Ej. Depósito ofrendas domingo"></div>
       </div>
       <div class="formAcciones">
@@ -2545,8 +2550,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-063';
-document.getElementById('versionTopbar').textContent = 'Ver-063';
+const APP_VERSION = 'church-admin Ver-064';
+document.getElementById('versionTopbar').textContent = 'Ver-064';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -5475,6 +5480,7 @@ async function cargarDepositos() {
   lista.innerHTML = '<div class="estadoCargando">Cargando depósitos…</div>';
   if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
 
+  if (cacheBancos.length === 0) { const rb = await sbCall(sb.from('bancos').select('*').order('nombre')); if (rb.data) cacheBancos = rb.data; }
   const { data, error } = await sbCall(sb.from('depositos').select('*').order('fecha', { ascending: false }));
   if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${error.message}</div>`; return; }
 
@@ -5492,25 +5498,33 @@ function nombreCuentaPorId(id) {
   return c ? `${c.codigo} — ${c.nombre}` : 'Cuenta no encontrada';
 }
 
+function renderResumenDepositos(filas) {
+  const conf = filas.filter(d => (d.estado || 'Confirmado') === 'Confirmado'), proc = filas.filter(d => d.estado === 'En proceso');
+  const suma = l => l.reduce((t, d) => t + (Number(d.monto) || 0), 0);
+  document.getElementById('resumenDepositos').innerHTML = `
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">Confirmados (${conf.length})</div><div class="monto">${formatoMoneda(suma(conf))}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">En proceso (${proc.length})</div><div class="monto">${formatoMoneda(suma(proc))}</div></div>`;
+}
+
 function renderDepositos(filas) {
   const lista = document.getElementById('listaDepositos');
   if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay depósitos registrados.</div>'; return; }
   lista.innerHTML = filas.map(d => `
     <div class="tarjetaSeguimiento" onclick="abrirFormDeposito('${d.id}')">
       <div>
-        <div class="nombrePersona">${d.notas || 'Depósito'}</div>
-        <div class="metaLinea">${formatoFecha(d.fecha)} · ${nombreCuentaPorId(d.cuenta_origen_id)} → ${nombreCuentaPorId(d.cuenta_destino_id)}</div>
+        <div class="nombrePersona">${escV28(d.notas || 'Depósito')}</div>
+        <div class="metaLinea">${formatoFecha(d.fecha)} · ${escV28(nombreCuentaPorId(d.cuenta_origen_id))} → ${escV28(nombreCuentaPorId(d.cuenta_destino_id))}${d.banco_id ? ' · ' + escV28(nombreBancoPorId(d.banco_id)) : ''}${d.metodo ? ' · ' + escV28(d.metodo) : ''}${d.referencia ? ' · Ref. ' + escV28(d.referencia) : ''}</div>
       </div>
-      <span class="badge badge-tipo">${formatoMoneda(d.monto)}</span>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+        <span class="badge badge-tipo">${formatoMoneda(d.monto)}</span>
+        <span class="badge ${d.estado === 'En proceso' ? 'badge-prioridad-Urgente' : 'badge-tipo'}">${escV28(d.estado || 'Confirmado')}</span>
+      </div>
     </div>`).join('');
 }
 
-function poblarSelectCuentas(selectId, valorActual, filtroTipo) {
-  const select = document.getElementById(selectId);
-  const cuentas = filtroTipo ? cacheCuentas.filter(c => c.tipo === filtroTipo) : cacheCuentas;
-  select.innerHTML = '<option value="">Selecciona…</option>' +
-    cuentas.map(c => `<option value="${c.id}">${c.codigo} — ${c.nombre}</option>`).join('');
-  if (valorActual) select.value = valorActual;
+function dpElegirBanco() {
+  const b = cacheBancos.find(x => x.id === document.getElementById('dpBanco').value);
+  if (b && b.cuenta_id) document.getElementById('dpCuentaDestino').value = b.cuenta_id;
 }
 
 function abrirFormDeposito(id) {
@@ -5519,6 +5533,10 @@ function abrirFormDeposito(id) {
   document.getElementById('dpFecha').value = new Date().toISOString().slice(0, 10);
   poblarSelectCuentas('dpCuentaOrigen', null, 'Activo');
   poblarSelectCuentas('dpCuentaDestino', null, 'Activo');
+  document.getElementById('dpBanco').innerHTML = '<option value="">— Sin banco —</option>' + cacheBancos.map(b => `<option value="${b.id}">${escV28(b.nombre)}</option>`).join('');
+  document.getElementById('dpMetodo').innerHTML = ['Efectivo', 'Cheque', 'Zelle', 'Cash App', 'Electrónico', 'Otro'].map(m => `<option>${m}</option>`).join('');
+  const caja = cacheCuentas.find(c => c.codigo === '1001');
+  if (caja) document.getElementById('dpCuentaOrigen').value = caja.id;
 
   const form = document.getElementById('formDeposito');
   form.dataset.editId = '';
@@ -5534,6 +5552,10 @@ function abrirFormDeposito(id) {
       document.getElementById('dpNotas').value = d.notas || '';
       document.getElementById('dpCuentaOrigen').value = d.cuenta_origen_id || '';
       document.getElementById('dpCuentaDestino').value = d.cuenta_destino_id || '';
+      document.getElementById('dpBanco').value = d.banco_id || '';
+      document.getElementById('dpMetodo').value = d.metodo || 'Efectivo';
+      document.getElementById('dpReferencia').value = d.referencia || '';
+      document.getElementById('dpEstado').value = d.estado || 'Confirmado';
       document.getElementById('btnEliminarDeposito').style.display = 'inline-block';
     }
   }
@@ -5556,11 +5578,20 @@ async function guardarDeposito(evt) {
     notas: document.getElementById('dpNotas').value.trim() || null,
     cuenta_origen_id: document.getElementById('dpCuentaOrigen').value,
     cuenta_destino_id: document.getElementById('dpCuentaDestino').value,
+    banco_id: document.getElementById('dpBanco').value || null,
+    metodo: document.getElementById('dpMetodo').value,
+    referencia: document.getElementById('dpReferencia').value.trim() || null,
+    estado: document.getElementById('dpEstado').value,
   };
+  if (payload.cuenta_origen_id === payload.cuenta_destino_id) { alert('La cuenta de origen y la de destino deben ser distintas.'); return false; }
 
   let error;
   if (id) {
     ({ error } = await sbCall(sb.from('depositos').update(payload).eq('id', id)));
+    const previo = cacheDepositos.find(x => x.id === id);
+    if (!error && previo && previo.transaccion_id) {
+      await sbCall(sb.from('transacciones').update({ fecha: payload.fecha, descripcion: payload.notas || 'Depósito', monto: payload.monto, metodo: payload.metodo, referencia: payload.referencia, cuenta_dr: payload.cuenta_destino_id, cuenta_cr: payload.cuenta_origen_id }).eq('id', previo.transaccion_id));
+    }
   } else {
     const { data: trans, error: errTrans } = await sbCall(
       sb.from('transacciones').insert({
@@ -5569,6 +5600,8 @@ async function guardarDeposito(evt) {
         categoria: 'Depósito',
         tipo: 'Transferencia',
         tipo_origen: 'deposito',
+        metodo: payload.metodo,
+        referencia: payload.referencia,
         monto: payload.monto,
         cuenta_dr: payload.cuenta_destino_id,
         cuenta_cr: payload.cuenta_origen_id,
@@ -6710,7 +6743,7 @@ const LF_CFG = {
   ofrendas: { cache: () => cacheOfrendas, cont: 'listaOfrendas', titulo: 'Ofrendas', nombre: o => o.tipo || 'Ofrenda', detalle: o => [o.metodo, o.estado].filter(Boolean).join(' · '), resumen: () => renderResumenOfrendas, render: () => renderOfrendas },
   donaciones: { cache: () => cacheDonaciones, cont: 'listaDonaciones', buscador: 'buscadorDonaciones', titulo: 'Donaciones', nombre: d => nombrePersonaPorId(d.persona_id), detalle: d => [d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDonaciones, render: () => renderDonaciones },
   gastos: { cache: () => cacheGastos, cont: 'listaGastos', buscador: 'buscadorGastos', titulo: 'Gastos', nombre: g => g.descripcion || '—', detalle: g => [g.categoria, g.metodo, g.estado].filter(Boolean).join(' · '), resumen: () => renderResumenGastos, render: () => renderGastos },
-  depositos: { cache: () => cacheDepositos, cont: 'listaDepositos', titulo: 'Depósitos', nombre: d => d.notas || 'Depósito', detalle: d => nombreCuentaPorId(d.cuenta_origen_id) + ' → ' + nombreCuentaPorId(d.cuenta_destino_id), resumen: null, render: () => renderDepositos },
+  depositos: { cache: () => cacheDepositos, cont: 'listaDepositos', titulo: 'Depósitos', nombre: d => d.notas || 'Depósito', detalle: d => [nombreCuentaPorId(d.cuenta_origen_id) + ' → ' + nombreCuentaPorId(d.cuenta_destino_id), d.banco_id ? nombreBancoPorId(d.banco_id) : '', d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDepositos, render: () => renderDepositos },
 };
 const lfEstado = {};
 
