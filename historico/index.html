@@ -78,6 +78,8 @@
       <p class="ayuda">Elige desde qué fecha vas a registrar lo atrasado y cuánto había en cada cuenta ese día (por ejemplo, según el estado de cuenta del banco).</p>
       <div class="grid"><div><label for="fInicio">Fecha de inicio</label><input type="date" id="fInicio"></div></div>
       <div class="grid" id="saldosInicio"></div>
+      <p class="ayuda" style="margin-top:10px">¿No sabes cuánto había ese día? El programa lo puede calcular: lo que hay hoy menos lo que ya registraste desde esa fecha. (Solo es correcto si todo lo de ese periodo ya está registrado.)</p>
+      <button class="btn btn2" onclick="calcularInicio()">Calcular con lo que ya registré</button>
       <button class="btn" onclick="guardarPaso2()">Guardar Paso 2</button>
       <div class="msg" id="msg2"></div>
     </div>
@@ -234,6 +236,19 @@ async function guardarPaso2() {
   if (r2.error) { $('msg2').textContent = 'Error: ' + r2.error.message; $('msg2').className = 'msg mal'; return; }
   $('msg2').textContent = 'Guardado.'; $('msg2').className = 'msg ok';
   await refrescar();
+}
+
+function calcularInicio() {
+  const ini = $('fInicio').value, corte = $('fCorte').value;
+  if (!ini || !corte) { $('msg2').textContent = 'Elige la fecha de inicio (Paso 2) y la fecha de hoy (Paso 1).'; $('msg2').className = 'msg mal'; return; }
+  if (ini >= corte) { $('msg2').textContent = 'La fecha de inicio debe ser anterior a la fecha de hoy.'; $('msg2').className = 'msg mal'; return; }
+  const asientos = cacheTrans.map(lcAsiento).filter(Boolean).filter(a => a.fecha >= ini && a.fecha <= corte);
+  CUENTAS.forEach(c => {
+    const neto = asientos.reduce((t, a) => t + (a.dr === c.cod ? a.c : 0) - (a.cr === c.cod ? a.c : 0), 0) / 100;
+    $('i_' + c.cod).value = (num($('h_' + c.cod).value) - neto).toFixed(2);
+  });
+  $('msg2').textContent = 'Calculado. Revisa los números y toca "Guardar Paso 2". Mientras lo de ese periodo no esté completo, el cuadre dará cero porque estos números salen de lo ya registrado.';
+  $('msg2').className = 'msg';
 }
 
 function pintarCuadre() {
