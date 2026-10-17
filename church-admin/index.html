@@ -2543,8 +2543,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-061';
-document.getElementById('versionTopbar').textContent = 'Ver-061';
+const APP_VERSION = 'church-admin Ver-062';
+document.getElementById('versionTopbar').textContent = 'Ver-062';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -2806,6 +2806,28 @@ function finVolver() {
   }
 }
 
+async function finMostrarPendienteHistorico() {
+  const el = document.getElementById('finPendienteHist');
+  if (!el) return;
+  if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
+  const [cf, si, tr] = await Promise.all([
+    sbCall(sb.from('config_iglesia').select('fecha_corte, fecha_inicio_historico').eq('id', 1).maybeSingle()),
+    sbCall(sb.from('saldos_iniciales').select('*')),
+    sbCall(sb.from('transacciones').select('id, fecha, descripcion, categoria, tipo, tipo_origen, metodo, monto, solo_fondo, cuenta_dr, cuenta_cr').range(0, 9999)),
+  ]);
+  const corte = cf.data && cf.data.fecha_corte, ini = cf.data && cf.data.fecha_inicio_historico;
+  if (!corte || !ini) { el.textContent = ''; return; }
+  const asientos = (tr.data || []).map(lcAsiento).filter(a => a && a.fecha >= ini && a.fecha <= corte);
+  let dif = 0;
+  ['1001', '1002', '1003', '1005'].forEach(cod => {
+    const r = (si.data || []).find(x => x.cuenta_codigo === cod) || {};
+    const mov = asientos.reduce((t, a) => t + (a.dr === cod ? a.c : 0) - (a.cr === cod ? a.c : 0), 0) / 100;
+    dif += (Number(r.saldo_corte) || 0) - ((Number(r.saldo_hist_inicial) || 0) + mov);
+  });
+  dif = Math.round(dif * 100) / 100;
+  el.textContent = Math.abs(dif) < 0.005 ? '' : 'Este total es el dinero real de hoy. Incluye ' + formatoMoneda(dif) + ' de movimientos anteriores que todavía se están detallando.';
+}
+
 async function finCargarInicio() {
   const encabezado = document.getElementById('finHomeBalance');
   const [rt, ...conteos] = await Promise.all([
@@ -2831,7 +2853,9 @@ async function finCargarInicio() {
     encabezado.innerHTML = `
       <div class="cbEtiqueta">${corte ? 'Dinero disponible (balance actual)' : 'Balance general'}</div>
       <div class="cbMonto">${formatoMoneda(inicial + ing - egr)}</div>
-      <div class="cbStats"><span>${corte ? 'Ingresos desde el ' + formatoFecha(corte) : 'Ingresos'}: <b>${formatoMoneda(ing)}</b></span><span>Gastos: <b>${formatoMoneda(egr)}</b></span></div>`;
+      <div class="cbStats"><span>${corte ? 'Ingresos desde el ' + formatoFecha(corte) : 'Ingresos'}: <b>${formatoMoneda(ing)}</b></span><span>Gastos: <b>${formatoMoneda(egr)}</b></span></div>
+      <div id="finPendienteHist" style="margin-top:8px; font-size:0.85rem; opacity:0.9;"></div>`;
+    if (corte) finMostrarPendienteHistorico();
   } else {
     encabezado.innerHTML = '<div class="cbEtiqueta">Balance general</div><div class="cbMonto">—</div>';
   }
