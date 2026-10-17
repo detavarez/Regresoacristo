@@ -18,7 +18,6 @@
   const LS_ACT = 'ca_ultima_actividad';
   const LS_BLOQ = 'ca_bloqueada';
   const SS_OK = 'ca_sesion_ok';
-  const GRACIA_OCULTA_MS = 15000;
 
   const cfg = { cerrarSesion: null, nombreApp: 'Church Admin', alDesbloquear: null };
   let est = { tiene_pin: false, preguntado: true, metodo_defecto: 'clave' };
@@ -26,7 +25,6 @@
   let bloqueado = false;
   let temporizador = null;
   let metodo = 'clave';
-  let ocultoDesde = 0;
   let listo = false;
 
   const $ = id => document.getElementById(id);
@@ -281,13 +279,27 @@
     msg('segLockMsg', error ? 'No se pudo enviar el correo: ' + error.message : 'Te enviamos un correo a ' + correo + ' para crear una contraseña nueva.', !error);
   }
 
-  // ───────── Biometría ─────────
-  async function bioActivar() {
-    const u = usuario();
-    if (!u) return;
-    if (!bioSoportada()) { msg('segPerfilMsg', 'Este navegador no permite huella o rostro.'); return; }
+  // Primer ingreso con email: la huella o el rostro es el método predeterminado (cada quien puede cambiarlo).
+  async function primerInicio() {
+    let listo = false;
     try {
-      if (!(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())) { msg('segPerfilMsg', 'Este dispositivo no tiene huella o rostro configurados.'); return; }
+      if (bioSoportada() && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()) listo = await bioActivar(true);
+    } catch (e) { listo = false; }
+    if (listo) {
+      const r = await sbCall(sb.rpc('ca_metodo_fijar', { m: 'bio' }));
+      if (!r.error) { est.metodo_defecto = 'bio'; est.preguntado = true; }
+    }
+    abrirPerfil(!listo);
+    if (listo) msg('segPerfilMsg', 'Listo: tu huella o rostro es tu método predeterminado. Aquí puedes cambiarlo.', true);
+  }
+
+  // ───────── Biometría ─────────
+  async function bioActivar(silenciosoPrimera) {
+    const u = usuario();
+    if (!u) return false;
+    if (!bioSoportada()) { msg('segPerfilMsg', 'Este navegador no permite huella o rostro.'); return false; }
+    try {
+      if (!(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())) { if (!silenciosoPrimera) msg('segPerfilMsg', 'Este dispositivo no tiene huella o rostro configurados.'); return false; }
       const cred = await navigator.credentials.create({ publicKey: {
         challenge: crypto.getRandomValues(new Uint8Array(32)),
         rp: { name: cfg.nombreApp, id: location.hostname },
@@ -297,10 +309,11 @@
         timeout: 60000, attestation: 'none',
       } });
       localStorage.setItem('ca_bio_' + u.id, b64(cred.rawId));
-      msg('segPerfilMsg', 'Listo: ya puedes entrar con huella o rostro en este dispositivo.', true);
-      pintarPerfil();
+      if (!silenciosoPrimera) { msg('segPerfilMsg', 'Listo: ya puedes entrar con huella o rostro en este dispositivo.', true); pintarPerfil(); }
+      return true;
     } catch (e) {
-      msg('segPerfilMsg', 'No se pudo activar: ' + (e && e.name === 'NotAllowedError' ? 'cancelado o sin permiso.' : (e.message || 'error')));
+      if (!silenciosoPrimera) msg('segPerfilMsg', 'No se pudo activar: ' + (e && e.name === 'NotAllowedError' ? 'cancelado o sin permiso.' : (e.message || 'error')));
+      return false;
     }
   }
   async function bioQuitar() {
@@ -407,19 +420,11 @@
     }, { passive: true }));
     document.addEventListener('visibilitychange', () => {
       if (!usuario()) return;
-      if (document.visibilityState === 'hidden') { ocultoDesde = Date.now(); return; }
-      if (bloqueado) return;
-      const fuera = ocultoDesde ? Date.now() - ocultoDesde : 0;
-      const last = Number(localStorage.getItem(LS_ACT)) || 0;
-      if (fuera >= GRACIA_OCULTA_MS || (minutos > 0 && Date.now() - last > minutos * 60000)) bloquear();
-    });
-    global.addEventListener('pagehide', () => {
-      if (!usuario()) return;
-      localStorage.setItem(LS_BLOQ, '1');
-      sessionStorage.removeItem(SS_OK);
-    });
-    global.addEventListener('pageshow', e => {
-      if (e.persisted && usuario() && !bloqueado) bloquear();
+      if (document.visibilityState !== 'visible' || bloqueado) return;
+      // Solo se bloquea si pasó el tiempo de inactividad; cambiar de pestaña o de app no bloquea.
+      const last = Number(localStorage.getItem(LS_ACT)) || Date.now();
+      if (minutos > 0 && Date.now() - last > minutos * 60000) bloquear();
+      else marcarActividad();
     });
     if (global.sb && sb.auth && sb.auth.onAuthStateChange) {
       sb.auth.onAuthStateChange(async evento => {
@@ -448,12 +453,12 @@
         sessionStorage.setItem(SS_OK, '1');
         guardarActividad();
         marcarActividad();
-        if (!est.preguntado) abrirPerfil(true);
+        if (!est.preguntado) await primerInicio();
         return;
       }
       const last = Number(localStorage.getItem(LS_ACT)) || Date.now();
       const vencida = minutos > 0 && Date.now() - last > minutos * 60000;
-      if (!sessionStorage.getItem(SS_OK) || localStorage.getItem(LS_BLOQ) === '1' || vencida) bloquear();
+      if (localStorage.getItem(LS_BLOQ) === '1' || vencida) bloquear();
       else marcarActividad();
     },
     bloquear,

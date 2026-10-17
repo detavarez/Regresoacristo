@@ -619,7 +619,11 @@
   .menu3Lista.abierto { display: block; }
   .menu3Lista button { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 10px 14px; cursor: pointer; font-size: 0.9rem; color: var(--text); }
   .menu3Lista button:hover { background: rgba(128,128,128,0.12); }
-  .dotEstado { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #9aa3ad; }
+  .dotEstado { display: inline-block; flex: 0 0 16px; width: 16px; min-width: 16px; height: 16px; min-height: 16px; border-radius: 50%; background: #9aa3ad; }
+  .xCerrar { position: absolute; top: 8px; right: 12px; background: none; border: 0; font-size: 1.7rem; line-height: 1; cursor: pointer; color: var(--text-muted); }
+  .filaBolsa { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 8px; align-items: center; padding: 11px 6px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.92rem; }
+  .filaBolsa.enc { font-weight: 700; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; cursor: default; }
+  .filaBolsa .num { text-align: right; }
   .dotEstado.ok { background: #1fa971; }
   .dotEstado.mal { background: #d93025; }
   .tarjetaModulo { position: relative; }
@@ -706,8 +710,10 @@
           <div class="cbMonto">…</div>
         </div>
         <div id="finHomeAlertas"></div>
-        <div id="finHomeTendencia" style="margin-bottom:14px;"></div>
-        <div id="finHomeComparativas" style="margin-bottom:22px;"></div>
+        <div style="display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap;">
+          <button class="btnSecundario" style="flex:1; min-width:150px; padding:12px;" onclick="abrirGrafica('A')">Gráfica A — Últimos 6 meses</button>
+          <button class="btnSecundario" style="flex:1; min-width:150px; padding:12px;" onclick="abrirGrafica('B')">Gráfica B — Comparativas</button>
+        </div>
         <div id="finHomeTiles"></div>
       </div>
 
@@ -794,9 +800,9 @@
         <div id="listaRecurrentes"><div class="estadoCargando">Cargando plantillas…</div></div>
       </div>
 
-      <!-- Sub-vista: Por aprobar (Cash App / Zelle) — Ver-034 -->
+      <!-- Sub-vista: Por aprobar (CashApp / Zelle) — Ver-034 -->
       <div id="subvistaFinPorAprobar" style="display:none;">
-        <div class="barraAcciones" style="justify-content:flex-end; align-items:center; margin-bottom:10px;">
+        <div style="display:flex; width:100%; justify-content:flex-end; align-items:center; gap:12px; margin-bottom:10px;">
           <span id="paImportDot" class="dotEstado" title="Importación de correos"></span>
           <div class="menu3">
             <button type="button" class="btnTresPuntos" onclick="toggleMenu3(this)" aria-label="Más opciones">⋯</button>
@@ -822,21 +828,15 @@
 
       <!-- Sub-vista: Bolsas (aparte) — fondos fuera de las finanzas de la iglesia -->
       <div id="subvistaFinBolsas" style="display:none;">
-        <div style="margin-bottom:12px; font-size:0.85rem; color:var(--text-muted);">Bolsas aparte (renta del local, etc.). Se llevan por persona y <b>no forman parte de las finanzas de la iglesia</b>: no entran a diezmos, ofrendas, reportes ni balance.</div>
-        <div class="grid-resumen" id="resumenBolsas" style="margin-bottom:20px;"></div>
-        <div class="barraAcciones">
-          <select id="blSelBolsa" onchange="cargarBolsas()"></select>
+        <div class="barraAcciones" style="align-items:center;">
+          <button class="btnSecundario" id="blVolver" style="display:none;" onclick="blVolverLista()">← Bolsas</button>
+          <input type="text" id="blBuscar" placeholder="Buscar por nombre…" oninput="blRender()" style="display:none;">
+          <button class="btnAccion" id="blBtnAporte" style="display:none;" onclick="blAbrir(null)">+ Aporte</button>
           <button class="btnSecundario" onclick="blAbrirAdmin()">Administrar bolsas</button>
         </div>
-        <div class="barraAcciones">
-          <input type="month" id="blMes" onchange="cargarBolsas()">
-          <input type="text" id="blBuscar" placeholder="Buscar por nombre…" oninput="blRender()">
-          <button class="btnAccion" onclick="blAbrir(null)">+ Nuevo aporte</button>
-        </div>
-        <label style="display:flex; align-items:center; gap:8px; font-size:0.88rem; color:var(--text-muted); margin-bottom:12px;">
-          <input type="checkbox" id="blTodos" onchange="cargarBolsas()"> Ver todos los meses
-        </label>
-        <div id="listaBolsas"><div class="estadoCargando">Cargando aportes…</div></div>
+        <div class="grid-resumen" id="resumenBolsas" style="margin-bottom:16px;"></div>
+        <div id="listaBolsas"><div class="estadoCargando">Cargando…</div></div>
+        <select id="blSelBolsa" style="display:none;"></select><input type="month" id="blMes" style="display:none;"><input type="checkbox" id="blTodos" checked style="display:none;">
       </div>
 
       <!-- Sub-vista: Diezmos -->
@@ -1320,7 +1320,7 @@
         </div>
 
         <div class="tablaWrap" style="margin-bottom:20px;" id="bloqueImportCfg">
-          <h3>Importación de correos (Cash App y Zelle)</h3>
+          <h3>Importación de correos (CashApp y Zelle)</h3>
           <div style="padding:14px 18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
             <span id="cfgImportDot" class="dotEstado"></span>
             <span id="cfgImportTxt" style="font-size:0.9rem;"></span>
@@ -1370,6 +1370,15 @@
           <h3>Fondo y categoría predeterminados</h3>
           <div style="padding:8px 18px; font-size:0.8rem; color:var(--text-muted);">Lo que aparece ya elegido al registrar cada tipo de transacción. Siempre se puede cambiar en cada registro.</div>
           <div id="listaDefaultsTx" style="padding:8px 18px;"></div>
+        </div>
+
+        <div class="tablaWrap" style="margin-bottom:20px;">
+          <h3>Métodos de pago de entradas (diezmos, ofrendas, donaciones…)</h3>
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
+            <input type="text" id="nuevoMetodoPrograma" placeholder="Nuevo método…" style="flex:1;">
+            <button class="btnAccion" onclick="agregarMetodoPago('Programa')">+ Agregar</button>
+          </div>
+          <div id="listaMetodosPrograma" style="padding:8px 18px;"></div>
         </div>
 
         <div class="tablaWrap" style="margin-bottom:20px;">
@@ -1933,7 +1942,7 @@
   </div>
 </div>
 
-<!-- ═══════════════ MODAL: Aprobar pago entrante (Cash App / Zelle) ═══════════════ -->
+<!-- ═══════════════ MODAL: Aprobar pago entrante (CashApp / Zelle) ═══════════════ -->
 <div class="modalOverlay" id="modalPorAprobar">
   <div class="modalCaja">
     <h3>Aprobar pago recibido</h3>
@@ -2074,7 +2083,7 @@
         <div><label for="blMetodo">Método</label><select id="blMetodo"></select></div>
         <div><label for="blReferencia">Referencia</label><input type="text" id="blReferencia"></div>
         <div class="full"><label for="blNota">Nota</label><input type="text" id="blNota"></div>
-        <div class="full" id="blAviso" style="display:none; font-size:0.82rem; color:var(--text-muted);">Este aporte viene de un pago de Cash App/Zelle: el monto, la fecha, el método y la referencia no se pueden cambiar.</div>
+        <div class="full" id="blAviso" style="display:none; font-size:0.82rem; color:var(--text-muted);">Este aporte viene de un pago de CashApp/Zelle: el monto, la fecha, el método y la referencia no se pueden cambiar.</div>
       </div>
       <div class="formAcciones">
         <button type="button" class="btnPeligro" id="blBtnEliminar" onclick="blEliminar()" style="display:none;">Eliminar</button>
@@ -2101,6 +2110,23 @@
   </div>
 </div>
 
+<div class="modalOverlay" id="modalGraficas" onclick="if (event.target === this) cerrarGrafica()">
+  <div class="modalCaja" style="position:relative; max-width:640px;">
+    <button type="button" class="xCerrar" onclick="cerrarGrafica()" aria-label="Cerrar">×</button>
+    <h3 id="grafTitulo" style="padding-right:30px;"></h3>
+    <div id="finHomeTendencia"></div>
+    <div id="finHomeComparativas"></div>
+  </div>
+</div>
+
+<div class="modalOverlay" id="modalBolsaHist" onclick="if (event.target === this) document.getElementById('modalBolsaHist').classList.remove('abierto')">
+  <div class="modalCaja" style="position:relative; max-width:520px;">
+    <button type="button" class="xCerrar" onclick="document.getElementById('modalBolsaHist').classList.remove('abierto')" aria-label="Cerrar">×</button>
+    <h3 id="blHistTitulo" style="padding-right:30px;"></h3>
+    <div id="blHistLista"></div>
+  </div>
+</div>
+
 <!-- ═══════════════ MODAL: Nuevo/Editar Diezmo ═══════════════ -->
 <div class="modalOverlay" id="modalDiezmo">
   <div class="modalCaja">
@@ -2108,9 +2134,9 @@
     <form id="formDiezmo" onsubmit="return guardarDiezmo(event)">
       <div class="formGrid">
         <div><label for="dzFecha">Fecha *</label><input type="date" id="dzFecha" required></div>
-        <div><label for="dzMonto">Monto *</label><input type="number" id="dzMonto" step="0.01" min="0" required></div>
+        <div><label for="dzSobre">Sobre #</label><input type="text" id="dzSobre" inputmode="numeric" placeholder="Escribe el sobre" oninput="dzElegirSobre()"></div>
         <div class="full"><label for="dzPersona">Miembro *</label><select id="dzPersona" required onchange="dzElegirPersona()"></select></div>
-        <div><label for="dzSobre">Sobre #</label><input type="text" id="dzSobre" inputmode="numeric" placeholder="Se llena solo" oninput="dzElegirSobre()"></div>
+        <div><label for="dzMonto">Monto *</label><input type="number" id="dzMonto" step="0.01" min="0" required></div>
         <div><label for="dzMetodo">Método</label><select id="dzMetodo"></select></div>
         <div><label for="dzFondo">Fondo</label><select id="dzFondo"></select></div>
         <div><label for="dzEstado">Estado</label><select id="dzEstado"></select></div>
@@ -2550,8 +2576,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-064';
-document.getElementById('versionTopbar').textContent = 'Ver-064';
+const APP_VERSION = 'church-admin Ver-065';
+document.getElementById('versionTopbar').textContent = 'Ver-065';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -2715,8 +2741,17 @@ async function cargarDefaultsTx() {
 }
 function defaultTx(tipo) { return cacheDefaultsTx.find(d => d.tipo === tipo) || {}; }
 
+function abrirGrafica(cual) {
+  document.getElementById('grafTitulo').textContent = cual === 'A' ? 'Gráfica A — Últimos 6 meses' : 'Gráfica B — Comparativas';
+  document.getElementById('finHomeTendencia').style.display = cual === 'A' ? '' : 'none';
+  document.getElementById('finHomeComparativas').style.display = cual === 'B' ? '' : 'none';
+  document.getElementById('modalGraficas').classList.add('abierto');
+}
+function cerrarGrafica() { document.getElementById('modalGraficas').classList.remove('abierto'); }
+
 function mostrarFinanzas() {
   cargarDefaultsTx();
+  if (cacheMetodosPago.length === 0) cargarMetodosPago();
   document.getElementById('vistaDashboard').style.display = 'none';
   document.getElementById('vistaFinanzas').style.display = 'block';
   finMostrarInicio();
@@ -2726,7 +2761,7 @@ function mostrarFinanzas() {
 const FIN_TARJETAS = [
   { grupo: 'Finanzas de la Iglesia', items: [
     { tab: 'resumen', icono: '📊', etiqueta: 'Resumen Mensual', sub: 'Ingresos, egresos y balance por mes', color: 'c-blue' },
-    { tab: 'porAprobar', icono: '✅', etiqueta: 'Aprobaciones', sub: 'Cash App, Zelle y app móvil', color: 'c-green' },
+    { tab: 'porAprobar', icono: '✅', etiqueta: 'Aprobaciones', sub: 'CashApp, Zelle y app móvil', color: 'c-green' },
     { tab: 'bolsas', icono: '🗂️', etiqueta: 'Bolsas (aparte)', sub: 'Renta y otras, fuera de las finanzas', color: 'c-gold' },
     { tab: 'diezmos', icono: '🙏', etiqueta: 'Diezmos', sub: 'Registro de diezmos', color: 'c-gold', tabla: 'diezmos' },
     { tab: 'ofrendas', icono: '🕊️', etiqueta: 'Ofrendas', sub: 'Ofrendas generales', color: 'c-blue', tabla: 'ofrendas' },
@@ -4352,7 +4387,7 @@ function normNombre(s) { return String(s || '').toLowerCase().normalize('NFD').r
 // ── Zona de peligro (Ver-043) ──
 const PELIGRO_TABLAS = [
   ['diezmos', 'Diezmos'], ['ofrendas', 'Ofrendas'], ['donaciones', 'Donaciones'], ['gastos', 'Gastos'],
-  ['transacciones', 'Transacciones (todas)'], ['registros_movil', 'Registros móviles'], ['pagos_entrantes', 'Pagos Cash App/Zelle'],
+  ['transacciones', 'Transacciones (todas)'], ['registros_movil', 'Registros móviles'], ['pagos_entrantes', 'Pagos CashApp/Zelle'],
 ];
 function peAbrir() {
   document.getElementById('peLista').innerHTML = PELIGRO_TABLAS.map(([t, n]) => `<label style="display:flex; gap:8px; font-size:0.9rem; font-weight:400;"><input type="checkbox" class="peChk" value="${t}"> ${n}</label>`).join('');
@@ -5534,7 +5569,7 @@ function abrirFormDeposito(id) {
   poblarSelectCuentas('dpCuentaOrigen', null, 'Activo');
   poblarSelectCuentas('dpCuentaDestino', null, 'Activo');
   document.getElementById('dpBanco').innerHTML = '<option value="">— Sin banco —</option>' + cacheBancos.map(b => `<option value="${b.id}">${escV28(b.nombre)}</option>`).join('');
-  document.getElementById('dpMetodo').innerHTML = ['Efectivo', 'Cheque', 'Zelle', 'Cash App', 'Electrónico', 'Otro'].map(m => `<option>${m}</option>`).join('');
+  document.getElementById('dpMetodo').innerHTML = ['Efectivo', 'Cheque', 'Zelle', 'CashApp', 'Electrónico', 'Otro'].map(m => `<option>${m}</option>`).join('');
   const caja = cacheCuentas.find(c => c.codigo === '1001');
   if (caja) document.getElementById('dpCuentaOrigen').value = caja.id;
 
@@ -5926,12 +5961,12 @@ async function generarRecurrenteAhora(id) {
   cargarRecurrentes();
 }
 
-// ══════════════════════ POR APROBAR: Cash App / Zelle (Ver-034) ══════════════════════
+// ══════════════════════ POR APROBAR: CashApp / Zelle (Ver-034) ══════════════════════
 // Los pagos los deja la Edge Function "ingest-pago" en pagos_entrantes. Nada llega a los libros
 // hasta que se aprueba aquí; al aprobar se crea el mismo registro que crearía el formulario manual.
 let cachePagosEntrantes = [];
 const PA_FUENTES = {
-  cashapp: { etiqueta: 'Cash App', metodo: 'Cash App' },
+  cashapp: { etiqueta: 'CashApp', metodo: 'CashApp' },
   zelle:   { etiqueta: 'Zelle',    metodo: 'Zelle' },
 };
 
@@ -6006,7 +6041,7 @@ function paRender() {
     const f = PA_FUENTES[x.fuente] || { etiqueta: x.fuente };
     const pendiente = x.estado === 'Por aprobar';
     const miembro = x.persona_id ? nombrePersonaPorId(x.persona_id) : '';
-    const aviso = x.remitente_verificado ? '' : ' <span title="Gmail no pudo confirmar que este correo viene realmente de Cash App/Wells Fargo. Compáralo con tu estado de cuenta." style="color:var(--danger);">⚠</span>';
+    const aviso = x.remitente_verificado ? '' : ' <span title="Gmail no pudo confirmar que este correo viene realmente de CashApp/Wells Fargo. Compáralo con tu estado de cuenta." style="color:var(--danger);">⚠</span>';
     const partes = [
       formatoFecha(x.fecha), f.etiqueta,
       x.nota ? escV28(x.nota) : 'sin nota',
@@ -6163,7 +6198,7 @@ async function paReabrir(id) {
   cargarPorAprobar();
 }
 
-// ── Interruptor: importación automática de correos (Cash App / Zelle) ──
+// ── Interruptor: importación automática de correos (CashApp / Zelle) ──
 // La función ingest-pago lee ajustes_ingest.activo; si está apagado responde 503 y el script de Gmail
 // NO avanza su marca, así que los correos recibidos durante la pausa se importan al reactivar.
 let paImportActiva = true;
@@ -6475,9 +6510,12 @@ async function blCargarBolsas() {
   return {};
 }
 
+let blBolsaAbierta = null;
+function blClave(a) { return a.persona_id ? 'p:' + a.persona_id : 'n:' + (a.aportante || '').trim().toLowerCase(); }
+
 async function cargarBolsas() {
   const lista = document.getElementById('listaBolsas');
-  lista.innerHTML = '<div class="estadoCargando">Cargando aportes…</div>';
+  lista.innerHTML = '<div class="estadoCargando">Cargando…</div>';
   await asegurarDirectorioFinanzas();
   const rb = await blCargarBolsas();
   if (rb.error) {
@@ -6485,65 +6523,68 @@ async function cargarBolsas() {
     return;
   }
   const sel = document.getElementById('blSelBolsa');
-  const actual = sel.value || 'todas';
-  sel.innerHTML = '<option value="todas">Todas las bolsas</option>' +
-    cacheBolsas.map(b => `<option value="${b.id}">${escV28(b.nombre)}${b.activa ? '' : ' (archivada)'}</option>`).join('');
-  sel.value = (actual === 'todas' || cacheBolsas.some(b => String(b.id) === actual)) ? actual : 'todas';
-  const mes = document.getElementById('blMes');
-  if (!mes.value) { const d = new Date(); mes.value = `${d.getFullYear()}-${blDosDig(d.getMonth() + 1)}`; }
-  let q = sb.from('bolsa_aportes').select('*')
-    .order('fecha', { ascending: false }).order('creado_en', { ascending: false }).range(0, 999);
-  if (sel.value !== 'todas') q = q.eq('bolsa_id', sel.value);
-  if (!document.getElementById('blTodos').checked) {
-    const [y, m] = mes.value.split('-').map(Number);
-    const ini = `${y}-${blDosDig(m)}-01`;
-    const sig = m === 12 ? `${y + 1}-01-01` : `${y}-${blDosDig(m + 1)}-01`;
-    q = q.gte('fecha', ini).lt('fecha', sig);
-  }
-  const { data, error } = await sbCall(q);
+  sel.innerHTML = cacheBolsas.map(b => `<option value="${b.id}">${escV28(b.nombre)}</option>`).join('');
+  const { data, error } = await sbCall(sb.from('bolsa_aportes').select('*').order('fecha', { ascending: false }).order('creado_en', { ascending: false }).range(0, 4999));
   if (error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(error.message)}</div>`; return; }
   cacheBolsaAportes = data || [];
+  if (blBolsaAbierta && !cacheBolsas.some(b => String(b.id) === String(blBolsaAbierta))) blBolsaAbierta = null;
   blRender();
 }
 
+function blAbrirBolsa(id) { blBolsaAbierta = String(id); document.getElementById('blSelBolsa').value = id; document.getElementById('blBuscar').value = ''; blRender(); }
+function blVolverLista() { blBolsaAbierta = null; blRender(); }
+
 function blRender() {
-  const buscar = (document.getElementById('blBuscar').value || '').trim().toLowerCase();
-  const todas = document.getElementById('blSelBolsa').value === 'todas';
-  const filas = cacheBolsaAportes.filter(a => !buscar || blNombreAportante(a).toLowerCase().includes(buscar));
-  const cts = v => Math.round((Number(v) || 0) * 100);
-  const total = filas.reduce((s, a) => s + cts(a.monto), 0);
-  const porPersona = new Map(), porBolsa = new Map();
-  filas.forEach(a => {
-    const k = a.persona_id ? 'p:' + a.persona_id : 'n:' + (a.aportante || '').trim().toLowerCase();
-    const cur = porPersona.get(k) || { nombre: blNombreAportante(a), c: 0 };
-    cur.c += cts(a.monto); porPersona.set(k, cur);
-    porBolsa.set(a.bolsa_id, (porBolsa.get(a.bolsa_id) || 0) + cts(a.monto));
-  });
-  document.getElementById('resumenBolsas').innerHTML = `
-    <div class="tarjetaResumen ingreso"><div class="etiqueta">${todas ? 'Total en bolsas' : escV28(blNombre(document.getElementById('blSelBolsa').value))}</div><div class="monto">${formatoMoneda(total / 100)}</div></div>
-    <div class="tarjetaResumen"><div class="etiqueta">Aportes</div><div class="monto">${filas.length}</div></div>
-    <div class="tarjetaResumen"><div class="etiqueta">Personas</div><div class="monto">${porPersona.size}</div></div>`;
   const lista = document.getElementById('listaBolsas');
-  if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay aportes en este periodo. Crea bolsas con "Administrar bolsas".</div>'; return; }
-  const tarjeta = (titulo, monto) => `
-    <div class="tarjetaSeguimiento"><div><div class="nombrePersona">${escV28(titulo)}</div></div><span class="badge badge-tipo">${formatoMoneda(monto / 100)}</span></div>`;
-  const bloqueBolsas = todas ? `<h4 style="margin:6px 0 8px; color:var(--navy);">Por bolsa</h4>` +
-    [...porBolsa.entries()].sort((a, b) => b[1] - a[1]).map(([id, c]) => tarjeta(blNombre(id), c)).join('') : '';
-  const bloquePersonas = `<h4 style="margin:${todas ? 18 : 6}px 0 8px; color:var(--navy);">Por persona</h4>` +
-    [...porPersona.values()].sort((a, b) => b.c - a.c).map(p => tarjeta(p.nombre, p.c)).join('');
-  const detalle = filas.map(a => {
-    const partes = [formatoFecha(a.fecha), todas ? escV28(blNombre(a.bolsa_id)) : '', a.metodo ? escV28(a.metodo) : '',
-      a.referencia ? escV28(a.referencia) : '', a.nota ? escV28(a.nota) : ''].filter(Boolean);
-    return `
-    <div class="tarjetaSeguimiento" onclick="blAbrir('${a.id}')">
-      <div>
-        <div class="nombrePersona">${escV28(blNombreAportante(a))}</div>
-        <div class="metaLinea">${partes.join(' · ')}</div>
-      </div>
-      <span class="badge badge-tipo">${formatoMoneda(a.monto)}</span>
-    </div>`;
-  }).join('');
-  lista.innerHTML = `${bloqueBolsas}${bloquePersonas}<h4 style="margin:18px 0 8px; color:var(--navy);">Detalle</h4>${detalle}`;
+  const cts = v => Math.round((Number(v) || 0) * 100);
+  const abierta = !!blBolsaAbierta;
+  document.getElementById('blVolver').style.display = abierta ? '' : 'none';
+  document.getElementById('blBuscar').style.display = abierta ? '' : 'none';
+  document.getElementById('blBtnAporte').style.display = abierta ? '' : 'none';
+  if (!abierta) {
+    const tot = cacheBolsaAportes.reduce((t, a) => t + cts(a.monto), 0);
+    document.getElementById('resumenBolsas').innerHTML = `<div class="tarjetaResumen ingreso"><div class="etiqueta">Total en todas las bolsas</div><div class="monto">${formatoMoneda(tot / 100)}</div></div>`;
+    if (cacheBolsas.length === 0) { lista.innerHTML = '<div class="estadoVacio">Aún no hay bolsas. Crea una con "Administrar bolsas".</div>'; return; }
+    lista.innerHTML = cacheBolsas.map(b => {
+      const ap = cacheBolsaAportes.filter(a => String(a.bolsa_id) === String(b.id));
+      const total = ap.reduce((t, a) => t + cts(a.monto), 0);
+      const personas = new Set(ap.map(blClave)).size;
+      return `<div class="tarjetaSeguimiento" onclick="blAbrirBolsa('${b.id}')"><div><div class="nombrePersona">${escV28(b.nombre)}${b.activa ? '' : ' (archivada)'}</div><div class="metaLinea">${personas} persona${personas === 1 ? '' : 's'}</div></div><span class="badge badge-tipo">${formatoMoneda(total / 100)}</span></div>`;
+    }).join('');
+    return;
+  }
+  const buscar = (document.getElementById('blBuscar').value || '').trim().toLowerCase();
+  const delaBolsa = cacheBolsaAportes.filter(a => String(a.bolsa_id) === String(blBolsaAbierta));
+  const grupos = new Map();
+  delaBolsa.forEach(a => {
+    const k = blClave(a);
+    const g = grupos.get(k) || { clave: k, nombre: blNombreAportante(a), total: 0, ultimo: null };
+    g.total += cts(a.monto);
+    if (!g.ultimo || String(a.fecha) > String(g.ultimo.fecha)) g.ultimo = a;
+    grupos.set(k, g);
+  });
+  const filas = [...grupos.values()].filter(g => !buscar || g.nombre.toLowerCase().includes(buscar)).sort((a, b) => String(b.ultimo.fecha).localeCompare(String(a.ultimo.fecha)));
+  const totalBolsa = delaBolsa.reduce((t, a) => t + cts(a.monto), 0);
+  document.getElementById('resumenBolsas').innerHTML = `
+    <div class="tarjetaResumen ingreso"><div class="etiqueta">${escV28(blNombre(blBolsaAbierta))}</div><div class="monto">${formatoMoneda(totalBolsa / 100)}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Personas</div><div class="monto">${grupos.size}</div></div>`;
+  if (!filas.length) { lista.innerHTML = '<div class="estadoVacio">Todavía no hay aportes en esta bolsa.</div>'; return; }
+  lista.innerHTML = `<div class="filaBolsa enc"><span>Nombre</span><span>Último pago</span><span class="num">Monto</span><span class="num">Total</span></div>` + filas.map(g => `
+    <div class="filaBolsa" onclick="blHistorial('${escV28(g.clave).replace(/'/g, '&#39;')}')">
+      <span><b>${escV28(g.nombre)}</b></span><span>${formatoFecha(g.ultimo.fecha)}</span><span class="num">${formatoMoneda(g.ultimo.monto)}</span><span class="num"><b>${formatoMoneda(g.total / 100)}</b></span>
+    </div>`).join('');
+}
+
+function blHistorial(clave) {
+  const ap = cacheBolsaAportes.filter(a => String(a.bolsa_id) === String(blBolsaAbierta) && blClave(a) === clave).sort((x, y) => String(y.fecha).localeCompare(String(x.fecha)));
+  if (!ap.length) return;
+  const total = ap.reduce((t, a) => t + Math.round((Number(a.monto) || 0) * 100), 0);
+  document.getElementById('blHistTitulo').textContent = blNombreAportante(ap[0]);
+  document.getElementById('blHistLista').innerHTML = ap.map(a => `
+    <div class="relFila" style="cursor:pointer;" onclick="document.getElementById('modalBolsaHist').classList.remove('abierto'); blAbrir('${a.id}')">
+      <span>${formatoFecha(a.fecha)} · ${escV28(blNombre(a.bolsa_id))}${a.metodo ? ' · ' + escV28(a.metodo) : ''}${a.nota ? ' · ' + escV28(a.nota) : ''}</span><b>${formatoMoneda(a.monto)}</b>
+    </div>`).join('') + `<div class="relFila" style="font-weight:700; border-bottom:0;"><span>Total</span><span>${formatoMoneda(total / 100)}</span></div>`;
+  document.getElementById('modalBolsaHist').classList.add('abierto');
 }
 
 // ── Aporte (agregar / editar / eliminar) ──
@@ -6556,6 +6597,7 @@ function blAbrir(id) {
   document.getElementById('blTitulo').textContent = a ? 'Aporte a bolsa' : 'Nuevo aporte a bolsa';
   const opciones = (a && !activas.some(b => String(b.id) === String(a.bolsa_id)) ? cacheBolsas.filter(b => String(b.id) === String(a.bolsa_id)) : []).concat(activas);
   document.getElementById('blBolsa').innerHTML = opciones.map(b => `<option value="${b.id}">${escV28(b.nombre)}</option>`).join('');
+  if (!a && blBolsaAbierta) document.getElementById('blBolsa').value = blBolsaAbierta;
   const selActual = document.getElementById('blSelBolsa').value;
   document.getElementById('blBolsa').value = a ? a.bolsa_id : (activas.some(b => String(b.id) === selActual) ? selActual : activas[0].id);
   poblarSelectPersonas('blPersona', a ? (a.persona_id || '') : '');
@@ -6610,7 +6652,7 @@ async function blGuardar(evt) {
 async function blEliminar() {
   const a = cacheBolsaAportes.find(r => String(r.id) === String(blEditandoId));
   if (!a) return;
-  const aviso = a.pago_entrante_id ? '\n\nEste aporte vino de un pago de Cash App/Zelle que ya figura como aprobado; eliminarlo no lo devuelve a "Por aprobar".' : '';
+  const aviso = a.pago_entrante_id ? '\n\nEste aporte vino de un pago de CashApp/Zelle que ya figura como aprobado; eliminarlo no lo devuelve a "Por aprobar".' : '';
   if (!await confirmar('¿Eliminar este aporte?' + aviso)) return;
   const { error } = await sbCall(sb.from('bolsa_aportes').delete().eq('id', a.id));
   if (error) { alert('Error al eliminar: ' + error.message); return; }
@@ -6682,7 +6724,8 @@ let cacheOfrendas = [];
 let cacheDonaciones = [];
 let cacheGastos = [];
 let cacheFondos = [];
-const METODOS_PAGO = ['Efectivo', 'Electrónico', 'Zelle', 'Cash App', 'Tarjeta de banco', 'Tarjeta de CashApp', 'Tarjeta', 'Cheque', 'Otro'];
+const METODOS_PAGO = ['Efectivo', 'Cheque', 'Zelle', 'CashApp'];
+const METODOS_GASTO_BASE = ['Tarjeta de banco', 'Tarjeta de CashApp', 'Electrónico', 'Efectivo', 'Cheque'];
 const ESTADOS_FIN = ['Completado', 'Pendiente', 'Cancelado'];
 const OFRENDA_TIPOS = ['Ofrenda General', 'Misiones', 'Construcción', 'Especial', 'Bebés y Niños', 'Jóvenes'];
 const OFRENDA_TIPO_CUENTA = { 'Misiones': '4006', 'Construcción': '4007' };
@@ -6704,12 +6747,19 @@ function poblarSelectFondos(selectId, valorActual) {
   const select = document.getElementById(selectId);
   select.innerHTML = cacheFondos.map(f => `<option value="${f.id}">${f.nombre}</option>`).join('');
   if (valorActual) select.value = valorActual;
+  else { const g = cacheFondos.find(f => /fondo general/i.test(f.nombre)); if (g) select.value = g.id; }
 }
 
+function metodosProgramaActivos() {
+  const l = cacheMetodosPago.filter(m => m.uso === 'Programa' && m.activo).map(m => m.nombre);
+  return l.length ? l : METODOS_PAGO;
+}
 function poblarSelectMetodo(selectId, valorActual) {
   const select = document.getElementById(selectId);
-  select.innerHTML = METODOS_PAGO.map(m => `<option value="${m}">${m}</option>`).join('');
-  select.value = valorActual || 'Efectivo';
+  const lista = metodosProgramaActivos().slice();
+  if (valorActual && !lista.includes(valorActual)) lista.push(valorActual);
+  select.innerHTML = lista.map(m => `<option value="${m}">${m}</option>`).join('');
+  select.value = valorActual || lista[0];
 }
 
 function poblarSelectEstado(selectId, valorActual) {
@@ -9889,10 +9939,10 @@ async function cargarMetodosPago() {
 }
 function metodosGastoActivos() {
   const l = cacheMetodosPago.filter(m => m.uso === 'Gasto' && m.activo).map(m => m.nombre);
-  return l.length ? l : METODOS_PAGO;
+  return l.length ? l : METODOS_GASTO_BASE;
 }
 function renderMetodosPago() {
-  [['Gasto', 'listaMetodosGasto'], ['Ingreso', 'listaMetodosIngreso']].forEach(([uso, id]) => {
+  [['Gasto', 'listaMetodosGasto'], ['Ingreso', 'listaMetodosIngreso'], ['Programa', 'listaMetodosPrograma']].forEach(([uso, id]) => {
     const cont = document.getElementById(id);
     const filas = cacheMetodosPago.filter(m => m.uso === uso);
     cont.innerHTML = filas.length ? filas.map(m => `
@@ -9900,19 +9950,29 @@ function renderMetodosPago() {
         <span class="${m.activo ? '' : 'inactivo'}">${escV28(m.nombre)}</span>
         <span style="display:flex; gap:6px;">
           <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="toggleMetodoPago('${m.id}', ${!m.activo})">${m.activo ? 'Activo' : 'Inactivo'}</button>
-          <button class="btnSecundario btnPeligro" style="padding:4px 12px; font-size:0.78rem;" onclick="quitarMetodoPago('${m.id}')">Quitar</button>
+          <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="renombrarMetodoPago('${m.id}')">Editar</button>
+          <button class="btnSecundario btnPeligro" style="padding:4px 12px; font-size:0.78rem;" onclick="quitarMetodoPago('${m.id}')">Eliminar</button>
         </span>
       </div>`).join('') : '<div class="estadoVacio">Sin métodos. Se usará la lista básica.</div>';
   });
 }
 async function agregarMetodoPago(uso) {
-  const input = document.getElementById(uso === 'Gasto' ? 'nuevoMetodoGasto' : 'nuevoMetodoIngreso');
+  const input = document.getElementById({ Gasto: 'nuevoMetodoGasto', Ingreso: 'nuevoMetodoIngreso', Programa: 'nuevoMetodoPrograma' }[uso]);
   const nombre = input.value.trim();
   if (!nombre) return;
   const orden = cacheMetodosPago.filter(m => m.uso === uso).length + 1;
   const { error } = await sbCall(sb.from('metodos_pago').insert({ nombre, uso, orden, activo: true }));
   if (error) { alert(/duplicate|unique/i.test(error.message) ? 'Ese método ya existe.' : 'Error al agregar: ' + error.message); return; }
   input.value = '';
+  await cargarMetodosPago(); renderMetodosPago();
+}
+async function renombrarMetodoPago(id) {
+  const m = cacheMetodosPago.find(x => x.id === id);
+  if (!m) return;
+  const nuevo = ((await pedir('Nuevo nombre del método:', m.nombre)) || '').trim();
+  if (!nuevo || nuevo === m.nombre) return;
+  const { error } = await sbCall(sb.from('metodos_pago').update({ nombre: nuevo }).eq('id', id));
+  if (error) { alert(/duplicate|unique/i.test(error.message) ? 'Ya existe un método con ese nombre.' : 'Error: ' + error.message); return; }
   await cargarMetodosPago(); renderMetodosPago();
 }
 async function toggleMetodoPago(id, nuevo) {
@@ -9942,10 +10002,12 @@ function renderCatalogoMinisterios() {
   }
   cont.innerHTML = cacheMinisterios.map(m => `
     <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
-      <span>${m.nombre}</span>
-      <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="toggleActivoMinisterio('${m.id}', ${!m.activo})">
-        ${m.activo ? 'Activo' : 'Inactivo'}
-      </button>
+      <span>${escV28(m.nombre)}</span>
+      <span style="display:flex; gap:6px;">
+        <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="toggleActivoMinisterio('${m.id}', ${!m.activo})">${m.activo ? 'Activo' : 'Inactivo'}</button>
+        <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="renombrarCatalogo('ministerios', '${m.id}')">Editar</button>
+        <button class="btnSecundario btnPeligro" style="padding:4px 12px; font-size:0.78rem;" onclick="eliminarCatalogo('ministerios', '${m.id}')">Eliminar</button>
+      </span>
     </div>`).join('');
 }
 
@@ -9957,11 +10019,32 @@ function renderCatalogoTiposServicio() {
   }
   cont.innerHTML = cacheTiposServicio.map(t => `
     <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
-      <span>${t.nombre}</span>
-      <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="toggleActivoTipoServicio('${t.id}', ${!t.activo})">
-        ${t.activo ? 'Activo' : 'Inactivo'}
-      </button>
+      <span>${escV28(t.nombre)}</span>
+      <span style="display:flex; gap:6px;">
+        <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="toggleActivoTipoServicio('${t.id}', ${!t.activo})">${t.activo ? 'Activo' : 'Inactivo'}</button>
+        <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="renombrarCatalogo('tipos_servicio', '${t.id}')">Editar</button>
+        <button class="btnSecundario btnPeligro" style="padding:4px 12px; font-size:0.78rem;" onclick="eliminarCatalogo('tipos_servicio', '${t.id}')">Eliminar</button>
+      </span>
     </div>`).join('');
+}
+
+async function renombrarCatalogo(tabla, id) {
+  const lista = tabla === 'ministerios' ? cacheMinisterios : cacheTiposServicio;
+  const item = lista.find(x => x.id === id);
+  if (!item) return;
+  const nuevo = ((await pedir('Nuevo nombre:', item.nombre)) || '').trim();
+  if (!nuevo || nuevo === item.nombre) return;
+  const { error } = await sbCall(sb.from(tabla).update({ nombre: nuevo }).eq('id', id));
+  if (error) { alert('Error: ' + error.message); return; }
+  cargarCatalogos();
+}
+async function eliminarCatalogo(tabla, id) {
+  const lista = tabla === 'ministerios' ? cacheMinisterios : cacheTiposServicio;
+  const item = lista.find(x => x.id === id);
+  if (!item || !await confirmar('¿Eliminar "' + item.nombre + '"?')) return;
+  const { error } = await sbCall(sb.from(tabla).delete().eq('id', id));
+  if (error) { alert(/foreign|violates|referenc/i.test(error.message) ? 'No se puede eliminar porque ya se usa en registros. Mejor márcalo como Inactivo.' : 'Error: ' + error.message); return; }
+  cargarCatalogos();
 }
 
 async function agregarMinisterio() {

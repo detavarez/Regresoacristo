@@ -639,12 +639,13 @@
     <select id="rpTipoPeriodo" onchange="cargar()"><option value="dia">Día</option><option value="semana">Semana</option><option value="mes" selected>Mes</option><option value="anio">Año</option></select>
     <input type="date" id="rpFechaAncla" onchange="cargar()">
   </div>
+  <div class="tarjetaResumen" style="margin-bottom:16px; text-align:center; padding:20px;"><div class="etiqueta">Balance total (dinero disponible)</div><div class="monto" id="rpBalanceTotal" style="font-size:2.2rem;">—</div></div>
   <div class="grid-resumen">
     <div class="tarjetaResumen ingreso"><div class="etiqueta">Diezmos</div><div class="monto" id="rpTotalDiezmos">—</div></div>
     <div class="tarjetaResumen ingreso"><div class="etiqueta">Ofrendas</div><div class="monto" id="rpTotalOfrendas">—</div></div>
     <div class="tarjetaResumen ingreso"><div class="etiqueta">Donaciones</div><div class="monto" id="rpTotalDonaciones">—</div></div>
     <div class="tarjetaResumen egreso"><div class="etiqueta">Gastos</div><div class="monto" id="rpTotalGastos">—</div></div>
-    <div class="tarjetaResumen"><div class="etiqueta">Balance General</div><div class="monto" id="rpBalanceGeneral">—</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Balance del periodo</div><div class="monto" id="rpBalanceGeneral">—</div></div>
   </div>
   <div class="tablaWrap" style="margin-bottom:20px;"><h3>Quiénes dieron (diezmos + donaciones)</h3><div id="rpQuienesDieron"></div></div>
   <div class="grid-resumen" style="margin-bottom:20px;">
@@ -689,6 +690,8 @@ async function salirSesion() { SEG.detener(); await cerrarSesion(); location.rel
 const tabla = (enc, filas) => `<table class="tablaTrans"><thead><tr>${enc.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${filas.join('')}</tbody></table>`;
 async function cargar() {
   const tipo = $('rpTipoPeriodo').value;
+  const rb = await sb.rpc('pastor_balance3');
+  if (rb.data && rb.data.balance_total != null) $('rpBalanceTotal').textContent = money(rb.data.balance_total);
   const { data, error } = await sb.rpc('pastor_resumen3', { p_tipo: tipo, p_fecha: $('rpFechaAncla').value });
   if (error) { $('rpSubtitulo').textContent = 'No se pudo cargar el resumen.'; return false; }
   if (data.error) { $('rpSubtitulo').textContent = data.error === 'sin_permiso' ? 'No tienes autorización para ver este resumen.' : 'Error.'; return false; }

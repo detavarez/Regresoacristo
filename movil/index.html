@@ -82,7 +82,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <div id="loginBox" style="display:none">
   <div class="logo-i" style="margin:0 auto;width:56px;height:56px;font-size:28px">✝</div>
   <h2>MobileCash</h2>
-  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M009</div>
+  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M010</div>
   <div class="form-card">
     <div class="fgrp"><label>Correo</label><input type="email" id="lgEmail" autocomplete="username" inputmode="email"></div>
     <div class="fgrp"><label>Contraseña</label><input type="password" id="lgPass" autocomplete="current-password"></div>
@@ -93,7 +93,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 
 <div id="app" style="display:none">
 <div class="topbar">
-  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M009 · <span id="quien"></span></div></div></div>
+  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M010 · <span id="quien"></span></div></div></div>
   <div style="display:flex;gap:8px;align-items:center"><span id="dot" style="width:8px;height:8px;border-radius:50%;background:#3DAA6E;display:inline-block"></span><button class="sbtn" id="btnInstalar" style="display:none" onclick="instalarApp()">📲</button><button class="sbtn" onclick="cargar(true)">↻</button><button class="sbtn" onclick="SEG.bloquear()" aria-label="Bloquear">🔒</button><button class="sbtn" onclick="SEG.abrirPerfil(false)" aria-label="Mi perfil">👤</button></div>
 </div>
 <div id="toast" class="toast"></div>
@@ -124,17 +124,17 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   <div class="form-card">
     <h3 id="frmTitulo">🙏 Registro de Diezmo</h3>
     <div class="info-card" id="frmAnon" style="display:none"><div class="ix">Las ofrendas son anónimas. No se registra ningún nombre.</div></div>
-    <div class="fgrp" id="gConcepto" style="display:none"><label>Concepto del gasto</label><input type="text" id="fConcepto" placeholder="Ej. Compra de agua para el servicio" autocomplete="off"></div>
+        <div class="fgrp"><label>Fecha</label><input type="date" id="fFecha"></div>
+    <div class="fgrp" id="gSobre"><label>No. de sobre (se llena solo al elegir el miembro)</label><input type="text" id="fSobre" placeholder="101" inputmode="numeric"></div>
+    <div class="fgrp" id="gNombre"><label id="lNombre">Nombre del miembro</label><input type="text" id="fNombre" list="dlPersonas" placeholder="Nombre completo" autocomplete="off"><datalist id="dlPersonas"></datalist></div>
+<div class="fgrp" id="gConcepto" style="display:none"><label>Concepto del gasto</label><input type="text" id="fConcepto" placeholder="Ej. Compra de agua para el servicio" autocomplete="off"></div>
     <div class="fgrp" id="gCategoria" style="display:none"><label>Categoría</label><select id="fCategoria"></select></div>
     <div class="fgrp" id="gProveedor" style="display:none"><label>Pagado a (opcional)</label><input type="text" id="fProveedor" list="dlProveedores" placeholder="Tienda o proveedor" autocomplete="off"><datalist id="dlProveedores"></datalist></div>
-    <div class="fgrp" id="gNombre"><label id="lNombre">Nombre del miembro</label><input type="text" id="fNombre" list="dlPersonas" placeholder="Nombre completo" autocomplete="off"><datalist id="dlPersonas"></datalist></div>
     <div class="fgrp"><label>Monto</label><div class="amt"><span class="pfx">$</span><input type="number" id="fMonto" placeholder="0.00" min="0" step="0.01" inputmode="decimal"></div></div>
-    <div class="fgrp" id="gSobre"><label>No. de sobre (se llena solo al elegir el miembro)</label><input type="text" id="fSobre" placeholder="101" inputmode="numeric"></div>
     <div class="fgrp" id="gSub"><label id="lSub">Tipo</label><select id="fSub"></select></div>
     <div class="fgrp" id="gProyecto"><label>Proyecto (opcional)</label><input type="text" id="fProyecto" placeholder="Ej. Misión Norte"></div>
     <div class="fgrp" id="gServicio"><label>Servicio</label><select id="fServicio" disabled></select></div>
     <div class="fgrp"><label>Método de pago</label><div class="chips" id="chips"></div></div>
-    <div class="fgrp"><label>Fecha</label><input type="date" id="fFecha"></div>
     <div class="fgrp" id="gRef"><label id="lRef">Referencia / # cheque / ID</label><input type="text" id="fRef" placeholder="CHQ-1234"></div>
     <div class="fgrp" id="gFoto" style="display:none"><label>Foto del recibo (opcional)</label><input type="file" id="fFoto" accept="image/*" capture="environment" onchange="$('fotoOk').textContent = this.files[0] ? 'Foto lista ✓' : ''"><div id="fotoOk" style="font-size:12px;color:#5dd49a"></div></div>
     <button class="submit" id="btnEnviar" onclick="enviar()">✝ Enviar para aprobación</button>

@@ -111,9 +111,10 @@ const CUENTAS = [
   { cod: '1001', nombre: 'Efectivo' },
   { cod: '1002', nombre: 'Banco — Checking' },
   { cod: '1003', nombre: 'Banco — Savings' },
-  { cod: '1005', nombre: 'Cash App' },
+  { cod: '1005', nombre: 'CashApp' },
 ];
-const METODOS = ['Efectivo', 'Cheque', 'Zelle', 'Cash App', 'Electrónico', 'Tarjeta de banco', 'Tarjeta de CashApp', 'Otro'];
+const METODOS = ['Efectivo', 'Cheque', 'Zelle', 'CashApp'];
+const METODOS_GASTO = ['Tarjeta de banco', 'Tarjeta de CashApp', 'Electrónico', 'Efectivo', 'Cheque'];
 const OFRENDA_TIPOS = ['Ofrenda General', 'Misiones', 'Construcción', 'Especial', 'Bebés y Niños', 'Jóvenes'];
 const OFRENDA_TIPO_CUENTA = { 'Misiones': '4006', 'Construcción': '4007' };
 const PROPOSITOS = ['Fondo General', 'Fondo de Misiones', 'Construcción', 'Educación', 'Ayuda Social'];
@@ -138,7 +139,7 @@ function fondoPorDefecto(tipo) {
   return g ? g.id : (cacheFondos[0] ? cacheFondos[0].id : '');
 }
 const opcionesFondo = sel => cacheFondos.map(f => `<option value="${f.id}" ${f.id === sel ? 'selected' : ''}>${esc(f.nombre)}</option>`).join('');
-const opcionesMetodo = sel => METODOS.map(m => `<option ${m === (sel || 'Efectivo') ? 'selected' : ''}>${esc(m)}</option>`).join('');
+const opcionesMetodo = (sel, lista) => (lista || METODOS).map(m => `<option ${m === (sel || 'Efectivo') ? 'selected' : ''}>${esc(m)}</option>`).join('');
 
 function lcActivoPorMetodo(m) {
   const x = String(m || '').toLowerCase();
@@ -292,7 +293,7 @@ function pintarTabs() {
   } else if (tabActual === 'gastos') {
     const cats = cacheCuentas.filter(c => c.tipo === 'Gasto').sort((a, b) => a.codigo.localeCompare(b.codigo));
     const dc = defecto('Gasto').categoria;
-    h = `<div class="grid">${f}<div><label for="pDesc">Descripción</label><input type="text" id="pDesc"></div><div><label for="pCat">Categoría</label><select id="pCat">${cats.map(c => `<option ${c.nombre === dc ? 'selected' : ''}>${esc(c.nombre)}</option>`).join('')}</select></div><div><label for="pOrg">Pagado a (opcional)</label><select id="pOrg"><option value="">—</option>${cacheOrgs.map(o => `<option value="${o.id}">${esc(o.nombre)}</option>`).join('')}</select></div><div><label for="pMonto">Monto</label><input type="number" step="0.01" min="0" id="pMonto" inputmode="decimal"></div><div><label for="pMetodo">Método</label><select id="pMetodo">${opcionesMetodo('Efectivo')}</select></div><div><label for="pFondo">Sale del fondo</label><select id="pFondo">${opcionesFondo(fondoPorDefecto('Gasto'))}</select></div><div><label for="pRef">Factura / referencia</label><input type="text" id="pRef"></div></div>
+    h = `<div class="grid">${f}<div><label for="pDesc">Descripción</label><input type="text" id="pDesc"></div><div><label for="pCat">Categoría</label><select id="pCat">${cats.map(c => `<option ${c.nombre === dc ? 'selected' : ''}>${esc(c.nombre)}</option>`).join('')}</select></div><div><label for="pOrg">Pagado a (opcional)</label><select id="pOrg"><option value="">—</option>${cacheOrgs.map(o => `<option value="${o.id}">${esc(o.nombre)}</option>`).join('')}</select></div><div><label for="pMonto">Monto</label><input type="number" step="0.01" min="0" id="pMonto" inputmode="decimal"></div><div><label for="pMetodo">Método</label><select id="pMetodo">${opcionesMetodo('Efectivo', METODOS_GASTO)}</select></div><div><label for="pFondo">Sale del fondo</label><select id="pFondo">${opcionesFondo(fondoPorDefecto('Gasto'))}</select></div><div><label for="pRef">Factura / referencia</label><input type="text" id="pRef"></div></div>
       <button class="btn" onclick="guardarGasto()">Guardar gasto</button>`;
   } else {
     const op = CUENTAS.map(c => `<option value="${c.cod}">${c.nombre}</option>`).join('');
