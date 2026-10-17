@@ -74,7 +74,8 @@
         <h1>${esc(cfg.nombreApp)} bloqueada</h1>
         <div class="segSub" id="segLockUser"></div>
         <div class="segMsg" id="segLockMsg"></div>
-        <div id="segPanelBio" style="display:none"><button class="segBtn" id="segBtnBio" type="button">Entrar con huella o rostro</button></div>
+        <div id="segPanelInicio" style="display:none"><button class="segBtn" id="segBtnInicio" type="button"></button></div>
+        <div id="segPanelBio" style="display:none"></div>
         <div id="segPanelPin" style="display:none"><label for="segInPin">PIN de 4 números</label><input id="segInPin" class="segPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div>
         <form id="segPanelClave" style="display:none"><label for="segInClave">Contraseña</label><input id="segInClave" type="password" autocomplete="current-password"><button class="segBtn" type="submit" id="segBtnClave">Entrar</button></form>
         <div class="segLinks">
@@ -121,13 +122,13 @@
       </div>`;
     document.body.appendChild(perfil);
 
-    $('segBtnBio').onclick = bioDesbloquear;
+    $('segBtnInicio').onclick = () => iniciarMetodo(metodo);
     $('segInPin').oninput = e => { if (e.target.value.length === 4) verificarPin(); };
     $('segPanelClave').onsubmit = e => { e.preventDefault(); verificarClave(); };
     $('segOlvido').onclick = olvideClave;
-    $('segUsaPin').onclick = () => cambiarMetodoTemporal('pin');
-    $('segUsaBio').onclick = () => cambiarMetodoTemporal('bio');
-    $('segUsaClave').onclick = () => cambiarMetodoTemporal('clave');
+    $('segUsaPin').onclick = () => iniciarMetodo('pin');
+    $('segUsaBio').onclick = () => iniciarMetodo('bio');
+    $('segUsaClave').onclick = () => iniciarMetodo('clave');
     $('segSelMetodo').onchange = guardarMetodo;
     $('segGuardarPin').onclick = guardarPin;
     $('segQuitarPin').onclick = quitarPin;
@@ -202,7 +203,7 @@
     $('segInClave').value = '';
     msg('segLockMsg', '');
     $('segLock').style.display = 'flex';
-    mostrarMetodo(metodoPredeterminado(), true);
+    mostrarInicio(metodoPredeterminado());
   }
 
   function desbloquear() {
@@ -216,9 +217,24 @@
     if (cfg.alDesbloquear) cfg.alDesbloquear();
   }
 
-  function mostrarMetodo(m, automatico) {
+  // Pantalla 1: muestra un botón para el método predeterminado; nada se inicia solo.
+  function mostrarInicio(m) {
     metodo = m;
-    $('segPanelBio').style.display = m === 'bio' ? 'block' : 'none';
+    $('segPanelInicio').style.display = 'block';
+    $('segPanelBio').style.display = 'none';
+    $('segPanelPin').style.display = 'none';
+    $('segPanelClave').style.display = 'none';
+    $('segBtnInicio').textContent = m === 'bio' ? 'Entrar con huella o rostro' : (m === 'pin' ? 'Entrar con PIN' : 'Entrar con email y contraseña');
+    $('segOlvido').style.display = 'none';
+    $('segUsaPin').style.display = (m !== 'pin' && est.tiene_pin) ? '' : 'none';
+    $('segUsaBio').style.display = (m !== 'bio' && bioAqui()) ? '' : 'none';
+    $('segUsaClave').style.display = m !== 'clave' ? '' : 'none';
+    msg('segLockMsg', '');
+  }
+  // Se llama solo cuando el usuario toca un botón o enlace.
+  function iniciarMetodo(m) {
+    metodo = m;
+    $('segPanelInicio').style.display = 'none';
     $('segPanelPin').style.display = m === 'pin' ? 'block' : 'none';
     $('segPanelClave').style.display = m === 'clave' ? 'block' : 'none';
     $('segOlvido').style.display = (m === 'pin' || m === 'clave') ? '' : 'none';
@@ -228,9 +244,10 @@
     msg('segLockMsg', '');
     if (m === 'pin') setTimeout(() => $('segInPin').focus(), 80);
     if (m === 'clave') setTimeout(() => $('segInClave').focus(), 80);
-    if (m === 'bio' && automatico) bioDesbloquear(true);
+    if (m === 'bio') bioDesbloquear(false);
   }
-  function cambiarMetodoTemporal(m) { mostrarMetodo(m, false); }   // solo para este acceso
+  // Compatibilidad con llamadas internas (errores): muestra el panel de un método ya elegido.
+  function mostrarMetodo(m) { iniciarMetodo(m); }
 
   async function verificarPin() {
     const pin = $('segInPin').value.trim();
@@ -294,7 +311,7 @@
   }
   async function bioDesbloquear(silencioso) {
     const id = localStorage.getItem('ca_bio_' + uid());
-    if (!id) { mostrarMetodo(est.tiene_pin ? 'pin' : 'clave', false); return; }
+    if (!id) { mostrarInicio(est.tiene_pin ? 'pin' : 'clave'); return; }
     try {
       await navigator.credentials.get({ publicKey: {
         challenge: crypto.getRandomValues(new Uint8Array(32)),
@@ -303,7 +320,7 @@
       } });
       desbloquear();
     } catch (e) {
-      if (!silencioso) msg('segLockMsg', 'No se reconoció la huella o el rostro. Usa tu PIN o contraseña.');
+      if (!silencioso) { mostrarInicio('bio'); msg('segLockMsg', 'No se reconoció la huella o el rostro. Puedes intentar de nuevo o usar otro método.'); }
     }
   }
 
