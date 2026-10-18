@@ -620,6 +620,45 @@
   .menu3Lista button { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 10px 14px; cursor: pointer; font-size: 0.9rem; color: var(--text); }
   .menu3Lista button:hover { background: rgba(128,128,128,0.12); }
   .dotEstado { display: inline-block; flex: 0 0 16px; width: 16px; min-width: 16px; height: 16px; min-height: 16px; border-radius: 50%; background: #9aa3ad; }
+  .popGraf { position: fixed; inset: 0; z-index: 3500; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(0,0,0,0.55); }
+  .popGraf.abierto { display: flex; }
+  .popGrafCaja { position: relative; background: var(--surface); color: var(--text); width: 100%; max-width: 560px; max-height: 88vh; overflow: auto; border-radius: 16px; padding: 22px 20px 18px; box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
+  .interruptor { display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 0.92rem; }
+  .interruptor input { display: none; }
+  .interruptor .pista { flex: 0 0 44px; width: 44px; height: 24px; border-radius: 12px; background: #b9c2d0; position: relative; transition: background .2s; }
+  .interruptor .pista::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  .interruptor input:checked + .pista { background: #1fa971; }
+  .interruptor input:checked + .pista::after { transform: translateX(20px); }
+  .accCab { display: flex; align-items: center; gap: 14px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .avatarIni { flex: 0 0 52px; width: 52px; height: 52px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.15rem; }
+  .accCard { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; background: var(--surface); }
+  .accCard h4 { margin: 0 0 10px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+  .accCard label { display: block; font-size: 0.8rem; color: var(--text-muted); margin: 8px 0 4px; }
+  .accCard select, .accCard input[type=text] { width: 100%; }
+  .permGrupo { font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--heading); margin: 14px 0 6px; }
+  .permGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 14px; }
+  .permFila { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; border-radius: 8px; background: rgba(128,128,128,0.07); font-size: 0.86rem; cursor: pointer; }
+  .permFila input { display: none; }
+  .permFila .pista { flex: 0 0 38px; width: 38px; height: 22px; border-radius: 11px; background: #b9c2d0; position: relative; transition: background .2s; }
+  .permFila .pista::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  .permFila input:checked + .pista { background: #1fa971; }
+  .permFila input:checked + .pista::after { transform: translateX(16px); }
+  .modalAncho { max-width: 760px !important; }
+  .pfHead { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .pfHead .avatarIni { flex: 0 0 64px; width: 64px; height: 64px; font-size: 1.4rem; }
+  .pfNombre { font-size: 1.2rem; font-weight: 700; color: var(--heading); line-height: 1.2; }
+  .pfLegal { font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
+  .pfBadges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .pfCard { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; background: var(--surface); }
+  .pfCard h4 { margin: 0 0 8px; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+  .pfGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px 16px; }
+  .pfDato small { display: block; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 1px; }
+  .pfDato div { font-size: 0.92rem; word-break: break-word; }
+  .pfPill { display: inline-block; padding: 4px 11px; margin: 0 6px 6px 0; border-radius: 14px; background: rgba(15,36,69,0.08); color: var(--heading); font-size: 0.85rem; cursor: pointer; text-decoration: none; }
+  .pfPill.inactivo { opacity: 0.5; }
+  .pfFila { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: start; padding: 6px 0; border-bottom: 1px dashed var(--border); }
+  .pfFila:last-child { border-bottom: 0; }
+  .pfFila > span:first-child { font-size: 0.8rem; color: var(--text-muted); padding-top: 5px; }
   .xCerrar { position: absolute; top: 8px; right: 12px; background: none; border: 0; font-size: 1.7rem; line-height: 1; cursor: pointer; color: var(--text-muted); }
   .filaBolsa { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 8px; align-items: center; padding: 11px 6px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.92rem; }
   .filaBolsa.enc { font-weight: 700; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; cursor: default; }
@@ -711,8 +750,8 @@
         </div>
         <div id="finHomeAlertas"></div>
         <div style="display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap;">
-          <button class="btnSecundario" style="flex:1; min-width:150px; padding:12px;" onclick="abrirGrafica('A')">Gráfica A — Últimos 6 meses</button>
-          <button class="btnSecundario" style="flex:1; min-width:150px; padding:12px;" onclick="abrirGrafica('B')">Gráfica B — Comparativas</button>
+          <button class="btnSecundario" style="flex:1; min-width:150px; padding:12px;" onclick="abrirGrafica('A')">Últimos 6 meses</button>
+          <button class="btnSecundario" style="flex:1; min-width:150px; padding:12px;" onclick="abrirGrafica('B')">Comparativas</button>
         </div>
         <div id="finHomeTiles"></div>
       </div>
@@ -806,7 +845,7 @@
           <span id="paImportDot" class="dotEstado" title="Importación de correos"></span>
           <div class="menu3">
             <button type="button" class="btnTresPuntos" onclick="toggleMenu3(this)" aria-label="Más opciones">⋯</button>
-            <div class="menu3Lista"><button type="button" id="paMenuResueltos" onclick="paAlternarVerResueltos()">Ver también aprobados y rechazados</button></div>
+            <div class="menu3Lista"><button type="button" id="paMenuResueltos" onclick="paAlternarVerResueltos()">Ver también aprobados y rechazados</button><button type="button" onclick="rmEliminarRechazados()">Eliminar rechazados del celular</button></div>
           </div>
           <input type="checkbox" id="paVerResueltos" style="display:none;">
         </div>
@@ -1304,11 +1343,20 @@
           <div style="padding:14px 18px; font-size:0.88rem;">Cada una se abre por separado en el navegador y se puede instalar como app (botón 📲 dentro de la app, o "Agregar a pantalla de inicio"). Usan tu misma cuenta y la misma seguridad (PIN, huella o contraseña).</div>
           <div style="padding:0 18px 14px; display:flex; gap:8px; flex-wrap:wrap;">
             <a class="btnSecundario" href="./" target="_blank" style="text-decoration:none;">Programa completo</a>
+            <a class="btnSecundario" href="../portal/" target="_blank" style="text-decoration:none;">Portal de Asistentes</a>
             <a class="btnSecundario" href="../pastor/" target="_blank" style="text-decoration:none;">Resumen del Pastor</a>
             <a class="btnSecundario" href="../movil/" target="_blank" style="text-decoration:none;">MobileCash</a>
           </div>
           <div style="padding:0 18px 14px; font-size:0.78rem; color:var(--text-muted);">El acceso al Resumen del Pastor se da por usuario en Usuarios ("Puede entrar al Resumen del Pastor"); esa persona no entra al programa completo.</div>
         </div>
+        <div class="tablaWrap" style="margin-bottom:20px;">
+          <h3>Número de sobre</h3>
+          <div style="padding:14px 18px;">
+            <label class="interruptor"><input type="checkbox" id="cfgUsarSobres" onchange="cfgGuardarUsarSobres()"><span class="pista"></span><span>Pedir el número de sobre al registrar diezmos (programa y MobileCash)</span></label>
+            <div id="cfgSobresMsg" style="font-size:0.82rem; color:var(--text-muted); margin-top:8px;">Si lo desactivas, el campo desaparece, pero los números se siguen asignando y se muestran en los registros.</div>
+          </div>
+        </div>
+
         <div class="tablaWrap" style="margin-bottom:20px;" id="bloqueBloqueoCfg">
           <h3>Bloqueo automático por inactividad</h3>
           <div style="padding:14px 18px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -1370,6 +1418,19 @@
           <h3>Fondo y categoría predeterminados</h3>
           <div style="padding:8px 18px; font-size:0.8rem; color:var(--text-muted);">Lo que aparece ya elegido al registrar cada tipo de transacción. Siempre se puede cambiar en cada registro.</div>
           <div id="listaDefaultsTx" style="padding:8px 18px;"></div>
+        </div>
+
+        <div class="tablaWrap" style="margin-bottom:20px;">
+          <h3>Páginas del Portal de Asistentes</h3>
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px;">
+            <input type="text" id="ppNombre" placeholder="Nombre (ej. Inventario)">
+            <input type="text" id="ppUrl" placeholder="Dirección (ej. ../inventario/)">
+            <input type="text" id="ppApp" placeholder="Clave de acceso (ej. inventario)">
+            <input type="text" id="ppPermiso" placeholder="Permiso (opcional)">
+            <button class="btnAccion" onclick="agregarPaginaPortal()">+ Agregar página</button>
+          </div>
+          <div id="listaPaginasPortal" style="padding:8px 18px;"></div>
+          <div style="padding:0 18px 12px; font-size:0.78rem; color:var(--text-muted);">Después de agregar una página, autorízala a cada persona en Usuarios → Editar acceso. La página nueva debe pedir su propia clave de acceso para validar permisos.</div>
         </div>
 
         <div class="tablaWrap" style="margin-bottom:20px;">
@@ -1442,6 +1503,7 @@
         <input type="date" id="rpFechaAncla" onchange="actualizarResumenPastoral()">
       </div>
 
+      <div class="tarjetaResumen" style="margin-bottom:16px; text-align:center; padding:20px;"><div class="etiqueta">Balance total (dinero disponible)</div><div class="monto" id="rpBalanceTotal" style="font-size:2.2rem;">—</div></div>
       <div class="grid-resumen">
         <div class="tarjetaResumen ingreso">
           <div class="etiqueta">Diezmos</div>
@@ -1460,7 +1522,7 @@
           <div class="monto" id="rpTotalGastos">—</div>
         </div>
         <div class="tarjetaResumen">
-          <div class="etiqueta">Balance General</div>
+          <div class="etiqueta">Balance del periodo</div>
           <div class="monto" id="rpBalanceGeneral">—</div>
         </div>
       </div>
@@ -2110,20 +2172,12 @@
   </div>
 </div>
 
-<div class="modalOverlay" id="modalGraficas" onclick="if (event.target === this) cerrarGrafica()">
-  <div class="modalCaja" style="position:relative; max-width:640px;">
+<div id="popGraf" class="popGraf" onclick="if (event.target === this) cerrarGrafica()">
+  <div class="popGrafCaja" role="dialog" aria-modal="true">
     <button type="button" class="xCerrar" onclick="cerrarGrafica()" aria-label="Cerrar">×</button>
-    <h3 id="grafTitulo" style="padding-right:30px;"></h3>
+    <h3 id="grafTitulo" style="margin:0 28px 12px 0;"></h3>
     <div id="finHomeTendencia"></div>
     <div id="finHomeComparativas"></div>
-  </div>
-</div>
-
-<div class="modalOverlay" id="modalBolsaHist" onclick="if (event.target === this) document.getElementById('modalBolsaHist').classList.remove('abierto')">
-  <div class="modalCaja" style="position:relative; max-width:520px;">
-    <button type="button" class="xCerrar" onclick="document.getElementById('modalBolsaHist').classList.remove('abierto')" aria-label="Cerrar">×</button>
-    <h3 id="blHistTitulo" style="padding-right:30px;"></h3>
-    <div id="blHistLista"></div>
   </div>
 </div>
 
@@ -2229,36 +2283,44 @@
 
 <!-- ═══════════════ MODAL: Editar Rol de Usuario ═══════════════ -->
 <div class="modalOverlay" id="modalRolUsuario">
-  <div class="modalCaja">
-    <h3 id="modalRolUsuarioTitulo">Editar acceso</h3>
+  <div class="modalCaja modalAncho" style="position:relative;">
+    <button type="button" class="xCerrar" onclick="cerrarModalRolUsuario()" aria-label="Cerrar">×</button>
     <form id="formRolUsuario" onsubmit="return guardarRolUsuario(event)">
       <input type="hidden" id="ruUsuarioId">
-      <div class="formGrid">
-        <div class="full" id="ruNombreUsuario" style="font-weight:600; color: var(--heading);"></div>
-        <div class="full" id="ruCargoInfo" style="font-size:0.85rem; color:var(--text-muted);"></div>
-        <div class="full">
-          <label for="ruPersona">Miembro vinculado</label>
-          <select id="ruPersona"></select>
-        </div>
-        <div>
-          <label for="ruRol">Nivel de acceso en Church Admin</label>
-          <select id="ruRol" onchange="ruPintarPermisos(true)"></select>
-        </div>
-        <div>
-          <label style="display:flex; gap:8px; align-items:center; margin-top:26px; font-weight:400;"><input type="checkbox" id="ruActivo"> Cuenta activa en Church Admin</label>
-        </div>
-        <div class="full"><label style="display:flex; gap:8px; align-items:center; font-weight:400;"><input type="checkbox" id="ruPastorApp"> Puede entrar al Resumen del Pastor (app aparte)</label></div>
-        <div class="full"><button type="button" class="btnSecundario" onclick="ruPintarPermisos(true)">Restablecer permisos predeterminados</button></div>
-        <div class="full"><label>Permisos (marca lo que esta persona puede hacer)</label><div id="ruPermisos" style="display:grid; gap:6px; margin-top:6px;"></div></div>
-        <div class="full" id="ruBloqueClave">
-          <label>Contraseña</label>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button type="button" class="btnSecundario" onclick="ruResetClave('reset_email')">Enviar enlace por correo</button>
-            <button type="button" class="btnSecundario" onclick="ruResetClave('reset_temporal')">Crear contraseña temporal</button>
-          </div>
-          <div id="ruResultado" style="font-size:0.85rem; margin-top:8px;"></div>
-        </div>
+      <div class="accCab">
+        <div class="avatarIni" id="ruAvatar">?</div>
+        <div><div id="ruNombreUsuario" style="font-weight:700; font-size:1.05rem; color:var(--heading);"></div><div id="ruCargoInfo" style="font-size:0.82rem; color:var(--text-muted);"></div></div>
       </div>
+
+      <div class="accCard">
+        <h4>Cuenta</h4>
+        <label for="ruPersona">Miembro vinculado</label>
+        <select id="ruPersona"></select>
+        <label for="ruRol">Nivel de acceso en el programa</label>
+        <select id="ruRol" onchange="ruPintarPermisos(true)"></select>
+        <label class="interruptor" style="margin-top:12px;"><input type="checkbox" id="ruActivo"><span class="pista"></span><span>Cuenta activa en el programa</span></label>
+      </div>
+
+      <div class="accCard">
+        <h4>Portal de asistentes — páginas autorizadas</h4>
+        <div id="ruPortalLista" class="permGrid"></div>
+      </div>
+
+      <div class="accCard">
+        <h4>Permisos dentro del programa</h4>
+        <button type="button" class="btnSecundario" onclick="ruPintarPermisos(true)">Restablecer permisos del nivel</button>
+        <div id="ruPermisos"></div>
+      </div>
+
+      <div class="accCard" id="ruBloqueClave">
+        <h4>Contraseña</h4>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btnSecundario" onclick="ruResetClave('reset_email')">Enviar enlace por correo</button>
+          <button type="button" class="btnSecundario" onclick="ruResetClave('reset_temporal')">Crear contraseña temporal</button>
+        </div>
+        <div id="ruResultado" style="font-size:0.85rem; margin-top:8px;"></div>
+      </div>
+
       <div class="formAcciones">
         <button type="button" class="btnSecundario" onclick="cerrarModalRolUsuario()">Cancelar</button>
         <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
@@ -2576,8 +2638,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-065';
-document.getElementById('versionTopbar').textContent = 'Ver-065';
+const APP_VERSION = 'church-admin Ver-066';
+document.getElementById('versionTopbar').textContent = 'Ver-066';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -2742,14 +2804,36 @@ async function cargarDefaultsTx() {
 function defaultTx(tipo) { return cacheDefaultsTx.find(d => d.tipo === tipo) || {}; }
 
 function abrirGrafica(cual) {
-  document.getElementById('grafTitulo').textContent = cual === 'A' ? 'Gráfica A — Últimos 6 meses' : 'Gráfica B — Comparativas';
+  document.getElementById('grafTitulo').textContent = cual === 'A' ? 'Últimos 6 meses' : 'Comparativas';
   document.getElementById('finHomeTendencia').style.display = cual === 'A' ? '' : 'none';
   document.getElementById('finHomeComparativas').style.display = cual === 'B' ? '' : 'none';
-  document.getElementById('modalGraficas').classList.add('abierto');
+  document.getElementById('popGraf').classList.add('abierto');
 }
-function cerrarGrafica() { document.getElementById('modalGraficas').classList.remove('abierto'); }
+function cerrarGrafica() { document.getElementById('popGraf').classList.remove('abierto'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('popGraf').classList.contains('abierto')) cerrarGrafica(); });
+
+let usarSobres = false;
+async function cargarUsarSobres() {
+  const { data } = await sbCall(sb.from('config_iglesia').select('usar_sobres').eq('id', 1).maybeSingle());
+  usarSobres = !!(data && data.usar_sobres);
+  aplicarUsarSobres();
+}
+function aplicarUsarSobres() {
+  const campo = document.getElementById('dzSobre');
+  if (campo && campo.parentElement) campo.parentElement.style.display = usarSobres ? '' : 'none';
+  const chk = document.getElementById('cfgUsarSobres');
+  if (chk) chk.checked = usarSobres;
+}
+async function cfgGuardarUsarSobres() {
+  const v = document.getElementById('cfgUsarSobres').checked;
+  const r = await sbCall(sb.from('config_iglesia').update({ usar_sobres: v }).eq('id', 1));
+  if (r.error) { alert('Error: ' + r.error.message); document.getElementById('cfgUsarSobres').checked = !v; return; }
+  usarSobres = v; aplicarUsarSobres();
+  document.getElementById('cfgSobresMsg').textContent = v ? 'Activado: se pide el número de sobre al registrar diezmos.' : 'Desactivado: no se pide el número de sobre. Los números se siguen asignando y se muestran en los registros.';
+}
 
 function mostrarFinanzas() {
+  cargarUsarSobres();
   cargarDefaultsTx();
   if (cacheMetodosPago.length === 0) cargarMetodosPago();
   document.getElementById('vistaDashboard').style.display = 'none';
@@ -4008,6 +4092,22 @@ function rmAbrir(id) {
   document.getElementById('modalRegMovil').classList.add('abierto');
 }
 
+async function rmEliminar(id) {
+  const x = cacheRegMovil.find(r => r.id === id);
+  if (!x || !await confirmar('¿Eliminar este registro del historial del celular?\n' + (x.nombre || x.tipo) + ' · ' + formatoMoneda(x.monto) + '\n\nNo borra transacciones ya aprobadas; solo quita este registro de la lista.')) return;
+  const { error } = await sbCall(sb.from('registros_movil').delete().eq('id', id));
+  if (error) { alert('No se pudo eliminar: ' + error.message); return; }
+  cargarPorAprobar();
+}
+async function rmEliminarRechazados() {
+  const n = cacheRegMovil.filter(r => r.estado === 'Rechazado').length;
+  if (!n) { alert('No hay registros rechazados a la vista. Activa "Ver también aprobados y rechazados" primero.'); return; }
+  if (!await confirmar('¿Eliminar los ' + n + ' registros rechazados del celular? No afecta transacciones aprobadas.')) return;
+  const { error } = await sbCall(sb.from('registros_movil').delete().eq('estado', 'Rechazado'));
+  if (error) { alert('No se pudo eliminar: ' + error.message); return; }
+  cargarPorAprobar();
+}
+
 function rmCerrar() { document.getElementById('modalRegMovil').classList.remove('abierto'); }
 
 async function rmVerRecibo() {
@@ -4118,6 +4218,7 @@ async function cfgSincronizar() {
 }
 
 async function cfgCargar() {
+  cargarUsarSobres();
   cfgCargarBloqueo();
   sobCargarEstado();
   paCargarImportacion();
@@ -4274,13 +4375,14 @@ function ruPintarPermisos(desdeRol) {
   const u = cacheUsuarioApps.find(a => a.usuario_id === document.getElementById('ruUsuarioId').value);
   const guardados = (!desdeRol && u && u.permisos && Object.keys(u.permisos).length) ? u.permisos : null;
   const base = PERM_POR_ROL[rol] || {};
-  let grupo = '';
-  document.getElementById('ruPermisos').innerHTML = rol ? PERM_KEYS.map(p => {
-    const cab = p.grupo !== grupo ? `<div style="font-weight:700; font-size:0.78rem; text-transform:uppercase; margin-top:8px; color:var(--heading);">${p.grupo}</div>` : '';
-    grupo = p.grupo;
-    return cab + `<label style="display:flex; gap:8px; align-items:flex-start; font-size:0.85rem; font-weight:400;"><input type="checkbox" id="ruPerm_${p.key}" ${(guardados ? guardados[p.key] : base[p.key]) ? 'checked' : ''}> <span>${p.label}</span></label>`;
-  }).join('') : '';
+  if (!rol) { document.getElementById('ruPermisos').innerHTML = '<div style="font-size:0.85rem; color:var(--text-muted); margin-top:8px;">Sin acceso al programa completo.</div>'; return; }
+  const grupos = [...new Set(PERM_KEYS.map(p => p.grupo))];
+  document.getElementById('ruPermisos').innerHTML = grupos.map(g => `
+    <div class="permGrupo">${g}</div>
+    <div class="permGrid">${PERM_KEYS.filter(p => p.grupo === g).map(p => `
+      <label class="permFila"><span>${p.label}</span><input type="checkbox" id="ruPerm_${p.key}" ${(guardados ? guardados[p.key] : base[p.key]) ? 'checked' : ''}><span class="pista"></span></label>`).join('')}</div>`).join('');
 }
+
 // Oculta tarjetas según permisos
 const FIN_PERM_TAB = { diario: 'verReportes', mayor: 'verReportes', balance: 'verReportes', comprobacion: 'verReportes', reportes: 'verReportes', reportesHub: 'verReportes', conciliacion: 'verReportes', declaraciones: 'verReportes', cierre: 'cerrarPeriodo', ajustes: 'agregarTrans', auditoria: 'verAuditoria', configIr: 'gestionarConfig' };
 
@@ -6034,9 +6136,10 @@ function paRender() {
     if (src === 'm') {
       const pend = x.estado === 'Pendiente';
       const partes = ['📱', formatoFecha(x.fecha), escV28(x.tipo), x.subtipo ? escV28(x.subtipo) : '', escV28(x.metodo), pend ? '' : escV28(x.estado)].filter(Boolean);
+      const borrar = (!pend && puede('eliminarTrans')) ? `<button class="btnSecundario btnPeligro" style="padding:2px 10px; font-size:0.75rem; margin-top:4px;" onclick="event.stopPropagation(); rmEliminar('${x.id}')">Eliminar</button>` : '';
       return `<div class="tarjetaSeguimiento"${pend ? ` onclick="rmAbrir('${x.id}')"` : ' style="opacity:0.6;"'}>
         <div><div class="nombrePersona">${escV28(x.nombre || 'Anónima')}</div><div class="metaLinea">${partes.join(' · ')}</div></div>
-        <span class="badge badge-tipo">${formatoMoneda(x.monto)}</span></div>`;
+        <div style="display:flex; flex-direction:column; align-items:flex-end;"><span class="badge badge-tipo">${formatoMoneda(x.monto)}</span>${borrar}</div></div>`;
     }
     const f = PA_FUENTES[x.fuente] || { etiqueta: x.fuente };
     const pendiente = x.estado === 'Por aprobar';
@@ -8483,14 +8586,14 @@ function abrirPerfil(id, nuevo) {
   const cont = document.getElementById('perfilContenido');
   if (!p) { cont.innerHTML = '<div class="estadoVacio">Este perfil no está disponible.</div>'; document.getElementById('modalPerfil').classList.add('abierto'); return; }
 
-  const enlace = x => { const o = personaPorId(x); return o ? `<a class="lnkPerfil ${o.estado_miembro === 'Inactivo' ? 'inactivo' : ''}" onclick="abrirPerfil('${o.id}')">${escV28(nombreMostrar(o))}</a>` : '—'; };
+  const pill = x => { const o = personaPorId(x); return o ? `<a class="pfPill ${o.estado_miembro === 'Inactivo' ? 'inactivo' : ''}" onclick="abrirPerfil('${o.id}')">${escV28(nombreMostrar(o))}</a>` : ''; };
   const inact = p.estado_miembro === 'Inactivo';
 
   const fams = familiasDe(id).map(hid => {
     const h = cacheHouseholds.find(x => x.id === hid) || (p.households && p.household_id === hid ? p.households : null);
-    const miembros = cacheDirectorio.filter(q => familiasDe(q.id).includes(hid));
-    return `<div style="margin-bottom:10px;"><b>${escV28(h?.nombre || 'Familia')}</b><div>${miembros.map(q => `<div class="${q.estado_miembro === 'Inactivo' ? 'inactivo' : ''}">${q.id === id ? escV28(nombreMostrar(q)) : enlace(q.id)}</div>`).join('')}</div></div>`;
-  }).join('') || '<div style="color:var(--text-muted);">Sin familia asignada</div>';
+    const miembros = cacheDirectorio.filter(q => q.id !== id && familiasDe(q.id).includes(hid));
+    return `<div class="pfFila"><span>${escV28(h?.nombre || 'Familia')}</span><span>${miembros.map(q => pill(q.id)).join('') || '<span style="color:var(--text-muted);font-size:0.85rem;">Sin otros miembros</span>'}</span></div>`;
+  }).join('') || '<div style="color:var(--text-muted); font-size:0.88rem;">Sin familia asignada</div>';
 
   const rels = relacionesDe(id);
   const grupos = [
@@ -8499,20 +8602,23 @@ function abrirPerfil(id, nuevo) {
     ['Hermanos', x => x === 'Hermano(a)' || x === 'Hermano' || x === 'Hermana'],
     ['Hijos', x => ['Hijo', 'Hija', 'Hijo(a)', 'Hijastro', 'Hijastra', 'Hijastro(a)'].includes(x)],
   ];
-  let usados = new Set();
+  const usados = new Set();
   let relHtml = grupos.map(([titulo, fn]) => {
     const f = rels.filter(r => fn(r.etiqueta));
     f.forEach(r => usados.add(r.rowId));
-    return f.length ? `<div style="margin-bottom:8px;"><b>${titulo}</b>${f.map(r => `<div class="${personaPorId(r.otroId)?.estado_miembro === 'Inactivo' ? 'inactivo' : ''}">${enlace(r.otroId)} <span style="color:var(--text-muted);">(${escV28(r.etiqueta)})</span></div>`).join('')}</div>` : '';
+    return f.length ? `<div class="pfFila"><span>${titulo}</span><span>${f.map(r => pill(r.otroId)).join('')}</span></div>` : '';
   }).join('');
   const otros = rels.filter(r => !usados.has(r.rowId));
-  if (otros.length) relHtml += `<div><b>Otros familiares</b>${otros.map(r => `<div>${enlace(r.otroId)} <span style="color:var(--text-muted);">(${escV28(r.etiqueta)})</span></div>`).join('')}</div>`;
-  if (!relHtml) relHtml = '<div style="color:var(--text-muted);">Sin parentescos registrados</div>';
+  if (otros.length) relHtml += `<div class="pfFila"><span>Otros</span><span>${otros.map(r => pill(r.otroId) + `<small style="color:var(--text-muted);margin-right:8px;">(${escV28(r.etiqueta)})</small>`).join('')}</span></div>`;
+  if (!relHtml) relHtml = '<div style="color:var(--text-muted); font-size:0.88rem;">Sin parentescos registrados</div>';
 
   const dir = [p.street, p.apartment, p.city, p.state, p.zip].filter(Boolean).join(', ');
-  const dato = (t, v) => v ? `<div class="perfilDato"><span>${t}:</span> ${escV28(v)}</div>` : '';
+  const dato = (t, v) => v ? `<div class="pfDato"><small>${t}</small><div>${escV28(v)}</div></div>` : '';
   const emerg = [p.emergency_contact_name, p.emergency_contact_phone, p.emergency_contact_relationship].filter(Boolean).join(' · ');
   const motivo = inact ? [p.estado_motivo, p.estado_detalle].filter(Boolean).join(' — ') : '';
+  const iniciales = ((nombreMostrar(p).match(/[A-Za-zÁÉÍÓÚÑáéíóúñ]+/g) || ['?']).slice(0, 2).map(w => w[0]).join('')).toUpperCase();
+  const legal = p.nombre_completo && p.nombre_completo !== nombreMostrar(p) ? p.nombre_completo : '';
+  const infoCard = [dato('Teléfono', p.telefono), dato('Correo', p.correo), dato('Nacimiento', p.fecha_nacimiento ? formatoFecha(p.fecha_nacimiento) : ''), dato('Dirección', dir), dato('Contacto de emergencia', emerg)].join('');
 
   cont.innerHTML = `
     <div class="perfilBarra">
@@ -8523,15 +8629,22 @@ function abrirPerfil(id, nuevo) {
         <button class="btnSecundario" onclick="document.getElementById('modalPerfil').classList.remove('abierto')">Cerrar</button>
       </span>
     </div>
-    <h3 style="margin-bottom:6px;">${escV28(nombreMostrar(p))}</h3>
-    <span class="badge badge-estado-${inact ? 'Inactivo' : 'Activo'}">${inact ? 'Inactivo' : 'Activo'}</span>
-    ${motivo ? `<div class="perfilDato"><span>Motivo:</span> ${escV28(motivo)}</div>` : ''}
-    ${inact && puede('administrarFamilias') ? `<div style="margin-top:8px;"><button class="btnAccion" onclick="reactivarMiembro('${id}')">Reactivar miembro</button></div>` : ''}
-    <div class="perfilSeccion">Familias</div>${fams}
-    <div class="perfilSeccion">Parentescos</div>${relHtml}
-    <div class="perfilSeccion">Información</div>
-    ${dato('Sobre actual', p.sobre_actual ? String(p.sobre_actual) : '')}<div id="perfilSobres" class="perfilDato"></div>
-    ${dato('Nombre completo', p.nombre_completo)}${dato('Apodo', p.apodo)}${dato('Nacimiento', p.fecha_nacimiento)}${dato('Teléfono', p.telefono)}${dato('Correo', p.correo)}${dato('Dirección', dir)}${dato('Contacto de emergencia', emerg)}${dato('Notas', p.notas)}`;
+    <div class="pfHead">
+      <div class="avatarIni">${escV28(iniciales)}</div>
+      <div>
+        <div class="pfNombre">${escV28(nombreMostrar(p))}</div>
+        ${legal ? `<div class="pfLegal">Nombre legal: ${escV28(legal)}</div>` : ''}
+        <div class="pfBadges"><span class="badge badge-estado-${inact ? 'Inactivo' : 'Activo'}">${inact ? 'Inactivo' : 'Activo'}</span>${p.sobre_actual ? `<span class="badge badge-tipo">Sobre ${p.sobre_actual}</span>` : ''}</div>
+      </div>
+    </div>
+    ${motivo ? `<div class="pfCard"><div class="pfDato"><small>Motivo de inactividad</small><div>${escV28(motivo)}</div></div></div>` : ''}
+    ${inact && puede('administrarFamilias') ? `<div style="margin-bottom:12px;"><button class="btnAccion" onclick="reactivarMiembro('${id}')">Reactivar miembro</button></div>` : ''}
+    ${infoCard ? `<div class="pfCard"><h4>Información</h4><div class="pfGrid">${infoCard}</div></div>` : ''}
+    <div class="pfCard"><h4>Familias</h4>${fams}</div>
+    <div class="pfCard"><h4>Parentescos</h4>${relHtml}</div>
+    ${p.notas ? `<div class="pfCard"><h4>Notas</h4><div style="font-size:0.9rem; white-space:pre-wrap;">${escV28(p.notas)}</div></div>` : ''}
+    <div id="perfilSobres" class="perfilDato"></div>`;
+
   document.getElementById('modalPerfil').classList.add('abierto');
   cargarSobresPerfil(id);
 }
@@ -8549,7 +8662,7 @@ function imprimirPerfil() {
   if (!w) { alert('El navegador bloqueó la ventana de impresión.'); return; }
   const cont = document.getElementById('perfilContenido').cloneNode(true);
   cont.querySelectorAll('button').forEach(b => b.remove());
-  w.document.write('<html><head><meta charset="utf-8"><title>Perfil</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}.perfilSeccion{font-weight:700;margin:16px 0 6px;text-transform:uppercase;font-size:12px}.perfilDato{font-size:14px;margin:3px 0}a{color:#111;text-decoration:none}.inactivo{color:#777}</style></head><body>' + cont.innerHTML + '</body></html>');
+  w.document.write('<html><head><meta charset="utf-8"><title>Perfil</title><style>.avatarIni{display:none}.pfNombre{font-size:20px;font-weight:700}.pfLegal{font-size:12px;color:#555}.pfCard{border:1px solid #bbb;border-radius:8px;padding:10px;margin:10px 0}.pfCard h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;color:#555}.pfGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}.pfDato small{display:block;font-size:10px;color:#666}.pfPill{display:inline-block;margin-right:8px}.pfFila{display:flex;gap:10px;padding:3px 0}.pfFila>span:first-child{width:90px;color:#555}body{font-family:Arial,sans-serif;padding:24px;color:#111}.perfilSeccion{font-weight:700;margin:16px 0 6px;text-transform:uppercase;font-size:12px}.perfilDato{font-size:14px;margin:3px 0}a{color:#111;text-decoration:none}.inactivo{color:#777}</style></head><body>' + cont.innerHTML + '</body></html>');
   w.document.close();
   w.focus();
   w.print();
@@ -9680,17 +9793,19 @@ function cambiarSubtabAdmin(tab) {
 
 // ── Usuarios y Roles ──────────────────────────────────────────────────────
 let cacheCargos = [];
-let cachePastorApps = [];
+let cacheAppsTodas = [];
+let cachePortalPaginas = [];
 
 async function cargarUsuariosAdmin() {
   const lista = document.getElementById('listaUsuariosAdmin');
   lista.innerHTML = '<div class="estadoCargando">Cargando usuarios…</div>';
 
-  const [{ data: usuarios, error: errU }, { data: apps, error: errA }, { data: cargos }, { data: appsPastor }] = await Promise.all([
+  const [{ data: usuarios, error: errU }, { data: apps, error: errA }, { data: cargos }, { data: appsTodas }, { data: paginasPortal }] = await Promise.all([
     sbCall(sb.from('usuarios').select('*').order('nombre', { ascending: true })),
     sbCall(sb.from('usuario_apps').select('*').eq('app', 'church_admin')),
     sbCall(sb.from('miembros_iglesia').select('persona_id, rol')),
-    sbCall(sb.from('usuario_apps').select('usuario_id, activo').eq('app', 'pastor_overview')),
+    sbCall(sb.from('usuario_apps').select('usuario_id, app, rol, permisos, activo')),
+    sbCall(sb.from('portal_paginas').select('*').order('orden')),
   ]);
 
   if (errU || errA) {
@@ -9701,7 +9816,8 @@ async function cargarUsuariosAdmin() {
   cacheUsuariosAdmin = usuarios || [];
   cacheUsuarioApps = apps || [];
   cacheCargos = cargos || [];
-  cachePastorApps = appsPastor || [];
+  cacheAppsTodas = appsTodas || [];
+  cachePortalPaginas = paginasPortal || [];
   renderResumenRoles();
   renderUsuariosAdmin();
 }
@@ -9762,7 +9878,8 @@ async function abrirModalRolUsuario(usuarioId) {
   if (!u) return;
   const fila = cacheUsuarioApps.find(a => a.usuario_id === usuarioId);
   document.getElementById('ruUsuarioId').value = usuarioId;
-  document.getElementById('ruNombreUsuario').textContent = `${u.nombre || u.correo} (${u.correo})`;
+  document.getElementById('ruNombreUsuario').textContent = u.nombre || u.correo;
+  document.getElementById('ruCargoInfo').textContent = u.correo;
   document.getElementById('ruResultado').textContent = '';
   const selRol = document.getElementById('ruRol');
   selRol.innerHTML = ruOpcionesNivel(true);
@@ -9770,15 +9887,54 @@ async function abrirModalRolUsuario(usuarioId) {
   if (rolActual && !Array.from(selRol.options).some(o => o.value === rolActual)) selRol.insertAdjacentHTML('beforeend', `<option value="${escV28(rolActual)}">${escV28(nivelDeRol(rolActual))}</option>`);
   selRol.value = rolActual;
   document.getElementById('ruActivo').checked = fila ? fila.activo !== false : true;
-  document.getElementById('ruPastorApp').checked = cachePastorApps.some(x => x.usuario_id === usuarioId && x.activo !== false);
+  const ini = ((u.nombre || u.correo || '?').match(/[A-Za-zÁÉÍÓÚÑáéíóúñ]/g) || ['?']);
+  document.getElementById('ruAvatar').textContent = (ini[0] + (String(u.nombre || '').trim().split(/\s+/)[1] ? String(u.nombre).trim().split(/\s+/)[1][0] : '')).toUpperCase();
+  ruPintarPortal(usuarioId);
   if (!cacheDirectorio.length) await cargarDirectorio();
   const sel = document.getElementById('ruPersona');
   sel.innerHTML = '<option value="">Sin vincular</option>' + cacheDirectorio.filter(p => p.id === u.persona_id || !cacheUsuariosAdmin.some(x => x.persona_id === p.id)).map(p => `<option value="${p.id}">${escV28(nombreMostrar(p))}</option>`).join('');
   sel.value = u.persona_id || '';
   const cargo = u.persona_id ? cargoDePersona(u.persona_id) : '';
-  document.getElementById('ruCargoInfo').textContent = cargo ? 'Cargo en la iglesia: ' + cargo + ' (el cargo es independiente de los permisos de la app)' : 'El cargo en la iglesia es independiente de los permisos de la app.';
+  document.getElementById('ruCargoInfo').textContent = u.correo + (cargo ? ' · Cargo: ' + cargo : '');
   ruPintarPermisos(false);
   document.getElementById('modalRolUsuario').classList.add('abierto');
+}
+
+function portalPermitida(p, filas) {
+  const f = filas.find(x => x.app === p.app && x.activo !== false);
+  if (!f) return false;
+  if (!p.permiso) return true;
+  const per = f.permisos || {};
+  return f.rol === 'Administrador' || !!per.todo || !!per[p.permiso];
+}
+function ruPintarPortal(usuarioId) {
+  const filas = cacheAppsTodas.filter(x => x.usuario_id === usuarioId);
+  document.getElementById('ruPortalLista').innerHTML = cachePortalPaginas.map(p => `
+    <label class="permFila"><span>${escV28(p.icono)} ${escV28(p.nombre)}${p.activa ? '' : ' (oculta)'}</span><input type="checkbox" id="ruPortal_${escV28(p.clave)}" ${portalPermitida(p, filas) ? 'checked' : ''}><span class="pista"></span></label>`).join('') || '<div style="font-size:0.85rem; color:var(--text-muted);">No hay páginas en el portal.</div>';
+}
+async function ruGuardarPortal(usuarioId) {
+  const { data: filas } = await sbCall(sb.from('usuario_apps').select('*').eq('usuario_id', usuarioId));
+  let rows = filas || [];
+  let algunaMarcada = false;
+  for (const p of cachePortalPaginas) {
+    const chk = document.getElementById('ruPortal_' + p.clave);
+    if (!chk) continue;
+    const quiere = chk.checked, tiene = portalPermitida(p, rows);
+    if (quiere) algunaMarcada = true;
+    const fila = rows.find(x => x.app === p.app);
+    if (quiere && !tiene) {
+      if (!fila) await sbCall(sb.from('usuario_apps').insert({ usuario_id: usuarioId, app: p.app, rol: p.rol_defecto || 'Asistente', permisos: p.permiso ? { [p.permiso]: true } : {}, activo: true }));
+      else await sbCall(sb.from('usuario_apps').update({ activo: true, permisos: p.permiso ? { ...(fila.permisos || {}), [p.permiso]: true } : (fila.permisos || {}) }).eq('usuario_id', usuarioId).eq('app', p.app));
+    } else if (!quiere && tiene) {
+      if (p.permiso && fila) await sbCall(sb.from('usuario_apps').update({ permisos: { ...(fila.permisos || {}), [p.permiso]: false } }).eq('usuario_id', usuarioId).eq('app', p.app));
+      else if (fila) await sbCall(sb.from('usuario_apps').delete().eq('usuario_id', usuarioId).eq('app', p.app));
+    }
+    const r2 = await sbCall(sb.from('usuario_apps').select('*').eq('usuario_id', usuarioId));
+    rows = r2.data || rows;
+  }
+  const portal = rows.find(x => x.app === 'portal');
+  if (algunaMarcada && !portal) await sbCall(sb.from('usuario_apps').insert({ usuario_id: usuarioId, app: 'portal', rol: 'Asistente', permisos: {}, activo: true }));
+  else if (!algunaMarcada && portal) await sbCall(sb.from('usuario_apps').delete().eq('usuario_id', usuarioId).eq('app', 'portal'));
 }
 
 function cerrarModalRolUsuario() {
@@ -9816,15 +9972,7 @@ async function guardarRolUsuario(evt) {
   }
   if (error) { alert('Error al guardar: ' + error.message); return false; }
 
-  const quierePastor = document.getElementById('ruPastorApp').checked;
-  const tienePastor = cachePastorApps.some(x => x.usuario_id === usuarioId);
-  if (quierePastor && !tienePastor) {
-    const r = await sbCall(sb.from('usuario_apps').insert({ usuario_id: usuarioId, app: 'pastor_overview', rol: 'Pastor', permisos: {}, activo: true }));
-    if (r.error) alert('Se guardó el acceso, pero no el del Resumen del Pastor: ' + r.error.message);
-  } else if (!quierePastor && tienePastor) {
-    const r = await sbCall(sb.from('usuario_apps').delete().eq('usuario_id', usuarioId).eq('app', 'pastor_overview'));
-    if (r.error) alert('No se pudo quitar el acceso al Resumen del Pastor: ' + r.error.message);
-  }
+  await ruGuardarPortal(usuarioId);
   const actual = cacheUsuariosAdmin.find(x => x.id === usuarioId);
   if ((actual?.persona_id || null) !== personaId) {
     const r = await sbCall(sb.from('usuarios').update({ persona_id: personaId }).eq('id', usuarioId));
@@ -9903,6 +10051,7 @@ async function cargarCatalogos() {
   renderCatalogoTiposServicio();
   await cargarMetodosPago();
   renderMetodosPago();
+  await cargarPaginasPortal();
   if (cacheCuentas.length === 0) await cargarListaCuentasSilencioso();
   if (cacheFondos.length === 0) { const rf = await sbCall(sb.from('fondos').select('*').order('nombre')); if (rf.data) cacheFondos = rf.data; }
   await cargarDefaultsTx();
@@ -9966,6 +10115,50 @@ async function agregarMetodoPago(uso) {
   input.value = '';
   await cargarMetodosPago(); renderMetodosPago();
 }
+async function cargarPaginasPortal() {
+  const { data } = await sbCall(sb.from('portal_paginas').select('*').order('orden'));
+  cachePortalPaginas = data || [];
+  document.getElementById('listaPaginasPortal').innerHTML = cachePortalPaginas.map(p => `
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px solid var(--border);">
+      <span class="${p.activa ? '' : 'inactivo'}">${escV28(p.icono)} <b>${escV28(p.nombre)}</b> <small style="color:var(--text-muted)">${escV28(p.url)} · acceso: ${escV28(p.app)}${p.permiso ? '/' + escV28(p.permiso) : ''}</small></span>
+      <span style="display:flex; gap:6px;">
+        <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="alternarPaginaPortal('${escV28(p.clave)}', ${!p.activa})">${p.activa ? 'Activa' : 'Oculta'}</button>
+        <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="editarPaginaPortal('${escV28(p.clave)}')">Editar</button>
+        <button class="btnSecundario btnPeligro" style="padding:4px 12px; font-size:0.78rem;" onclick="eliminarPaginaPortal('${escV28(p.clave)}')">Eliminar</button>
+      </span>
+    </div>`).join('') || '<div class="estadoVacio">Sin páginas.</div>';
+}
+async function agregarPaginaPortal() {
+  const nombre = document.getElementById('ppNombre').value.trim(), url = document.getElementById('ppUrl').value.trim(), app = document.getElementById('ppApp').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_'), permiso = document.getElementById('ppPermiso').value.trim() || null;
+  if (!nombre || !url || !app) { alert('Escribe el nombre, la dirección y la clave de acceso.'); return; }
+  const clave = nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  const { error } = await sbCall(sb.from('portal_paginas').insert({ clave, nombre, url, app, permiso, orden: cachePortalPaginas.length + 1 }));
+  if (error) { alert(/duplicate|unique/i.test(error.message) ? 'Ya existe una página con ese nombre.' : 'Error: ' + error.message); return; }
+  ['ppNombre', 'ppUrl', 'ppApp', 'ppPermiso'].forEach(i => { document.getElementById(i).value = ''; });
+  cargarPaginasPortal();
+}
+async function alternarPaginaPortal(clave, activa) {
+  const { error } = await sbCall(sb.from('portal_paginas').update({ activa }).eq('clave', clave));
+  if (error) { alert('Error: ' + error.message); return; }
+  cargarPaginasPortal();
+}
+async function editarPaginaPortal(clave) {
+  const p = cachePortalPaginas.find(x => x.clave === clave); if (!p) return;
+  const nombre = ((await pedir('Nombre de la página:', p.nombre)) || '').trim(); if (!nombre) return;
+  const url = ((await pedir('Dirección de la página:', p.url)) || '').trim(); if (!url) return;
+  const descripcion = await pedir('Descripción corta (opcional):', p.descripcion || '');
+  const { error } = await sbCall(sb.from('portal_paginas').update({ nombre, url, descripcion: descripcion || null }).eq('clave', clave));
+  if (error) { alert('Error: ' + error.message); return; }
+  cargarPaginasPortal();
+}
+async function eliminarPaginaPortal(clave) {
+  const p = cachePortalPaginas.find(x => x.clave === clave);
+  if (!p || !await confirmar('¿Eliminar la página "' + p.nombre + '" del portal? Los permisos de las personas no se borran.')) return;
+  const { error } = await sbCall(sb.from('portal_paginas').delete().eq('clave', clave));
+  if (error) { alert('Error: ' + error.message); return; }
+  cargarPaginasPortal();
+}
+
 async function renombrarMetodoPago(id) {
   const m = cacheMetodosPago.find(x => x.id === id);
   if (!m) return;
@@ -10390,96 +10583,22 @@ async function actualizarResumenPastoral() {
   const tipo = document.getElementById('rpTipoPeriodo').value;
   const fechaAncla = document.getElementById('rpFechaAncla').value;
   if (!fechaAncla) return;
-
-  const { inicio, fin } = calcularRangoPeriodo(tipo, fechaAncla);
-
-  const etiquetasTipo = { dia: 'Día', semana: 'Semana', mes: 'Mes', anio: 'Año' };
-  document.getElementById('rpSubtitulo').textContent =
-    `${etiquetasTipo[tipo]}: ${formatoFecha(inicio)} — ${formatoFecha(fin)}`;
-
-  if (cacheDirectorio.length === 0) {
-    await sbCall(sb.from('personas').select('*').eq('archivado', false)).then(({ data }) => {
-      if (data) cacheDirectorio = data;
-    });
-  }
-  if (cacheTiposServicio.length === 0) {
-    await sbCall(sb.from('tipos_servicio').select('*')).then(({ data }) => {
-      if (data) cacheTiposServicio = data;
-    });
-  }
-
-  const [
-    { data: diezmos, error: e1 },
-    { data: ofrendas, error: e2 },
-    { data: donaciones, error: e3 },
-    { data: gastos, error: e4 },
-    { data: registrosAsistencia, error: e5 },
-  ] = await Promise.all([
-    sbCall(sb.from('diezmos').select('*').gte('fecha', inicio).lte('fecha', fin)),
-    sbCall(sb.from('ofrendas').select('*').gte('fecha', inicio).lte('fecha', fin)),
-    sbCall(sb.from('donaciones').select('*').gte('fecha', inicio).lte('fecha', fin)),
-    sbCall(sb.from('gastos').select('*').gte('fecha', inicio).lte('fecha', fin)),
-    sbCall(sb.from('asistencia_registros').select('*').gte('fecha', inicio).lte('fecha', fin)),
-  ]);
-
-  const error = e1 || e2 || e3 || e4 || e5;
-  if (error) {
-    alert('Error al cargar el resumen: ' + error.message);
-    return;
-  }
-
-  const sumar = (filas) => (filas || []).reduce((acc, f) => acc + (Number(f.monto) || 0), 0);
-  const totalDiezmos = sumar(diezmos);
-  const totalOfrendas = sumar(ofrendas);
-  const totalDonaciones = sumar(donaciones);
-  const totalGastos = sumar(gastos);
-  const balance = totalDiezmos + totalOfrendas + totalDonaciones - totalGastos;
-
-  document.getElementById('rpTotalDiezmos').textContent = formatoMoneda(totalDiezmos);
-  document.getElementById('rpTotalOfrendas').textContent = formatoMoneda(totalOfrendas);
-  document.getElementById('rpTotalDonaciones').textContent = formatoMoneda(totalDonaciones);
-  document.getElementById('rpTotalGastos').textContent = formatoMoneda(totalGastos);
-  document.getElementById('rpBalanceGeneral').textContent = formatoMoneda(balance);
-
-  // Quiénes dieron: diezmos + donaciones agrupado por persona
-  const porPersona = {};
-  [...(diezmos || []), ...(donaciones || [])].forEach(f => {
-    if (!f.persona_id) return;
-    porPersona[f.persona_id] = (porPersona[f.persona_id] || 0) + (Number(f.monto) || 0);
-  });
-
-  const listaDieron = Object.keys(porPersona)
-    .map(pid => ({ nombre: nombrePersonaPorId(pid), total: porPersona[pid] }))
-    .sort((a, b) => b.total - a.total);
-
-  const contQuienes = document.getElementById('rpQuienesDieron');
-  contQuienes.innerHTML = listaDieron.length === 0
-    ? '<div class="estadoVacio">Sin registros en este periodo.</div>'
-    : `<table class="tablaTrans"><thead><tr><th>Persona</th><th>Total</th></tr></thead><tbody>
-        ${listaDieron.map(x => `<tr><td>${x.nombre}</td><td class="montoIngreso">${formatoMoneda(x.total)}</td></tr>`).join('')}
-      </tbody></table>`;
-
-  // Asistencia
-  const filasAsistencia = registrosAsistencia || [];
-  const totalAsistentes = filasAsistencia.reduce((acc, r) => acc + (Number(r.total_asistentes) || 0), 0);
-  const totalVisitas = filasAsistencia.reduce((acc, r) => acc + (Array.isArray(r.visitantes) ? r.visitantes.length : 0), 0);
-
-  document.getElementById('rpTotalAsistentes').textContent = totalAsistentes;
-  document.getElementById('rpTotalVisitas').textContent = totalVisitas;
-
-  const porServicio = {};
-  filasAsistencia.forEach(r => {
-    const nombreServicio = nombreTipoServicioPorId(r.tipo_servicio_id);
-    porServicio[nombreServicio] = (porServicio[nombreServicio] || 0) + (Number(r.total_asistentes) || 0);
-  });
-
-  const contServicio = document.getElementById('rpAsistenciaPorServicio');
-  const nombresServicio = Object.keys(porServicio);
-  contServicio.innerHTML = nombresServicio.length === 0
-    ? '<div class="estadoVacio">Sin registros de asistencia en este periodo.</div>'
-    : `<table class="tablaTrans"><thead><tr><th>Tipo de servicio</th><th>Asistentes</th></tr></thead><tbody>
-        ${nombresServicio.map(n => `<tr><td>${n}</td><td>${porServicio[n]}</td></tr>`).join('')}
-      </tbody></table>`;
+  const tabla = (enc, filas) => `<table class="tablaTrans"><thead><tr>${enc.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${filas.join('')}</tbody></table>`;
+  const rb = await sbCall(sb.rpc('pastor_balance3'));
+  if (rb.data && rb.data.balance_total != null) document.getElementById('rpBalanceTotal').textContent = formatoMoneda(rb.data.balance_total);
+  const { data, error } = await sbCall(sb.rpc('pastor_resumen3', { p_tipo: tipo, p_fecha: fechaAncla }));
+  if (error || !data) { document.getElementById('rpSubtitulo').textContent = 'No se pudo cargar el resumen.'; return; }
+  if (data.error) { document.getElementById('rpSubtitulo').textContent = data.error === 'sin_permiso' ? 'No tienes autorización para ver este resumen.' : 'Error.'; return; }
+  document.getElementById('rpSubtitulo').textContent = `${{ dia: 'Día', semana: 'Semana', mes: 'Mes', anio: 'Año' }[tipo]}: ${formatoFecha(data.inicio)} — ${formatoFecha(data.fin)}`;
+  document.getElementById('rpTotalDiezmos').textContent = formatoMoneda(data.diezmos);
+  document.getElementById('rpTotalOfrendas').textContent = formatoMoneda(data.ofrendas);
+  document.getElementById('rpTotalDonaciones').textContent = formatoMoneda(data.donaciones);
+  document.getElementById('rpTotalGastos').textContent = formatoMoneda(data.gastos);
+  document.getElementById('rpBalanceGeneral').textContent = formatoMoneda(data.diezmos + data.ofrendas + data.donaciones - data.gastos);
+  document.getElementById('rpQuienesDieron').innerHTML = data.quienes.length ? tabla(['Persona', 'Total'], data.quienes.map(x => `<tr><td>${escV28(x.nombre)}</td><td class="montoIngreso">${formatoMoneda(x.total)}</td></tr>`)) : '<div class="estadoVacio">Sin registros en este periodo.</div>';
+  document.getElementById('rpTotalAsistentes').textContent = data.asistentes;
+  document.getElementById('rpTotalVisitas').textContent = data.visitas;
+  document.getElementById('rpAsistenciaPorServicio').innerHTML = data.por_servicio.length ? tabla(['Tipo de servicio', 'Asistentes'], data.por_servicio.map(x => `<tr><td>${escV28(x.nombre)}</td><td>${x.total}</td></tr>`)) : '<div class="estadoVacio">Sin registros de asistencia en este periodo.</div>';
 }
 
 // ══════════════════════ VER-029: BOTÓN "ATRÁS" DEL CELULAR ══════════════════════

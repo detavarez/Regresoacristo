@@ -82,7 +82,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <div id="loginBox" style="display:none">
   <div class="logo-i" style="margin:0 auto;width:56px;height:56px;font-size:28px">✝</div>
   <h2>MobileCash</h2>
-  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M010</div>
+  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M011</div>
   <div class="form-card">
     <div class="fgrp"><label>Correo</label><input type="email" id="lgEmail" autocomplete="username" inputmode="email"></div>
     <div class="fgrp"><label>Contraseña</label><input type="password" id="lgPass" autocomplete="current-password"></div>
@@ -93,7 +93,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 
 <div id="app" style="display:none">
 <div class="topbar">
-  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M010 · <span id="quien"></span></div></div></div>
+  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M011 · <span id="quien"></span></div></div></div>
   <div style="display:flex;gap:8px;align-items:center"><span id="dot" style="width:8px;height:8px;border-radius:50%;background:#3DAA6E;display:inline-block"></span><button class="sbtn" id="btnInstalar" style="display:none" onclick="instalarApp()">📲</button><button class="sbtn" onclick="cargar(true)">↻</button><button class="sbtn" onclick="SEG.bloquear()" aria-label="Bloquear">🔒</button><button class="sbtn" onclick="SEG.abrirPerfil(false)" aria-label="Mi perfil">👤</button></div>
 </div>
 <div id="toast" class="toast"></div>
@@ -126,7 +126,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     <div class="info-card" id="frmAnon" style="display:none"><div class="ix">Las ofrendas son anónimas. No se registra ningún nombre.</div></div>
         <div class="fgrp"><label>Fecha</label><input type="date" id="fFecha"></div>
     <div class="fgrp" id="gSobre"><label>No. de sobre (se llena solo al elegir el miembro)</label><input type="text" id="fSobre" placeholder="101" inputmode="numeric"></div>
-    <div class="fgrp" id="gNombre"><label id="lNombre">Nombre del miembro</label><input type="text" id="fNombre" list="dlPersonas" placeholder="Nombre completo" autocomplete="off"><datalist id="dlPersonas"></datalist></div>
+    <div class="fgrp" id="gNombre"><label id="lNombre">Nombre del miembro</label><div style="position:relative;"><input type="text" id="fNombre" list="dlPersonas" placeholder="Escribe el nombre" autocomplete="off" onfocus="this.select()" onclick="this.select()" style="padding-right:38px;"><button type="button" id="btnBorrarNombre" aria-label="Borrar nombre" onclick="borrarNombre()" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); border:0; background:none; font-size:1.3rem; color:#8a96a8; cursor:pointer; display:none;">×</button></div><datalist id="dlPersonas"></datalist></div>
 <div class="fgrp" id="gConcepto" style="display:none"><label>Concepto del gasto</label><input type="text" id="fConcepto" placeholder="Ej. Compra de agua para el servicio" autocomplete="off"></div>
     <div class="fgrp" id="gCategoria" style="display:none"><label>Categoría</label><select id="fCategoria"></select></div>
     <div class="fgrp" id="gProveedor" style="display:none"><label>Pagado a (opcional)</label><input type="text" id="fProveedor" list="dlProveedores" placeholder="Tienda o proveedor" autocomplete="off"><datalist id="dlProveedores"></datalist></div>
@@ -158,6 +158,7 @@ let METODOS_ING = ['Efectivo','Cheque'];
 let METODOS_GASTO = ['Tarjeta de banco','Tarjeta de CashApp','Electrónico','Efectivo','Cheque'];
 const CATEGORIAS_BASE = ['Servicios','Mantenimiento','Suministros','Alimentos','Transporte','Otros'];
 let METODOS = METODOS_ING;
+let usarSobresM = false;
 const OFRENDAS = ['Ofrenda General','Misiones','Construcción','Especial','Bebés y Niños','Jóvenes'];
 const DONACIONES = ['Fondo General','Fondo de Misiones','Construcción','Educación','Ayuda Social'];
 const SERVICIOS_BASE = ['Domingo AM','Domingo PM','Miércoles','Especial'];
@@ -191,7 +192,9 @@ function servicioAuto() {
   if (n) $('fServicio').value = n;
 }
 $('fFecha').addEventListener('change', () => { if (tipo !== 'Gasto') servicioAuto(); });
+function borrarNombre() { $('fNombre').value = ''; $('btnBorrarNombre').style.display = 'none'; if (tipo === 'Diezmo') $('fSobre').value = ''; $('fNombre').focus(); }
 $('fNombre').addEventListener('input', () => {
+  $('btnBorrarNombre').style.display = $('fNombre').value ? '' : 'none';
   if (tipo !== 'Diezmo') return;
   const k = norm($('fNombre').value);
   const m = personas.filter(p => norm(p.nombre) === k);
@@ -246,7 +249,7 @@ function setTipo(t) {
   $('frmAnon').style.display = t === 'Ofrenda' ? '' : 'none';
   $('gNombre').style.display = (t === 'Ofrenda' || g) ? 'none' : '';
   $('lNombre').textContent = t === 'Diezmo' ? 'Nombre del miembro' : 'Nombre del donante';
-  $('gSobre').style.display = t === 'Diezmo' ? '' : 'none';
+  $('gSobre').style.display = (t === 'Diezmo' && usarSobresM) ? '' : 'none';
   $('gServicio').style.display = (t === 'Donación' || g) ? 'none' : '';
   $('gProyecto').style.display = t === 'Donación' ? '' : 'none';
   $('gRef').style.display = t === 'Ofrenda' ? 'none' : '';
@@ -315,7 +318,7 @@ async function enviar() {
   }
   const fila = {
     tipo, nombre: tipo === 'Ofrenda' ? null : nombre, persona_id: personaId, monto, metodo, fecha,
-    no_sobre: tipo === 'Diezmo' ? ($('fSobre').value.trim() || null) : null,
+    no_sobre: tipo === 'Diezmo' ? ($('fSobre').value.trim() || (personas.find(q => norm(q.nombre) === norm(nombre)) || {}).sobre || null) : null,
     servicio: tipo === 'Donación' ? null : $('fServicio').value,
     referencia: tipo === 'Ofrenda' ? null : ($('fRef').value.trim() || null),
     subtipo: tipo === 'Diezmo' ? null : $('fSub').value,
@@ -326,6 +329,7 @@ async function enviar() {
   b.disabled = false;
   if (error) { toast('No se pudo enviar: ' + error.message); return; }
   ['fNombre', 'fMonto', 'fSobre', 'fRef', 'fProyecto'].forEach(i => $(i).value = '');
+  $('btnBorrarNombre').style.display = 'none';
   $('fFecha').value = fechaServicio(hoy()); servicioAuto();
   $('ov').classList.add('show');
   cargar();
@@ -381,6 +385,9 @@ async function cargar(avisar) {
 async function cargarListas() {
   const { data } = await sbCall(sb.from('personas').select('id, nombre, apellido, nombre_completo, sobre_actual').eq('archivado', false).range(0, 4999));
   personas = (data || []).map(p => ({ id: p.id, nombre: p.nombre_completo || `${p.nombre || ''} ${p.apellido || ''}`.trim(), sobre: p.sobre_actual ? String(p.sobre_actual) : '' })).filter(p => p.nombre);
+  const rcfg = await sbCall(sb.from('config_iglesia').select('usar_sobres').eq('id', 1).maybeSingle());
+  usarSobresM = !!(rcfg.data && rcfg.data.usar_sobres);
+  setTipo(tipo);
   const rm = await sbCall(sb.from('metodos_pago').select('nombre, uso').eq('activo', true).order('orden'));
   if (!rm.error && rm.data) {
     const g = rm.data.filter(x => x.uso === 'Gasto').map(x => x.nombre), i = rm.data.filter(x => x.uso === 'Ingreso').map(x => x.nombre);

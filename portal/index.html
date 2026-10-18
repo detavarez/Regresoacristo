@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f2445">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Portal de Asistentes</title>
+<style>
+  :root { --navy:#0f2445; --bg:#f4f6f9; --surface:#fff; --text:#1a2433; --muted:#6b7686; --border:#dbe1ea; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); }
+  .top { background:var(--navy); color:#fff; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .top b { font-size:1.1rem; }
+  .top button { background:rgba(255,255,255,.15); color:#fff; border:0; border-radius:8px; padding:8px 12px; font-size:1rem; cursor:pointer; }
+  main { max-width:720px; margin:0 auto; padding:18px 16px 40px; }
+  h2 { margin:6px 0 4px; } .sub { color:var(--muted); font-size:.92rem; margin-bottom:18px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+  a.tarjeta { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px 16px; text-decoration:none; color:inherit; display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; box-shadow:0 2px 8px rgba(15,36,69,.06); }
+  a.tarjeta:active { transform:scale(.98); }
+  .ico { font-size:2.4rem; } .nom { font-weight:700; font-size:1.1rem; color:var(--navy); } .desc { font-size:.85rem; color:var(--muted); }
+  #login { max-width:360px; margin:40px auto; padding:0 16px; }
+  label { display:block; font-size:.85rem; color:var(--muted); margin:10px 0 4px; }
+  input { width:100%; padding:12px; border:1px solid var(--border); border-radius:8px; font-size:1rem; }
+  .btn { width:100%; margin-top:14px; padding:13px; border:0; border-radius:8px; background:var(--navy); color:#fff; font-size:1rem; cursor:pointer; }
+  .msg { margin-top:12px; color:#b3261e; font-size:.9rem; }
+  .oculto { display:none; }
+</style>
+<script>const APP_SLUG = 'portal';</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="../shared/dialogos.js"></script>
+<script src="../shared/supabase-client.js"></script>
+<script src="../shared/auth.js"></script>
+<script src="../shared/seguridad.js"></script>
+<script src="../shared/instalar.js"></script>
+</head>
+<body>
+<div class="top"><b>Portal de Asistentes</b><span><button id="btnBloq" class="oculto" onclick="SEG.bloquear()" aria-label="Bloquear">🔒</button> <button id="btnPerfil" class="oculto" onclick="SEG.abrirPerfil(false)" aria-label="Mi perfil">👤</button></span></div>
+
+<div id="login" class="oculto">
+  <h2>Entrar</h2>
+  <p class="sub">Usa tu correo y contraseña.</p>
+  <form onsubmit="return entrar(event)">
+    <label for="lgEmail">Correo</label><input type="email" id="lgEmail" autocomplete="username" required>
+    <label for="lgPass">Contraseña</label><input type="password" id="lgPass" autocomplete="current-password" required>
+    <button class="btn" type="submit" id="lgBtn">Entrar</button>
+    <div class="msg" id="lgMsg"></div>
+  </form>
+</div>
+
+<main id="contenido" class="oculto">
+  <h2 id="saludo">Bienvenido</h2>
+  <div class="sub">Estas son las páginas que tienes autorizadas.</div>
+  <div class="grid" id="paginas"></div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function permitida(p, filas) {
+  const f = filas.find(x => x.app === p.app && x.activo !== false);
+  if (!f) return false;
+  if (!p.permiso) return true;
+  const per = f.permisos || {};
+  return f.rol === 'Administrador' || !!per.todo || !!per[p.permiso];
+}
+
+async function mostrarPaginas() {
+  const u = getSesion().usuario;
+  $('saludo').textContent = 'Hola, ' + (u.nombre || u.correo || '');
+  const [cat, mias] = await Promise.all([
+    sbCall(sb.from('portal_paginas').select('*').eq('activa', true).order('orden')),
+    sbCall(sb.from('usuario_apps').select('app, rol, permisos, activo').eq('usuario_id', u.id)),
+  ]);
+  const filas = mias.data || [];
+  const lista = (cat.data || []).filter(p => permitida(p, filas));
+  $('paginas').innerHTML = lista.length ? lista.map(p => {
+    const url = p.url + (p.url.includes('?') ? '&' : '?') + 'portal=1';
+    return `<a class="tarjeta" href="${esc(url)}"><span class="ico">${esc(p.icono)}</span><span class="nom">${esc(p.nombre)}</span><span class="desc">${esc(p.descripcion || '')}</span></a>`;
+  }).join('') : '<div class="sub">Todavía no tienes páginas autorizadas. Pídele al administrador que te dé acceso.</div>';
+  $('contenido').classList.remove('oculto');
+  $('login').classList.add('oculto');
+  $('btnBloq').classList.remove('oculto'); $('btnPerfil').classList.remove('oculto');
+}
+async function entrar(evt) {
+  evt.preventDefault(); $('lgBtn').disabled = true; $('lgMsg').textContent = '';
+  const r = await iniciarSesion($('lgEmail').value.trim(), $('lgPass').value);
+  $('lgBtn').disabled = false;
+  if (!r.ok) { $('lgMsg').textContent = r.mensaje === 'Correo o contraseña incorrectos.' ? r.mensaje : 'Tu cuenta todavía no tiene acceso al portal. Pídeselo al administrador.'; return false; }
+  await SEG.sesionIniciada({ nueva: true });
+  await mostrarPaginas();
+  return false;
+}
+async function salirSesion() { SEG.detener(); await cerrarSesion(); location.reload(); }
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+// En el portal, "atrás" sale de la aplicación (sin pantalla de bloqueo intermedia).
+SEG.init({ cerrarSesion: salirSesion, nombreApp: 'Portal de Asistentes', sinHistorial: true });
+(async function () {
+  const { data } = await sb.auth.getSession();
+  if (data && data.session) {
+    const r = await cargarSesion();
+    if (r.ok) { await SEG.sesionIniciada({ nueva: false }); await mostrarPaginas(); return; }
+  }
+  $('login').classList.remove('oculto');
+})();
+</script>
+</body>
+</html>

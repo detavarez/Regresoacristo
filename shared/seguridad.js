@@ -403,6 +403,8 @@
 
   // ───────── Historial: "página 1" = pantalla de bloqueo ─────────
   function prepararHistorial() {
+    // Páginas abiertas desde el Portal (?portal=1) y el propio Portal: "atrás" vuelve al portal / sale, sin pantalla de bloqueo intermedia.
+    if (cfg.sinHistorial || new URLSearchParams(location.search).get('portal') === '1') return;
     try {
       if (history.state && history.state.ca === 'lock') return;
       history.replaceState({ ca: 'lock' }, '');
