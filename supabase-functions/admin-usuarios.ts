@@ -5,7 +5,7 @@ const cors = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
-const ROLES = ['Administrador', 'Administrador delegado', 'Tesorero', 'Secretaría', 'Colaborador', 'Pastor'];
+const ROLES = ['Administrador', 'Administrador delegado', 'Tesorero', 'Secretaría', 'Colaborador', 'Pastor', 'Asistente'];
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
@@ -51,8 +51,10 @@ Deno.serve(async (req) => {
       const uid = creado.user.id;
       const { error: eU } = await admin.from('usuarios').insert({ id: uid, correo, nombre: nombre || correo, activo: true, must_change_creds: true, persona_id: body.persona_id ?? null });
       if (eU) { await admin.auth.admin.deleteUser(uid); return json({ error: eU.message }, 400); }
-      const { error: eA } = await admin.from('usuario_apps').insert({ usuario_id: uid, app: 'church_admin', rol, permisos: body.permisos ?? {}, activo: true });
-      if (eA) { await admin.auth.admin.deleteUser(uid); return json({ error: eA.message }, 400); }
+      if (rol !== 'Asistente') {
+        const { error: eA } = await admin.from('usuario_apps').insert({ usuario_id: uid, app: 'church_admin', rol, permisos: body.permisos ?? {}, activo: true });
+        if (eA) { await admin.auth.admin.deleteUser(uid); return json({ error: eA.message }, 400); }
+      }
       return json({ ok: true, usuario_id: uid, password_temporal: password });
     }
 
@@ -70,7 +72,7 @@ Deno.serve(async (req) => {
       const { data: u } = await admin.from('usuarios').select('correo').eq('id', body.usuario_id).maybeSingle();
       if (!u?.correo) return json({ error: 'Usuario no encontrado.' }, 404);
       const pub = createClient(url, anon);
-      const { error } = await pub.auth.resetPasswordForEmail(u.correo, { redirectTo: 'https://detavarez.github.io/Regresoacristo/church-admin/' });
+      const { error } = await pub.auth.resetPasswordForEmail(u.correo, { redirectTo: 'https://detavarez.github.io/Regresoacristo/portal/' });
       if (error) return json({ error: error.message }, 400);
       return json({ ok: true, correo: u.correo });
     }

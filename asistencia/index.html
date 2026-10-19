@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f2445">
+<meta name="robots" content="noindex">
+<title>Asistencia</title>
+<style>
+  :root { --navy:#0f2445; --bg:#f4f6f9; --surface:#fff; --text:#1a2433; --muted:#6b7686; --border:#dbe1ea; --ok:#1f8f5f; --okbg:#e5f6ed; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin:0; font-family:-apple-system,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); padding-bottom:90px; }
+  .top { background:var(--navy); color:#fff; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:8px; position:sticky; top:0; z-index:20; }
+  .top b { font-size:1.1rem; } .top a, .top button { background:rgba(255,255,255,.15); color:#fff; border:0; border-radius:8px; padding:8px 12px; font-size:1rem; cursor:pointer; text-decoration:none; }
+  main { max-width:760px; margin:0 auto; padding:14px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:12px; }
+  label { display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px; }
+  input[type=date], input[type=text], input[type=search], input[type=email], input[type=password] { width:100%; padding:12px; font-size:1rem; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--text); }
+  .fila2 { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:end; }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .chip { padding:11px 16px; border-radius:22px; border:1px solid var(--border); background:#fff; font-size:.98rem; cursor:pointer; color:var(--text); }
+  .chip.sel { background:var(--navy); border-color:var(--navy); color:#fff; font-weight:600; }
+  .barra { position:sticky; top:56px; z-index:15; background:var(--bg); padding:8px 0 10px; }
+  .cont { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .cont div { background:#fff; border:1px solid var(--border); border-radius:12px; padding:8px; text-align:center; }
+  .cont b { display:block; font-size:1.5rem; color:var(--navy); } .cont span { font-size:.74rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  .miembro { display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; min-height:60px; padding:10px 14px; margin-bottom:8px; border:1px solid var(--border); border-radius:14px; background:#fff; font-size:1.05rem; text-align:left; cursor:pointer; color:var(--text); }
+  .miembro.si { background:var(--okbg); border-color:var(--ok); }
+  .tilde { flex:0 0 34px; width:34px; height:34px; border-radius:50%; border:2px solid #b9c2d0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.2rem; font-weight:700; }
+  .miembro.si .tilde { background:var(--ok); border-color:var(--ok); }
+  .miembro small { color:var(--muted); display:block; font-size:.78rem; }
+  .btn { padding:12px 18px; border-radius:10px; border:0; background:var(--navy); color:#fff; font-size:1rem; cursor:pointer; }
+  .btn2 { background:#fff; color:var(--navy); border:1px solid var(--navy); }
+  .pie { position:fixed; left:0; right:0; bottom:0; z-index:25; background:#fff; border-top:1px solid var(--border); padding:10px 14px calc(10px + env(safe-area-inset-bottom)); display:flex; gap:10px; align-items:center; justify-content:center; }
+  .pie .btn { flex:1; max-width:420px; font-size:1.08rem; padding:14px; }
+  .estado { font-size:.85rem; color:var(--muted); text-align:center; }
+  .vis { display:inline-flex; align-items:center; gap:6px; background:#fff3d6; border:1px solid #f0d98a; border-radius:18px; padding:6px 12px; margin:0 8px 8px 0; font-size:.95rem; }
+  .vis button { border:0; background:none; font-size:1.2rem; line-height:1; cursor:pointer; color:#8a6d00; }
+  #login { max-width:360px; margin:40px auto; padding:0 16px; }
+  .msg { color:#b3261e; font-size:.9rem; margin-top:10px; } .oculto { display:none; }
+</style>
+<script>const APP_SLUG = 'asistencia';</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="../shared/dialogos.js"></script>
+<script src="../shared/supabase-client.js"></script>
+<script src="../shared/auth.js"></script>
+<script src="../shared/seguridad.js"></script>
+</head>
+<body>
+<div class="top"><b>Asistencia</b><span><a href="../portal/" id="lnkPortal" class="oculto">Portal</a> <button id="btnBloq" class="oculto" onclick="SEG.bloquear()" aria-label="Bloquear">🔒</button> <button id="btnPerfil" class="oculto" onclick="SEG.abrirPerfil(false)" aria-label="Mi perfil">👤</button></span></div>
+
+<div id="login" class="oculto">
+  <h2>Asistencia</h2>
+  <p style="color:var(--muted)">Entra con tu correo y contraseña.</p>
+  <form onsubmit="return entrar(event)">
+    <label for="lgEmail">Correo</label><input type="email" id="lgEmail" autocomplete="username" required>
+    <label for="lgPass" style="margin-top:10px">Contraseña</label><input type="password" id="lgPass" autocomplete="current-password" required>
+    <button class="btn" type="submit" id="lgBtn" style="width:100%; margin-top:14px">Entrar</button>
+    <div class="msg" id="lgMsg"></div>
+  </form>
+</div>
+
+<main id="contenido" class="oculto">
+  <div class="card">
+    <div class="fila2">
+      <div><label for="fFecha">Fecha del servicio</label><input type="date" id="fFecha" onchange="cambioFechaTipo()"></div>
+      <button class="btn btn2" onclick="irHoy()">Hoy</button>
+    </div>
+    <div class="chips" id="tipos"></div>
+  </div>
+
+  <div class="barra">
+    <div class="cont"><div><b id="cPres">0</b><span>Presentes</span></div><div><b id="cVis">0</b><span>Visitas</span></div><div><b id="cTot">0</b><span>Total</span></div></div>
+  </div>
+
+  <div class="card">
+    <label for="buscar">Buscar miembro</label>
+    <input type="search" id="buscar" placeholder="Nombre, apodo o apellido" oninput="pintar()" autocomplete="off">
+    <div class="chips">
+      <button class="chip sel" id="fTodos" onclick="filtro('todos')">Todos</button>
+      <button class="chip" id="fPres" onclick="filtro('presentes')">Presentes</button>
+      <button class="chip" id="fAus" onclick="filtro('ausentes')">Ausentes</button>
+    </div>
+  </div>
+
+  <div id="lista"></div>
+
+  <div class="card" id="cardVisitas">
+    <b>Visitas</b>
+    <div style="margin:10px 0" id="listaVis"></div>
+    <div class="fila2"><div><label for="nuevaVis">Nombre de la visita</label><input type="text" id="nuevaVis" placeholder="Ej. María Pérez" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();agregarVisita();}"></div><button class="btn" onclick="agregarVisita()">+ Agregar</button></div>
+    <div style="margin-top:12px"><label for="notas">Notas (opcional)</label><input type="text" id="notas" oninput="marcarSucio()"></div>
+  </div>
+</main>
+
+<div class="pie oculto" id="pie"><span class="estado" id="estado"></span><button class="btn" id="btnGuardar" onclick="guardar()">Guardar asistencia</button></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+let miembros = [], tipos = [], presentes = new Set(), visitas = [], tipoSel = null, filtroSel = 'todos', sucio = false;
+
+// Como se conoce al miembro: Apodo Apellido (o Nombre Apellido si no tiene apodo)
+const nombreVisible = p => ((p.apodo && p.apodo.trim()) ? p.apodo.trim() : (p.nombre || '').trim()) + ' ' + (p.apellido || '').trim();
+const textoBusqueda = p => norm([p.apodo, p.apellido, p.nombre, p.nombre_completo, p.sobre].filter(Boolean).join(' '));
+function hoy() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+function marcarSucio() { sucio = true; $('estado').textContent = 'Cambios sin guardar'; }
+window.addEventListener('beforeunload', e => { if (sucio) { e.preventDefault(); e.returnValue = ''; } });
+
+function contadores() {
+  $('cPres').textContent = presentes.size; $('cVis').textContent = visitas.length; $('cTot').textContent = presentes.size + visitas.length;
+}
+function pintarTipos() {
+  $('tipos').innerHTML = tipos.map(t => `<button class="chip ${t.id === tipoSel ? 'sel' : ''}" onclick="elegirTipo('${t.id}')">${esc(t.nombre)}</button>`).join('') || '<span class="estado">No hay tipos de servicio. Pídele al administrador que los cree.</span>';
+}
+function pintar() {
+  const q = norm($('buscar').value.trim());
+  const filas = miembros.filter(p => (!q || textoBusqueda(p).includes(q)) && (filtroSel === 'todos' || (filtroSel === 'presentes') === presentes.has(p.id)));
+  $('lista').innerHTML = filas.map(p => `<button type="button" class="miembro ${presentes.has(p.id) ? 'si' : ''}" onclick="alternar('${p.id}')"><span>${esc(nombreVisible(p))}</span><span class="tilde">${presentes.has(p.id) ? '✓' : ''}</span></button>`).join('') || '<div class="estado" style="padding:20px">No hay coincidencias.</div>';
+  contadores();
+}
+function alternar(id) { if (presentes.has(id)) presentes.delete(id); else presentes.add(id); marcarSucio(); pintar(); }
+function filtro(f) { filtroSel = f; ['Todos', 'Pres', 'Aus'].forEach(k => $('f' + k).classList.remove('sel')); $({ todos: 'fTodos', presentes: 'fPres', ausentes: 'fAus' }[f]).classList.add('sel'); pintar(); }
+function pintarVisitas() {
+  $('listaVis').innerHTML = visitas.map((v, i) => `<span class="vis">${esc(v)} <button onclick="quitarVisita(${i})" aria-label="Quitar">×</button></span>`).join('') || '<span class="estado">Sin visitas registradas.</span>';
+  contadores();
+}
+function agregarVisita() { const v = $('nuevaVis').value.trim(); if (!v) return; visitas.push(v); $('nuevaVis').value = ''; marcarSucio(); pintarVisitas(); $('nuevaVis').focus(); }
+function quitarVisita(i) { visitas.splice(i, 1); marcarSucio(); pintarVisitas(); }
+function irHoy() { $('fFecha').value = hoy(); cambioFechaTipo(); }
+
+async function confirmarSiHayCambios() { return !sucio || await confirmar('Hay cambios sin guardar. ¿Descartarlos?'); }
+async function elegirTipo(id) { if (id === tipoSel) return; if (!await confirmarSiHayCambios()) return; tipoSel = id; localStorage.setItem('asist_tipo', id); pintarTipos(); await cargarRegistro(); }
+async function cambioFechaTipo() { if (!await confirmarSiHayCambios()) return; await cargarRegistro(); }
+
+async function cargarRegistro() {
+  const fecha = $('fFecha').value;
+  if (!fecha || !tipoSel) return;
+  $('estado').textContent = 'Cargando…';
+  const r = await sbCall(sb.rpc('asistencia_cargar', { p_fecha: fecha, p_tipo: tipoSel }));
+  if (r.error || !r.data || r.data.error) { $('estado').textContent = 'No se pudo cargar.'; return; }
+  presentes = new Set(r.data.presentes || []);
+  visitas = Array.isArray(r.data.visitantes) ? r.data.visitantes.slice() : [];
+  $('notas').value = r.data.notas || '';
+  sucio = false;
+  $('estado').textContent = r.data.registro_id ? 'Registro guardado' : 'Registro nuevo';
+  pintar(); pintarVisitas();
+}
+
+async function guardar() {
+  if (!$('fFecha').value || !tipoSel) { alert('Elige la fecha y el tipo de servicio.'); return; }
+  $('btnGuardar').disabled = true; $('estado').textContent = 'Guardando…';
+  const r = await sbCall(sb.rpc('asistencia_guardar', { p_fecha: $('fFecha').value, p_tipo: tipoSel, p_presentes: [...presentes], p_visitantes: visitas, p_notas: $('notas').value.trim() || null }));
+  $('btnGuardar').disabled = false;
+  if (r.error || !r.data || r.data.error) { $('estado').textContent = 'No se pudo guardar'; alert('No se pudo guardar: ' + ((r.error && r.error.message) || (r.data && r.data.error) || 'error')); return; }
+  sucio = false; $('estado').textContent = 'Guardado ✓ · Total ' + r.data.total;
+}
+
+async function iniciarPagina() {
+  if (!getSesion().usuario) return;
+  const [m, t] = await Promise.all([sbCall(sb.rpc('asistencia_miembros')), sbCall(sb.rpc('asistencia_tipos'))]);
+  if (m.error || (m.data && m.data.error) || t.error || (t.data && t.data.error)) { $('login').classList.remove('oculto'); $('lgMsg').textContent = 'No tienes autorización para esta página.'; return; }
+  miembros = (m.data || []).sort((a, b) => nombreVisible(a).localeCompare(nombreVisible(b), 'es', { sensitivity: 'base' }));
+  tipos = t.data || [];
+  tipoSel = (tipos.find(x => x.id === localStorage.getItem('asist_tipo')) || tipos[0] || {}).id || null;
+  $('fFecha').value = hoy();
+  $('login').classList.add('oculto'); $('contenido').classList.remove('oculto'); $('pie').classList.remove('oculto');
+  $('btnBloq').classList.remove('oculto'); $('btnPerfil').classList.remove('oculto');
+  if (new URLSearchParams(location.search).get('portal') === '1') $('lnkPortal').classList.remove('oculto');
+  pintarTipos(); pintar(); pintarVisitas();
+  await cargarRegistro();
+}
+async function entrar(evt) {
+  evt.preventDefault(); $('lgBtn').disabled = true; $('lgMsg').textContent = '';
+  const r = await iniciarSesion($('lgEmail').value.trim(), $('lgPass').value);
+  $('lgBtn').disabled = false;
+  if (!r.ok) { $('lgMsg').textContent = r.mensaje === 'Correo o contraseña incorrectos.' ? r.mensaje : 'No tienes autorización para esta página. Pídele acceso al administrador.'; return false; }
+  await SEG.sesionIniciada({ nueva: true });
+  await iniciarPagina();
+  return false;
+}
+async function salirSesion() { SEG.detener(); await cerrarSesion(); location.reload(); }
+SEG.init({ cerrarSesion: salirSesion, nombreApp: 'Asistencia' });
+(async function () {
+  const { data } = await sb.auth.getSession();
+  if (data && data.session) {
+    const r = await cargarSesion();
+    if (r.ok) { await SEG.sesionIniciada({ nueva: false }); await iniciarPagina(); return; }
+  }
+  $('login').classList.remove('oculto');
+})();
+</script>
+</body>
+</html>
