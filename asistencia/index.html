@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f2445">
 <meta name="robots" content="noindex">
+<link rel="manifest" href="../portal/manifest.json">
+<link rel="icon" href="../portal/icon-192.png">
+<link rel="apple-touch-icon" href="../portal/icon-192.png">
 <title>Asistencia</title>
 <style>
   :root { --navy:#0f2445; --bg:#f4f6f9; --surface:#fff; --text:#1a2433; --muted:#6b7686; --border:#dbe1ea; --ok:#1f8f5f; --okbg:#e5f6ed; }
@@ -45,6 +48,7 @@
 <script src="../shared/supabase-client.js"></script>
 <script src="../shared/auth.js"></script>
 <script src="../shared/seguridad.js"></script>
+<script src="../shared/instalar.js"></script>
 </head>
 <body>
 <div class="top"><b>Asistencia</b><span><a href="../portal/" id="lnkPortal" class="oculto">Portal</a> <button id="btnBloq" class="oculto" onclick="SEG.bloquear()" aria-label="Bloquear">🔒</button> <button id="btnPerfil" class="oculto" onclick="SEG.abrirPerfil(false)" aria-label="Mi perfil">👤</button></span></div>

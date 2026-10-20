@@ -874,6 +874,7 @@
           <input type="text" id="blBuscar" placeholder="Buscar por nombre…" oninput="blRender()" style="display:none;">
           <button class="btnAccion" id="blBtnAporte" style="display:none;" onclick="blAbrir(null)">+ Aporte</button>
           <button class="btnSecundario" onclick="blAbrirAdmin()">Administrar bolsas</button>
+          <button class="btnSecundario" onclick="deshacerUltimo()">Deshacer</button>
         </div>
         <div class="grid-resumen" id="resumenBolsas" style="margin-bottom:16px;"></div>
         <div id="listaBolsas"><div class="estadoCargando">Cargando…</div></div>
@@ -2151,6 +2152,7 @@
       </div>
       <div class="formAcciones">
         <button type="button" class="btnPeligro" id="blBtnEliminar" onclick="blEliminar()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" id="blBtnMover" onclick="abrirMover('bolsa_aportes')" style="display:none;">Mover a…</button>
         <button type="button" class="btnSecundario" onclick="blCerrar()">Cancelar</button>
         <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
       </div>
@@ -2183,6 +2185,19 @@
   </div>
 </div>
 
+<div class="modalOverlay" id="modalMover" onclick="if (event.target === this) this.classList.remove('abierto')">
+  <div class="modalCaja" style="position:relative; max-width:460px;">
+    <button type="button" class="xCerrar" onclick="document.getElementById('modalMover').classList.remove('abierto')" aria-label="Cerrar">×</button>
+    <h3 style="padding-right:30px;">Mover registro</h3>
+    <div id="mvResumen" style="font-size:0.9rem; color:var(--text-muted); margin-bottom:12px;"></div>
+    <label style="font-size:0.8rem; color:var(--text-muted);">Mover a</label>
+    <div id="mvDestinos" style="display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 10px;"></div>
+    <div id="mvExtra"></div>
+    <div id="mvMsg" style="font-size:0.85rem; color:var(--danger); margin-top:8px;"></div>
+    <div class="formAcciones"><button type="button" class="btnSecundario" onclick="document.getElementById('modalMover').classList.remove('abierto')">Cancelar</button><button type="button" class="btnPrincipal" id="btnMvEjecutar" style="width:auto;" onclick="mvEjecutar()" disabled>Mover</button></div>
+  </div>
+</div>
+
 <!-- ═══════════════ MODAL: Nuevo/Editar Diezmo ═══════════════ -->
 <div class="modalOverlay" id="modalDiezmo">
   <div class="modalCaja">
@@ -2201,6 +2216,7 @@
       <div class="formAcciones">
         <button type="button" class="btnSecundario" id="btnReciboDiezmo" style="display:none;" onclick="rcDesdeRegistro(this.dataset.t)">🧾 Recibo</button>
         <button type="button" class="btnPeligro" id="btnEliminarDiezmo" onclick="eliminarDiezmo()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" id="btnMoverDiezmo" onclick="abrirMover('diezmos')" style="display:none;">Mover a…</button>
         <button type="button" class="btnSecundario" onclick="cerrarModalDiezmo()">Cancelar</button>
         <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
       </div>
@@ -2225,6 +2241,7 @@
       </div>
       <div class="formAcciones">
         <button type="button" class="btnPeligro" id="btnEliminarOfrenda" onclick="eliminarOfrenda()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" id="btnMoverOfrenda" onclick="abrirMover('ofrendas')" style="display:none;">Mover a…</button>
         <button type="button" class="btnSecundario" onclick="cerrarModalOfrenda()">Cancelar</button>
         <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
       </div>
@@ -2252,6 +2269,7 @@
       <div class="formAcciones">
         <button type="button" class="btnSecundario" id="btnReciboDonacion" style="display:none;" onclick="rcDesdeRegistro(this.dataset.t)">🧾 Recibo</button>
         <button type="button" class="btnPeligro" id="btnEliminarDonacion" onclick="eliminarDonacion()" style="display:none;">Eliminar</button>
+        <button type="button" class="btnSecundario" id="btnMoverDonacion" onclick="abrirMover('donaciones')" style="display:none;">Mover a…</button>
         <button type="button" class="btnSecundario" onclick="cerrarModalDonacion()">Cancelar</button>
         <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
       </div>
@@ -2640,8 +2658,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-067';
-document.getElementById('versionTopbar').textContent = 'Ver-067';
+const APP_VERSION = 'church-admin Ver-068';
+document.getElementById('versionTopbar').textContent = 'Ver-068';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -6663,8 +6681,9 @@ function blRender() {
   const grupos = new Map();
   delaBolsa.forEach(a => {
     const k = blClave(a);
-    const g = grupos.get(k) || { clave: k, nombre: blNombreAportante(a), total: 0, ultimo: null };
+    const g = grupos.get(k) || { clave: k, nombre: blNombreAportante(a), total: 0, n: 0, ultimo: null };
     g.total += cts(a.monto);
+    g.n++;
     if (!g.ultimo || String(a.fecha) > String(g.ultimo.fecha)) g.ultimo = a;
     grupos.set(k, g);
   });
@@ -6676,7 +6695,7 @@ function blRender() {
   if (!filas.length) { lista.innerHTML = '<div class="estadoVacio">Todavía no hay aportes en esta bolsa.</div>'; return; }
   lista.innerHTML = `<div class="filaBolsa enc"><span>Nombre</span><span>Último pago</span><span class="num">Monto</span><span class="num">Total</span></div>` + filas.map(g => `
     <div class="filaBolsa" onclick="blHistorial('${escV28(g.clave).replace(/'/g, '&#39;')}')">
-      <span><b>${escV28(g.nombre)}</b></span><span>${formatoFecha(g.ultimo.fecha)}</span><span class="num">${formatoMoneda(g.ultimo.monto)}</span><span class="num"><b>${formatoMoneda(g.total / 100)}</b></span>
+      <span><b>${escV28(g.nombre)}</b><small style="display:block; color:var(--text-muted);">${g.n} pago${g.n === 1 ? '' : 's'}</small></span><span>${formatoFecha(g.ultimo.fecha)}</span><span class="num">${formatoMoneda(g.ultimo.monto)}</span><span class="num"><b>${formatoMoneda(g.total / 100)}</b></span>
     </div>`).join('');
 }
 
@@ -6916,7 +6935,7 @@ function lfMontar(k) {
     <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
       <span class="menu3" style="margin-left:auto; order:2;">
         <button type="button" class="btnTresPuntos" onclick="toggleMenu3(this)" aria-label="Más opciones">⋯</button>
-        <div class="menu3Lista"><button type="button" onclick="lfImprimir('${k}')">Imprimir</button><button type="button" onclick="lfExcel('${k}')">Excel</button></div>
+        <div class="menu3Lista"><button type="button" onclick="lfImprimir('${k}')">Imprimir</button><button type="button" onclick="lfExcel('${k}')">Excel</button><button type="button" onclick="deshacerUltimo()">Deshacer último cambio</button><button type="button" onclick="eliminarMiUltimoRegistro()">Eliminar mi último registro</button></div>
       </span>
       <button type="button" class="btnSecundario" onclick="lfRango('${k}','hoy')">Hoy</button>
       <button type="button" class="btnSecundario" onclick="lfRango('${k}','semana')">Semana</button>
@@ -9776,6 +9795,209 @@ async function eliminarAsistencia() {
 let cacheUsuariosAdmin = [];
 let cacheUsuarioApps = [];
 
+// ── Mover un registro a otro tipo y deshacer (Ver-068) ──
+const MV_TIPOS = { diezmos: 'Diezmo', ofrendas: 'Ofrenda', donaciones: 'Donación', bolsa_aportes: 'Bolsa aparte' };
+let mvOrigen = null, mvDestino = null;
+
+function mvIdEditando(tabla) {
+  if (tabla === 'diezmos') return document.getElementById('formDiezmo').dataset.editId;
+  if (tabla === 'ofrendas') return document.getElementById('formOfrenda').dataset.editId;
+  if (tabla === 'donaciones') return document.getElementById('formDonacion').dataset.editId;
+  return blEditandoId;
+}
+function mvFila(tabla, id) {
+  const cache = { diezmos: cacheDiezmos, ofrendas: cacheOfrendas, donaciones: cacheDonaciones, bolsa_aportes: cacheBolsaAportes }[tabla] || [];
+  return cache.find(r => String(r.id) === String(id));
+}
+function mvNombre(tabla, r) {
+  if (tabla === 'bolsa_aportes') return blNombreAportante(r);
+  if (tabla === 'ofrendas') return r.tipo || 'Ofrenda';
+  return nombrePersonaPorId(r.persona_id);
+}
+
+async function abrirMover(tabla) {
+  const id = mvIdEditando(tabla);
+  const r = id && mvFila(tabla, id);
+  if (!r) { alert('Primero abre un registro guardado.'); return; }
+  await asegurarDirectorioFinanzas();
+  if (cacheBolsas.length === 0) await blCargarBolsas();
+  mvOrigen = { tabla, id: String(id) }; mvDestino = null;
+  document.getElementById('mvResumen').textContent = `${MV_TIPOS[tabla]} · ${mvNombre(tabla, r)} · ${formatoMoneda(r.monto)} · ${formatoFecha(r.fecha)}`;
+  document.getElementById('mvDestinos').innerHTML = Object.keys(MV_TIPOS).filter(t => t !== tabla).map(t => `<button type="button" class="btnSecundario" id="mvBtn_${t}" onclick="mvElegir('${t}')">${MV_TIPOS[t]}</button>`).join('');
+  document.getElementById('mvExtra').innerHTML = '';
+  document.getElementById('mvMsg').textContent = '';
+  document.getElementById('btnMvEjecutar').disabled = true;
+  document.getElementById('modalMover').classList.add('abierto');
+}
+function mvElegir(destino) {
+  mvDestino = destino;
+  Object.keys(MV_TIPOS).forEach(t => { const b = document.getElementById('mvBtn_' + t); if (b) b.classList.toggle('btnOn', t === destino); });
+  const r = mvFila(mvOrigen.tabla, mvOrigen.id);
+  const tienePersona = mvOrigen.tabla !== 'ofrendas' && r.persona_id && cacheDirectorio.some(p => String(p.id) === String(r.persona_id));
+  const personas = '<option value="">Elegir miembro…</option>' + cacheDirectorio.map(p => `<option value="${p.id}">${escV28(nombreMostrar(p))}</option>`).join('');
+  let h = '';
+  if (destino === 'ofrendas') h += `<label>Tipo de ofrenda</label><select id="mvTipoOfrenda">${OFRENDA_TIPOS.map(t => `<option>${escV28(t)}</option>`).join('')}</select>`;
+  if (destino === 'donaciones') h += `<label>Propósito</label><select id="mvProposito">${DONACION_PROPOSITOS.map(t => `<option>${escV28(t)}</option>`).join('')}</select>`;
+  if ((destino === 'diezmos' || destino === 'donaciones') && !tienePersona) h += `<label>Miembro *</label><select id="mvPersona">${personas}</select>`;
+  if (destino === 'bolsa_aportes') {
+    h += `<label>Bolsa *</label><select id="mvBolsa">${cacheBolsas.filter(b => b.activa).map(b => `<option value="${b.id}">${escV28(b.nombre)}</option>`).join('')}</select>`;
+    if (!tienePersona && mvOrigen.tabla !== 'bolsa_aportes') h += `<label>Persona</label><select id="mvPersona">${personas}</select>`;
+  }
+  document.getElementById('mvExtra').innerHTML = h;
+  document.getElementById('btnMvEjecutar').disabled = false;
+}
+
+function mvGuardarUndo(item) {
+  const pila = JSON.parse(sessionStorage.getItem('ca_undo') || '[]');
+  pila.push(item);
+  sessionStorage.setItem('ca_undo', JSON.stringify(pila.slice(-15)));
+}
+function mvAvisoDeshacer(texto) {
+  let el = document.getElementById('avisoUndo');
+  if (!el) {
+    el = document.createElement('div'); el.id = 'avisoUndo';
+    el.style.cssText = 'position:fixed; left:12px; right:12px; bottom:14px; z-index:6500; max-width:520px; margin:0 auto; background:#0f2445; color:#fff; border-radius:12px; padding:12px 14px; display:flex; gap:12px; align-items:center; justify-content:space-between; box-shadow:0 8px 28px rgba(0,0,0,.4); font-size:.92rem;';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = `<span>${escV28(texto)}</span><span style="display:flex; gap:10px;"><button style="background:#fff; color:#0f2445; border:0; border-radius:8px; padding:7px 12px; cursor:pointer; font-weight:600;" onclick="deshacerUltimo()">Deshacer</button><button style="background:none; border:0; color:#fff; font-size:1.2rem; cursor:pointer;" onclick="this.closest('#avisoUndo').remove()">×</button></span>`;
+  clearTimeout(window.__tUndo); window.__tUndo = setTimeout(() => { const e = document.getElementById('avisoUndo'); if (e) e.remove(); }, 20000);
+}
+
+async function mvRefrescar() {
+  const f = [typeof cargarDiezmos === 'function' && cargarDiezmos, cargarOfrendas, cargarDonaciones, cargarGastos, cargarBolsas];
+  for (const fn of f) { try { if (typeof fn === 'function') await fn(); } catch (e) { /* vista no abierta */ } }
+}
+
+async function mvEjecutar() {
+  if (!mvOrigen || !mvDestino) return;
+  const msg = document.getElementById('mvMsg');
+  const { tabla, id } = mvOrigen;
+  const src = mvFila(tabla, id);
+  const u = await sb.auth.getUser();
+  const uid = (u.data && u.data.user && u.data.user.id) || null;
+  let personaId = (tabla !== 'ofrendas' && src.persona_id) ? String(src.persona_id) : null;
+  const selP = document.getElementById('mvPersona');
+  if (selP && selP.value) personaId = selP.value;
+  const aportanteOrigen = tabla === 'bolsa_aportes' ? (src.aportante || null) : null;
+  if ((mvDestino === 'diezmos' || mvDestino === 'donaciones') && !personaId) { msg.textContent = 'Elige el miembro.'; return; }
+  const persona = personaId ? cacheDirectorio.find(p => String(p.id) === String(personaId)) : null;
+  const nombre = persona ? nombreMostrar(persona) : (aportanteOrigen || '');
+  document.getElementById('btnMvEjecutar').disabled = true;
+  msg.textContent = 'Moviendo…';
+
+  let trans = null;
+  if (src.transaccion_id) { const r = await sbCall(sb.from('transacciones').select('*').eq('id', src.transaccion_id).maybeSingle()); trans = r.data || null; }
+  const fondo = (trans && trans.fondo_id) || null;
+  const base = { fecha: src.fecha, monto: src.monto, metodo: src.metodo, referencia: src.referencia || null };
+  const undo = { texto: `${MV_TIPOS[tabla]} → ${MV_TIPOS[mvDestino]}: ${nombre || ''} ${formatoMoneda(src.monto)}`, op: 'mover', origen: { tabla, fila: src, trans }, destino: { tabla: mvDestino, id: null, transId: null, transCreada: false } };
+
+  try {
+    if (mvDestino === 'bolsa_aportes') {
+      const ins = await sbCall(sb.from('bolsa_aportes').insert({ bolsa_id: document.getElementById('mvBolsa').value, persona_id: personaId, aportante: persona ? null : (aportanteOrigen || nombre || null), fecha: src.fecha, monto: src.monto, metodo: src.metodo, referencia: base.referencia, nota: 'Movido desde ' + MV_TIPOS[tabla], creado_por: uid }).select('id').single());
+      if (ins.error) throw ins.error;
+      undo.destino.id = ins.data.id;
+      const d1 = await sbCall(sb.from(tabla).delete().eq('id', id)); if (d1.error) throw d1.error;
+      if (trans) { const d2 = await sbCall(sb.from('transacciones').delete().eq('id', trans.id)); if (d2.error) throw d2.error; }
+    } else {
+      const catOf = mvDestino === 'ofrendas' ? document.getElementById('mvTipoOfrenda').value : null;
+      const proposito = mvDestino === 'donaciones' ? document.getElementById('mvProposito').value : null;
+      const T = mvDestino === 'diezmos'
+        ? { descripcion: `Diezmo — ${nombre}`, categoria: 'Diezmos', tipo_origen: 'Diezmo', cuenta_cr: cuentaIdPorCodigo('4001') }
+        : (mvDestino === 'ofrendas'
+          ? { descripcion: `Ofrenda — ${catOf}`, categoria: catOf, tipo_origen: 'Ofrenda', cuenta_cr: cuentaIdPorCodigo(OFRENDA_TIPO_CUENTA[catOf] || '4002') }
+          : { descripcion: `Donación — ${nombre}`, categoria: proposito, tipo_origen: 'Donación', cuenta_cr: cuentaIdPorCodigo('4003') });
+      let transId = trans ? trans.id : null;
+      if (trans) {
+        const r = await sbCall(sb.from('transacciones').update({ ...T }).eq('id', trans.id)); if (r.error) throw r.error;
+      } else {
+        const r = await sbCall(sb.from('transacciones').insert({ fecha: src.fecha, tipo: 'Ingreso', metodo: src.metodo, monto: src.monto, referencia: base.referencia, estado: 'Completado', fondo_id: fondo || (defaultTx(mvDestino === 'diezmos' ? 'Diezmo' : (mvDestino === 'ofrendas' ? 'Ofrenda' : 'Donación')).fondo_id || null), solo_fondo: false, creado_por: uid, ...T }).select('id').single());
+        if (r.error) throw r.error; transId = r.data.id; undo.destino.transCreada = true;
+      }
+      undo.destino.transId = transId;
+      let fila;
+      if (mvDestino === 'diezmos') fila = { ...base, persona_id: personaId, estado: src.estado || 'Completado', transaccion_id: transId, creado_por: uid, no_sobre: persona && persona.sobre_actual ? String(persona.sobre_actual) : null };
+      else if (mvDestino === 'ofrendas') fila = { fecha: src.fecha, monto: src.monto, metodo: src.metodo, tipo: catOf, estado: src.estado || 'Completado', transaccion_id: transId, creado_por: uid };
+      else fila = { ...base, persona_id: personaId, estado: src.estado || 'Completado', transaccion_id: transId, creado_por: uid };
+      const ins = await sbCall(sb.from(mvDestino).insert(fila).select('id').single());
+      if (ins.error) throw ins.error;
+      undo.destino.id = ins.data.id;
+      const d1 = await sbCall(sb.from(tabla).delete().eq('id', id)); if (d1.error) throw d1.error;
+    }
+  } catch (e) {
+    msg.textContent = 'No se pudo mover: ' + (e.message || e);
+    document.getElementById('btnMvEjecutar').disabled = false;
+    return;
+  }
+  mvGuardarUndo(undo);
+  document.getElementById('modalMover').classList.remove('abierto');
+  ['cerrarModalDiezmo', 'cerrarModalOfrenda', 'cerrarModalDonacion', 'blCerrar'].forEach(fn => { try { if (typeof window[fn] === 'function') window[fn](); } catch (e) { /* modal cerrado */ } });
+  await mvRefrescar();
+  mvAvisoDeshacer('Movido: ' + undo.texto);
+}
+
+async function deshacerUltimo() {
+  const pila = JSON.parse(sessionStorage.getItem('ca_undo') || '[]');
+  const it = pila[pila.length - 1];
+  if (!it) { alert('No hay nada que deshacer en esta sesión.'); return; }
+  if (!await confirmar('¿Deshacer? ' + it.texto)) return;
+  try {
+    if (it.op === 'mover') {
+      const d = it.destino, o = it.origen;
+      let r = await sbCall(sb.from(d.tabla).delete().eq('id', d.id)); if (r.error) throw r.error;
+      if (o.trans) {
+        if (d.tabla === 'bolsa_aportes') {
+          r = await sbCall(sb.from('transacciones').insert(o.trans)); if (r.error) throw r.error;
+        } else {
+          r = await sbCall(sb.from('transacciones').update(o.trans).eq('id', o.trans.id)); if (r.error) throw r.error;
+        }
+      } else if (d.transCreada && d.transId) {
+        r = await sbCall(sb.from('transacciones').delete().eq('id', d.transId)); if (r.error) throw r.error;
+      }
+      r = await sbCall(sb.from(o.tabla).insert(o.fila)); if (r.error) throw r.error;
+    } else if (it.op === 'eliminar') {
+      if (it.trans) { const r = await sbCall(sb.from('transacciones').insert(it.trans)); if (r.error) throw r.error; }
+      const r2 = await sbCall(sb.from(it.tabla).insert(it.fila)); if (r2.error) throw r2.error;
+    }
+  } catch (e) { alert('No se pudo deshacer: ' + (e.message || e)); return; }
+  pila.pop(); sessionStorage.setItem('ca_undo', JSON.stringify(pila));
+  const av = document.getElementById('avisoUndo'); if (av) av.remove();
+  await mvRefrescar();
+}
+
+// Elimina el último registro que yo creé (diezmo, ofrenda, donación o gasto); se puede deshacer.
+async function eliminarMiUltimoRegistro() {
+  const u = await sb.auth.getUser();
+  const uid = u.data && u.data.user && u.data.user.id;
+  const tablas = ['diezmos', 'ofrendas', 'donaciones', 'gastos'];
+  const res = await Promise.all(tablas.map(t => sbCall(sb.from(t).select('*').eq('creado_por', uid).order('creado_en', { ascending: false }).limit(1))));
+  let mejor = null;
+  res.forEach((r, i) => { const f = r.data && r.data[0]; if (f && (!mejor || String(f.creado_en) > String(mejor.fila.creado_en))) mejor = { tabla: tablas[i], fila: f }; });
+  if (!mejor) { alert('No encontré registros creados por ti.'); return; }
+  const f = mejor.fila;
+  const nombre = mejor.tabla === 'gastos' ? (f.descripcion || 'Gasto') : (mejor.tabla === 'ofrendas' ? (f.tipo || 'Ofrenda') : nombrePersonaPorId(f.persona_id));
+  const texto = `${({ diezmos: 'Diezmo', ofrendas: 'Ofrenda', donaciones: 'Donación', gastos: 'Gasto' })[mejor.tabla]} · ${nombre} · ${formatoMoneda(f.monto)} · ${formatoFecha(f.fecha)}`;
+  if (!await confirmar('¿Eliminar tu último registro?\n' + texto + '\n\nPodrás deshacerlo.')) return;
+  let trans = null;
+  if (f.transaccion_id) { const r = await sbCall(sb.from('transacciones').select('*').eq('id', f.transaccion_id).maybeSingle()); trans = r.data || null; }
+  let r = await sbCall(sb.from(mejor.tabla).delete().eq('id', f.id));
+  if (r.error) { alert('No se pudo eliminar: ' + r.error.message); return; }
+  if (trans) await sbCall(sb.from('transacciones').delete().eq('id', trans.id));
+  mvGuardarUndo({ op: 'eliminar', texto: 'Eliminado: ' + texto, tabla: mejor.tabla, fila: f, trans });
+  await mvRefrescar();
+  mvAvisoDeshacer('Eliminado: ' + texto);
+}
+
+// El botón "Mover a…" aparece solo cuando se está editando un registro guardado.
+function mvSincronizarBotones() {
+  [['btnEliminarDiezmo', 'btnMoverDiezmo'], ['btnEliminarOfrenda', 'btnMoverOfrenda'], ['btnEliminarDonacion', 'btnMoverDonacion'], ['blBtnEliminar', 'blBtnMover']].forEach(([a, b]) => {
+    const ea = document.getElementById(a), eb = document.getElementById(b);
+    if (!ea || !eb) return;
+    const sync = () => { eb.style.display = (ea.style.display === 'none' || !puede('editarTrans')) ? 'none' : ''; };
+    new MutationObserver(sync).observe(ea, { attributes: true, attributeFilter: ['style'] });
+    sync();
+  });
+}
+
 function mostrarAdministracion() {
   document.getElementById('vistaDashboard').style.display = 'none';
   document.getElementById('vistaAdministracion').style.display = 'block';
@@ -10700,6 +10922,7 @@ async function actualizarResumenPastoral() {
   }
 })();
 SEG.init({ cerrarSesion: manejarLogout, nombreApp: 'Church Admin' });
+mvSincronizarBotones();
 </script>
 
 </body>
