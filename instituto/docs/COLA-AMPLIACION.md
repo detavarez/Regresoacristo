@@ -1,6 +1,6 @@
 # Cola de ampliación — Instituto Bíblico
 
-Generada por `instituto/tools/qc.js` (2026-10-13). **Cada chat la lee al arrancar.** Se trabaja en este orden, de la 101 en adelante.
+Generada por `instituto/tools/qc.js` (2026-10-20). **Cada chat la lee al arrancar.** Se trabaja en este orden, de la 101 en adelante.
 
 - Puerta (Constitución §7.6): **CERRADA: no se escribe la lección 142 hasta que todas las de abajo cumplan**
 - Progreso: **1 de 41** lecciones cumplen.

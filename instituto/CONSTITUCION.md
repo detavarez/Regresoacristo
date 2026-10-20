@@ -50,6 +50,8 @@ El lenguaje y la exigencia crecen con el nivel; el respeto hacia el estudiante n
 
 **Aviso sobre la regla 3.1.** La declaración no usa la palabra "pentecostal" ni describe el bautismo en el Espíritu Santo como experiencia posterior ni las lenguas. Mientras David no aclare la postura de la iglesia en esos puntos, la regla "fuente principal pentecostal" (Horton) se aplica con cuidado: en esos temas Horton se presenta como una postura entre otras, no como la posición del Instituto.
 
+**3.5 Postura frente a otras doctrinas y religiones [DECIDIDO por David, 20 de octubre de 2026].** El Instituto es evangélico y está abierto a todas las personas que quieran aprender la verdad bíblica. No evita temas incómodos: cuando una enseñanza se aparta de lo que la Biblia enseña con claridad (por ejemplo, doctrinas o prácticas del catolicismo romano, el uso de imágenes en el culto, otras religiones), el Instituto la presenta con exactitud, como la expone la propia tradición, y la confronta con la Escritura, mostrando por qué, a juicio del Instituto, no concuerda con ella. Se critican doctrinas y prácticas, no personas: sin burla, sin generalizaciones ni caricaturas. Los libros que David sube para análisis son el material que se enseñará: no se omiten, suavizan ni sustituyen por notas de neutralidad. Esto no cambia §3.2: los temas abiertos siguen presentándose con las posturas evangélicas en justicia.
+
 **3.4 Niveles de certeza en cada afirmación [DECIDIDO].** Toda afirmación importante se clasifica como: *explícito* (el texto lo dice), *inferido* (se deduce razonablemente), *tradición* (la iglesia lo ha creído, sin apoyo textual directo) o *especulación* (posible, sin fundamento en el texto).
 
 ## 4. Estándar de cada lección
@@ -92,6 +94,7 @@ El lenguaje y la exigencia crecen con el nivel; el respeto hacia el estudiante n
 ## Registro de decisiones
 - 2026-10-12: propósito, público por nivel, postura doctrinal general y tres grupos, extensión 3 000–4 000 por idioma en todos los niveles, aprobación al 70 %.
 - 2026-10-12: David entrega la declaración de fe de su iglesia (anexo `DECLARACION-DE-FE.md`); Claude propone una clasificación parcial que David aún no ha confirmado.
+- 2026-10-20: David decide que el Instituto confronta con la Biblia las doctrinas contrarias (§3.5) y que los libros analizados no se filtran ni suavizan.
 - 2026-10-12: el QC mide 1 de 41 lecciones en cumplimiento (la 141). David decide inicialmente ampliar las viejas poco a poco; después, con la información de que aún no hay estudiantes, decide **arreglar primero desde la 101 en orden, con puerta (§7.6), cola de trabajo y QC automático**. Se amplía conservando el texto existente.
 - 2026-10-12: David define el bautismo en el Espíritu Santo como experiencia posterior a la conversión, sin exigir las lenguas como evidencia. David aprueba la enmienda 3.1-bis a la regla de la fuente principal.
 - 2026-10-12: confirmados por David los niveles de certeza (3.4), bilingüe (4.3), estructura de la lección (4.4), reglas de honestidad (6) y reglas de trabajo (7).

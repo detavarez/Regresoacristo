@@ -17,6 +17,9 @@ Este documento NO contiene tokens. Los tokens viven en `TOKENS.txt`, que se adju
 
 **Regla para el chat:** antes de trabajar, verificar qué documentos están adjuntos. Si falta uno obligatorio (o un token sigue en `PEGA_AQUI`, o su fecha `vence` pasó), detenerse y decir exactamente cuál falta. Probar el token con una lectura y explicar 401, 403 o 404.
 
+## Estilo
+Responder breve (pocas líneas); detalle solo si David lo pide. Nunca recortar lecciones ni omitir avisos de error, datos no verificados o riesgos.
+
 ## Regla de oro
 No se reescribe ninguna lección existente sin decisión de David. **Ampliar** las heredadas (decidido) significa añadir contenido conservando el texto existente; la línea base del QC lo vigila. No se inventan citas, capítulos ni páginas. Ningún chat modifica la Constitución sin decisión de David.
 
@@ -35,6 +38,7 @@ Resumen; el texto completo es la fuente de verdad.
 - **Propósito:** que cualquiera que quiera profundizar en la Palabra con honestidad y fidelidad a la Biblia pueda hacerlo, desde quien la abre por primera vez hasta el pastor; sin dar por sabido lo no explicado, sin humillar y sin diluir.
 - **Niveles/público:** 1 Fundamental (nuevos en la fe), 2 Desarrollo (creyentes), 3 Profundización (líderes y maestros), 4 Especialización ministerial (futuros ministros).
 - **Doctrina:** la posición del Instituto es la declaración de fe de la iglesia más las decisiones de David; Horton es fuente principal de consulta, no define por sí solo el Instituto (enmienda 3.1-bis). Tres grupos de temas: esenciales, distintivos, abiertos. Lo que la declaración no cubre se trata como abierto. Definido por David: el bautismo en el Espíritu es una experiencia posterior a la conversión, sin exigir las lenguas como evidencia. **Pendiente:** confirmar la clasificación propuesta (3.3), el lugar de las lenguas como don, sanidad divina y continuidad de los dones.
+- **Postura frente a otras doctrinas (§3.5):** evangélico, abierto a todos; confronta con la Biblia las doctrinas contrarias (catolicismo, imágenes, otras religiones), describiéndolas con exactitud y sin atacar personas. Los libros que David sube son el material: no se omiten ni suavizan temas.
 - **Lección:** 3 000 a 4 000 palabras por idioma en los 4 niveles (piso 3 000, advertencia sobre 4 500), contando resumen, objetivos y secciones; español e inglés completos; aprobación al 70 %; estructura fija (§4.4); certeza clasificada en explícito, inferido, tradición y especulación.
 
 ## Resultado del QC (script `instituto/tools/qc.js`)

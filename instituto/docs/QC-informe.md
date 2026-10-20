@@ -1,6 +1,6 @@
 # Informe QC — Instituto Bíblico
 
-Generado: 2026-10-13 · Estándar: Constitución §4 · Lecciones nuevas: desde la 141
+Generado: 2026-10-20 · Estándar: Constitución §4 · Lecciones nuevas: desde la 141
 
 ## Resumen
 - Lecciones escritas: **41** de 247 previstas en el currículo (206 por escribir).
