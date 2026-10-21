@@ -1,0 +1,70 @@
+<DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista de Canciones</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); overflow: hidden; }
+    header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+    h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); }
+    .search-container { padding: 25px 30px; background: #f8f9fa; border-bottom: 2px solid #e9ecef; }
+    #searchInput { width: 100%; padding: 15px 20px; font-size: 16px; border: 2px solid #667eea; border-radius: 25px; outline: none; transition: all 0.3s ease; }
+    #searchInput:focus { border-color: #764ba2; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+    .list-container { padding: 20px 30px; max-height: 600px; overflow-y: auto; }
+    .list-container::-webkit-scrollbar { width: 10px; }
+    .list-container::-webkit-scrollbar-track { background: #f1f1f1; }
+    .list-container::-webkit-scrollbar-thumb { background: #667eea; border-radius: 5px; }
+    .list-container::-webkit-scrollbar-thumb:hover { background: #764ba2; }
+    ol { counter-reset: song-counter; list-style: none; }
+    li { padding: 12px 15px; margin: 8px 0; background: #f8f9fa; border-left: 4px solid #667eea; border-radius: 5px; transition: all 0.2s ease; counter-increment: song-counter; position: relative; padding-left: 60px; }
+    li::before { content: counter(song-counter); position: absolute; left: 15px; top: 50%; transform: translateY(-50%); background: #667eea; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+    li:hover { background: #e7f1ff; border-left-color: #764ba2; transform: translateX(5px); }
+    li.hidden { display: none; }
+    .stats { padding: 20px 30px; background: #f8f9fa; border-top: 2px solid #e9ecef; text-align: center; }
+    .stats-content { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px; }
+    .stat-item { flex: 1; min-width: 150px; }
+    .stat-number { font-size: 2.5em; font-weight: bold; color: #667eea; display: block; }
+    .stat-label { color: #6c757d; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+    .no-results { text-align: center; padding: 40px; color: #6c757d; font-style: italic; display: none; }
+    .no-results.show { display: block; }
+    @media (max-width: 768px) { h1 { font-size: 1.8em; } .container { border-radius: 10px; } .list-container { max-height: 400px; } li { padding-left: 50px; } li::before { width: 28px; height: 28px; font-size: 12px; } }
+</style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🎵 Lista de Canciones Disponibles</h1>
+    </header>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="🔍 Buscar canción..." autocomplete="off">
+    </div>
+    <div class="list-container">
+        <ol id="songList">
+            <li>Sum�rgeme</li> 
+            <li>Yo Navegare Live Dahaira Video Oficial</li> 
+        </ol>
+        <div class="no-results" id="noResults">No se encontraron canciones que coincidan con tu búsqueda.</div>
+    </div>
+    <div class="stats">
+        <div class="stats-content">
+            <div class="stat-item">
+                <span class="stat-number" id="visibleCount">0</span>
+                <span class="stat-label">Mostrando</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="totalCount">0</span>
+                <span class="stat-label">Total de Canciones</span>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function updateCounts() { const allSongs = document.querySelectorAll('#songList li'); const visibleSongs = document.querySelectorAll('#songList li:not(.hidden)'); document.getElementById('totalCount').textContent = allSongs.length; document.getElementById('visibleCount').textContent = visibleSongs.length; const noResults = document.getElementById('noResults'); if (visibleSongs.length === 0 && allSongs.length > 0) { noResults.classList.add('show'); } else { noResults.classList.remove('show'); } }
+    document.getElementById('searchInput').addEventListener('input', function(e) { const searchTerm = e.target.value.toLowerCase().trim(); const songs = document.querySelectorAll('#songList li'); songs.forEach(song => { const songText = song.textContent.toLowerCase(); if (songText.includes(searchTerm)) { song.classList.remove('hidden'); } else { song.classList.add('hidden'); } }); updateCounts(); });
+    window.addEventListener('DOMContentLoaded', updateCounts);
+</script>
+</body>
+</html>
