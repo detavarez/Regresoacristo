@@ -1,0 +1,234 @@
+<DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista de Canciones</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); overflow: hidden; }
+    header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+    h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); }
+    .search-container { padding: 25px 30px; background: #f8f9fa; border-bottom: 2px solid #e9ecef; }
+    #searchInput { width: 100%; padding: 15px 20px; font-size: 16px; border: 2px solid #667eea; border-radius: 25px; outline: none; transition: all 0.3s ease; }
+    #searchInput:focus { border-color: #764ba2; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+    .list-container { padding: 20px 30px; max-height: 600px; overflow-y: auto; }
+    .list-container::-webkit-scrollbar { width: 10px; }
+    .list-container::-webkit-scrollbar-track { background: #f1f1f1; }
+    .list-container::-webkit-scrollbar-thumb { background: #667eea; border-radius: 5px; }
+    .list-container::-webkit-scrollbar-thumb:hover { background: #764ba2; }
+    ol { counter-reset: song-counter; list-style: none; }
+    li { padding: 12px 15px; margin: 8px 0; background: #f8f9fa; border-left: 4px solid #667eea; border-radius: 5px; transition: all 0.2s ease; counter-increment: song-counter; position: relative; padding-left: 60px; }
+    li::before { content: counter(song-counter); position: absolute; left: 15px; top: 50%; transform: translateY(-50%); background: #667eea; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+    li:hover { background: #e7f1ff; border-left-color: #764ba2; transform: translateX(5px); }
+    li.hidden { display: none; }
+    .stats { padding: 20px 30px; background: #f8f9fa; border-top: 2px solid #e9ecef; text-align: center; }
+    .stats-content { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px; }
+    .stat-item { flex: 1; min-width: 150px; }
+    .stat-number { font-size: 2.5em; font-weight: bold; color: #667eea; display: block; }
+    .stat-label { color: #6c757d; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+    .no-results { text-align: center; padding: 40px; color: #6c757d; font-style: italic; display: none; }
+    .no-results.show { display: block; }
+    @media (max-width: 768px) { h1 { font-size: 1.8em; } .container { border-radius: 10px; } .list-container { max-height: 400px; } li { padding-left: 50px; } li::before { width: 28px; height: 28px; font-size: 12px; } }
+</style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>ðŸŽµ Lista de Canciones Disponibles</h1>
+    </header>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="ðŸ” Buscar canciÃ³n..." autocomplete="off">
+    </div>
+    <div class="list-container">
+        <ol id="songList">
+            <li>1 hora Fondo musical para PREDICAR ORAR</li> 
+            <li>A ti me rindo Hillsong Worship PISTA ton</li> 
+            <li>A ti Pista Marcos Witt</li> 
+            <li>Abre los cielos Gateway Worship Pista ka</li> 
+            <li>Adonde ire</li> 
+            <li>Alaba a Dios Pista Danny Berrios</li> 
+            <li>ALELUYA AVIVAMIENTO VOZ FEMENINA</li> 
+            <li>Algo esta cayendo aqu¡ PISTA MUJER Tono bajo Jos‚ Luis Reyes Canciones y pistas 001</li> 
+            <li>ALGO ESTA CAYENDO AQUI TONO MUJER</li> 
+            <li>Amarte Solo A Ti</li> 
+            <li>Amemonos de corazon</li> 
+            <li>amemonos uno</li> 
+            <li>ANHELO CONOCERTE SOBRE ALAS DE PALOMA PI</li> 
+            <li>Arianny Aquino Cuando El Me Toca Pista y</li> 
+            <li>ASI COMO DAVID DANZABA</li> 
+            <li>Barak Ven Espiritu Santo Pista Karaoke</li> 
+            <li>Barro Kairo Worship Joe L Barnes Karaoke</li> 
+            <li>Beautiful Lord</li> 
+            <li>Bienaventurados El Canto de las Bienaven</li> 
+            <li>Campfire Coritos Israel Houghton Pista</li> 
+            <li>CeCe Winans Worthy Of It All</li> 
+            <li>Cielos abiertos New Wine Karaoke</li> 
+            <li>Clame Sarai Rivera Karaoke</li> 
+            <li>Coalo Zamorano Eres fiel</li> 
+            <li>Cody Carnes Firm Foundation He Won t Pia</li> 
+            <li>Como dijiste Lo unico que quiero pista k</li> 
+            <li>Como en el cielo PISTA</li> 
+            <li>Como No Voy A Creer Christine D clario &</li> 
+            <li>Como no voy a creer Christine d Clario p</li> 
+            <li>Coritos de Corazon Israel Hougton Karaok</li> 
+            <li>Coritos Israel Houghton Pista</li> 
+            <li>Coros de fuego</li> 
+            <li>Creo en ti Pista Mi mayor tono mujer Jul</li> 
+            <li>Cuan Grande es Dios D tono mujer</li> 
+            <li>Dame de beber PISTA Tonalidad A para MUJ</li> 
+            <li>Dame de beber PISTA</li> 
+            <li>Danzando a cada temporada</li> 
+            <li>Danzando Christine D Clario Karaoke</li> 
+            <li>Denicher Pol Inexplicable video lyric pi</li> 
+            <li>Deseable PISTA</li> 
+            <li>Digno de adorar Mission Musica Pista</li> 
+            <li>DIGNO DE ADORAR PISTA TONO BAJO</li> 
+            <li>Digno y Santo Ingrid rosario pista y let</li> 
+            <li>dime por que</li> 
+            <li>EL ALFARERO</li> 
+            <li>El borde de su manto Pista en Piano tono</li> 
+            <li>El Espiritu de Dios esta en este lugar P</li> 
+            <li>El Sacrificio pista Centro Vida karaoke</li> 
+            <li>EL TOQUE DE TU GLORIA Isabelle Valdez PI</li> 
+            <li>En los montes en los valles Pista</li> 
+            <li>En totalidad a Ti Hay momentos Exaltate</li> 
+            <li>Enamorado Oasis Ministry Ft Karen Espino</li> 
+            <li>ENTRADA TRIUNFAL</li> 
+            <li>Escalando Pelda¤os Si Tuviera Fe</li> 
+            <li>Espiritu de Dios Pista PARA MUJER</li> 
+            <li>Esta Cayendo Jose Luis Reyes Karaoke</li> 
+            <li>Este corito es Estaban todos unanimes Pi</li> 
+            <li>Evangelina Crubinca Hermoso Nombre Eres</li> 
+            <li>Gratitude Brandon Lake Karaoke Female Lo</li> 
+            <li>Has cambiado mi lamento en baile Proposi</li> 
+            <li>Hasta Ver Tu Gloria Barak Pista</li> 
+            <li>Hay una uncion aqui pista y letra</li> 
+            <li>he visto Pista Patty Tamares</li> 
+            <li>Hermoso momento PISTA Tono mujer Tono ba</li> 
+            <li>Hermoso Nombre PISTA Christine D Clario</li> 
+            <li>Hermoso Nombre y Agnus Dei Pista Letra</li> 
+            <li>hevistoPistaPattyTamares</li> 
+            <li>Hoy Mas Que Nunca Marino Karaoke</li> 
+            <li>Hoy Mas Que Nunca Marino Karaoke</li> 
+            <li>Incomprensible Amor New Wine Pista</li> 
+            <li>Instrumental Pista Yo Me Rindo a El Abig</li> 
+            <li>Jesus Be The Name Elevation Worship Kara</li> 
+            <li>Jesus Esta Pasando Por Aqui Pista</li> 
+            <li>KARAOKE CORITOS ALEGRES CONOZCO A UN HOM</li> 
+            <li>KARAOKE YO QUIERO ENAMORARME MAS DE TI P</li> 
+            <li>La bondad de Dios PISTA Tono bajo Sol b</li> 
+            <li>La Cosecha Pista</li> 
+            <li>La SUNAMITA Nadie Puede Detenerle pista</li> 
+            <li>La tierra canta Barak pista karaoke</li> 
+            <li>Levanto mis manos Algo esta cayendo aqui</li> 
+            <li>Libre Soy Barak Ft Alex Campos H</li> 
+            <li>Lo haras otra vez PISTA Elevation Worshi</li> 
+            <li>Los Brazos de Papa Grupo Grace feat Oasi</li> 
+            <li>Love me so karaoke</li> 
+            <li>MARINO LAS DIEZ VIRGENES karaoke</li> 
+            <li>Marnellys Ocasio Dije que si Pista</li> 
+            <li>Me haces Falta karaoke Temis Chappe 001</li> 
+            <li>Mi deseo Mi plenitud Llena este lugar Je</li> 
+            <li>Mi Desierto Pista</li> 
+            <li>Mi Plenitud Pista</li> 
+            <li>Mi plenitud Yeshua tono mujer pista karaoke acordes</li> 
+            <li>Necesito a Cristo KARAOKE</li> 
+            <li>New Wine Que Los Cielos Se Abran Hoy Pis</li> 
+            <li>No Hay Dios Tan Grande Como Tu Coro Pist</li> 
+            <li>Padre Nuestro Bethel Music Pista Karaoke</li> 
+            <li>PISTA ADORACION TE ALABO 14 2 22</li> 
+            <li>Pista Anhelo conocerte Virginia Brito</li> 
+            <li>PISTA KARAOKE MAS ALLA DEL HORIZONTE 001</li> 
+            <li>Pista karaoke quiero conocer a Jesus Yes</li> 
+            <li>Pista La bondad de Dios Blanca & Essenti</li> 
+            <li>Pista Letra YAHWEH SE MANIFESTARA Oasis</li> 
+            <li>Pista LOOR A TI MI DIOS Los Voceros De C</li> 
+            <li>Pista medley Ingri Rosario(por el poder de tu amor-cante al se¤or-cuan grande es el)</li> 
+            <li>Pista Musica del Cielo Libre Soy Hay Lib</li> 
+            <li>Pista No hay lugar mas tono bajo</li> 
+            <li>Pista TE NECESITO Grace Rodriguez MULTIT</li> 
+            <li>Pista Vientos de Gloria New Wine</li> 
+            <li>Pistas Yo navegare Espiritu de Dios llen</li> 
+            <li>PODEROSO DIOS CENTRO DE VIDA PISTA</li> 
+            <li>Poderoso Dios pista karaoke acordes tono mujer 001</li> 
+            <li>Pon Aceite En Mi Lampara Ricardo Rodrigu</li> 
+            <li>Popurri de coros Oh que regalo precioso</li> 
+            <li>Preciosa Sangre PISTA Y LETRA Marisabel</li> 
+            <li>Purificame by Jonathan Napoles Pista Ins</li> 
+            <li>Que seri a de mi Pista Jesus Adrian Rome</li> 
+            <li>Quiero Conocer a Jesus - La Ni¤a de Tus Ojos - Tengo un Nuevo Amor</li> 
+            <li>Quiero llenar tu trono Tu Fidelidad Sant</li> 
+            <li>Raisa Diaz El E Santo Karaoke</li> 
+            <li>Raisa Diaz El es santo Karaoke</li> 
+            <li>Renuevame PISTA A Para mujer Exitos Cris</li> 
+            <li>Revelation Song Kari Jobe Official Live Video 001</li> 
+            <li>Rey Christine D Clario Pista</li> 
+            <li>Rey de reyes Rosa Karia pista tono y med</li> 
+            <li>Rompan El Techo Genesis Colon Karaoke To</li> 
+            <li>Salmo 23 Pista Leonel Tuchez Video Lyric</li> 
+            <li>Santo Espiritu Ven Pista</li> 
+            <li>Santo por siempre La IBI karaoke mujer u</li> 
+            <li>Santo por siempre PISTA Fa mayor</li> 
+            <li>secret place</li> 
+            <li>SHEKINAH Pista Barak tono original ft Mi</li> 
+            <li>Si te tengo a ti lo tengo todo Marcos Br</li> 
+            <li>Si tu presencia conmigo no va PISTA Oasi</li> 
+            <li>Sobre Alas De Paloma cover Virginia Brito</li> 
+            <li>SOY UN ALTAR PISTA CON LETRA</li> 
+            <li>SUMERGEME PISTA PARA VOZ DE MUJER</li> 
+            <li>Te doy gloria Vamos a cantar pista karao</li> 
+            <li>Toma Todo De Mi Virginia Brito PISTA</li> 
+            <li>Tu fidelidad es grande PISTA Voz de muje</li> 
+            <li>Tu gracia me salvo Pista</li> 
+            <li>Tu gracia Pista Karaoke</li> 
+            <li>Tu mirada Hermoso eres y Exaltate KARAOK</li> 
+            <li>Tu mirada</li> 
+            <li>Tu presencia es el cielo PISTA MUJER Isr</li> 
+            <li>Un destello de tu gloria pista karaoke a</li> 
+            <li>UN DIA CAMINABA Karaoke</li> 
+            <li>UNCION EN EL AIRE World Worship fe</li> 
+            <li>Vamos A Cantar Karaoke En Espiritu y En</li> 
+            <li>Vamos a Cantar PISTA</li> 
+            <li>Vasijas Rotas Sublime gracia PISTA Hillsong 001</li> 
+            <li>Ven Espiritu ven Marcos Barrientos Con l</li> 
+            <li>Ven Espiritu ven</li> 
+            <li>Vengan Angeles Virginia Brito</li> 
+            <li>Video Al Estar Aqui Pista</li> 
+            <li>Virginia Brito Hay un Rio de Vida Pista y Letra</li> 
+            <li>Viuda sin nada karaoke cristiano sin der</li> 
+            <li>Way Maker PISTA Tono bajo tono mujer La</li> 
+            <li>WHAT A GOD SEU Worship Instrumental with</li> 
+            <li>While I wait</li> 
+            <li>Yahweh se manifestara PISTA Tono mujer T</li> 
+            <li>YAHWEH SE MANIFESTARA VERSION CORTA Pist</li> 
+            <li>YESHUA PISTA Quiero conocer a Jesus</li> 
+            <li>Yo me alegre con mci karaoke coritos</li> 
+            <li>Yo navegare pista tono de mujer</li> 
+            <li>Yo Quiero Mas De Ti Cover Virginia Brito</li> 
+            <li>Yo Quiero Mas De Ti Cover Virginia Brito</li> 
+            <li>Yo soy un altar Virginia Brito</li> 
+        </ol>
+        <div class="no-results" id="noResults">No se encontraron canciones que coincidan con tu bÃºsqueda.</div>
+    </div>
+    <div class="stats">
+        <div class="stats-content">
+            <div class="stat-item">
+                <span class="stat-number" id="visibleCount">0</span>
+                <span class="stat-label">Mostrando</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="totalCount">0</span>
+                <span class="stat-label">Total de Canciones</span>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function updateCounts() { const allSongs = document.querySelectorAll('#songList li'); const visibleSongs = document.querySelectorAll('#songList li:not(.hidden)'); document.getElementById('totalCount').textContent = allSongs.length; document.getElementById('visibleCount').textContent = visibleSongs.length; const noResults = document.getElementById('noResults'); if (visibleSongs.length === 0 && allSongs.length > 0) { noResults.classList.add('show'); } else { noResults.classList.remove('show'); } }
+    document.getElementById('searchInput').addEventListener('input', function(e) { const searchTerm = e.target.value.toLowerCase().trim(); const songs = document.querySelectorAll('#songList li'); songs.forEach(song => { const songText = song.textContent.toLowerCase(); if (songText.includes(searchTerm)) { song.classList.remove('hidden'); } else { song.classList.add('hidden'); } }); updateCounts(); });
+    window.addEventListener('DOMContentLoaded', updateCounts);
+</script>
+</body>
+</html>
