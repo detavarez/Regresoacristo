@@ -7,7 +7,12 @@
 (function () {
   const instalada = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
   if (instalada) return;
-  const forzar = new URLSearchParams(location.search).has('instalar');
+  const params = new URLSearchParams(location.search);
+  const forzar = params.has('instalar');
+  const esPortal = /\/portal\/?(index\.html)?$/.test(location.pathname);
+  // Solo el Portal ofrece instalar por defecto; las demás páginas únicamente si el enlace trae ?instalar.
+  // Nunca dentro del Portal instalado (?portal=1).
+  if (!forzar && (!esPortal || params.get('portal') === '1')) return;
   const clave = 'ca_instalar_cerrado_' + location.pathname;
   if (!forzar && localStorage.getItem(clave)) return;
   const ua = navigator.userAgent;
