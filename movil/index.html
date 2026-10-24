@@ -151,7 +151,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   </div>
 </div>
 
-<div id="camOv"><video id="camVideo" autoplay playsinline muted></video><div class="camBar"><button type="button" class="camBtn" onclick="cerrarCamara()">Cancelar</button><button type="button" class="camShot" onclick="capturarFoto()" aria-label="Tomar foto"></button><span style="width:90px"></span></div></div>
+<div id="camOv"><video id="camVideo" autoplay playsinline muted></video><div class="camBar"><button type="button" class="camBtn" onclick="cerrarCamara()">Cancelar</button><button type="button" class="camShot" onclick="capturarFoto()" aria-label="Tomar foto"></button><button type="button" class="camBtn" id="camFlash" onclick="alternarFlash()" aria-label="Flash" style="width:90px">🔦 Luz</button></div></div>
 
 <div id="pg-pendientes" class="page"><div class="pg-title">Mis Registros</div><div class="pg-sub">Enviados y pendientes de aprobación</div><div id="listaPend"></div></div>
 <div id="pg-historial" class="page"><div class="pg-title">Historial</div><div class="pg-sub">Aprobados o rechazados</div><div id="listaHist"></div></div>
@@ -296,12 +296,30 @@ async function abrirCamara() {
   try {
     camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false });
     $('camVideo').srcObject = camStream;
+    camFlash = false; pintarFlash();
     $('camOv').style.display = 'block';
   } catch (e) {
     toast('No se pudo abrir la cámara. Puedes elegir la foto de la galería.');
   }
 }
+let camFlash = false;
+function pintarFlash() {
+  const b = $('camFlash'); if (!b) return;
+  b.textContent = camFlash ? '🔦 Luz: sí' : '🔦 Luz';
+  b.style.background = camFlash ? '#E8C97A' : ''; b.style.color = camFlash ? '#0D1B2A' : '';
+}
+// Linterna (flash) de la cámara: la permite Chrome en Android; Safari de iPhone no la expone a las páginas web.
+async function alternarFlash() {
+  const t = camStream && camStream.getVideoTracks()[0];
+  const cap = t && t.getCapabilities ? t.getCapabilities() : {};
+  if (!t || !cap.torch) { toast('Este teléfono o navegador no permite prender la luz desde la app. Usa la luz del lugar o la cámara del teléfono (galería).'); return; }
+  try {
+    await t.applyConstraints({ advanced: [{ torch: !camFlash }] });
+    camFlash = !camFlash; pintarFlash();
+  } catch (e) { toast('No se pudo prender la luz.'); }
+}
 function cerrarCamara() {
+  camFlash = false;
   if (camStream) camStream.getTracks().forEach(t => t.stop());
   camStream = null; $('camVideo').srcObject = null; $('camOv').style.display = 'none';
 }
