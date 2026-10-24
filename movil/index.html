@@ -209,7 +209,7 @@ $('fNombre').addEventListener('input', () => {
   $('btnBorrarNombre').style.display = $('fNombre').value ? '' : 'none';
   if (tipo !== 'Diezmo') return;
   const k = norm($('fNombre').value);
-  const m = personas.filter(p => norm(p.nombre) === k);
+  const m = personas.filter(p => norm(p.nombre) === k || norm(p.legal) === k || norm(p.completo) === k);
   if (m.length === 1 && m[0].sobre) $('fSobre').value = m[0].sobre;
 });
 $('fSobre').addEventListener('input', () => {
@@ -397,7 +397,7 @@ async function enviar() {
   let personaId = null;
   if (tipo !== 'Ofrenda') {
     const k = norm(nombre);
-    const m = personas.filter(p => norm(p.nombre) === k);
+    const m = personas.filter(p => norm(p.nombre) === k || norm(p.legal) === k || norm(p.completo) === k);
     if (m.length === 1) personaId = m[0].id;
   }
   const fila = {
@@ -468,8 +468,8 @@ async function cargar(avisar) {
 }
 
 async function cargarListas() {
-  const { data } = await sbCall(sb.from('personas').select('id, nombre, apellido, nombre_completo, sobre_actual').eq('archivado', false).range(0, 4999));
-  personas = (data || []).map(p => ({ id: p.id, nombre: p.nombre_completo || `${p.nombre || ''} ${p.apellido || ''}`.trim(), sobre: p.sobre_actual ? String(p.sobre_actual) : '' })).filter(p => p.nombre);
+  const { data } = await sbCall(sb.from('personas').select('id, nombre, apellido, apodo, nombre_completo, sobre_actual').eq('archivado', false).range(0, 4999));
+  personas = (data || []).map(p => ({ id: p.id, nombre: `${(p.apodo || '').trim() || (p.nombre || '').trim()} ${(p.apellido || '').trim()}`.trim() || p.nombre_completo || '', legal: `${(p.nombre || '').trim()} ${(p.apellido || '').trim()}`.trim(), completo: p.nombre_completo || '', sobre: p.sobre_actual ? String(p.sobre_actual) : '' })).filter(p => p.nombre);
   const rcfg = await sbCall(sb.from('config_iglesia').select('usar_sobres').eq('id', 1).maybeSingle());
   usarSobresM = !!(rcfg.data && rcfg.data.usar_sobres);
   setTipo(tipo);
@@ -489,7 +489,7 @@ async function cargarListas() {
   if (!rd.error && rd.data && rd.data.categoria && cats.includes(rd.data.categoria)) $('fCategoria').value = rd.data.categoria;
   const ro = await sbCall(sb.from('organizaciones').select('nombre').eq('archivado', false).order('nombre'));
   $('dlProveedores').innerHTML = ((!ro.error && ro.data) || []).map(o => `<option value="${esc(o.nombre)}">`).join('');
-  $('dlPersonas').innerHTML = personas.map(p => `<option value="${esc(p.nombre)}">`).join('');
+  $('dlPersonas').innerHTML = personas.map(p => `<option value="${esc(p.nombre)}">` + (p.legal && norm(p.legal) !== norm(p.nombre) ? `<option value="${esc(p.legal)}">` : '')).join('');
   let serv = SERVICIOS_BASE;
   const r = await sbCall(sb.from('tipos_servicio').select('nombre, activo').order('nombre'));
   if (!r.error && r.data && r.data.length) { const a = r.data.filter(x => x.activo !== false).map(x => x.nombre); if (a.length) serv = a; }

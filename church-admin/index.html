@@ -2779,7 +2779,7 @@ async function ejecutarBusquedaGlobal() {
   cont.innerHTML = '<div class="estadoCargando">Buscando…</div>';
   const like = '%' + q + '%';
   const [pe, tr, og, cp] = await Promise.all([
-    sbCall(sb.from('personas').select('id, nombre_completo').ilike('nombre_completo', like).limit(15)),
+    sbCall(sb.from('personas').select('id, nombre, apellido, apodo, nombre_completo').eq('archivado', false).or('nombre_completo.ilike.' + like + ',apodo.ilike.' + like + ',nombre.ilike.' + like + ',apellido.ilike.' + like).limit(15)),
     sbCall(sb.from('transacciones').select('id, fecha, descripcion, categoria, monto').or('descripcion.ilike.' + like + ',categoria.ilike.' + like + ',referencia.ilike.' + like).order('fecha', { ascending: false }).limit(15)),
     sbCall(sb.from('organizaciones').select('id, nombre, categoria').ilike('nombre', like).limit(10)),
     sbCall(sb.from('campanas').select('id, nombre').ilike('nombre', like).limit(10)),
@@ -2787,7 +2787,7 @@ async function ejecutarBusquedaGlobal() {
   if (mi !== busqSeq) return;
   const fila = (tipo, titulo, sub, accion) => `<div class="busqItem" onclick="${accion}"><span class="busqTipo">${tipo}</span><div><div>${escV28(titulo)}</div><div style="font-size:0.78rem; color:var(--text-muted);">${escV28(sub)}</div></div></div>`;
   let h = '';
-  const ps = (pe.data || []); if (ps.length) h += '<div class="busqGrupo">Personas</div>' + ps.map(x => fila('Persona', x.nombre_completo, 'Abrir Secretaría', "irDesdeBusqueda('persona')")).join('');
+  const ps = (pe.data || []); if (ps.length) h += '<div class="busqGrupo">Personas</div>' + ps.map(x => fila('Persona', nombreMostrar(x), 'Abrir Secretaría', "irDesdeBusqueda('persona')")).join('');
   const ts = (tr.data || []); if (ts.length) h += '<div class="busqGrupo">Transacciones</div>' + ts.map(x => fila(x.categoria || 'Trans.', x.descripcion || x.categoria || '', formatoFecha(x.fecha) + ' · ' + formatoMoneda(x.monto), "irDesdeBusqueda('trans')")).join('');
   const os = (og.data || []); if (os.length) h += '<div class="busqGrupo">Proveedores / Organizaciones</div>' + os.map(x => fila('Proveedor', x.nombre, x.categoria || '', "irDesdeBusqueda('prov')")).join('');
   const cs = (cp.data || []); if (cs.length) h += '<div class="busqGrupo">Campañas</div>' + cs.map(x => fila('Campaña', x.nombre, 'Abrir campañas', "irDesdeBusqueda('camp')")).join('');
@@ -3926,7 +3926,7 @@ async function cargarDeclaraciones() {
       const p = mapaPers[personaId];
       porPersona[personaId] = {
         persona_id: personaId,
-        nombre: p.nombre_completo || `${p.nombre} ${p.apellido || ''}`.trim(),
+        nombre: nombreLegal(p),
         direccion: direccionDePersona(p, mapaPers),
         diezmos: 0, donaciones: 0, promesas: 0, total: 0, items: [],
       };
@@ -8182,7 +8182,7 @@ function filtrarDirectorio() {
 function exportarDirectorioCSV() {
   if (cacheDirectorio.length === 0) { alert('No hay miembros que exportar.'); return; }
   csvDescargar('directorio_miembros.csv', ['Nombre', 'Teléfono', 'Correo', 'Familia', 'Dirección', 'Ciudad', 'Estado', 'Código Postal'],
-    cacheDirectorio.map(p => [p.nombre_completo || `${p.nombre} ${p.apellido}`, p.telefono || '', p.correo || '', p.households?.nombre || '', p.street || '', p.city || '', p.state || '', p.zip || '']));
+    cacheDirectorio.map(p => [nombreLegal(p), p.telefono || '', p.correo || '', p.households?.nombre || '', p.street || '', p.city || '', p.state || '', p.zip || '']));
 }
 
 // ── Cumpleaños ────────────────────────────────────────────────────────────
@@ -8798,13 +8798,21 @@ function renderResumenPastoral() {
 // siempre p.nombre_completo directamente.
 function nombreMostrar(p) {
   if (!p) return 'Persona no encontrada';
-  const formal = p.nombre_completo || `${p.nombre} ${p.apellido}`;
-  return p.apodo ? `${p.apodo} ${p.apellido || ''}`.trim() : formal;
+  const ap = (p.apodo || '').trim();
+  const base = ap || (p.nombre || '').trim();
+  const res = `${base} ${(p.apellido || '').trim()}`.trim();
+  return res || p.nombre_completo || 'Persona sin nombre';
+}
+
+// Nombre legal "Nombre Apellido": solo para recibos, declaraciones y reportes impresos.
+function nombreLegal(p) {
+  if (!p) return '';
+  const res = `${(p.nombre || '').trim()} ${(p.apellido || '').trim()}`.trim();
+  return res || p.nombre_completo || '';
 }
 
 function personaTextoBusqueda(p) {
-  const formal = p.nombre_completo || `${p.nombre} ${p.apellido}`;
-  return `${formal} ${p.apodo || ''}`.toLowerCase();
+  return `${p.nombre_completo || ''} ${p.nombre || ''} ${p.apellido || ''} ${p.apodo || ''}`.toLowerCase();
 }
 
 function nombrePersonaPorId(id) {
