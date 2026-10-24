@@ -49,10 +49,11 @@
 <script src="../shared/supabase-client.js"></script>
 <script src="../shared/auth.js"></script>
 <script src="../shared/seguridad.js"></script>
+<script src="../shared/nav.js"></script>
 <script src="../shared/instalar.js"></script>
 </head>
 <body>
-<div class="top"><b>Asistencia</b><span><a href="../portal/" id="lnkPortal">Portal</a> <button id="btnBloq" class="oculto" onclick="SEG.bloquear()" aria-label="Bloquear">🔒</button></span></div>
+<script>NAV.montar({ titulo: 'Asistencia', bloq: { oculto: true } });</script>
 
 <div id="login" class="oculto">
   <h2>Asistencia</h2>
@@ -172,7 +173,7 @@ async function iniciarPagina() {
   tipoSel = (tipos.find(x => x.id === localStorage.getItem('asist_tipo')) || tipos[0] || {}).id || null;
   $('fFecha').value = hoy();
   $('login').classList.add('oculto'); $('contenido').classList.remove('oculto'); $('pie').classList.remove('oculto');
-  $('btnBloq').classList.remove('oculto');
+  NAV.mostrar('btnBloq');
   pintarTipos(); pintar(); pintarVisitas();
   await cargarRegistro();
 }

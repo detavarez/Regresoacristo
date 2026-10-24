@@ -36,10 +36,11 @@
 <script src="../shared/supabase-client.js"></script>
 <script src="../shared/auth.js"></script>
 <script src="../shared/seguridad.js"></script>
+<script src="../shared/nav.js"></script>
 <script src="../shared/instalar.js"></script>
 </head>
 <body>
-<div class="top"><b>Portal de Asistentes</b><span><button id="btnBloq" class="oculto" onclick="SEG.bloquear()" aria-label="Bloquear">🔒</button> <button id="btnPerfil" class="oculto" onclick="SEG.abrirPerfil(false)" aria-label="Mi perfil">👤</button></span></div>
+<script>NAV.montar({ titulo: 'Portal de Asistentes', esPortal: true, bloq: { oculto: true }, perfil: true });</script>
 
 <div id="login" class="oculto">
   <h2>Entrar</h2>
@@ -85,7 +86,7 @@ async function mostrarPaginas() {
   }).join('') : '<div class="sub">Todavía no tienes páginas autorizadas. Pídele al administrador que te dé acceso.</div>';
   $('contenido').classList.remove('oculto');
   $('login').classList.add('oculto');
-  $('btnBloq').classList.remove('oculto'); $('btnPerfil').classList.remove('oculto');
+  NAV.mostrar('btnBloq'); NAV.mostrar('btnPerfil');
 }
 async function entrar(evt) {
   evt.preventDefault(); $('lgBtn').disabled = true; $('lgMsg').textContent = '';

@@ -15,6 +15,7 @@
 <script src="../shared/supabase-client.js"></script>
 <script src="../shared/auth.js"></script>
 <script src="../shared/seguridad.js"></script>
+<script src="../shared/nav.js"></script>
 <script src="../shared/instalar.js"></script>
 <style>
   :root {
@@ -612,13 +613,8 @@
 </style>
 </head>
 <body>
-<div class="topbar">
-  <div class="marca">Resumen <span>Pastoral</span> <span style="font-size:0.7rem; font-weight:600; opacity:0.85; margin-left:6px;" id="versionTopbar">Ver-P002</span></div>
-  <div class="usuarioInfo">
-    <button class="btnTopIcono" id="btnInstalar" style="display:none;" onclick="instalar()" aria-label="Instalar">📲</button><button class="btnTopIcono" id="btnTema" onclick="alternarTema()" aria-label="Tema">🌙</button>
-    <a class="btnTopIcono" href="../portal/" title="Portal" aria-label="Portal" style="text-decoration:none;display:inline-flex;align-items:center;">Portal</a><button class="btnTopIcono" id="btnBloq" style="display:none;" onclick="SEG.bloquear()" aria-label="Bloquear" title="Bloquear">🔒</button>
-  </div>
-</div>
+<script>NAV.montar({ titulo: 'Resumen Pastoral', sub: 'Ver-P002', bloq: { oculto: true },
+  extras: [{ id: 'btnInstalar', html: '📲', titulo: 'Instalar en el celular', onclick: 'instalar()', oculto: true }] });</script>
 <div class="contenido">
 <div id="loginBox" style="display:none; max-width:360px; margin:40px auto;">
   <h2>Resumen Pastoral</h2>
@@ -662,7 +658,6 @@ const fecha = iso => { const [y, m, d] = String(iso).split('-'); return `${m}/${
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function aplicarTema(t) {
   if (t === 'oscuro') document.documentElement.setAttribute('data-tema', 'oscuro'); else document.documentElement.removeAttribute('data-tema');
-  $('btnTema').textContent = t === 'oscuro' ? '☀️' : '🌙';
 }
 function alternarTema() {
   const n = document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'claro' : 'oscuro';
@@ -673,7 +668,7 @@ const hoy = new Date(); $('rpFechaAncla').value = new Date(hoy - hoy.getTimezone
 function mostrarVista() {
   $('loginBox').style.display = 'none';
   $('vista').style.display = '';
-  $('btnBloq').style.display = '';
+  NAV.mostrar('btnBloq');
   cargar();
 }
 async function entrarLogin(evt) {

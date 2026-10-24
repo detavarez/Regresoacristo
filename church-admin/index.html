@@ -16,6 +16,7 @@
 <script src="../shared/dialogos.js"></script>
 <script src="../shared/auth.js"></script>
 <script src="../shared/seguridad.js"></script>
+<script src="../shared/nav.js"></script>
 <script src="../shared/instalar.js"></script>
 <style>
   :root {
@@ -697,13 +698,8 @@
 
 <!-- ═══════════════ SHELL PRINCIPAL ═══════════════ -->
 <div id="pantallaApp">
-  <div class="topbar">
-    <div class="marca">Church <span>Admin</span> <span style="font-size:0.7rem; font-weight:600; opacity:0.85; margin-left:6px;" id="versionTopbar"></span></div>
-    <div class="usuarioInfo">
-      <button class="btnTopIcono" id="btnInstalar" style="display:none;" onclick="instalarApp()" title="Instalar en el celular" aria-label="Instalar">📲</button><button class="btnTopIcono" onclick="abrirBusquedaGlobal()" title="Búsqueda global" aria-label="Búsqueda global">🔍</button><button class="btnTopIcono" id="btnTema" onclick="alternarTema()" title="Tema claro/oscuro" aria-label="Tema">🌙</button>
-      <a class="btnTopIcono" href="../portal/" title="Portal" aria-label="Portal" style="text-decoration:none;display:inline-flex;align-items:center;">Portal</a><button class="btnTopIcono" onclick="SEG.bloquear()" title="Bloquear" aria-label="Bloquear">🔒</button><span id="nombreUsuarioTop"></span>
-    </div>
-  </div>
+  <script>NAV.montar({ titulo: 'Church Admin', sub: '<span id="versionTopbar"></span> · <span id="nombreUsuarioTop"></span>',
+    extras: [{ id: 'btnInstalar', html: '📲', titulo: 'Instalar en el celular', onclick: 'instalarApp()', oculto: true }, { html: '🔍', titulo: 'Búsqueda global', onclick: 'abrirBusquedaGlobal()' }] });</script>
 
   <div class="contenido">
     <!-- ═══ Vista: Dashboard (grid de módulos) ═══ -->
