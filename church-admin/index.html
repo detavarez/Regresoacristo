@@ -311,6 +311,9 @@
     align-items: flex-start;
     gap: 12px;
   }
+  .tarjetaSeguimiento > div:first-child { flex: 1; min-width: 0; }
+  .tarjetaSeguimiento > .badge-tipo { flex-shrink: 0; white-space: nowrap; }
+  #modalMover { z-index: 150; }
   .tarjetaSeguimiento:hover { box-shadow: 0 4px 14px rgba(15,36,69,0.1); }
   .tarjetaSeguimiento .nombrePersona { font-weight: 600; color: var(--heading); margin-bottom: 2px; }
   .tarjetaSeguimiento .metaLinea { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
@@ -698,7 +701,7 @@
     <div class="marca">Church <span>Admin</span> <span style="font-size:0.7rem; font-weight:600; opacity:0.85; margin-left:6px;" id="versionTopbar"></span></div>
     <div class="usuarioInfo">
       <button class="btnTopIcono" id="btnInstalar" style="display:none;" onclick="instalarApp()" title="Instalar en el celular" aria-label="Instalar">📲</button><button class="btnTopIcono" onclick="abrirBusquedaGlobal()" title="Búsqueda global" aria-label="Búsqueda global">🔍</button><button class="btnTopIcono" id="btnTema" onclick="alternarTema()" title="Tema claro/oscuro" aria-label="Tema">🌙</button>
-      <button class="btnTopIcono" onclick="SEG.bloquear()" title="Bloquear" aria-label="Bloquear">🔒</button><button class="btnTopIcono" onclick="SEG.abrirPerfil(false)" title="Mi perfil" aria-label="Mi perfil">👤</button><span id="nombreUsuarioTop" style="cursor:pointer;" onclick="SEG.abrirPerfil(false)"></span>
+      <a class="btnTopIcono" href="../portal/" title="Portal" aria-label="Portal" style="text-decoration:none;display:inline-flex;align-items:center;">Portal</a><button class="btnTopIcono" onclick="SEG.bloquear()" title="Bloquear" aria-label="Bloquear">🔒</button><span id="nombreUsuarioTop"></span>
     </div>
   </div>
 
@@ -7211,6 +7214,18 @@ function renderResumenDiezmos(filas) {
     <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${_f.length}</div></div>`;
 }
 
+// Línea de detalle uniforme: fecha · método · ID de transacción (sin repetir el nombre del método; estado solo si no está Completado).
+function refLimpia(ref) {
+  let r = String(ref || '').trim();
+  let antes;
+  do { antes = r; r = r.replace(/^(zelle\s*\*?\s*zelle|zelle|cash\s*app)\s*[*:#-]*\s*/i, ''); } while (r !== antes);
+  return r.trim();
+}
+function metaMovimiento(d) {
+  return [formatoFecha(d.fecha), d.metodo || '—', refLimpia(d.referencia), (d.estado && d.estado !== 'Completado') ? d.estado : '']
+    .filter(Boolean).map(escV28).join(' · ');
+}
+
 function renderDiezmos(filas) {
   const lista = document.getElementById('listaDiezmos');
   if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay diezmos registrados.</div>'; return; }
@@ -7218,7 +7233,7 @@ function renderDiezmos(filas) {
     <div class="tarjetaSeguimiento" onclick="abrirFormDiezmo('${d.id}')">
       <div>
         <div class="nombrePersona">${nombrePersonaPorId(d.persona_id)}</div>
-        <div class="metaLinea">${formatoFecha(d.fecha)}${d.no_sobre ? ' · Sobre ' + escV28(d.no_sobre) : ''} · ${d.metodo || '—'}${d.referencia ? ' · ' + d.referencia : ''} · ${d.estado || ''}</div>
+        <div class="metaLinea">${metaMovimiento(d)}</div>
       </div>
       <span class="badge badge-tipo">${formatoMoneda(d.monto)}</span>
     </div>`).join('');
@@ -7375,7 +7390,7 @@ function renderOfrendas(filas) {
     <div class="tarjetaSeguimiento" onclick="abrirFormOfrenda('${o.id}')">
       <div>
         <div class="nombrePersona">${o.tipo || 'Ofrenda'}</div>
-        <div class="metaLinea">${formatoFecha(o.fecha)} · ${o.metodo || '—'} · ${o.estado || ''}</div>
+        <div class="metaLinea">${metaMovimiento(o)}</div>
       </div>
       <span class="badge badge-tipo">${formatoMoneda(o.monto)}</span>
     </div>`).join('');
@@ -7512,7 +7527,7 @@ function renderDonaciones(filas) {
     <div class="tarjetaSeguimiento" onclick="abrirFormDonacion('${d.id}')">
       <div>
         <div class="nombrePersona">${nombrePersonaPorId(d.persona_id)}</div>
-        <div class="metaLinea">${formatoFecha(d.fecha)} · ${d.metodo || '—'}${d.referencia ? ' · ' + d.referencia : ''} · ${d.estado || ''}</div>
+        <div class="metaLinea">${metaMovimiento(d)}</div>
       </div>
       <span class="badge badge-tipo">${formatoMoneda(d.monto)}</span>
     </div>`).join('');

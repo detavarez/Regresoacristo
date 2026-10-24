@@ -11,6 +11,7 @@
 <title>Asistencia</title>
 <style>
   :root { --navy:#0f2445; --bg:#f4f6f9; --surface:#fff; --text:#1a2433; --muted:#6b7686; --border:#dbe1ea; --ok:#1f8f5f; --okbg:#e5f6ed; }
+  :root[data-tema="oscuro"] { --bg:#0b1426; --surface:#14213a; --text:#e6ecf5; --muted:#9fb0c8; --border:#2a3b5c; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { margin:0; font-family:-apple-system,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); padding-bottom:90px; }
   .top { background:var(--navy); color:#fff; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:8px; position:sticky; top:0; z-index:20; }
@@ -51,7 +52,7 @@
 <script src="../shared/instalar.js"></script>
 </head>
 <body>
-<div class="top"><b>Asistencia</b><span><a href="../portal/" id="lnkPortal" class="oculto">Portal</a> <button id="btnBloq" class="oculto" onclick="SEG.bloquear()" aria-label="Bloquear">🔒</button> <button id="btnPerfil" class="oculto" onclick="SEG.abrirPerfil(false)" aria-label="Mi perfil">👤</button></span></div>
+<div class="top"><b>Asistencia</b><span><a href="../portal/" id="lnkPortal">Portal</a> <button id="btnBloq" class="oculto" onclick="SEG.bloquear()" aria-label="Bloquear">🔒</button></span></div>
 
 <div id="login" class="oculto">
   <h2>Asistencia</h2>
@@ -171,8 +172,7 @@ async function iniciarPagina() {
   tipoSel = (tipos.find(x => x.id === localStorage.getItem('asist_tipo')) || tipos[0] || {}).id || null;
   $('fFecha').value = hoy();
   $('login').classList.add('oculto'); $('contenido').classList.remove('oculto'); $('pie').classList.remove('oculto');
-  $('btnBloq').classList.remove('oculto'); $('btnPerfil').classList.remove('oculto');
-  if (new URLSearchParams(location.search).get('portal') === '1') $('lnkPortal').classList.remove('oculto');
+  $('btnBloq').classList.remove('oculto');
   pintarTipos(); pintar(); pintarVisitas();
   await cargarRegistro();
 }

@@ -616,7 +616,7 @@
   <div class="marca">Resumen <span>Pastoral</span> <span style="font-size:0.7rem; font-weight:600; opacity:0.85; margin-left:6px;" id="versionTopbar">Ver-P002</span></div>
   <div class="usuarioInfo">
     <button class="btnTopIcono" id="btnInstalar" style="display:none;" onclick="instalar()" aria-label="Instalar">📲</button><button class="btnTopIcono" id="btnTema" onclick="alternarTema()" aria-label="Tema">🌙</button>
-    <button class="btnTopIcono" id="btnBloq" style="display:none;" onclick="SEG.bloquear()" aria-label="Bloquear" title="Bloquear">🔒</button><button class="btnTopIcono" id="btnPerfil" style="display:none;" onclick="SEG.abrirPerfil(false)" aria-label="Mi perfil" title="Mi perfil">👤</button>
+    <a class="btnTopIcono" href="../portal/" title="Portal" aria-label="Portal" style="text-decoration:none;display:inline-flex;align-items:center;">Portal</a><button class="btnTopIcono" id="btnBloq" style="display:none;" onclick="SEG.bloquear()" aria-label="Bloquear" title="Bloquear">🔒</button>
   </div>
 </div>
 <div class="contenido">
@@ -673,7 +673,7 @@ const hoy = new Date(); $('rpFechaAncla').value = new Date(hoy - hoy.getTimezone
 function mostrarVista() {
   $('loginBox').style.display = 'none';
   $('vista').style.display = '';
-  $('btnBloq').style.display = ''; $('btnPerfil').style.display = '';
+  $('btnBloq').style.display = '';
   cargar();
 }
 async function entrarLogin(evt) {

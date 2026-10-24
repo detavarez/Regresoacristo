@@ -1,0 +1,5 @@
+<!doctype html><html><body><script>
+window.getSesion=()=>({usuario:{id:'u1',nombre:'David',correo:'d@x.com'}});
+window.sbCall=async p=>p; window.confirmar=async()=>true;
+window.sb={from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{bloqueo_minutos:15}})})})}),rpc:async()=>({data:{tiene_pin:false,preguntado:true,metodo_defecto:'clave'}}),auth:{}};
+</script><script src="/shared/seguridad.js"></script><script>SEG.init({cerrarSesion:()=>{},nombreApp:'T'});SEG.abrirPerfil(false);</script></body></html>

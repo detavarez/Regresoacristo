@@ -61,6 +61,12 @@
       .segFila{display:grid;grid-template-columns:1fr 1fr;gap:8px}
       .segBtnRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
       .segBtnRow button{flex:1;min-width:120px}
+      .segLista{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+      .segItem{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(128,128,128,.4);background:none;color:inherit;cursor:pointer;font-size:.95rem;text-align:left}
+      .segItem b{font-weight:600;font-size:.85rem;opacity:.8}
+      .segPanelP{display:none}
+      .segPanelP h1{margin-bottom:10px}
+      .segPanelP .segFila{margin-top:8px}
     `;
     document.head.appendChild(css);
 
@@ -91,34 +97,52 @@
     perfil.style.zIndex = '5500';
     perfil.style.background = 'rgba(0,0,0,.55)';
     perfil.innerHTML = `
-      <div class="segCard segPerfil">
+      <div class=\"segCard segPerfil\">
         <h1>Mi perfil</h1>
-        <div class="segSub" id="segPerfilUser"></div>
-        <div class="segSub" id="segPerfilIntro" style="display:none">Elige cómo quieres entrar cada vez. Es tu decisión: puedes usar PIN, huella o rostro, o tu email y contraseña.</div>
-        <div class="segMsg" id="segPerfilMsg"></div>
-
-        <div class="segSec">Método predeterminado de acceso</div>
-        <select id="segSelMetodo" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(128,128,128,.45);background:transparent;color:inherit"></select>
-
-        <div class="segSec">PIN de 4 números</div>
-        <div class="segSub" id="segPinEstado"></div>
-        <div class="segFila"><input id="segPin1" type="password" inputmode="numeric" maxlength="4" placeholder="PIN nuevo" autocomplete="off"><input id="segPin2" type="password" inputmode="numeric" maxlength="4" placeholder="Repetir PIN" autocomplete="off"></div>
-        <div class="segBtnRow"><button class="segBtn2" id="segGuardarPin" type="button">Guardar PIN</button><button class="segBtn2" id="segQuitarPin" type="button">No usar PIN</button></div>
-
-        <div class="segSec">Huella o rostro (este dispositivo)</div>
-        <div class="segSub" id="segBioEstado"></div>
-        <div class="segBtnRow"><button class="segBtn2" id="segBioOn" type="button">Activar</button><button class="segBtn2" id="segBioOff" type="button">Desactivar</button></div>
-
-        <div class="segSec">Contraseña</div>
-        <input id="segClaveActual" type="password" placeholder="Contraseña actual" autocomplete="current-password">
-        <div class="segFila"><input id="segClaveNueva" type="password" placeholder="Nueva contraseña" autocomplete="new-password"><input id="segClaveNueva2" type="password" placeholder="Repetir" autocomplete="new-password"></div>
-        <div class="segBtnRow"><button class="segBtn2" id="segCambiarClave" type="button">Cambiar contraseña</button></div>
-
-        <div class="segSec">Sesión</div>
-        <div class="segBtnRow"><button class="segBtn2" id="segBloquearAhora" type="button">Bloquear ahora</button><button class="segBtn2" id="segCerrarSesion" type="button">Cerrar sesión</button></div>
-        <button class="segBtn2" id="segCerrarPerfil" type="button" style="margin-top:14px">Cerrar</button>
+        <div class=\"segSub\" id=\"segPerfilUser\"></div>
+        <div class=\"segSub\" id=\"segPerfilIntro\" style=\"display:none\">Elige cómo quieres entrar cada vez. Es tu decisión: puedes usar PIN, huella o rostro, o tu email y contraseña.</div>
+        <div class=\"segMsg\" id=\"segPerfilMsg\"></div>
+        <div class=\"segLista\">
+          <button type=\"button\" class=\"segItem\" id=\"segAbrMetodo\"><span>Método de acceso</span><b id=\"segResMetodo\"></b></button>
+          <button type=\"button\" class=\"segItem\" id=\"segAbrPin\"><span>PIN</span><b id=\"segPinEstado\"></b></button>
+          <button type=\"button\" class=\"segItem\" id=\"segBioBtn\"><span>Huella o rostro</span><b id=\"segBioEstado\"></b></button>
+          <button type=\"button\" class=\"segItem\" id=\"segAbrClave\"><span>Contraseña</span><b>Cambiar</b></button>
+          <button type=\"button\" class=\"segItem\" id=\"segTemaBtn\"><span>Tema</span><b id=\"segTemaTxt\"></b></button>
+        </div>
+        <div class=\"segBtnRow\"><button class=\"segBtn2\" id=\"segBloquearAhora\" type=\"button\">Bloquear ahora</button><button class=\"segBtn2\" id=\"segCerrarSesion\" type=\"button\">Cerrar sesión</button></div>
+        <button class=\"segBtn2\" id=\"segCerrarPerfil\" type=\"button\" style=\"margin-top:14px\">Cerrar</button>
       </div>`;
     document.body.appendChild(perfil);
+
+    const pop = document.createElement('div');
+    pop.id = 'segPop';
+    pop.className = 'segOv';
+    pop.style.zIndex = '5600';
+    pop.style.background = 'rgba(0,0,0,.55)';
+    pop.innerHTML = `
+      <div class="segCard">
+        <div id="segPopMetodo" class="segPanelP">
+          <h1>Método de acceso</h1>
+          <div class="segSub">Cómo quieres entrar cada vez.</div>
+          <select id="segSelMetodo" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(128,128,128,.45);background:transparent;color:inherit"></select>
+          <button class="segBtn" id="segMetodoOk" type="button">Guardar</button>
+        </div>
+        <div id="segPopPin" class="segPanelP">
+          <h1>PIN de 4 números</h1>
+          <div class="segFila"><input id="segPin1" type="password" inputmode="numeric" maxlength="4" placeholder="PIN nuevo" autocomplete="off"><input id="segPin2" type="password" inputmode="numeric" maxlength="4" placeholder="Repetir PIN" autocomplete="off"></div>
+          <button class="segBtn" id="segGuardarPin" type="button">Guardar PIN</button>
+          <button class="segBtn2" id="segQuitarPin" type="button">No usar PIN</button>
+        </div>
+        <div id="segPopClave" class="segPanelP">
+          <h1>Cambiar contraseña</h1>
+          <input id="segClaveActual" type="password" placeholder="Contraseña actual" autocomplete="current-password">
+          <div class="segFila"><input id="segClaveNueva" type="password" placeholder="Nueva contraseña" autocomplete="new-password"><input id="segClaveNueva2" type="password" placeholder="Repetir" autocomplete="new-password"></div>
+          <button class="segBtn" id="segCambiarClave" type="button">Cambiar contraseña</button>
+        </div>
+        <div class="segMsg" id="segPopMsg"></div>
+        <button class="segBtn2" id="segPopCerrar" type="button">Cancelar</button>
+      </div>`;
+    document.body.appendChild(pop);
 
     $('segBtnInicio').onclick = () => iniciarMetodo(metodo);
     $('segInPin').oninput = e => { if (e.target.value.length === 4) verificarPin(); };
@@ -127,11 +151,15 @@
     $('segUsaPin').onclick = () => iniciarMetodo('pin');
     $('segUsaBio').onclick = () => iniciarMetodo('bio');
     $('segUsaClave').onclick = () => iniciarMetodo('clave');
-    $('segSelMetodo').onchange = guardarMetodo;
+    $('segAbrMetodo').onclick = () => abrirPop('segPopMetodo');
+    $('segAbrPin').onclick = () => abrirPop('segPopPin');
+    $('segAbrClave').onclick = () => abrirPop('segPopClave');
+    $('segMetodoOk').onclick = guardarMetodo;
+    $('segPopCerrar').onclick = cerrarPop;
+    $('segTemaBtn').onclick = alternarTema;
+    $('segBioBtn').onclick = () => (bioAqui() ? bioQuitar() : bioActivar());
     $('segGuardarPin').onclick = guardarPin;
     $('segQuitarPin').onclick = quitarPin;
-    $('segBioOn').onclick = bioActivar;
-    $('segBioOff').onclick = bioQuitar;
     $('segCambiarClave').onclick = cambiarClave;
     $('segBloquearAhora').onclick = () => { cerrarPerfil(); bloquear(); };
     $('segCerrarSesion').onclick = async () => {
@@ -148,6 +176,12 @@
     m.textContent = texto;
     m.className = 'segMsg' + (ok ? ' ok' : '');
     m.style.display = texto ? 'block' : 'none';
+    // Si hay una ventanilla abierta, el mensaje se ve ahí; al tener éxito se cierra y queda en el perfil.
+    if (id === 'segPerfilMsg' && $('segPop') && $('segPop').style.display === 'flex') {
+      const q = $('segPopMsg');
+      q.textContent = texto; q.className = 'segMsg' + (ok ? ' ok' : ''); q.style.display = texto ? 'block' : 'none';
+      if (ok) cerrarPop();
+    }
   }
 
   // ───────── Estado y configuración ─────────
@@ -336,26 +370,47 @@
   }
 
   // ───────── Perfil ─────────
+  const ETIQ_METODO = { clave: 'Email y contraseña', pin: 'PIN', bio: 'Huella o rostro' };
   function pintarPerfil() {
     const u = usuario() || {};
     $('segPerfilUser').textContent = (u.nombre || '') + (u.correo ? ' · ' + u.correo : '');
-    $('segPinEstado').textContent = est.tiene_pin ? 'PIN activado.' : 'No usas PIN.';
+    $('segResMetodo').textContent = ETIQ_METODO[est.metodo_defecto || 'clave'] || '';
+    $('segPinEstado').textContent = est.tiene_pin ? 'Activado · Cambiar' : 'Crear';
     $('segQuitarPin').style.display = est.tiene_pin ? '' : 'none';
-    $('segBioEstado').textContent = !bioSoportada() ? 'Este navegador no permite huella o rostro.' : (bioAqui() ? 'Activada en este dispositivo.' : 'No activada en este dispositivo.');
-    $('segBioOn').style.display = (bioSoportada() && !bioAqui()) ? '' : 'none';
-    $('segBioOff').style.display = bioAqui() ? '' : 'none';
+    $('segBioEstado').textContent = !bioSoportada() ? 'No disponible' : (bioAqui() ? 'Activada · Desactivar' : 'Activar');
+    $('segBioBtn').disabled = !bioSoportada();
     const sel = $('segSelMetodo');
     sel.innerHTML = `<option value="clave">Email y contraseña</option><option value="pin">PIN de 4 números</option><option value="bio">Huella o rostro (este dispositivo)</option>`;
     sel.value = est.metodo_defecto || 'clave';
+    $('segTemaTxt').textContent = temaActual() === 'oscuro' ? '🌞 Modo claro' : '🌛 Modo oscuro';
   }
+  function abrirPop(panel) {
+    ['segPopMetodo', 'segPopPin', 'segPopClave'].forEach(i => { $(i).style.display = i === panel ? 'block' : 'none'; });
+    ['segPin1', 'segPin2', 'segClaveActual', 'segClaveNueva', 'segClaveNueva2'].forEach(i => { $(i).value = ''; });
+    const q = $('segPopMsg'); q.textContent = ''; q.style.display = 'none';
+    $('segPop').style.display = 'flex';
+  }
+  function cerrarPop() { if ($('segPop')) $('segPop').style.display = 'none'; }
+  // Tema claro/oscuro compartido por todas las apps (misma clave que Church Admin).
+  function temaActual() { try { return localStorage.getItem('ca_tema') === 'oscuro' ? 'oscuro' : 'claro'; } catch (e) { return 'claro'; } }
+  function aplicarTemaGlobal(t) {
+    if (t === 'oscuro') document.documentElement.setAttribute('data-tema', 'oscuro'); else document.documentElement.removeAttribute('data-tema');
+  }
+  function alternarTema() {
+    const nuevo = temaActual() === 'oscuro' ? 'claro' : 'oscuro';
+    try { localStorage.setItem('ca_tema', nuevo); } catch (e) { /* sin almacenamiento */ }
+    aplicarTemaGlobal(nuevo);
+    pintarPerfil();
+  }
+  aplicarTemaGlobal(temaActual());
   function abrirPerfil(primeraVez) {
     pintarPerfil();
     $('segPerfilIntro').style.display = primeraVez ? 'block' : 'none';
+    cerrarPop();
     msg('segPerfilMsg', '');
-    ['segPin1', 'segPin2', 'segClaveActual', 'segClaveNueva', 'segClaveNueva2'].forEach(i => { $(i).value = ''; });
     $('segPerfil').style.display = 'flex';
   }
-  function cerrarPerfil() { if ($('segPerfil')) $('segPerfil').style.display = 'none'; }
+  function cerrarPerfil() { cerrarPop(); if ($('segPerfil')) $('segPerfil').style.display = 'none'; }
 
   async function guardarMetodo() {
     const m = $('segSelMetodo').value;

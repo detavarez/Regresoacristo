@@ -5,3 +5,4 @@ Extras recientes: MobileCash M012 (cámara dentro de la app, borrador recuperabl
 16 Apodos: "Apodo Apellido" en búsquedas/listas/perfil; nombre legal en reportes y exportes (church-admin, movil, asistencia).
 Filtros/totales/orden/imprimir/Excel ahora también en Ventas, Eventos, Otros Ingresos y Pagos de Promesas.
 A006: filtro Estado, Recurrentes con filtros, Auditoría (Hasta/Usuario), Aprobar todo.
+UI: listas de Diezmos/Donaciones/Ofrendas uniformes (fecha · método · ID, sin sobre); ventana Mover visible; nav de módulos = Portal · 🔒 (perfil solo en el Portal); perfil simplificado con ventanillas + tema 🌛/🌞 (clave `ca_tema`); MobileCash sin logo (con ↻ y punto verde).

@@ -99,8 +99,8 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 
 <div id="app" style="display:none">
 <div class="topbar">
-  <div class="tl"><div class="logo-i">✝</div><div><h1>MobileCash</h1><div class="ts">Ver-M012 · <span id="quien"></span></div></div></div>
-  <div style="display:flex;gap:8px;align-items:center"><span id="dot" style="width:8px;height:8px;border-radius:50%;background:#3DAA6E;display:inline-block"></span><button class="sbtn" id="btnInstalar" style="display:none" onclick="instalarApp()">📲</button><button class="sbtn" onclick="cargar(true)">↻</button><button class="sbtn" onclick="SEG.bloquear()" aria-label="Bloquear">🔒</button><button class="sbtn" onclick="SEG.abrirPerfil(false)" aria-label="Mi perfil">👤</button></div>
+  <div class="tl"><div><h1>MobileCash</h1><div class="ts">Ver-M012 · <span id="quien"></span></div></div></div>
+  <div style="display:flex;gap:8px;align-items:center"><span id="dot" style="width:8px;height:8px;border-radius:50%;background:#3DAA6E;display:inline-block"></span><button class="sbtn" id="btnInstalar" style="display:none" onclick="instalarApp()">📲</button><button class="sbtn" onclick="cargar(true)" aria-label="Actualizar">↻</button><a class="sbtn" href="../portal/" aria-label="Portal" style="text-decoration:none;display:inline-flex;align-items:center;">Portal</a><button class="sbtn" onclick="SEG.bloquear()" aria-label="Bloquear">🔒</button></div>
 </div>
 <div id="toast" class="toast"></div>
 
