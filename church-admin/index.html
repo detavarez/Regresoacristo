@@ -836,6 +836,9 @@
       <div id="subvistaFinRecurrentes" style="display:none;">
         <div class="grid-resumen" id="resumenRecurrentes" style="margin-bottom:20px;"></div>
         <div class="barraAcciones">
+          <input type="text" id="rcBuscar" placeholder="Buscar plantilla…" oninput="rcFiltrar()">
+          <select id="rcFiltroEstado" onchange="rcFiltrar()" style="max-width:130px;"><option value="">Todas</option><option value="1">Activas</option><option value="0">Pausadas</option></select>
+          <select id="rcFiltroTipo" onchange="rcFiltrar()" style="max-width:130px;"><option value="">Gasto e ingreso</option><option value="Gasto">Gastos</option><option value="Ingreso">Ingresos</option></select>
           <button class="btnAccion" onclick="abrirFormRecurrente()">+ Nueva Plantilla</button>
         </div>
         <div id="listaRecurrentes"><div class="estadoCargando">Cargando plantillas…</div></div>
@@ -851,6 +854,7 @@
           </div>
           <input type="checkbox" id="paVerResueltos" style="display:none;">
         </div>
+        <div class="barraAcciones"><button type="button" class="btnAccion" id="paBtnTodo" onclick="paAprobarTodo()">Aprobar todo (solo los listos)</button></div>
         <div class="grid-resumen" id="resumenPorAprobar" style="margin-bottom:20px;"></div>
         <div id="listaPorAprobar"><div class="estadoCargando">Cargando pagos…</div></div>
       </div>
@@ -1064,7 +1068,9 @@
           <input type="text" id="auBuscar" placeholder="Buscar descripción…" oninput="auRender()">
           <select id="auModulo" onchange="auRender()"><option value="">Todos los módulos</option></select>
           <select id="auAccion" onchange="auRender()"><option value="">Todas las acciones</option><option value="crear">Crear</option><option value="editar">Editar</option><option value="eliminar">Eliminar</option></select>
+          <select id="auUsuario" onchange="auRender()"><option value="">Todos los usuarios</option></select>
           <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="auDesde" onchange="cargarAuditoria()"></label>
+          <label style="font-size:0.8rem; color: var(--text-muted);">Hasta <input type="date" id="auHasta" onchange="cargarAuditoria()"></label>
           <button class="btnSecundario" onclick="auExportarCSV()">⬇ Exportar</button>
         </div>
         <div id="listaAuditoria"><div class="estadoCargando">Cargando…</div></div>
@@ -4827,6 +4833,8 @@ async function cargarAuditoria() {
   let q = sb.from('audit_log').select('*').order('creado_en', { ascending: false }).range(0, 499);
   const desde = document.getElementById('auDesde').value;
   if (desde) q = q.gte('creado_en', desde);
+  const hasta = document.getElementById('auHasta').value;
+  if (hasta) q = q.lt('creado_en', new Date(new Date(hasta + 'T00:00:00').getTime() + 86400000).toISOString());
   const [r, ru] = await Promise.all([sbCall(q), sbCall(sb.from('usuarios').select('id, nombre'))]);
   if (r.error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(r.error.message)}. ¿Ya corriste el SQL de auditoría y tienes permiso para verla?</div>`; return; }
   auUsuarios = new Map((ru.data || []).map(u => [String(u.id), u.nombre]));
@@ -4835,6 +4843,10 @@ async function cargarAuditoria() {
   const mods = [...new Set(cacheAuditoria.map(a => a.modulo).filter(Boolean))].sort();
   sel.innerHTML = '<option value="">Todos los módulos</option>' + mods.map(m => `<option value="${escV28(m)}">${escV28(m)}</option>`).join('');
   sel.value = mods.includes(actual) ? actual : '';
+  const su = document.getElementById('auUsuario'), uActual = su.value;
+  const uids = [...new Set(cacheAuditoria.map(a => a.usuario_id).filter(Boolean).map(String))];
+  su.innerHTML = '<option value="">Todos los usuarios</option>' + uids.map(id => `<option value="${escV28(id)}">${escV28(auUsuarios.get(id) || id.slice(0, 8))}</option>`).join('');
+  su.value = uids.includes(uActual) ? uActual : '';
   auRender();
 }
 
@@ -4851,7 +4863,8 @@ function auCambios(a) {
 function auRender() {
   const q = (document.getElementById('auBuscar').value || '').trim().toLowerCase();
   const mod = document.getElementById('auModulo').value, acc = document.getElementById('auAccion').value;
-  auFiltradas = cacheAuditoria.filter(a => (!mod || a.modulo === mod) && (!acc || a.accion === acc) && (!q || (a.descripcion || '').toLowerCase().includes(q)));
+  const usr = (document.getElementById('auUsuario') || {}).value || '';
+  auFiltradas = cacheAuditoria.filter(a => (!usr || String(a.usuario_id) === usr) && (!mod || a.modulo === mod) && (!acc || a.accion === acc) && (!q || (a.descripcion || '').toLowerCase().includes(q)));
   const lista = document.getElementById('listaAuditoria');
   if (!auFiltradas.length) { lista.innerHTML = '<div class="estadoVacio">Sin registros. La auditoría solo registra cambios hechos después de instalar el SQL.</div>'; return; }
   const icono = { crear: '➕', editar: '✏️', eliminar: '🗑️' };
@@ -5915,7 +5928,7 @@ async function cargarRecurrentes() {
 
   cacheRecurrentes = data || [];
   renderResumenRecurrentes();
-  renderRecurrentes(cacheRecurrentes);
+  rcFiltrar();
 }
 
 async function asegurarDirectorioFinanzas() {
@@ -5937,6 +5950,16 @@ function renderResumenRecurrentes() {
     <div class="tarjetaResumen egreso"><div class="etiqueta">Gastos recurrentes activos</div><div class="monto">${formatoMoneda(totalGasto)}</div></div>
     <div class="tarjetaResumen ingreso"><div class="etiqueta">Ingresos recurrentes activos</div><div class="monto">${formatoMoneda(totalIngreso)}</div></div>
     <div class="tarjetaResumen"><div class="etiqueta">Plantillas totales</div><div class="monto">${cacheRecurrentes.length}</div></div>`;
+}
+
+function rcFiltrar() {
+  const q = ((document.getElementById('rcBuscar') || {}).value || '').trim().toLowerCase();
+  const est = (document.getElementById('rcFiltroEstado') || {}).value || '';
+  const tipo = (document.getElementById('rcFiltroTipo') || {}).value || '';
+  renderRecurrentes(cacheRecurrentes.filter(r =>
+    (!q || `${r.descripcion || ''} ${r.categoria || ''} ${r.frecuencia || ''}`.toLowerCase().includes(q)) &&
+    (!est || (est === '1') === !!r.activo) &&
+    (!tipo || (tipo === 'Ingreso' ? r.tipo === 'Ingreso' : r.tipo !== 'Ingreso'))));
 }
 
 function renderRecurrentes(filas) {
@@ -6245,6 +6268,50 @@ async function paDevolver(id) {
   await sbCall(sb.from('pagos_entrantes').update({ estado: 'Por aprobar', resuelto_por: null, resuelto_en: null, tipo_aprobado: null, transaccion_id: null }).eq('id', id));
 }
 
+// Núcleo de aprobación (una sola vía para el formulario y para "Aprobar todo").
+async function paAprobarCore(x, { tipo, personaId, sub, fondoId, fecha }) {
+  const id = x.id;
+  const { data: ganado, error: eClaim } = await paReclamar(id, 'Aprobado');
+  if (eClaim) return { ok: false, msg: 'No se pudo reservar el pago: ' + eClaim.message };
+  if (!ganado || ganado.length === 0) return { ok: false, msg: 'Este pago ya fue procesado por otra persona.', procesado: true };
+
+  const sesion = getSesion();
+  const f = PA_FUENTES[x.fuente] || { etiqueta: x.fuente, metodo: 'Electrónico' };
+  const referencia = `${f.etiqueta} ${x.external_id}`;
+  const monto = Number(x.monto);
+  const nombre = personaId ? nombrePersonaPorId(personaId) : x.remitente;
+
+  let descripcion, categoria, origen, cuentaCr;
+  if (tipo === 'Diezmo') { descripcion = `Diezmo — ${nombre}`; categoria = 'Diezmos'; origen = 'Diezmo'; cuentaCr = cuentaIdPorCodigo('4001'); }
+  else if (tipo === 'Ofrenda') { descripcion = `Ofrenda — ${sub}`; categoria = sub; origen = 'Ofrenda'; cuentaCr = cuentaIdPorCodigo(OFRENDA_TIPO_CUENTA[sub] || '4002'); }
+  else { descripcion = `Donación — ${nombre}`; categoria = sub; origen = 'Donación'; cuentaCr = cuentaIdPorCodigo('4003'); }
+
+  const { data: trans, error: errTrans } = await sbCall(sb.from('transacciones').insert({
+    fecha, descripcion, categoria, tipo: 'Ingreso', tipo_origen: origen, metodo: f.metodo, monto,
+    referencia, estado: 'Completado', fondo_id: fondoId, cuenta_cr: cuentaCr, solo_fondo: false,
+    creado_por: sesion.usuario?.id || null,
+  }).select().single());
+  if (errTrans) { await paDevolver(id); return { ok: false, msg: 'Error al crear la transacción: ' + errTrans.message }; }
+
+  const base = { fecha, monto, metodo: f.metodo, estado: 'Completado', transaccion_id: trans.id, creado_por: sesion.usuario?.id || null };
+  let error;
+  if (tipo === 'Diezmo') ({ error } = await sbCall(sb.from('diezmos').insert({ ...base, persona_id: personaId, referencia })));
+  else if (tipo === 'Ofrenda') ({ error } = await sbCall(sb.from('ofrendas').insert({ ...base, tipo: sub })));
+  else ({ error } = await sbCall(sb.from('donaciones').insert({ ...base, persona_id: personaId, referencia })));
+  if (error) {
+    await sbCall(sb.from('transacciones').delete().eq('id', trans.id));
+    await paDevolver(id);
+    return { ok: false, msg: 'Error al guardar: ' + error.message };
+  }
+
+  await sbCall(sb.from('pagos_entrantes').update({ tipo_aprobado: tipo, transaccion_id: String(trans.id) }).eq('id', id));
+  // Aprende "este remitente = este miembro" para sugerirlo la próxima vez.
+  if (personaId && x.remitente_norm) {
+    await sbCall(sb.from('alias_donantes').upsert({ alias: x.remitente_norm, persona_id: String(personaId) }, { onConflict: 'alias' }));
+  }
+  return { ok: true };
+}
+
 async function paAprobar(evt) {
   evt.preventDefault();
   const id = document.getElementById('paId').value;
@@ -6261,51 +6328,40 @@ async function paAprobar(evt) {
   const btn = evt.target.querySelector('button[type="submit"]');
   btn.disabled = true;
   try {
-    const { data: ganado, error: eClaim } = await paReclamar(id, 'Aprobado');
-    if (eClaim) { alert('No se pudo reservar el pago: ' + eClaim.message); return false; }
-    if (!ganado || ganado.length === 0) { alert('Este pago ya fue procesado por otra persona.'); paCerrar(); cargarPorAprobar(); return false; }
-
-    const sesion = getSesion();
-    const f = PA_FUENTES[x.fuente] || { etiqueta: x.fuente, metodo: 'Electrónico' };
-    const referencia = `${f.etiqueta} ${x.external_id}`;
-    const monto = Number(x.monto);
-    const nombre = personaId ? nombrePersonaPorId(personaId) : x.remitente;
-
-    let descripcion, categoria, origen, cuentaCr;
-    if (tipo === 'Diezmo') { descripcion = `Diezmo — ${nombre}`; categoria = 'Diezmos'; origen = 'Diezmo'; cuentaCr = cuentaIdPorCodigo('4001'); }
-    else if (tipo === 'Ofrenda') { descripcion = `Ofrenda — ${sub}`; categoria = sub; origen = 'Ofrenda'; cuentaCr = cuentaIdPorCodigo(OFRENDA_TIPO_CUENTA[sub] || '4002'); }
-    else { descripcion = `Donación — ${nombre}`; categoria = sub; origen = 'Donación'; cuentaCr = cuentaIdPorCodigo('4003'); }
-
-    const { data: trans, error: errTrans } = await sbCall(sb.from('transacciones').insert({
-      fecha, descripcion, categoria, tipo: 'Ingreso', tipo_origen: origen, metodo: f.metodo, monto,
-      referencia, estado: 'Completado', fondo_id: fondoId, cuenta_cr: cuentaCr, solo_fondo: false,
-      creado_por: sesion.usuario?.id || null,
-    }).select().single());
-    if (errTrans) { await paDevolver(id); alert('Error al crear la transacción: ' + errTrans.message); return false; }
-
-    const base = { fecha, monto, metodo: f.metodo, estado: 'Completado', transaccion_id: trans.id, creado_por: sesion.usuario?.id || null };
-    let error;
-    if (tipo === 'Diezmo') ({ error } = await sbCall(sb.from('diezmos').insert({ ...base, persona_id: personaId, referencia })));
-    else if (tipo === 'Ofrenda') ({ error } = await sbCall(sb.from('ofrendas').insert({ ...base, tipo: sub })));
-    else ({ error } = await sbCall(sb.from('donaciones').insert({ ...base, persona_id: personaId, referencia })));
-    if (error) {
-      await sbCall(sb.from('transacciones').delete().eq('id', trans.id));
-      await paDevolver(id);
-      alert('Error al guardar: ' + error.message);
-      return false;
-    }
-
-    await sbCall(sb.from('pagos_entrantes').update({ tipo_aprobado: tipo, transaccion_id: String(trans.id) }).eq('id', id));
-    // Aprende "este remitente = este miembro" para sugerirlo la próxima vez.
-    if (personaId && x.remitente_norm) {
-      await sbCall(sb.from('alias_donantes').upsert({ alias: x.remitente_norm, persona_id: String(personaId) }, { onConflict: 'alias' }));
-    }
+    const r = await paAprobarCore(x, { tipo, personaId, sub, fondoId, fecha });
+    if (!r.ok) { alert(r.msg); if (r.procesado) { paCerrar(); cargarPorAprobar(); } return false; }
     paCerrar();
     cargarPorAprobar();
   } finally {
     btn.disabled = false;
   }
   return false;
+}
+
+// Aprobar todo: solo los pagos "listos" (tipo sugerido, miembro si hace falta, remitente verificado, sin nota REVISAR).
+function paListos() {
+  return cachePagosEntrantes.filter(x => x.estado === 'Por aprobar' && x.tipo_sugerido && ['Diezmo', 'Ofrenda', 'Donación'].includes(x.tipo_sugerido)
+    && x.remitente_verificado && !/REVISAR/i.test(x.nota || '')
+    && (x.tipo_sugerido === 'Ofrenda' || x.persona_id));
+}
+
+async function paAprobarTodo() {
+  const listos = paListos();
+  if (!listos.length) { alert('No hay pagos listos: cada uno necesita tipo, miembro (en diezmos y donaciones) y remitente verificado, sin "REVISAR" en la nota. Los demás se aprueban uno por uno.'); return; }
+  const total = listos.reduce((s, x) => s + (Number(x.monto) || 0), 0);
+  const otros = cachePagosEntrantes.filter(x => x.estado === 'Por aprobar').length - listos.length;
+  if (!await confirmar(`¿Aprobar ${listos.length} pagos listos por ${formatoMoneda(total)}? ${otros > 0 ? otros + ' más quedan para revisar uno por uno.' : ''}`)) return;
+  if (cacheFondos.length === 0 && typeof asegurarFondosFinanzas === 'function') await asegurarFondosFinanzas();
+  const g = cacheFondos.find(f => /fondo general/i.test(f.nombre)) || cacheFondos[0];
+  const fondoId = g ? g.id : null;
+  let ok = 0; const fallos = [];
+  for (const x of listos) {
+    const sub = x.tipo_sugerido === 'Ofrenda' ? 'Ofrenda General' : x.tipo_sugerido === 'Donación' ? 'Fondo General' : '';
+    const r = await paAprobarCore(x, { tipo: x.tipo_sugerido, personaId: x.persona_id || null, sub, fondoId, fecha: x.fecha });
+    if (r.ok) ok++; else fallos.push(`${x.remitente}: ${r.msg}`);
+  }
+  await cargarPorAprobar();
+  alert(`Aprobados: ${ok}.` + (fallos.length ? `\nNo se pudieron aprobar ${fallos.length}:\n` + fallos.slice(0, 8).join('\n') : ''));
 }
 
 async function paRechazar() {
@@ -6918,9 +6974,9 @@ function poblarSelectPersonas(selectId, valorActual) {
 const LF_CFG = {
   diezmos: { cache: () => cacheDiezmos, cont: 'listaDiezmos', buscador: 'buscadorDiezmos', titulo: 'Diezmos', nombre: d => nombrePersonaPorId(d.persona_id), detalle: d => [d.no_sobre ? 'Sobre ' + d.no_sobre : '', d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDiezmos, render: () => renderDiezmos },
   ofrendas: { cache: () => cacheOfrendas, cont: 'listaOfrendas', titulo: 'Ofrendas', nombre: o => o.tipo || 'Ofrenda', detalle: o => [o.metodo, o.estado].filter(Boolean).join(' · '), resumen: () => renderResumenOfrendas, render: () => renderOfrendas },
-  donaciones: { cache: () => cacheDonaciones, cont: 'listaDonaciones', buscador: 'buscadorDonaciones', titulo: 'Donaciones', nombre: d => nombrePersonaPorId(d.persona_id), detalle: d => [d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDonaciones, render: () => renderDonaciones },
-  gastos: { cache: () => cacheGastos, cont: 'listaGastos', buscador: 'buscadorGastos', titulo: 'Gastos', nombre: g => g.descripcion || '—', detalle: g => [g.categoria, g.metodo, g.estado].filter(Boolean).join(' · '), resumen: () => renderResumenGastos, render: () => renderGastos },
-  depositos: { cache: () => cacheDepositos, cont: 'listaDepositos', titulo: 'Depósitos', nombre: d => d.notas || 'Depósito', detalle: d => [nombreCuentaPorId(d.cuenta_origen_id) + ' → ' + nombreCuentaPorId(d.cuenta_destino_id), d.banco_id ? nombreBancoPorId(d.banco_id) : '', d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDepositos, render: () => renderDepositos },
+  donaciones: { estados: true, cache: () => cacheDonaciones, cont: 'listaDonaciones', buscador: 'buscadorDonaciones', titulo: 'Donaciones', nombre: d => nombrePersonaPorId(d.persona_id), detalle: d => [d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDonaciones, render: () => renderDonaciones },
+  gastos: { estados: true, cache: () => cacheGastos, cont: 'listaGastos', buscador: 'buscadorGastos', titulo: 'Gastos', nombre: g => g.descripcion || '—', detalle: g => [g.categoria, g.metodo, g.estado].filter(Boolean).join(' · '), resumen: () => renderResumenGastos, render: () => renderGastos },
+  depositos: { estados: true, cache: () => cacheDepositos, cont: 'listaDepositos', titulo: 'Depósitos', nombre: d => d.notas || 'Depósito', detalle: d => [nombreCuentaPorId(d.cuenta_origen_id) + ' → ' + nombreCuentaPorId(d.cuenta_destino_id), d.banco_id ? nombreBancoPorId(d.banco_id) : '', d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDepositos, render: () => renderDepositos },
   otrosIngresos: lfLibroCfg('otrosIngresos'),
   ventas: lfLibroCfg('ventas'),
   eventos: lfLibroCfg('eventos'),
@@ -6928,7 +6984,7 @@ const LF_CFG = {
 };
 function lfLibroCfg(key) {
   return {
-    cache: () => libroDatos[key], cont: 'lbLista_' + key, buscador: 'lbBuscar_' + key, titulo: LIBROS[key].titulo,
+    estados: true, cache: () => libroDatos[key], cont: 'lbLista_' + key, buscador: 'lbBuscar_' + key, titulo: LIBROS[key].titulo,
     nombre: r => r[LIBROS[key].campo] || LIBROS[key].singular,
     detalle: r => [nombreOrganizacionPorId(r.organizacion_id), (libroTrans[r.transaccion_id] || {}).categoria, r.metodo, r.estado].filter(Boolean).join(' · '),
     resumen: () => f => libroResumenFilas(key, f), render: () => f => libroRenderFilas(key, f),
@@ -6936,7 +6992,7 @@ function lfLibroCfg(key) {
 }
 const lfEstado = {};
 
-function lfSt(k) { return lfEstado[k] || (lfEstado[k] = { desde: '', hasta: '', anio: '', orden: 'fecha_desc', q: '' }); }
+function lfSt(k) { return lfEstado[k] || (lfEstado[k] = { desde: '', hasta: '', anio: '', orden: 'fecha_desc', q: '', estado: '' }); }
 
 function lfMontar(k) {
   const cfg = LF_CFG[k];
@@ -6963,6 +7019,7 @@ function lfMontar(k) {
       <div><label style="font-size:0.75rem;">Hasta</label><input type="date" id="lfHasta_${k}" onchange="lfCambio('${k}')"></div>
       <div><label style="font-size:0.75rem;">Año</label><select id="lfAnio_${k}" onchange="lfCambio('${k}')"><option value="">Todos</option>${anios.map(a => `<option value="${a}">${a}</option>`).join('')}</select></div>
       <div><label style="font-size:0.75rem;">Ordenar</label><select id="lfOrden_${k}" onchange="lfCambio('${k}')"><option value="fecha_desc">Fecha: reciente primero</option><option value="fecha_asc">Fecha: antigua primero</option><option value="monto_desc">Monto: mayor primero</option><option value="monto_asc">Monto: menor primero</option><option value="nombre_asc">Nombre A–Z</option></select></div>
+      ${cfg.estados ? `<div><label style="font-size:0.75rem;">Estado</label><select id="lfEstado_${k}" onchange="lfCambio('${k}')"><option value="">Todos</option><option value="Pendiente">Pendiente</option><option value="Completado">Completado</option><option value="Cancelado">Cancelado</option></select></div>` : ''}
       ${cfg.buscador ? '' : `<div><label style="font-size:0.75rem;">Buscar</label><input type="text" id="lfQ_${k}" placeholder="Buscar…" oninput="lfCambio('${k}')"></div>`}
     </div>
     `;
@@ -6979,6 +7036,7 @@ function lfCambio(k) {
   st.hasta = document.getElementById('lfHasta_' + k).value;
   st.anio = document.getElementById('lfAnio_' + k).value;
   st.orden = document.getElementById('lfOrden_' + k).value;
+  const es = document.getElementById('lfEstado_' + k); st.estado = es ? es.value : '';
   const q = document.getElementById('lfQ_' + k);
   if (q) st.q = q.value.trim().toLowerCase();
   if (st.anio && !st.desde && !st.hasta) { /* el año filtra por sí solo */ }
@@ -6998,6 +7056,7 @@ function lfRango(k, tipo) {
   if (tipo === 'limpiar') {
     document.getElementById('lfAnio_' + k).value = '';
     document.getElementById('lfOrden_' + k).value = 'fecha_desc';
+    const es = document.getElementById('lfEstado_' + k); if (es) es.value = '';
     const q = document.getElementById('lfQ_' + k); if (q) q.value = '';
     const cfg = LF_CFG[k]; if (cfg.buscador) document.getElementById(cfg.buscador).value = '';
   } else { document.getElementById('lfAnio_' + k).value = ''; }
@@ -7013,6 +7072,7 @@ function lfFiltrar(k) {
     if (st.desde && fe < st.desde) return false;
     if (st.hasta && fe > st.hasta) return false;
     if (st.anio && fe.slice(0, 4) !== st.anio) return false;
+    if (st.estado && (r.estado || 'Completado') !== st.estado) return false;
     if (q && !(cfg.nombre(r) + ' ' + cfg.detalle(r)).toLowerCase().includes(q)) return false;
     return true;
   });
@@ -7537,6 +7597,7 @@ function renderResumenGastos(filas) {
   document.getElementById('resumenGastos').innerHTML = `
     <div class="tarjetaResumen egreso"><div class="etiqueta">Total registrado</div><div class="monto">${formatoMoneda(total)}</div></div>
     <div class="tarjetaResumen"><div class="etiqueta">Categorías usadas</div><div class="monto">${new Set(_f.map(g => g.categoria)).size}</div></div>
+    <div class="tarjetaResumen"><div class="etiqueta">Pendientes</div><div class="monto">${formatoMoneda(_f.filter(g => g.estado === 'Pendiente').reduce((a, g) => a + (Number(g.monto) || 0), 0))}</div></div>
     <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${_f.length}</div></div>`;
 }
 

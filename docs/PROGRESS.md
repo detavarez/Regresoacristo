@@ -4,3 +4,4 @@ Plan de 16 partes. Hechas 1–15 y 16 (+ extras).
 Extras recientes: MobileCash M012 (cámara dentro de la app, borrador recuperable, monto con coma); `instalar.js` solo Portal/`?instalar`; reporte Cash App `CashApp_conciliacion.xlsx` (231 ingresos: 27 ya registrados, 115 claros, 89 a revisar; 78 gastos y 9 retiros sin registrar; ref duplicada `D-RK8GVX7QJ`).
 16 Apodos: "Apodo Apellido" en búsquedas/listas/perfil; nombre legal en reportes y exportes (church-admin, movil, asistencia).
 Filtros/totales/orden/imprimir/Excel ahora también en Ventas, Eventos, Otros Ingresos y Pagos de Promesas.
+A006: filtro Estado, Recurrentes con filtros, Auditoría (Hasta/Usuario), Aprobar todo.
