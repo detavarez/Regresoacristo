@@ -43,17 +43,17 @@
     if ($('segLock')) return;
     const css = document.createElement('style');
     css.textContent = `
-      .segOv{position:fixed;inset:0;z-index:6000;display:none;align-items:center;justify-content:center;padding:18px;background:linear-gradient(160deg,var(--navy,#0b1f3a) 0%,var(--navy-light,#16335c) 100%);font-family:inherit}
+      .segOv{position:fixed;inset:0;z-index:6000;display:none;align-items:center;justify-content:center;padding:18px;background:linear-gradient(160deg,var(--nvBg,var(--navy,#0b1f3a)) 0%,var(--nvBg2,var(--navy-light,#16335c)) 100%);font-family:inherit}
       .segCard{background:var(--surface,#fff);color:var(--text,#1a2433);width:100%;max-width:380px;border-radius:14px;padding:26px 22px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
       .segCard h1{font-size:1.25rem;margin:0 0 4px;color:var(--heading,#0b1f3a)}
       .segSub{font-size:.88rem;opacity:.75;margin-bottom:14px}
       .segCard input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid rgba(128,128,128,.45);border-radius:8px;font-size:1rem;background:transparent;color:inherit;margin-top:4px}
       .segCard label{font-size:.8rem;opacity:.8}
       .segPin{letter-spacing:16px;text-align:center;font-size:1.7rem!important}
-      .segBtn{width:100%;padding:12px;border-radius:8px;border:0;background:var(--navy,#0b1f3a);color:#fff;font-size:1rem;cursor:pointer;margin-top:10px}
+      .segBtn{width:100%;padding:12px;border-radius:8px;border:0;background:var(--nvBg,var(--navy,#0b1f3a));color:#fff;font-size:1rem;cursor:pointer;margin-top:10px}
       .segBtn2{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(128,128,128,.5);background:none;color:inherit;cursor:pointer;margin-top:8px;font-size:.92rem}
       .segLinks{margin-top:14px;display:flex;flex-direction:column;gap:8px;text-align:center}
-      .segLinks a{color:var(--navy,#0b1f3a);text-decoration:underline;cursor:pointer;font-size:.9rem}
+      .segLinks a{color:var(--nvBg,var(--navy,#0b1f3a));text-decoration:underline;cursor:pointer;font-size:.9rem}
       .segMsg{display:none;margin:10px 0 0;padding:9px 11px;border-radius:8px;font-size:.86rem;background:rgba(217,48,37,.12);color:#b3261e}
       .segMsg.ok{background:rgba(31,169,113,.15);color:#1f7a4d}
       .segPerfil{max-height:90vh;overflow:auto}

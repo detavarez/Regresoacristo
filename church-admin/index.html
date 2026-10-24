@@ -312,6 +312,25 @@
     align-items: flex-start;
     gap: 12px;
   }
+  /* Asistencia (mismo diseño que el módulo /asistencia/) */
+  .asCard { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  .asCard label { display: block; font-size: .78rem; color: var(--text-muted); margin-bottom: 4px; }
+  .asFila2 { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+  .asChips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .asChip { padding: 10px 15px; border-radius: 22px; border: 1px solid var(--border); background: var(--surface); font-size: .95rem; cursor: pointer; color: var(--text); }
+  .asChip.sel { background: var(--navy); border-color: var(--navy); color: #fff; font-weight: 600; }
+  .asCont { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; position: sticky; top: -1px; z-index: 5; background: var(--bg); padding: 6px 0; }
+  .asCont div { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 8px; text-align: center; }
+  .asCont b { display: block; font-size: 1.5rem; color: var(--heading); }
+  .asCont span { font-size: .72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+  .asLista { max-height: 340px; overflow-y: auto; margin-bottom: 12px; }
+  .asMiembro { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 56px; padding: 8px 14px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--text); font-size: 1rem; text-align: left; cursor: pointer; }
+  .asMiembro.si { background: rgba(31,143,95,.14); border-color: #1f8f5f; }
+  .asTilde { flex: 0 0 32px; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #b9c2d0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.1rem; font-weight: 700; }
+  .asMiembro.si .asTilde { background: #1f8f5f; border-color: #1f8f5f; }
+  .asVis { display: inline-flex; align-items: center; gap: 6px; background: #fff3d6; color: #5b4500; border: 1px solid #f0d98a; border-radius: 18px; padding: 6px 12px; margin: 0 8px 8px 0; font-size: .95rem; }
+  .asVis button { border: 0; background: none; font-size: 1.2rem; line-height: 1; cursor: pointer; color: #8a6d00; }
+  .asPie .btnPrincipal { flex: 1; font-size: 1.05rem; padding: 13px; }
   .tarjetaSeguimiento > div:first-child { flex: 1; min-width: 0; }
   .tarjetaSeguimiento > .badge-tipo { flex-shrink: 0; white-space: nowrap; }
   #modalMover { z-index: 150; }
@@ -2384,41 +2403,39 @@
     <h3 id="modalAsistenciaTitulo">Nuevo Registro</h3>
     <form id="formAsistencia" onsubmit="return guardarAsistencia(event)">
       <input type="hidden" id="asRegistroId">
-      <div class="formGrid">
-        <div>
-          <label for="asTipoServicio">Tipo de servicio *</label>
-          <select id="asTipoServicio" required></select>
+      <input type="hidden" id="asTotal">
+      <select id="asTipoServicio" style="display:none;"></select>
+      <div class="asCard">
+        <div class="asFila2">
+          <div><label for="asFecha">Fecha del servicio</label><input type="date" id="asFecha" required oninput="actualizarTipoServicioDefault()"></div>
+          <button type="button" class="btnSecundario" onclick="asHoy()">Hoy</button>
         </div>
-        <div><label for="asFecha">Fecha *</label><input type="date" id="asFecha" required oninput="actualizarTipoServicioDefault()"></div>
-        <div><label for="asTotal">Total de asistentes <span style="font-weight:400; color: var(--text-muted);">(automático)</span></label><input type="number" id="asTotal" readonly style="background: var(--bg); cursor:not-allowed;"></div>
-        <div class="full"><label for="asNotas">Notas</label><textarea id="asNotas" rows="2"></textarea></div>
+        <div class="asChips" id="asTipos"></div>
       </div>
-
-      <div class="seccionForm" style="margin-top:18px;">
-        <button type="button" class="btnSecundario" style="width:100%; text-align:left;" onclick="toggleChecklistAsistencia()">
-          👥 Marcar personas presentes (opcional) — <span id="contadorPresentes">0 marcadas</span>
-        </button>
-        <div id="checklistAsistenciaWrap" style="display:none; margin-top:10px;">
-          <input type="text" id="buscadorChecklistAsistencia" placeholder="Buscar persona…" oninput="renderChecklistAsistencia()" style="margin-bottom:8px;">
-          <div id="checklistAsistencia" style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
+      <div class="asCont"><div><b id="asCPres">0</b><span>Presentes</span></div><div><b id="asCVis">0</b><span>Visitas</span></div><div><b id="asCTot">0</b><span>Total</span></div></div>
+      <div class="asCard">
+        <label for="buscadorChecklistAsistencia">Buscar miembro</label>
+        <input type="search" id="buscadorChecklistAsistencia" placeholder="Nombre, apodo o apellido" oninput="renderChecklistAsistencia()" autocomplete="off">
+        <div class="asChips">
+          <button type="button" class="asChip sel" id="asFTodos" onclick="asFiltro('todos')">Todos</button>
+          <button type="button" class="asChip" id="asFPres" onclick="asFiltro('presentes')">Presentes</button>
+          <button type="button" class="asChip" id="asFAus" onclick="asFiltro('ausentes')">Ausentes</button>
         </div>
       </div>
-
-      <div class="seccionForm" style="margin-top:18px;">
-        <label style="display:block; font-size:0.8rem; font-weight:600; color: var(--text-muted); margin-bottom:8px;">
-          🙋 Visitantes (no son miembros registrados)
-        </label>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="nombreVisitanteInput" placeholder="Nombre del visitante…" style="flex:1;">
-          <button type="button" class="btnAccion" onclick="agregarVisitante()">+ Agregar</button>
+      <div id="checklistAsistencia" class="asLista"></div>
+      <div class="asCard">
+        <b>Visitas</b>
+        <div id="listaVisitantesAsistencia" style="margin:10px 0;"></div>
+        <div class="asFila2">
+          <div><label for="nombreVisitanteInput">Nombre de la visita</label><input type="text" id="nombreVisitanteInput" placeholder="Ej. María Pérez" autocomplete="off" onkeydown="if (event.key === 'Enter') { event.preventDefault(); agregarVisitante(); }"></div>
+          <button type="button" class="btnSecundario" onclick="agregarVisitante()">Agregar</button>
         </div>
-        <div id="listaVisitantesAsistencia" style="margin-top:10px;"></div>
+        <div style="margin-top:12px;"><label for="asNotas">Notas (opcional)</label><input type="text" id="asNotas"></div>
       </div>
-
-      <div class="formAcciones">
+      <div class="formAcciones asPie">
         <button type="button" class="btnPeligro" id="btnEliminarAsistencia" onclick="eliminarAsistencia()" style="display:none;">Eliminar</button>
         <button type="button" class="btnSecundario" onclick="cerrarModalAsistencia()">Cancelar</button>
-        <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
+        <button type="submit" class="btnPrincipal">Guardar</button>
       </div>
     </form>
   </div>
@@ -9752,7 +9769,7 @@ async function abrirFormAsistencia(id) {
   document.getElementById('asFecha').value = new Date().toISOString().slice(0, 10);
   presentesSeleccionados = new Set();
   visitantesActuales = [];
-  document.getElementById('checklistAsistenciaWrap').style.display = 'none';
+  asFiltroEstado = 'todos';
   document.getElementById('buscadorChecklistAsistencia').value = '';
   document.getElementById('nombreVisitanteInput').value = '';
 
@@ -9778,8 +9795,8 @@ async function abrirFormAsistencia(id) {
     actualizarTipoServicioDefault();
   }
 
-  actualizarContadorPresentes();
-  renderChecklistAsistencia();
+  pintarTiposAsistencia();
+  asFiltro('todos');
   renderVisitantes();
   recalcularTotalAsistencia();
   document.getElementById('modalAsistencia').classList.add('abierto');
@@ -9817,38 +9834,42 @@ function actualizarTipoServicioDefault() {
   if (candidato) {
     document.getElementById('asTipoServicio').value = candidato.id;
   }
+  pintarTiposAsistencia();
 }
 
-function toggleChecklistAsistencia() {
-  const wrap = document.getElementById('checklistAsistenciaWrap');
-  wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+let asFiltroEstado = 'todos';
+function asHoy() { document.getElementById('asFecha').value = new Date().toISOString().slice(0, 10); actualizarTipoServicioDefault(); }
+function pintarTiposAsistencia() {
+  const sel = document.getElementById('asTipoServicio');
+  document.getElementById('asTipos').innerHTML = [...sel.options].filter(o => o.value).map(o =>
+    `<button type="button" class="asChip ${String(sel.value) === String(o.value) ? 'sel' : ''}" onclick="asElegirTipo('${o.value}')">${escV28(o.textContent)}</button>`).join('');
+}
+function asElegirTipo(id) { document.getElementById('asTipoServicio').value = id; pintarTiposAsistencia(); }
+function asFiltro(f) {
+  asFiltroEstado = f;
+  [['asFTodos', 'todos'], ['asFPres', 'presentes'], ['asFAus', 'ausentes']].forEach(([id, k]) => document.getElementById(id).classList.toggle('sel', k === f));
+  renderChecklistAsistencia();
 }
 
 function actualizarContadorPresentes() {
-  document.getElementById('contadorPresentes').textContent = `${presentesSeleccionados.size} marcadas`;
+  document.getElementById('asCPres').textContent = presentesSeleccionados.size;
 }
 
 function renderChecklistAsistencia() {
-  const q = document.getElementById('buscadorChecklistAsistencia').value.trim().toLowerCase();
+  const q = normNombre(document.getElementById('buscadorChecklistAsistencia').value);
   const contenedor = document.getElementById('checklistAsistencia');
-
-  const personas = q
-    ? cacheDirectorio.filter(p => (nombreMostrar(p)).toLowerCase().includes(q))
-    : cacheDirectorio.slice(0, 50);
-
+  const personas = cacheDirectorio
+    .filter(p => p.estado_miembro !== 'Inactivo' || presentesSeleccionados.has(p.id))
+    .filter(p => !q || normNombre(personaTextoBusqueda(p)).includes(q))
+    .filter(p => asFiltroEstado === 'todos' || (asFiltroEstado === 'presentes') === presentesSeleccionados.has(p.id))
+    .sort((a, b) => nombreMostrar(a).localeCompare(nombreMostrar(b), 'es'));
   if (personas.length === 0) {
-    contenedor.innerHTML = '<div style="padding:8px; color: var(--text-muted); font-size:0.85rem;">Sin resultados</div>';
+    contenedor.innerHTML = '<div style="padding:10px; color: var(--text-muted); font-size:0.9rem;">Sin resultados</div>';
     return;
   }
-
   contenedor.innerHTML = personas.map(p => {
-    const marcado = presentesSeleccionados.has(p.id);
-    const nombre = nombreMostrar(p);
-    return `
-      <label style="display:flex; align-items:center; gap:8px; padding:6px 4px; font-size:0.85rem; cursor:pointer;">
-        <input type="checkbox" ${marcado ? 'checked' : ''} onchange="togglePersonaPresente('${p.id}', this.checked)">
-        ${nombre}
-      </label>`;
+    const si = presentesSeleccionados.has(p.id);
+    return `<button type="button" class="asMiembro ${si ? 'si' : ''}" onclick="togglePersonaPresente('${p.id}', ${!si})"><span>${escV28(nombreMostrar(p))}</span><span class="asTilde">${si ? '✓' : ''}</span></button>`;
   }).join('');
 }
 
@@ -9857,20 +9878,13 @@ function togglePersonaPresente(id, marcado) {
   else presentesSeleccionados.delete(id);
   actualizarContadorPresentes();
   recalcularTotalAsistencia();
+  renderChecklistAsistencia();
 }
 
 // ── Visitantes ────────────────────────────────────────────────────────────
 function renderVisitantes() {
-  const cont = document.getElementById('listaVisitantesAsistencia');
-  if (visitantesActuales.length === 0) {
-    cont.innerHTML = '';
-    return;
-  }
-  cont.innerHTML = visitantesActuales.map((nombre, idx) => `
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); font-size:0.85rem;">
-      <span>🙋 ${nombre}</span>
-      <button type="button" class="btnPeligro" style="padding:3px 8px; font-size:0.72rem;" onclick="quitarVisitante(${idx})">✕</button>
-    </div>`).join('');
+  document.getElementById('listaVisitantesAsistencia').innerHTML = visitantesActuales.map((nombre, idx) =>
+    `<span class="asVis">${escV28(nombre)} <button type="button" onclick="quitarVisitante(${idx})" aria-label="Quitar">×</button></span>`).join('');
 }
 
 function agregarVisitante() {
@@ -9891,6 +9905,9 @@ function quitarVisitante(idx) {
 
 function recalcularTotalAsistencia() {
   document.getElementById('asTotal').value = presentesSeleccionados.size + visitantesActuales.length;
+  document.getElementById('asCPres').textContent = presentesSeleccionados.size;
+  document.getElementById('asCVis').textContent = visitantesActuales.length;
+  document.getElementById('asCTot').textContent = presentesSeleccionados.size + visitantesActuales.length;
 }
 
 async function guardarAsistencia(evt) {
