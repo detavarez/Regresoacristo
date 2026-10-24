@@ -4676,11 +4676,13 @@ async function cargarPagosPromesa() {
 }
 function ppFiltrados() {
   const q = (document.getElementById('ppBuscar').value || '').trim().toLowerCase();
-  return cachePagosPromesaAll.filter(x => !q || `${x.persona} ${x.campana}`.toLowerCase().includes(q));
+  return lfFiltrar('pagosPromesa');
 }
-function ppRender() {
-  const f = ppFiltrados();
+function ppRender() { lfAplicar('pagosPromesa'); }
+function ppResumenFilas(f) {
   document.getElementById('resumenPagosPromesa').innerHTML = `<div class="tarjetaResumen ingreso"><div class="etiqueta">Total pagado</div><div class="monto">${formatoMoneda(f.reduce((s, x) => s + (Number(x.monto) || 0), 0))}</div></div><div class="tarjetaResumen"><div class="etiqueta">Pagos</div><div class="monto">${f.length}</div></div>`;
+}
+function ppRenderFilas(f) {
   document.getElementById('listaPagosPromesa').innerHTML = f.length ? f.map(x => `<div class="tarjetaSeguimiento"><div><div class="nombrePersona">${escV28(x.persona || '—')}</div><div class="metaLinea">${formatoFecha(x.fecha)} · ${escV28(x.campana || 'Sin campaña')} · ${escV28(x.metodo || '—')}</div></div><span class="badge badge-tipo">${formatoMoneda(x.monto)}</span></div>`).join('') : '<div class="estadoVacio">No hay pagos de promesas.</div>';
 }
 function ppExportar() { csvDescargar('pagos_promesas.csv', ['Fecha', 'Persona', 'Campaña', 'Método', 'Monto'], ppFiltrados().map(x => [x.fecha, x.persona, x.campana, x.metodo, Number(x.monto) || 0])); }
@@ -5235,11 +5237,10 @@ async function libroCargar(key) {
   libroRender(key);
 }
 
-function libroRender(key) {
+function libroRender(key) { lfAplicar(key); }
+function libroResumenFilas(key, filas) {
   const cfg = LIBROS[key];
-  const q = (document.getElementById('lbBuscar_' + key).value || '').trim().toLowerCase();
-  const todos = libroDatos[key];
-  const filas = todos.filter(r => !q || `${r[cfg.campo] || ''} ${nombreOrganizacionPorId(r.organizacion_id)} ${(libroTrans[r.transaccion_id] || {}).categoria || ''}`.toLowerCase().includes(q));
+  const todos = filas;
   const total = todos.reduce((s, r) => s + (Number(r.monto) || 0), 0);
   const pendientes = todos.filter(r => r.estado === 'Pendiente').reduce((s, r) => s + (Number(r.monto) || 0), 0);
   const claseTotal = cfg.tipo === 'Ingreso' ? 'ingreso' : 'egreso';
@@ -5247,6 +5248,9 @@ function libroRender(key) {
     <div class="tarjetaResumen ${claseTotal}"><div class="etiqueta">Total ${cfg.titulo}</div><div class="monto">${formatoMoneda(total)}</div></div>
     <div class="tarjetaResumen"><div class="etiqueta">Registros</div><div class="monto">${todos.length}</div></div>
     <div class="tarjetaResumen"><div class="etiqueta">Pendientes</div><div class="monto">${formatoMoneda(pendientes)}</div></div>`;
+}
+function libroRenderFilas(key, filas) {
+  const cfg = LIBROS[key];
   const lista = document.getElementById('lbLista_' + key);
   if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay registros.</div>'; return; }
   lista.innerHTML = filas.map(r => {
@@ -6918,7 +6922,19 @@ const LF_CFG = {
   donaciones: { cache: () => cacheDonaciones, cont: 'listaDonaciones', buscador: 'buscadorDonaciones', titulo: 'Donaciones', nombre: d => nombrePersonaPorId(d.persona_id), detalle: d => [d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDonaciones, render: () => renderDonaciones },
   gastos: { cache: () => cacheGastos, cont: 'listaGastos', buscador: 'buscadorGastos', titulo: 'Gastos', nombre: g => g.descripcion || '—', detalle: g => [g.categoria, g.metodo, g.estado].filter(Boolean).join(' · '), resumen: () => renderResumenGastos, render: () => renderGastos },
   depositos: { cache: () => cacheDepositos, cont: 'listaDepositos', titulo: 'Depósitos', nombre: d => d.notas || 'Depósito', detalle: d => [nombreCuentaPorId(d.cuenta_origen_id) + ' → ' + nombreCuentaPorId(d.cuenta_destino_id), d.banco_id ? nombreBancoPorId(d.banco_id) : '', d.metodo, d.referencia, d.estado].filter(Boolean).join(' · '), resumen: () => renderResumenDepositos, render: () => renderDepositos },
+  otrosIngresos: lfLibroCfg('otrosIngresos'),
+  ventas: lfLibroCfg('ventas'),
+  eventos: lfLibroCfg('eventos'),
+  pagosPromesa: { cache: () => cachePagosPromesaAll, cont: 'listaPagosPromesa', buscador: 'ppBuscar', titulo: 'Pagos de Promesas', nombre: x => x.persona || '—', detalle: x => [x.campana || 'Sin campaña', x.metodo].filter(Boolean).join(' · '), resumen: () => ppResumenFilas, render: () => ppRenderFilas },
 };
+function lfLibroCfg(key) {
+  return {
+    cache: () => libroDatos[key], cont: 'lbLista_' + key, buscador: 'lbBuscar_' + key, titulo: LIBROS[key].titulo,
+    nombre: r => r[LIBROS[key].campo] || LIBROS[key].singular,
+    detalle: r => [nombreOrganizacionPorId(r.organizacion_id), (libroTrans[r.transaccion_id] || {}).categoria, r.metodo, r.estado].filter(Boolean).join(' · '),
+    resumen: () => f => libroResumenFilas(key, f), render: () => f => libroRenderFilas(key, f),
+  };
+}
 const lfEstado = {};
 
 function lfSt(k) { return lfEstado[k] || (lfEstado[k] = { desde: '', hasta: '', anio: '', orden: 'fecha_desc', q: '' }); }

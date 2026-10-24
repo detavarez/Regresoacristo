@@ -1,8 +1,8 @@
 # WIP / PENDIENTE
-1. **Parte 16 — Apodos**: hecho en church-admin, movil, asistencia. Falta `pastor/` ("Quién dio"): depende de la función SQL `pastor_resumen3` (servidor); requiere acceso a Supabase.
+1. **Parte 16 — Apodos**: HECHA (church-admin, movil, asistencia, `pastor_resumen3`).
 2. **Importar Cash App — EN PAUSA**: no insertar nada en `pagos_entrantes`. David subirá un xlsx corregido al final del proyecto; entonces repetir el cruce (ID exacto → monto+fecha±3 días+nombre; `Por aprobar`, fuente `cashapp`, `external_id`=ID sin `#`, nota "[Reporte CSV]" y "REVISAR: motivo"). Alias de David: Elia Carolina Ramirez, Geovanna Andrea Aviles, Jose Mario Ramos, Pastor Nelson Aviles, David Elias Tavarez, Eddie/Eddy De La Cruz.
 3. Verificar con el teléfono de Crystal (español) que el gasto con foto ya sube (M012). Si falla, revisar permisos de cámara y bucket `comprobantes`.
 4. Portal instalado: David debe **desinstalar y reinstalar** el Portal (cambió el alcance del manifest) para que las páginas se abran sin barra del navegador. Revisar que Asistencia se vea igual que las demás.
 5. Decisiones abiertas: nuevo nombre para "Bolsas (aparte)" (opciones: Custodia / Fondos Aparte / Dinero de Terceros / Cuentas Aparte / Ingresos Aparte); ¿saldo inicial por fondo (Fondo General, Misiones…)? hoy los fondos suman todo lo registrado.
-6. Restos A006: filtros en Ventas/Eventos/Otros Ingresos/Pagos de promesa/Todas las Transacciones; Gastos pendientes; Recurrentes; Cierre de periodo; Auditoría con filtros; Aprobar todo; Inicio; Configuración (logo, año fiscal).
+6. Restos A006 (filtros en Ventas/Eventos/Otros Ingresos/Pagos de promesa: hechos; Todas las Transacciones ya tenía filtros): Gastos pendientes; Recurrentes; Cierre de periodo; Auditoría con filtros; Aprobar todo; Inicio; Configuración (logo, año fiscal).
 7. Cuando termine el trabajo histórico: borrar carpeta `/historico/` (nada depende de ella). Al terminar el proyecto David revoca su token de GitHub.
