@@ -72,13 +72,9 @@ document.getElementById('langEs').onclick = function (e) { e.preventDefault(); I
 document.getElementById('langEn').onclick = function (e) { e.preventDefault(); I18N.set('en'); };
 
 document.getElementById('olvide').onclick = async function () {
-  var correo = prompt('¿A qué correo te enviamos el enlace para restablecer tu contraseña?', email.value.trim());
-  if (!correo) return;
+  // Sin correos automáticos: un administrador crea una contraseña temporal.
   err.textContent = '';
-  var destino = location.href.replace('login.html', 'cuenta.html').split('?')[0];
-  var r = await sb.auth.resetPasswordForEmail(correo.trim(), { redirectTo: destino });
-  if (r.error) { err.textContent = 'No se pudo enviar el correo: ' + r.error.message; return; }
-  alert('Si ese correo tiene una cuenta, te llegará un enlace para restablecer tu contraseña.');
+  alert('Pide a un administrador que te cree una contraseña temporal.');
 };
 </script>
 </body>

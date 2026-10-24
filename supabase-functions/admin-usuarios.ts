@@ -68,15 +68,6 @@ Deno.serve(async (req) => {
       return json({ ok: true, password_temporal: password });
     }
 
-    if (body.accion === 'reset_email') {
-      const { data: u } = await admin.from('usuarios').select('correo').eq('id', body.usuario_id).maybeSingle();
-      if (!u?.correo) return json({ error: 'Usuario no encontrado.' }, 404);
-      const pub = createClient(url, anon);
-      const { error } = await pub.auth.resetPasswordForEmail(u.correo, { redirectTo: 'https://detavarez.github.io/Regresoacristo/portal/' });
-      if (error) return json({ error: error.message }, 400);
-      return json({ ok: true, correo: u.correo });
-    }
-
     return json({ error: 'Acción no válida.' }, 400);
   } catch (e) {
     return json({ error: String((e as Error).message ?? e) }, 500);

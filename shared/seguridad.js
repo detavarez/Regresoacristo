@@ -273,10 +273,8 @@
   }
 
   async function olvideClave() {
-    const correo = usuario() && usuario().correo;
-    if (!correo) return;
-    const { error } = await sbCall(sb.auth.resetPasswordForEmail(correo, { redirectTo: location.origin + location.pathname }));
-    msg('segLockMsg', error ? 'No se pudo enviar el correo: ' + error.message : 'Te enviamos un correo a ' + correo + ' para crear una contraseña nueva.', !error);
+    // Sin correos automáticos: un administrador crea una contraseña temporal (Admin → Usuarios → Editar acceso).
+    msg('segLockMsg', 'Pide a un administrador que te cree una contraseña temporal.', true);
   }
 
   // Primer ingreso con email: la huella o el rostro es el método predeterminado (cada quien puede cambiarlo).
