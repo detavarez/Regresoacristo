@@ -9995,11 +9995,37 @@ function mvElegir(destino) {
   if (destino === 'donaciones') h += `<label>Propósito</label><select id="mvProposito">${DONACION_PROPOSITOS.map(t => `<option>${escV28(t)}</option>`).join('')}</select>`;
   if ((destino === 'diezmos' || destino === 'donaciones') && !tienePersona) h += `<label>Miembro *</label><select id="mvPersona">${personas}</select>`;
   if (destino === 'bolsa_aportes') {
-    h += `<label>Bolsa *</label><select id="mvBolsa">${cacheBolsas.filter(b => b.activa).map(b => `<option value="${b.id}">${escV28(b.nombre)}</option>`).join('')}</select>`;
+    h += `<label>Repartir en bolsas *</label><div id="mvFilasBolsa"></div>
+      <button type="button" class="btnSecundario" onclick="mvAddFilaBolsa()" style="margin-bottom:8px;">+ Otra bolsa</button>
+      <div id="mvRestoTxt" style="font-size:0.85rem; margin-bottom:8px;"></div>`;
     if (!tienePersona && mvOrigen.tabla !== 'bolsa_aportes') h += `<label>Persona</label><select id="mvPersona">${personas}</select>`;
   }
   document.getElementById('mvExtra').innerHTML = h;
+  if (destino === 'bolsa_aportes') mvAddFilaBolsa(Number(r.monto));
   document.getElementById('btnMvEjecutar').disabled = false;
+}
+
+// Repartir un registro entre varias bolsas; lo que no se reparte se queda en el registro original.
+function mvAddFilaBolsa(monto) {
+  const c = document.getElementById('mvFilasBolsa');
+  const r = mvOrigen && mvFila(mvOrigen.tabla, mvOrigen.id);
+  let m = monto;
+  if (m === undefined && r) m = Math.max(0, Math.round((Number(r.monto) - mvSumaBolsas()) * 100) / 100);
+  const d = document.createElement('div');
+  d.className = 'mvFilaB'; d.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
+  d.innerHTML = `<select class="mvBolsaSel" style="flex:1;">${cacheBolsas.filter(b => b.activa).map(b => `<option value="${b.id}">${escV28(b.nombre)}</option>`).join('')}</select><input type="number" class="mvBolsaMonto" step="0.01" min="0.01" value="${m || ''}" style="width:110px;" oninput="mvResto()"><button type="button" class="btnSecundario" onclick="this.parentNode.remove(); mvResto();" aria-label="Quitar">×</button>`;
+  c.appendChild(d);
+  mvResto();
+}
+function mvSumaBolsas() {
+  return [...document.querySelectorAll('#mvFilasBolsa .mvBolsaMonto')].reduce((a, i) => a + (Number(i.value) || 0), 0);
+}
+function mvResto() {
+  const t = document.getElementById('mvRestoTxt'); const r = mvOrigen && mvFila(mvOrigen.tabla, mvOrigen.id);
+  if (!t || !r) return;
+  const resto = Math.round((Number(r.monto) - mvSumaBolsas()) * 100) / 100;
+  t.style.color = resto < 0 ? '#b3261e' : 'inherit';
+  t.textContent = resto < 0 ? `Te pasaste por ${formatoMoneda(-resto)}.` : (resto === 0 ? 'Todo el monto va a las bolsas.' : `Se queda como ${MV_TIPOS[mvOrigen.tabla]}: ${formatoMoneda(resto)}.`);
 }
 
 function mvGuardarUndo(item) {
@@ -10048,11 +10074,27 @@ async function mvEjecutar() {
 
   try {
     if (mvDestino === 'bolsa_aportes') {
-      const ins = await sbCall(sb.from('bolsa_aportes').insert({ bolsa_id: document.getElementById('mvBolsa').value, persona_id: personaId, aportante: persona ? null : (aportanteOrigen || nombre || null), fecha: src.fecha, monto: src.monto, metodo: src.metodo, referencia: base.referencia, nota: 'Movido desde ' + MV_TIPOS[tabla], creado_por: uid }).select('id').single());
-      if (ins.error) throw ins.error;
-      undo.destino.id = ins.data.id;
-      const d1 = await sbCall(sb.from(tabla).delete().eq('id', id)); if (d1.error) throw d1.error;
-      if (trans) { const d2 = await sbCall(sb.from('transacciones').delete().eq('id', trans.id)); if (d2.error) throw d2.error; }
+      const partes = [...document.querySelectorAll('#mvFilasBolsa .mvFilaB')].map(d => ({ bolsa_id: d.querySelector('.mvBolsaSel').value, monto: Math.round((Number(d.querySelector('.mvBolsaMonto').value) || 0) * 100) / 100 }));
+      const suma = Math.round(partes.reduce((a, x) => a + x.monto, 0) * 100) / 100;
+      const resto = Math.round((Number(src.monto) - suma) * 100) / 100;
+      if (!partes.length || partes.some(x => !(x.monto > 0)) || resto < 0) {
+        msg.textContent = resto < 0 ? 'Los montos de las bolsas superan el registro.' : 'Pon un monto mayor que cero en cada bolsa.';
+        document.getElementById('btnMvEjecutar').disabled = false; return;
+      }
+      const ids = [];
+      for (const x of partes) {
+        const ins = await sbCall(sb.from('bolsa_aportes').insert({ bolsa_id: x.bolsa_id, persona_id: personaId, aportante: persona ? null : (aportanteOrigen || nombre || null), fecha: src.fecha, monto: x.monto, metodo: src.metodo, referencia: base.referencia, nota: 'Movido desde ' + MV_TIPOS[tabla], creado_por: uid }).select('id').single());
+        if (ins.error) { for (const k of ids) await sbCall(sb.from('bolsa_aportes').delete().eq('id', k)); throw ins.error; }
+        ids.push(ins.data.id);
+      }
+      undo.destino.id = ids[0]; undo.destino.ids = ids; undo.destino.parcial = resto > 0;
+      if (resto > 0) {
+        const u1 = await sbCall(sb.from(tabla).update({ monto: resto }).eq('id', id)); if (u1.error) throw u1.error;
+        if (trans) { const u2 = await sbCall(sb.from('transacciones').update({ monto: resto }).eq('id', trans.id)); if (u2.error) throw u2.error; }
+      } else {
+        const d1 = await sbCall(sb.from(tabla).delete().eq('id', id)); if (d1.error) throw d1.error;
+        if (trans) { const d2 = await sbCall(sb.from('transacciones').delete().eq('id', trans.id)); if (d2.error) throw d2.error; }
+      }
     } else {
       const catOf = mvDestino === 'ofrendas' ? document.getElementById('mvTipoOfrenda').value : null;
       const proposito = mvDestino === 'donaciones' ? document.getElementById('mvProposito').value : null;
@@ -10098,8 +10140,12 @@ async function deshacerUltimo() {
   try {
     if (it.op === 'mover') {
       const d = it.destino, o = it.origen;
-      let r = await sbCall(sb.from(d.tabla).delete().eq('id', d.id)); if (r.error) throw r.error;
-      if (o.trans) {
+      let r;
+      for (const k of (d.ids || [d.id])) { r = await sbCall(sb.from(d.tabla).delete().eq('id', k)); if (r.error) throw r.error; }
+      if (d.parcial) {
+        r = await sbCall(sb.from(o.tabla).update({ monto: o.fila.monto }).eq('id', o.fila.id)); if (r.error) throw r.error;
+        if (o.trans) { r = await sbCall(sb.from('transacciones').update({ monto: o.trans.monto }).eq('id', o.trans.id)); if (r.error) throw r.error; }
+      } else if (o.trans) {
         if (d.tabla === 'bolsa_aportes') {
           r = await sbCall(sb.from('transacciones').insert(o.trans)); if (r.error) throw r.error;
         } else {
@@ -10108,7 +10154,7 @@ async function deshacerUltimo() {
       } else if (d.transCreada && d.transId) {
         r = await sbCall(sb.from('transacciones').delete().eq('id', d.transId)); if (r.error) throw r.error;
       }
-      r = await sbCall(sb.from(o.tabla).insert(o.fila)); if (r.error) throw r.error;
+      if (!d.parcial) { r = await sbCall(sb.from(o.tabla).insert(o.fila)); if (r.error) throw r.error; }
     } else if (it.op === 'eliminar') {
       if (it.trans) { const r = await sbCall(sb.from('transacciones').insert(it.trans)); if (r.error) throw r.error; }
       const r2 = await sbCall(sb.from(it.tabla).insert(it.fila)); if (r2.error) throw r2.error;
