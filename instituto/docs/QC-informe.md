@@ -4,9 +4,9 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 
 ## Resumen
 - Lecciones escritas: **41** de 247 previstas en el currículo (206 por escribir).
-- CUMPLEN el estándar: **7** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **34**
-- Por debajo del piso de 3000 palabras en algún idioma: **34** de 41
-- Promedio de palabras por lección: ES 1740 · EN 1626
+- CUMPLEN el estándar: **8** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **33**
+- Por debajo del piso de 3000 palabras en algún idioma: **33** de 41
+- Promedio de palabras por lección: ES 1762 · EN 1664
 - Disponibles sin archivo: ninguna · Archivos sin estar disponibles: ninguno
 
 **Palabras** = resumen + objetivos + secciones, por idioma (sin ejercicios ni quiz). Las heredadas no se reescriben sin decisión de David (Constitución §4.5).
@@ -21,7 +21,7 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 | 104 | 1 | 3343 | 3186 | 0.95 | 11/11 | 6/6 | 2 | CUMPLE |
 | 105 | 1 | 3251 | 3080 | 0.95 | 11/11 | 6/6 | 2 | CUMPLE |
 | 106 | 1 | 3481 | 3367 | 0.97 | 11/11 | 6/6 | 2 | CUMPLE |
-| 107 | 1 | 2394 | 1628 | 0.68 | 11/11 | 6/6 | 4 | HEREDADA |
+| 107 | 1 | 3259 | 3161 | 0.97 | 11/11 | 6/6 | 4 | CUMPLE |
 | 108 | 1 | 2071 | 1965 | 0.95 | 11/11 | 6/6 | 0 | HEREDADA |
 | 109 | 1 | 1665 | 1536 | 0.92 | 11/11 | 6/6 | 1 | HEREDADA |
 | 110 | 1 | 1365 | 1279 | 0.94 | 11/11 | 6/6 | 0 | HEREDADA |
@@ -58,7 +58,7 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 | 141 | 1 | 4296 | 4191 | 0.98 | 11/11 | 6/6 | 4 | CUMPLE |
 
 ## Puerta y línea base
-- Puerta (§7.6): **CERRADA** — 34 de las lecciones 101 a 141 aún no cumplen.
+- Puerta (§7.6): **CERRADA** — 33 de las lecciones 101 a 141 aún no cumplen.
 - Sin violaciones de la puerta ni regresiones respecto a la línea base.
 
 ## Detalle de problemas
@@ -78,11 +78,7 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 ### Lección 106 — Acto 3 — Israel: promesa, pacto, fracaso y esperanza (CUMPLE)
 - ⚠ fuentes con capítulo o página: confirmar que están verificadas contra el libro
 
-### Lección 107 — Acto 4 — Cristo: el cumplimiento que Israel no pudo lograr (HEREDADA)
-- ✘ ES: 2394 palabras (piso 3000)
-- ✘ EN: 1628 palabras (piso 3000)
-- ✘ falta sección de errores frecuentes
-- ⚠ desequilibrio EN/ES = 0.68
+### Lección 107 — Acto 4 — Cristo: el cumplimiento que Israel no pudo lograr (CUMPLE)
 - ⚠ fuentes con capítulo o página: confirmar que están verificadas contra el libro
 
 ### Lección 108 — Actos 5 y 6 — Iglesia y nueva creación: dónde estamos y hacia dónde va (HEREDADA)

@@ -128,22 +128,17 @@
       "n": 107,
       "nivel": 1,
       "titulo": "Acto 4 — Cristo: el cumplimiento que Israel no pudo lograr",
-      "es": 2394,
-      "en": 1628,
-      "ratio": 0.68,
+      "es": 3259,
+      "en": 3161,
+      "ratio": 0.97,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
       "glosario": 4,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 2394 palabras (piso 3000)",
-        "EN: 1628 palabras (piso 3000)",
-        "falta sección de errores frecuentes"
-      ],
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [
-        "desequilibrio EN/ES = 0.68",
         "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
       ],
       "info": []
