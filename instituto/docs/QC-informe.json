@@ -67,19 +67,16 @@
       "n": 104,
       "nivel": 1,
       "titulo": "Acto 1 — Creación: un mundo bueno y un ser humano con encargo",
-      "es": 2688,
-      "en": 2544,
+      "es": 3343,
+      "en": 3186,
       "ratio": 0.95,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
       "glosario": 2,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 2688 palabras (piso 3000)",
-        "EN: 2544 palabras (piso 3000)"
-      ],
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [
         "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
       ],

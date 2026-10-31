@@ -4,9 +4,9 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 
 ## Resumen
 - Lecciones escritas: **41** de 247 previstas en el currículo (206 por escribir).
-- CUMPLEN el estándar: **4** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **37**
-- Por debajo del piso de 3000 palabras en algún idioma: **37** de 41
-- Promedio de palabras por lección: ES 1673 · EN 1559
+- CUMPLEN el estándar: **5** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **36**
+- Por debajo del piso de 3000 palabras en algún idioma: **36** de 41
+- Promedio de palabras por lección: ES 1689 · EN 1575
 - Disponibles sin archivo: ninguna · Archivos sin estar disponibles: ninguno
 
 **Palabras** = resumen + objetivos + secciones, por idioma (sin ejercicios ni quiz). Las heredadas no se reescriben sin decisión de David (Constitución §4.5).
@@ -18,7 +18,7 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 | 101 | 1 | 3255 | 3136 | 0.96 | 11/11 | 6/6 | 7 | CUMPLE |
 | 102 | 1 | 3234 | 3155 | 0.98 | 11/11 | 6/6 | 6 | CUMPLE |
 | 103 | 1 | 3489 | 3372 | 0.97 | 11/11 | 6/6 | 1 | CUMPLE |
-| 104 | 1 | 2688 | 2544 | 0.95 | 11/11 | 6/6 | 2 | HEREDADA |
+| 104 | 1 | 3343 | 3186 | 0.95 | 11/11 | 6/6 | 2 | CUMPLE |
 | 105 | 1 | 2440 | 2280 | 0.93 | 11/11 | 6/6 | 2 | HEREDADA |
 | 106 | 1 | 2172 | 2046 | 0.94 | 11/11 | 6/6 | 1 | HEREDADA |
 | 107 | 1 | 2394 | 1628 | 0.68 | 11/11 | 6/6 | 4 | HEREDADA |
@@ -58,7 +58,7 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 | 141 | 1 | 4296 | 4191 | 0.98 | 11/11 | 6/6 | 4 | CUMPLE |
 
 ## Puerta y línea base
-- Puerta (§7.6): **CERRADA** — 37 de las lecciones 101 a 141 aún no cumplen.
+- Puerta (§7.6): **CERRADA** — 36 de las lecciones 101 a 141 aún no cumplen.
 - Sin violaciones de la puerta ni regresiones respecto a la línea base.
 
 ## Detalle de problemas
@@ -69,9 +69,7 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 ### Lección 102 — Cómo está organizada: Antiguo y Nuevo Testamento, secciones y géneros (CUMPLE)
 - ⚠ fuentes con capítulo o página: confirmar que están verificadas contra el libro
 
-### Lección 104 — Acto 1 — Creación: un mundo bueno y un ser humano con encargo (HEREDADA)
-- ✘ ES: 2688 palabras (piso 3000)
-- ✘ EN: 2544 palabras (piso 3000)
+### Lección 104 — Acto 1 — Creación: un mundo bueno y un ser humano con encargo (CUMPLE)
 - ⚠ fuentes con capítulo o página: confirmar que están verificadas contra el libro
 
 ### Lección 105 — Acto 2 — Caída: qué se rompió y hasta dónde llegó la ruptura (HEREDADA)
