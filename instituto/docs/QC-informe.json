@@ -29,19 +29,16 @@
       "n": 102,
       "nivel": 1,
       "titulo": "Cómo está organizada: Antiguo y Nuevo Testamento, secciones y géneros",
-      "es": 2220,
-      "en": 2125,
-      "ratio": 0.96,
+      "es": 3234,
+      "en": 3155,
+      "ratio": 0.98,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
-      "glosario": 5,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 2220 palabras (piso 3000)",
-        "EN: 2125 palabras (piso 3000)"
-      ],
+      "glosario": 6,
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [
         "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
       ],
