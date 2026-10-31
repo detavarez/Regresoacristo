@@ -1,6 +1,6 @@
 # Handoff — Instituto Bíblico (v5, reemplaza a v1 a v4)
 
-**PROYECTO: Instituto Bíblico — ESTUDIO PERSONAL.** David tiene otro proyecto separado (Instituto de clases con maestros y estudiantes), por iniciar en otros chats. No mezclar los dos: cada uno con su propio handoff y su propio repo o carpeta.
+**PROYECTO: Instituto Bíblico.** Nació como estudio personal de David y luego se abrió para que otras personas también se eduquen; por eso incluye cuentas de estudiante, maestro y administrador. Si existe otro proyecto aparte (clases), tiene su propio handoff y repo; no mezclar.
 
 Este documento NO contiene tokens. Los tokens viven en `TOKENS.txt`, que se adjunta en cada chat.
 
@@ -61,8 +61,7 @@ Resumen; el texto completo es la fuente de verdad.
 3. Revisar (sin reescribir) las lecciones que tocan temas de la Constitución §3.3; el informe QC las lista.
 4. Extracción de libros, uno por chat (nada evaluado todavía; los PDF deben volver a subirse). Duplicados por resolver: Consejería (Collins), Homilética (Kittim Silva), Panorama AT/NT (Benware).
 5. Confirmar con David la clasificación 3.3 y los temas que la declaración no cubre.
-6. Decidir con David si las cuentas de estudiante, maestro y administrador que ya tiene este sitio se quedan aquí o pertenecen al proyecto de clases.
-7. Prueba real del cambio de correo desde el panel admin con una cuenta de prueba.
+6. Prueba real del cambio de correo desde el panel admin con una cuenta de prueba.
 
 ## Seguridad
 - Revocar el token de GitHub pegado en chats anteriores. Usar solo los tokens fine-grained de `TOKENS.txt`.
