@@ -1,12 +1,12 @@
 # Informe QC — Instituto Bíblico
 
-Generado: 2026-10-20 · Estándar: Constitución §4 · Lecciones nuevas: desde la 141
+Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde la 141
 
 ## Resumen
 - Lecciones escritas: **41** de 247 previstas en el currículo (206 por escribir).
-- CUMPLEN el estándar: **1** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **40**
-- Por debajo del piso de 3000 palabras en algún idioma: **40** de 41
-- Promedio de palabras por lección: ES 1612 · EN 1497
+- CUMPLEN el estándar: **2** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **39**
+- Por debajo del piso de 3000 palabras en algún idioma: **39** de 41
+- Promedio de palabras por lección: ES 1625 · EN 1510
 - Disponibles sin archivo: ninguna · Archivos sin estar disponibles: ninguno
 
 **Palabras** = resumen + objetivos + secciones, por idioma (sin ejercicios ni quiz). Las heredadas no se reescriben sin decisión de David (Constitución §4.5).
@@ -15,7 +15,7 @@ Generado: 2026-10-20 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 
 | Lección | Nivel | ES | EN | EN/ES | Quiz ES/EN | Ejerc. ES/EN | Glos. | Estado |
 |---|---|---|---|---|---|---|---|---|
-| 101 | 1 | 2749 | 2603 | 0.95 | 11/11 | 6/6 | 7 | HEREDADA |
+| 101 | 1 | 3255 | 3136 | 0.96 | 11/11 | 6/6 | 7 | CUMPLE |
 | 102 | 1 | 2220 | 2125 | 0.96 | 11/11 | 6/6 | 5 | HEREDADA |
 | 103 | 1 | 2523 | 2413 | 0.96 | 11/11 | 6/6 | 0 | HEREDADA |
 | 104 | 1 | 2688 | 2544 | 0.95 | 11/11 | 6/6 | 2 | HEREDADA |
@@ -58,15 +58,12 @@ Generado: 2026-10-20 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 | 141 | 1 | 4296 | 4191 | 0.98 | 11/11 | 6/6 | 4 | CUMPLE |
 
 ## Puerta y línea base
-- Puerta (§7.6): **CERRADA** — 40 de las lecciones 101 a 141 aún no cumplen.
+- Puerta (§7.6): **CERRADA** — 39 de las lecciones 101 a 141 aún no cumplen.
 - Sin violaciones de la puerta ni regresiones respecto a la línea base.
 
 ## Detalle de problemas
 
-### Lección 101 — ¿Qué es la Biblia? Composición, autores, idiomas y unidad (HEREDADA)
-- ✘ ES: 2749 palabras (piso 3000)
-- ✘ EN: 2603 palabras (piso 3000)
-- ✘ falta sección de errores frecuentes
+### Lección 101 — ¿Qué es la Biblia? Composición, autores, idiomas y unidad (CUMPLE)
 - ⚠ fuentes con capítulo o página: confirmar que están verificadas contra el libro
 
 ### Lección 102 — Cómo está organizada: Antiguo y Nuevo Testamento, secciones y géneros (HEREDADA)

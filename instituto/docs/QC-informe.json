@@ -8,20 +8,16 @@
       "n": 101,
       "nivel": 1,
       "titulo": "¿Qué es la Biblia? Composición, autores, idiomas y unidad",
-      "es": 2749,
-      "en": 2603,
-      "ratio": 0.95,
+      "es": 3255,
+      "en": 3136,
+      "ratio": 0.96,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
       "glosario": 7,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 2749 palabras (piso 3000)",
-        "EN: 2603 palabras (piso 3000)",
-        "falta sección de errores frecuentes"
-      ],
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [
         "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
       ],
