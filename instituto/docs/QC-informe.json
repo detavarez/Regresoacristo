@@ -107,20 +107,16 @@
       "n": 106,
       "nivel": 1,
       "titulo": "Acto 3 — Israel: promesa, pacto, fracaso y esperanza",
-      "es": 2172,
-      "en": 2046,
-      "ratio": 0.94,
+      "es": 3481,
+      "en": 3367,
+      "ratio": 0.97,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
-      "glosario": 1,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 2172 palabras (piso 3000)",
-        "EN: 2046 palabras (piso 3000)",
-        "falta sección de errores frecuentes"
-      ],
+      "glosario": 2,
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [
         "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
       ],
