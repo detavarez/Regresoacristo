@@ -1,11 +1,11 @@
 # Handoff — Instituto Bíblico (v5, reemplaza a v1 a v4)
 
-**PROYECTO: Instituto Bíblico.** Nació como estudio personal de David y luego se abrió para que otras personas también se eduquen; por eso incluye cuentas de estudiante, maestro y administrador. Si existe otro proyecto aparte (clases), tiene su propio handoff y repo; no mezclar.
+**PROYECTO: Instituto Bíblico, modo AUTOESTUDIO.** Es un solo Instituto con dos modos (autoestudio y presencial) que comparten contenido, fuentes, doctrina y cuentas; ver `00-GOBIERNO/NUCLEO-COMPARTIDO.md`. El modo presencial tiene su propio handoff en `03-LOGS/presencial/HANDOFF-vigente.md`; no mezclar los archivos de uno y otro.
 
 Este documento NO contiene tokens. Los tokens viven en `TOKENS.txt`, que se adjunta en cada chat.
 
 ## Cómo arrancar un chat nuevo (pega esto primero)
-> Lee este handoff, `CONSTITUCION.md` y `DECLARACION-DE-FE.md` (están en `instituto/` del repo público detavarez/Regresoacristo; si aún no se han publicado, te los adjunto). Verifica qué documentos y tokens faltan antes de trabajar. Ejecuta `node instituto/tools/qc.js`, lee `instituto/docs/COLA-AMPLIACION.md` y dime en pocas líneas dónde estamos y cuál es el siguiente paso. No reescribas nada hasta que yo confirme.
+> Pega el prompt de autoestudio de `00-GOBIERNO/PROMPTS-DE-ARRANQUE.md` y adjunta `TOKENS.txt`. El chat escribe «Retomando: autoestudio — …» y trabaja la cola sin preguntar qué hacer; solo se detiene por token faltante, repo inaccesible, material faltante o conflicto no resuelto.
 
 ## Documentos que se adjuntan al abrir un chat
 `TOKENS.txt` va en todos los chats. El chat toma el token por su etiqueta y no lo repite completo ni lo guarda en ningún repo.
