@@ -48,25 +48,20 @@
       "n": 103,
       "nivel": 1,
       "titulo": "La historia bíblica en seis actos: el mapa completo",
-      "es": 2523,
-      "en": 2413,
-      "ratio": 0.96,
+      "es": 3489,
+      "en": 3372,
+      "ratio": 0.97,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
-      "glosario": 0,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 2523 palabras (piso 3000)",
-        "EN: 2413 palabras (piso 3000)",
-        "falta sección de errores frecuentes",
-        "falta caso para pensar (nota)"
-      ],
-      "avisos": [
-        "sin términos de glosario"
-      ],
-      "info": []
+      "glosario": 1,
+      "estado": "CUMPLE",
+      "errores": [],
+      "avisos": [],
+      "info": [
+        "revisar contra Constitución 3.3: bautismo en el Espíritu / lenguas"
+      ]
     },
     {
       "n": 104,
