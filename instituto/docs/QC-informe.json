@@ -147,23 +147,18 @@
       "n": 108,
       "nivel": 1,
       "titulo": "Actos 5 y 6 — Iglesia y nueva creación: dónde estamos y hacia dónde va",
-      "es": 2071,
-      "en": 1965,
-      "ratio": 0.95,
+      "es": 3104,
+      "en": 3042,
+      "ratio": 0.98,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
-      "glosario": 0,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 2071 palabras (piso 3000)",
-        "EN: 1965 palabras (piso 3000)",
-        "falta sección de errores frecuentes"
-      ],
+      "glosario": 1,
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [
-        "fuentes con capítulo o página: confirmar que están verificadas contra el libro",
-        "sin términos de glosario"
+        "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
       ],
       "info": [
         "revisar contra Constitución 3.3: bautismo en el Espíritu / lenguas; escatología detallada"
