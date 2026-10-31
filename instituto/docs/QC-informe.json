@@ -88,19 +88,16 @@
       "n": 105,
       "nivel": 1,
       "titulo": "Acto 2 — Caída: qué se rompió y hasta dónde llegó la ruptura",
-      "es": 2440,
-      "en": 2280,
-      "ratio": 0.93,
+      "es": 3251,
+      "en": 3080,
+      "ratio": 0.95,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
       "glosario": 2,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 2440 palabras (piso 3000)",
-        "EN: 2280 palabras (piso 3000)"
-      ],
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [
         "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
       ],

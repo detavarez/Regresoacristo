@@ -4,9 +4,9 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 
 ## Resumen
 - Lecciones escritas: **41** de 247 previstas en el currículo (206 por escribir).
-- CUMPLEN el estándar: **5** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **36**
-- Por debajo del piso de 3000 palabras en algún idioma: **36** de 41
-- Promedio de palabras por lección: ES 1689 · EN 1575
+- CUMPLEN el estándar: **6** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **35**
+- Por debajo del piso de 3000 palabras en algún idioma: **35** de 41
+- Promedio de palabras por lección: ES 1709 · EN 1594
 - Disponibles sin archivo: ninguna · Archivos sin estar disponibles: ninguno
 
 **Palabras** = resumen + objetivos + secciones, por idioma (sin ejercicios ni quiz). Las heredadas no se reescriben sin decisión de David (Constitución §4.5).
@@ -19,7 +19,7 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 | 102 | 1 | 3234 | 3155 | 0.98 | 11/11 | 6/6 | 6 | CUMPLE |
 | 103 | 1 | 3489 | 3372 | 0.97 | 11/11 | 6/6 | 1 | CUMPLE |
 | 104 | 1 | 3343 | 3186 | 0.95 | 11/11 | 6/6 | 2 | CUMPLE |
-| 105 | 1 | 2440 | 2280 | 0.93 | 11/11 | 6/6 | 2 | HEREDADA |
+| 105 | 1 | 3251 | 3080 | 0.95 | 11/11 | 6/6 | 2 | CUMPLE |
 | 106 | 1 | 2172 | 2046 | 0.94 | 11/11 | 6/6 | 1 | HEREDADA |
 | 107 | 1 | 2394 | 1628 | 0.68 | 11/11 | 6/6 | 4 | HEREDADA |
 | 108 | 1 | 2071 | 1965 | 0.95 | 11/11 | 6/6 | 0 | HEREDADA |
@@ -58,7 +58,7 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 | 141 | 1 | 4296 | 4191 | 0.98 | 11/11 | 6/6 | 4 | CUMPLE |
 
 ## Puerta y línea base
-- Puerta (§7.6): **CERRADA** — 36 de las lecciones 101 a 141 aún no cumplen.
+- Puerta (§7.6): **CERRADA** — 35 de las lecciones 101 a 141 aún no cumplen.
 - Sin violaciones de la puerta ni regresiones respecto a la línea base.
 
 ## Detalle de problemas
@@ -72,9 +72,7 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 ### Lección 104 — Acto 1 — Creación: un mundo bueno y un ser humano con encargo (CUMPLE)
 - ⚠ fuentes con capítulo o página: confirmar que están verificadas contra el libro
 
-### Lección 105 — Acto 2 — Caída: qué se rompió y hasta dónde llegó la ruptura (HEREDADA)
-- ✘ ES: 2440 palabras (piso 3000)
-- ✘ EN: 2280 palabras (piso 3000)
+### Lección 105 — Acto 2 — Caída: qué se rompió y hasta dónde llegó la ruptura (CUMPLE)
 - ⚠ fuentes con capítulo o página: confirmar que están verificadas contra el libro
 
 ### Lección 106 — Acto 3 — Israel: promesa, pacto, fracaso y esperanza (HEREDADA)
