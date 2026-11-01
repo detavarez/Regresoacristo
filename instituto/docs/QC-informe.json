@@ -231,20 +231,16 @@
       "n": 112,
       "nivel": 1,
       "titulo": "Los cuatro siglos entre los Testamentos: introducción",
-      "es": 1361,
-      "en": 1298,
-      "ratio": 0.95,
+      "es": 3092,
+      "en": 3004,
+      "ratio": 0.97,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
       "glosario": 4,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 1361 palabras (piso 3000)",
-        "EN: 1298 palabras (piso 3000)",
-        "falta sección de errores frecuentes"
-      ],
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [],
       "info": [
         "sin bloque de posturas (válido solo si no hay tema debatido)"
