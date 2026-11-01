@@ -188,20 +188,16 @@
       "n": 110,
       "nivel": 1,
       "titulo": "Línea de tiempo del Antiguo Testamento",
-      "es": 1365,
-      "en": 1279,
-      "ratio": 0.94,
+      "es": 3262,
+      "en": 3179,
+      "ratio": 0.97,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
       "glosario": 0,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 1365 palabras (piso 3000)",
-        "EN: 1279 palabras (piso 3000)",
-        "falta sección de errores frecuentes"
-      ],
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [
         "sin términos de glosario"
       ],
