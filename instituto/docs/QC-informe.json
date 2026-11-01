@@ -271,20 +271,16 @@
       "n": 114,
       "nivel": 1,
       "titulo": "Libros históricos: de Josué a Ester",
-      "es": 1195,
-      "en": 1128,
-      "ratio": 0.94,
+      "es": 3142,
+      "en": 3086,
+      "ratio": 0.98,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
       "glosario": 1,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 1195 palabras (piso 3000)",
-        "EN: 1128 palabras (piso 3000)",
-        "falta sección de errores frecuentes"
-      ],
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [
         "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
       ],

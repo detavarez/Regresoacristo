@@ -4,9 +4,9 @@ Generado: 2026-11-01 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 
 ## Resumen
 - Lecciones escritas: **41** de 247 previstas en el currículo (206 por escribir).
-- CUMPLEN el estándar: **14** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **27**
-- Por debajo del piso de 3000 palabras en algún idioma: **27** de 41
-- Promedio de palabras por lección: ES 2000 · EN 1903
+- CUMPLEN el estándar: **15** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **26**
+- Por debajo del piso de 3000 palabras en algún idioma: **26** de 41
+- Promedio de palabras por lección: ES 2048 · EN 1951
 - Disponibles sin archivo: ninguna · Archivos sin estar disponibles: ninguno
 
 **Palabras** = resumen + objetivos + secciones, por idioma (sin ejercicios ni quiz). Las heredadas no se reescriben sin decisión de David (Constitución §4.5).
@@ -28,7 +28,7 @@ Generado: 2026-11-01 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 | 111 | 1 | 3215 | 3094 | 0.96 | 11/11 | 6/6 | 0 | CUMPLE |
 | 112 | 1 | 3092 | 3004 | 0.97 | 11/11 | 6/6 | 4 | CUMPLE |
 | 113 | 1 | 3171 | 3076 | 0.97 | 11/11 | 6/6 | 2 | CUMPLE |
-| 114 | 1 | 1195 | 1128 | 0.94 | 11/11 | 6/6 | 1 | HEREDADA |
+| 114 | 1 | 3142 | 3086 | 0.98 | 11/11 | 6/6 | 1 | CUMPLE |
 | 115 | 1 | 1538 | 1421 | 0.92 | 11/11 | 6/6 | 0 | HEREDADA |
 | 116 | 1 | 1367 | 1277 | 0.93 | 11/11 | 6/6 | 3 | HEREDADA |
 | 117 | 1 | 1285 | 1224 | 0.95 | 11/11 | 6/6 | 0 | HEREDADA |
@@ -58,7 +58,7 @@ Generado: 2026-11-01 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 | 141 | 1 | 4296 | 4191 | 0.98 | 11/11 | 6/6 | 4 | CUMPLE |
 
 ## Puerta y línea base
-- Puerta (§7.6): **CERRADA** — 27 de las lecciones 101 a 141 aún no cumplen.
+- Puerta (§7.6): **CERRADA** — 26 de las lecciones 101 a 141 aún no cumplen.
 - Sin violaciones de la puerta ni regresiones respecto a la línea base.
 
 ## Detalle de problemas
@@ -93,10 +93,7 @@ Generado: 2026-11-01 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 ### Lección 113 — Pentateuco: qué hace cada uno de los cinco libros (CUMPLE)
 - ⚠ fuentes con capítulo o página: confirmar que están verificadas contra el libro
 
-### Lección 114 — Libros históricos: de Josué a Ester (HEREDADA)
-- ✘ ES: 1195 palabras (piso 3000)
-- ✘ EN: 1128 palabras (piso 3000)
-- ✘ falta sección de errores frecuentes
+### Lección 114 — Libros históricos: de Josué a Ester (CUMPLE)
 - ⚠ fuentes con capítulo o página: confirmar que están verificadas contra el libro
 
 ### Lección 115 — Poéticos y sapienciales: Job a Cantares (HEREDADA)
