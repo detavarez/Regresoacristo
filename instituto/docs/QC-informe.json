@@ -209,25 +209,22 @@
       "n": 111,
       "nivel": 1,
       "titulo": "Línea de tiempo del Nuevo Testamento",
-      "es": 1246,
-      "en": 1133,
-      "ratio": 0.91,
+      "es": 3214,
+      "en": 3093,
+      "ratio": 0.96,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
       "glosario": 0,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 1246 palabras (piso 3000)",
-        "EN: 1133 palabras (piso 3000)",
-        "falta sección de errores frecuentes"
-      ],
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [
         "sin términos de glosario"
       ],
       "info": [
-        "sin bloque de posturas (válido solo si no hay tema debatido)"
+        "sin bloque de posturas (válido solo si no hay tema debatido)",
+        "revisar contra Constitución 3.3: elección / seguridad eterna"
       ]
     },
     {
