@@ -359,20 +359,16 @@
       "n": 118,
       "nivel": 1,
       "titulo": "Evangelios y Hechos: cuatro retratos y una continuación",
-      "es": 1304,
-      "en": 1205,
-      "ratio": 0.92,
+      "es": 3126,
+      "en": 3058,
+      "ratio": 0.98,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
       "glosario": 1,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 1304 palabras (piso 3000)",
-        "EN: 1205 palabras (piso 3000)",
-        "falta sección de errores frecuentes"
-      ],
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [
         "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
       ],
