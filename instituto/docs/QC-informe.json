@@ -315,20 +315,16 @@
       "n": 116,
       "nivel": 1,
       "titulo": "Profetas mayores: Isaías a Daniel",
-      "es": 1367,
-      "en": 1277,
-      "ratio": 0.93,
+      "es": 3096,
+      "en": 3051,
+      "ratio": 0.99,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
       "glosario": 3,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 1367 palabras (piso 3000)",
-        "EN: 1277 palabras (piso 3000)",
-        "falta sección de errores frecuentes"
-      ],
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [
         "fuentes con capítulo o página: confirmar que están verificadas contra el libro"
       ],
