@@ -293,25 +293,23 @@
       "n": 115,
       "nivel": 1,
       "titulo": "Poéticos y sapienciales: Job a Cantares",
-      "es": 1538,
-      "en": 1421,
-      "ratio": 0.92,
+      "es": 3230,
+      "en": 3079,
+      "ratio": 0.95,
       "quizEs": 11,
       "quizEn": 11,
       "ejEs": 6,
       "ejEn": 6,
       "glosario": 0,
-      "estado": "HEREDADA",
-      "errores": [
-        "ES: 1538 palabras (piso 3000)",
-        "EN: 1421 palabras (piso 3000)",
-        "falta sección de errores frecuentes"
-      ],
+      "estado": "CUMPLE",
+      "errores": [],
       "avisos": [
         "fuentes con capítulo o página: confirmar que están verificadas contra el libro",
         "sin términos de glosario"
       ],
-      "info": []
+      "info": [
+        "revisar contra Constitución 3.3: demonios y creyentes"
+      ]
     },
     {
       "n": 116,
