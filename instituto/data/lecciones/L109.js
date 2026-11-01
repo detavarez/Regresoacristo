@@ -46,7 +46,62 @@ INST.registrarLeccion({
 
       { tipo: 'texto', titulo: 'Un ejemplo práctico: por qué la geografía explica los viajes de Pablo', html:
         '<p>El libro de Hechos y las cartas de Pablo cobran mucho más sentido cuando se entiende la red de rutas comerciales y militares romanas sobre las que Pablo viajaba. El imperio romano, en el siglo I, había construido un sistema de caminos pavimentados sin precedentes en la historia hasta ese momento, conectando ciudades portuarias del Mediterráneo con el interior de Asia Menor (la actual Turquía) y con Roma misma. Pablo no viaja al azar: sus rutas siguen, casi siempre, las principales vías comerciales y los puertos marítimos más transitados de su época, deteniéndose en ciudades estratégicamente importantes —Éfeso, Corinto, Filipos, Tesalónica— que funcionaban como centros comerciales y administrativos regionales, exactamente el tipo de lugar donde un mensaje podía extenderse con mayor rapidez hacia el resto de la región.</p>' +
-        '<p>Esta misma lógica geográfica ayuda a explicar, por ejemplo, por qué el evangelio llega tan rápidamente a Roma pese a la ausencia de medios de comunicación modernos: la infraestructura del propio imperio que en otros aspectos oprimía a los primeros cristianos fue, en este sentido, el medio providencial a través del cual su mensaje pudo extenderse con una velocidad notable para el mundo antiguo. Este es un ejemplo concreto de por qué prestar atención a la geografía no es un ejercicio académico aislado del resto del Instituto, sino una herramienta práctica de lectura que ilumina decisiones narrativas que de otro modo parecerían arbitrarias.</p>' }
+        '<p>Esta misma lógica geográfica ayuda a explicar, por ejemplo, por qué el evangelio llega tan rápidamente a Roma pese a la ausencia de medios de comunicación modernos: la infraestructura del propio imperio que en otros aspectos oprimía a los primeros cristianos fue, en este sentido, el medio providencial a través del cual su mensaje pudo extenderse con una velocidad notable para el mundo antiguo. Este es un ejemplo concreto de por qué prestar atención a la geografía no es un ejercicio académico aislado del resto del Instituto, sino una herramienta práctica de lectura que ilumina decisiones narrativas que de otro modo parecerían arbitrarias.</p>' },
+
+      { tipo: 'texto', titulo: 'Canaán por dentro: cuatro franjas de tierra', html:
+        `<p>Aunque Canaán es pequeña (de norte a sur, apenas unos doscientos cincuenta kilómetros), su relieve es muy variado, y casi cada franja tiene su propio papel en la historia bíblica. De oeste a este, pueden distinguirse cuatro.</p>
+        <ul>
+          <li><b>La llanura costera,</b> junto al Mediterráneo. Era tierra fértil y de paso, y en el sur estaba ocupada por los filisteos, enemigos recurrentes de Israel en los libros de Jueces y Samuel. No tenía buenos puertos naturales, razón por la cual Israel nunca fue una potencia marítima.</li>
+          <li><b>La región montañosa central,</b> una columna de colinas donde se asentó el pueblo de Israel: Hebrón, Siquem, Betel, Jerusalén. Es tierra de terrazas, viñedos y olivos, de aldeas pequeñas y de fácil defensa.</li>
+          <li><b>El valle del Jordán,</b> una grieta profunda que corre de norte a sur. Lot lo vio como una llanura de riego \"como el huerto de Jehová, como la tierra de Egipto\" (Génesis 13:10). En él están el mar de Galilea, el río Jordán y el mar Muerto.</li>
+          <li><b>La meseta de Transjordania,</b> al este del Jordán. Allí estaban Amón, Moab, Edom y, más al norte, Galaad y Basán, y la recorría el \"camino real\" (Números 20:17).</li>
+        </ul>
+        <p>Este relieve ayuda a entender textos aparentemente sencillos. Cuando la Biblia dice que alguien \"sube\" a Jerusalén o \"desciende\" a Jericó, está hablando literalmente de altitud, no solo de estilo.</p>` },
+
+      { tipo: 'texto', titulo: 'La lluvia del cielo: un detalle que lo cambia todo', html:
+        `<p>Una de las diferencias más importantes entre Egipto y Canaán es la fuente del agua, y la Biblia la señala de manera explícita. Moisés prepara al pueblo antes de entrar con esta comparación: \"la tierra a la cual entras para tomarla, no es como la tierra de Egipto de donde habéis salido, donde sembrabas tu semilla, y regabas con tu pie, como huerto de hortalizas. Sino que la tierra a la cual pasáis para tomarla es tierra de montes y de vegas, que bebe las aguas de la lluvia del cielo\" (Deuteronomio 11:10-11).</p>
+        <p>En Egipto, el Nilo garantizaba el agua; en Canaán, la cosecha dependía de que lloviera \"la temprana y la tardía\" (Deuteronomio 11:14), es decir, las lluvias del otoño y de la primavera. Esto tiene consecuencias teológicas profundas. Vivir de la lluvia es vivir con los ojos puestos en el cielo, en una dependencia que ningún canal de riego puede reemplazar. También explica por qué la religión cananea adoraba a Baal como dios de la tormenta y la fertilidad, y por qué el desafío del profeta Elías a Baal tomó la forma de una sequía y de una lluvia (1 Reyes 17-18): la pregunta era quién da realmente la lluvia, Baal o Jehová.</p>
+        <p>Así, un dato de geografía física, la ausencia de un gran río en Canaán, se convierte en una pieza del argumento bíblico: la tierra prometida es un lugar donde Israel debe confiar en Dios cada año para comer.</p>` },
+
+      { tipo: 'texto', titulo: 'Dos mares y un río: agua, sal y desierto', html:
+        `<p>El valle del Jordán contiene una paradoja geográfica que la Biblia recorre repetidamente. El río nace al norte, en las faldas del monte Hermón, atraviesa el mar de Galilea y termina en el mar Muerto, que está a más de cuatrocientos metros bajo el nivel del mar. Es el lugar más bajo de la tierra, y su agua no tiene salida: por eso es tan salada que ningún pez puede vivir en ella. La Biblia lo llama \"el mar Salado\" (Génesis 14:3).</p>
+        <p>El mar de Galilea, en cambio, es un lago de agua dulce, rodeado de ciudades pesqueras, y es el escenario de gran parte del ministerio de Jesús. Después de dejar Nazaret, Jesús \"vino y habitó en Capernaum, ciudad marítima\" (Mateo 4:13), y de ese entorno de pescadores salieron varios de sus primeros discípulos. Allí se calma una tormenta y se camina sobre las aguas, en un lago conocido por sus vientos repentinos.</p>
+        <p>La ruta de Jerusalén a Jericó ilumina otra de las parábolas más conocidas. \"Un hombre descendía de Jerusalén a Jericó, y cayó en manos de ladrones\" (Lucas 10:30). El verbo \"descendía\" es exacto: en menos de treinta kilómetros, el camino baja más de mil metros, atravesando desierto rocoso, ideal para emboscadas. Quien oía la parábola conocía ese camino y entendía el peligro. En sentido contrario, las peregrinaciones a Jerusalén eran siempre una subida, como cuando la familia de Jesús \"subió a Jerusalén conforme a la costumbre de la fiesta\" (Lucas 2:42). Muchos intérpretes ven en ese ascenso el trasfondo de los salmos de peregrinación (Salmos 120–134), una lectura <b>inferida</b> y ampliamente aceptada.</p>` },
+
+      { tipo: 'texto', titulo: 'El desierto: lugar de prueba y de encuentro', html:
+        `<p>Cerca de las tierras fértiles siempre hay desierto, y la Biblia lo usa con una doble función. Por un lado, es lugar de prueba. Moisés recuerda al pueblo: \"Y te acordarás de todo el camino por donde te ha traído Jehová tu Dios estos cuarenta años en el desierto, para afligirte, para probarte, para saber lo que había en tu corazón\" (Deuteronomio 8:2). Y cuando Jesús es llevado por el Espíritu al desierto para ser tentado (Mateo 4:1), repite en pequeño la experiencia de Israel, con la diferencia de que él resiste donde el pueblo cayó.</p>
+        <p>Por otro lado, el desierto es lugar de encuentro. El profeta Oseas escribe, hablando en nombre de Dios: \"yo la atraeré, y la llevaré al desierto, y hablaré a su corazón\" (Oseas 2:14). Al quitar las distracciones, el desierto deja al pueblo a solas con quien lo rescató. Moisés encuentra a Dios en el desierto de Madián, Elías en el Horeb y Juan el Bautista predica en el desierto de Judea. Esa doble cara explica por qué los desiertos aparecen una y otra vez en los momentos decisivos de la historia bíblica.</p>` },
+
+      { tipo: 'texto', titulo: 'Cómo usar un mapa bíblico: cuatro preguntas', html:
+        `<p>Un mapa puede ser un adorno o una herramienta de estudio. Para que sea lo segundo, conviene acercarse a cualquier pasaje con cuatro preguntas sencillas.</p>
+        <ul>
+          <li><b>¿Dónde está esto en relación con las rutas?</b> Los lugares junto a los caminos internacionales vivían bajo la presión constante de los imperios; los lugares apartados, no.</li>
+          <li><b>¿Qué potencia gobernaba en ese momento?</b> Un mismo lugar puede tener otro significado bajo Asiria, Babilonia o Roma, como se vio en la secuencia de imperios.</li>
+          <li><b>¿Qué altitud y qué agua hay?</b> No es lo mismo \"subir\" a Jerusalén que \"descender\" al mar Muerto, ni vivir de un río que de la lluvia.</li>
+          <li><b>¿Qué lugares conecta este viaje?</b> Los recorridos de Abraham, Jesús y Pablo siguen rutas reales, y reconstruirlas hace visibles detalles que una lectura rápida pasa por alto.</li>
+        </ul>
+        <p>Estas preguntas son un método, no una doctrina. Su valor es que obligan a leer la Biblia como lo que es: la historia de personas reales en lugares reales, y no un conjunto de ideas flotando sin escenario.</p>` },
+
+      { tipo: 'errores', titulo: 'Errores frecuentes al leer la geografía bíblica',
+        items: [
+          ['Leer los relatos como si ocurrieran en un lugar sin mapa', 'Los relatos bíblicos mencionan ciudades, caminos y distancias porque ocurrieron en lugares reales. Ignorar esos nombres convierte la Biblia en un cuento sin escenario; ubicarlos revela detalles que una lectura rápida pasa por alto.'],
+          ['Imaginar a Abraham como un nómada primitivo sin contacto con la civilización', 'Salió de Ur, una de las ciudades más desarrolladas de su época (Génesis 11:31). Su fe no fue la de alguien aislado, sino la de quien dejó una gran ciudad para obedecer una promesa.'],
+          ['Pensar que Israel fue invadido tantas veces solo por mala suerte', 'La ubicación de Canaán entre Egipto y Mesopotamia la convertía en el corredor obligado de los imperios. La Biblia no reduce la historia a geografía, pero la geografía explica por qué los conflictos eran inevitables.'],
+          ['Suponer que Canaán era fértil de la misma manera que Egipto', 'Canaán dependía de la lluvia, no de un gran río (Deuteronomio 11:10-11). Esa diferencia moldeó su economía, su religión y su manera de entender la dependencia de Dios.'],
+          ['Pensar que todo el Cercano Oriente era un desierto sin historia', 'La región tuvo ciudades, rutas comerciales y culturas sofisticadas desde antes de Abraham. Entenderlo evita una imagen caricaturesca del mundo bíblico.'],
+          ['Convertir un mapa en prueba de una postura doctrinal', 'Los mapas ayudan a ubicar lugares y rutas, pero no resuelven discusiones doctrinales. Cuando un lugar es discutido (por ejemplo, la ubicación exacta del monte Sinaí), conviene decir que el dato no es seguro, en lugar de afirmarlo con una certeza que no existe.']
+        ] },
+
+      { tipo: 'texto', titulo: 'Los vecinos de Israel: quiénes eran', html:
+        `<p>Israel no vivió solo. Alrededor de Canaán había pueblos con nombre propio, y conocerlos ayuda a leer muchos pasajes.</p>
+        <ul>
+          <li><b>Moab y Amón,</b> al este del Jordán, que la Biblia presenta como descendientes de Lot (Génesis 19:36-38), es decir, parientes lejanos de Israel. Rut, la bisabuela de David, era moabita.</li>
+          <li><b>Edom,</b> al sureste, descendiente de Esaú, el hermano de Jacob (Génesis 36:1). La relación entre los dos pueblos arrastra la rivalidad de los hermanos.</li>
+          <li><b>Los filisteos,</b> en la costa suroeste, con ciudades como Gat, de donde procedía Goliat (1 Samuel 17:4).</li>
+          <li><b>Fenicia,</b> en la costa norte, con Tiro y Sidón. Su rey Hiram colaboró con David y Salomón en la construcción del templo, enviando cedros (1 Reyes 5:1-10).</li>
+          <li><b>Aram,</b> al noreste, el reino cuyo comandante Naamán fue sanado de lepra por medio de Eliseo (2 Reyes 5).</li>
+        </ul>
+        <p>Estas relaciones fueron a veces de alianza y comercio, y a veces de guerra. Mostrar este mosaico evita una imagen demasiado simple del Antiguo Testamento, en la que Israel sería un pueblo aislado entre enemigos. La Biblia presenta un mundo de vecinos con historias entrelazadas, en el que Dios actúa también fuera de las fronteras de Israel.</p>` }
     ],
 
     en: [
@@ -71,7 +126,62 @@ INST.registrarLeccion({
 
       { tipo: 'texto', titulo: "A practical example: why geography explains Paul's journeys", html:
         '<p>The book of Acts and Paul\'s letters make much more sense once you understand the network of Roman commercial and military roads Paul traveled on. The Roman Empire, in the first century, had built a system of paved roads unprecedented in history up to that point, connecting Mediterranean port cities with the interior of Asia Minor (modern-day Turkey) and with Rome itself. Paul doesn\'t travel at random: his routes almost always follow the main trade roads and the busiest sea ports of his time, stopping in strategically important cities — Ephesus, Corinth, Philippi, Thessalonica — that functioned as regional commercial and administrative hubs, exactly the kind of place where a message could spread most quickly to the rest of the region.</p>' +
-        '<p>This same geographic logic helps explain, for example, why the gospel reaches Rome so quickly despite the absence of modern communication: the very infrastructure of the empire that in other respects oppressed the first Christians was, in this sense, the providential means through which their message could spread with remarkable speed for the ancient world. This is a concrete example of why paying attention to geography isn\'t an academic exercise disconnected from the rest of the Institute, but a practical reading tool that illuminates narrative decisions that would otherwise seem arbitrary.</p>' }
+        '<p>This same geographic logic helps explain, for example, why the gospel reaches Rome so quickly despite the absence of modern communication: the very infrastructure of the empire that in other respects oppressed the first Christians was, in this sense, the providential means through which their message could spread with remarkable speed for the ancient world. This is a concrete example of why paying attention to geography isn\'t an academic exercise disconnected from the rest of the Institute, but a practical reading tool that illuminates narrative decisions that would otherwise seem arbitrary.</p>' },
+
+      { tipo: 'texto', titulo: 'Canaan from the inside: four strips of land', html:
+        `<p>Although Canaan is small (from north to south, barely two hundred and fifty kilometers), its terrain is very varied, and almost every strip has its own role in the biblical story. From west to east, four can be distinguished.</p>
+        <ul>
+          <li><b>The coastal plain,</b> along the Mediterranean. It was fertile land and a passageway, and in the south it was occupied by the Philistines, recurring enemies of Israel in the books of Judges and Samuel. It had no good natural harbors, which is why Israel never became a maritime power.</li>
+          <li><b>The central hill country,</b> a spine of hills where the people of Israel settled: Hebron, Shechem, Bethel, Jerusalem. It is a land of terraces, vineyards, and olive trees, of small villages and easy defense.</li>
+          <li><b>The Jordan Valley,</b> a deep rift running from north to south. Lot saw it as a plain that was well watered, \"like the garden of the LORD, like the land of Egypt\" (Genesis 13:10). In it are the Sea of Galilee, the Jordan River, and the Dead Sea.</li>
+          <li><b>The Transjordan plateau,</b> east of the Jordan. There lay Ammon, Moab, Edom and, farther north, Gilead and Bashan, and it was traversed by the \"King's Highway\" (Numbers 20:17).</li>
+        </ul>
+        <p>This terrain helps to understand apparently simple texts. When the Bible says that someone \"goes up\" to Jerusalem or \"goes down\" to Jericho, it is speaking literally of altitude, not just of style.</p>` },
+
+      { tipo: 'texto', titulo: 'The rain from heaven: a detail that changes everything', html:
+        `<p>One of the most important differences between Egypt and Canaan is the source of water, and the Bible points it out explicitly. Moses prepares the people before they enter with this comparison: \"For the land which you go to possess is not like the land of Egypt from which you have come, where you sowed your seed and watered it by foot, as a vegetable garden; but the land which you cross over to possess is a land of hills and valleys, which drinks water from the rain of heaven\" (Deuteronomy 11:10-11).</p>
+        <p>In Egypt, the Nile guaranteed water; in Canaan, the harvest depended on rain falling \"the former rain and the latter rain\" (Deuteronomy 11:14), that is, the rains of autumn and of spring. This has deep theological consequences. To live by the rain is to live with eyes fixed on the sky, in a dependence that no irrigation canal can replace. It also explains why Canaanite religion worshiped Baal as god of storm and fertility, and why the prophet Elijah\'s challenge to Baal took the form of a drought and a rain (1 Kings 17-18): the question was who really gives the rain, Baal or the LORD.</p>
+        <p>Thus a fact of physical geography, the absence of a great river in Canaan, becomes a piece of the biblical argument: the promised land is a place where Israel must trust God every year in order to eat.</p>` },
+
+      { tipo: 'texto', titulo: 'Two seas and a river: water, salt, and desert', html:
+        `<p>The Jordan Valley contains a geographical paradox that the Bible traverses repeatedly. The river rises in the north, on the slopes of Mount Hermon, passes through the Sea of Galilee, and ends in the Dead Sea, which lies more than four hundred meters below sea level. It is the lowest place on earth, and its water has no outlet: that is why it is so salty that no fish can live in it. The Bible calls it \"the Salt Sea\" (Genesis 14:3).</p>
+        <p>The Sea of Galilee, by contrast, is a freshwater lake, surrounded by fishing towns, and it is the setting for much of Jesus' ministry. After leaving Nazareth, Jesus \"came and dwelt in Capernaum, which is by the sea\" (Matthew 4:13), and from that fishing environment came several of his first disciples. There a storm is calmed and he walks on the water, on a lake known for its sudden winds.</p>
+        <p>The route from Jerusalem to Jericho illuminates another of the best-known parables. \"A certain man went down from Jerusalem to Jericho, and fell among thieves\" (Luke 10:30). The verb \"went down\" is exact: in less than thirty kilometers, the road drops more than a thousand meters, crossing rocky desert, ideal for ambushes. Whoever heard the parable knew that road and understood the danger. In the opposite direction, pilgrimages to Jerusalem were always an ascent, as when Jesus' family \"went up to Jerusalem according to the custom of the feast\" (Luke 2:42). Many interpreters see in that ascent the background of the pilgrim psalms (Psalms 120–134), an <b>inferred</b> and widely accepted reading.</p>` },
+
+      { tipo: 'texto', titulo: 'The desert: a place of testing and of encounter', html:
+        `<p>Near the fertile lands there is always desert, and the Bible uses it with a double function. On one hand, it is a place of testing. Moses reminds the people: \"And you shall remember that the LORD your God led you all the way these forty years in the wilderness, to humble you and test you, to know what was in your heart\" (Deuteronomy 8:2). And when Jesus is led by the Spirit into the wilderness to be tempted (Matthew 4:1), he repeats on a small scale the experience of Israel, with the difference that he resists where the people fell.</p>
+        <p>On the other hand, the desert is a place of encounter. The prophet Hosea writes, speaking on God's behalf: \"Therefore, behold, I will allure her, will bring her into the wilderness, and speak comfort to her\" (Hosea 2:14). By removing distractions, the desert leaves the people alone with the one who rescued them. Moses meets God in the desert of Midian, Elijah at Horeb, and John the Baptist preaches in the wilderness of Judea. That double face explains why deserts appear again and again at the decisive moments of biblical history.</p>` },
+
+      { tipo: 'texto', titulo: 'How to use a Bible map: four questions', html:
+        `<p>A map can be an ornament or a study tool. For it to be the second, it helps to approach any passage with four simple questions.</p>
+        <ul>
+          <li><b>Where is this in relation to the routes?</b> Places along the international roads lived under the constant pressure of the empires; remote places did not.</li>
+          <li><b>Which power was ruling at that moment?</b> The same place can mean something different under Assyria, Babylon, or Rome, as seen in the sequence of empires.</li>
+          <li><b>What altitude and what water are there?</b> It is not the same to \"go up\" to Jerusalem as to \"go down\" to the Dead Sea, or to live from a river as from the rain.</li>
+          <li><b>Which places does this journey connect?</b> The travels of Abraham, Jesus, and Paul follow real routes, and reconstructing them makes visible details that a quick reading overlooks.</li>
+        </ul>
+        <p>These questions are a method, not a doctrine. Their value is that they force us to read the Bible as what it is: the story of real people in real places, and not a set of ideas floating without a setting.</p>` },
+
+      { tipo: 'errores', titulo: 'Common errors when reading biblical geography',
+        items: [
+          ['Reading the accounts as if they happened in a place with no map', 'The biblical accounts mention cities, roads, and distances because they happened in real places. Ignoring those names turns the Bible into a story without a setting; locating them reveals details that a quick reading overlooks.'],
+          ['Imagining Abraham as a primitive nomad with no contact with civilization', 'He came out of Ur, one of the most developed cities of his time (Genesis 11:31). His faith was not that of someone isolated, but of someone who left a great city to obey a promise.'],
+          ['Thinking Israel was invaded so many times only because of bad luck', 'The location of Canaan between Egypt and Mesopotamia made it the obligatory corridor of the empires. The Bible does not reduce history to geography, but geography explains why conflicts were unavoidable.'],
+          ['Assuming Canaan was fertile in the same way as Egypt', 'Canaan depended on rain, not on a great river (Deuteronomy 11:10-11). That difference shaped its economy, its religion, and its way of understanding dependence on God.'],
+          ['Thinking the whole Near East was a desert without history', 'The region had cities, trade routes, and sophisticated cultures from before Abraham. Understanding this avoids a caricature of the biblical world.'],
+          ['Turning a map into proof of a doctrinal position', 'Maps help to locate places and routes, but they do not settle doctrinal arguments. When a location is disputed (for example, the exact location of Mount Sinai), it is better to say that the information is not certain, rather than assert it with a certainty that does not exist.']
+        ] },
+
+      { tipo: 'texto', titulo: 'The neighbors of Israel: who they were', html:
+        `<p>Israel did not live alone. Around Canaan there were peoples with names of their own, and knowing them helps in reading many passages.</p>
+        <ul>
+          <li><b>Moab and Ammon,</b> east of the Jordan, whom the Bible presents as descendants of Lot (Genesis 19:36-38), that is, distant relatives of Israel. Ruth, the great-grandmother of David, was a Moabite.</li>
+          <li><b>Edom,</b> to the southeast, descended from Esau, the brother of Jacob (Genesis 36:1). The relationship between the two peoples carries the rivalry of the brothers.</li>
+          <li><b>The Philistines,</b> on the southwest coast, with cities such as Gath, where Goliath came from (1 Samuel 17:4).</li>
+          <li><b>Phoenicia,</b> on the northern coast, with Tyre and Sidon. Its king Hiram cooperated with David and Solomon in building the temple, sending cedars (1 Kings 5:1-10).</li>
+          <li><b>Aram,</b> to the northeast, the kingdom whose commander Naaman was healed of leprosy through Elisha (2 Kings 5).</li>
+        </ul>
+        <p>These relationships were sometimes of alliance and trade, and sometimes of war. Showing this mosaic avoids an overly simple picture of the Old Testament, in which Israel would be an isolated people among enemies. The Bible presents a world of neighbors with intertwined histories, in which God also acts beyond the borders of Israel.</p>` }
     ]
   },
 

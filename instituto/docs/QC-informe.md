@@ -1,12 +1,12 @@
 # Informe QC — Instituto Bíblico
 
-Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde la 141
+Generado: 2026-11-01 · Estándar: Constitución §4 · Lecciones nuevas: desde la 141
 
 ## Resumen
 - Lecciones escritas: **41** de 247 previstas en el currículo (206 por escribir).
-- CUMPLEN el estándar: **9** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **32**
-- Por debajo del piso de 3000 palabras en algún idioma: **32** de 41
-- Promedio de palabras por lección: ES 1787 · EN 1690
+- CUMPLEN el estándar: **10** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **31**
+- Por debajo del piso de 3000 palabras en algún idioma: **31** de 41
+- Promedio de palabras por lección: ES 1826 · EN 1730
 - Disponibles sin archivo: ninguna · Archivos sin estar disponibles: ninguno
 
 **Palabras** = resumen + objetivos + secciones, por idioma (sin ejercicios ni quiz). Las heredadas no se reescriben sin decisión de David (Constitución §4.5).
@@ -23,7 +23,7 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 | 106 | 1 | 3481 | 3367 | 0.97 | 11/11 | 6/6 | 2 | CUMPLE |
 | 107 | 1 | 3259 | 3161 | 0.97 | 11/11 | 6/6 | 4 | CUMPLE |
 | 108 | 1 | 3104 | 3042 | 0.98 | 11/11 | 6/6 | 1 | CUMPLE |
-| 109 | 1 | 1665 | 1536 | 0.92 | 11/11 | 6/6 | 1 | HEREDADA |
+| 109 | 1 | 3269 | 3159 | 0.97 | 11/11 | 6/6 | 1 | CUMPLE |
 | 110 | 1 | 1365 | 1279 | 0.94 | 11/11 | 6/6 | 0 | HEREDADA |
 | 111 | 1 | 1246 | 1133 | 0.91 | 11/11 | 6/6 | 0 | HEREDADA |
 | 112 | 1 | 1361 | 1298 | 0.95 | 11/11 | 6/6 | 4 | HEREDADA |
@@ -58,7 +58,7 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 | 141 | 1 | 4296 | 4191 | 0.98 | 11/11 | 6/6 | 4 | CUMPLE |
 
 ## Puerta y línea base
-- Puerta (§7.6): **CERRADA** — 32 de las lecciones 101 a 141 aún no cumplen.
+- Puerta (§7.6): **CERRADA** — 31 de las lecciones 101 a 141 aún no cumplen.
 - Sin violaciones de la puerta ni regresiones respecto a la línea base.
 
 ## Detalle de problemas
@@ -83,11 +83,6 @@ Generado: 2026-10-31 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 
 ### Lección 108 — Actos 5 y 6 — Iglesia y nueva creación: dónde estamos y hacia dónde va (CUMPLE)
 - ⚠ fuentes con capítulo o página: confirmar que están verificadas contra el libro
-
-### Lección 109 — El mapa del mundo bíblico: de Mesopotamia a Roma (HEREDADA)
-- ✘ ES: 1665 palabras (piso 3000)
-- ✘ EN: 1536 palabras (piso 3000)
-- ✘ falta sección de errores frecuentes
 
 ### Lección 110 — Línea de tiempo del Antiguo Testamento (HEREDADA)
 - ✘ ES: 1365 palabras (piso 3000)
