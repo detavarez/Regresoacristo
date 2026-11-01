@@ -4,9 +4,9 @@ Generado: 2026-11-01 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 
 ## Resumen
 - Lecciones escritas: **41** de 247 previstas en el currículo (206 por escribir).
-- CUMPLEN el estándar: **17** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **24**
-- Por debajo del piso de 3000 palabras en algún idioma: **24** de 41
-- Promedio de palabras por lección: ES 2131 · EN 2035
+- CUMPLEN el estándar: **18** · FALLAN (nuevas): **0** · HEREDADAS por debajo del estándar: **23**
+- Por debajo del piso de 3000 palabras en algún idioma: **23** de 41
+- Promedio de palabras por lección: ES 2175 · EN 2080
 - Disponibles sin archivo: ninguna · Archivos sin estar disponibles: ninguno
 
 **Palabras** = resumen + objetivos + secciones, por idioma (sin ejercicios ni quiz). Las heredadas no se reescriben sin decisión de David (Constitución §4.5).
@@ -31,7 +31,7 @@ Generado: 2026-11-01 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 | 114 | 1 | 3142 | 3086 | 0.98 | 11/11 | 6/6 | 1 | CUMPLE |
 | 115 | 1 | 3230 | 3079 | 0.95 | 11/11 | 6/6 | 0 | CUMPLE |
 | 116 | 1 | 3096 | 3051 | 0.99 | 11/11 | 6/6 | 3 | CUMPLE |
-| 117 | 1 | 1285 | 1224 | 0.95 | 11/11 | 6/6 | 0 | HEREDADA |
+| 117 | 1 | 3083 | 3066 | 0.99 | 11/11 | 6/6 | 0 | CUMPLE |
 | 118 | 1 | 1304 | 1205 | 0.92 | 11/11 | 6/6 | 1 | HEREDADA |
 | 119 | 1 | 1261 | 1164 | 0.92 | 11/11 | 6/6 | 0 | HEREDADA |
 | 120 | 1 | 1440 | 1359 | 0.94 | 11/11 | 6/6 | 1 | HEREDADA |
@@ -58,7 +58,7 @@ Generado: 2026-11-01 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 | 141 | 1 | 4296 | 4191 | 0.98 | 11/11 | 6/6 | 4 | CUMPLE |
 
 ## Puerta y línea base
-- Puerta (§7.6): **CERRADA** — 24 de las lecciones 101 a 141 aún no cumplen.
+- Puerta (§7.6): **CERRADA** — 23 de las lecciones 101 a 141 aún no cumplen.
 - Sin violaciones de la puerta ni regresiones respecto a la línea base.
 
 ## Detalle de problemas
@@ -103,10 +103,7 @@ Generado: 2026-11-01 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 ### Lección 116 — Profetas mayores: Isaías a Daniel (CUMPLE)
 - ⚠ fuentes con capítulo o página: confirmar que están verificadas contra el libro
 
-### Lección 117 — Profetas menores: los doce (HEREDADA)
-- ✘ ES: 1285 palabras (piso 3000)
-- ✘ EN: 1224 palabras (piso 3000)
-- ✘ falta sección de errores frecuentes
+### Lección 117 — Profetas menores: los doce (CUMPLE)
 - ⚠ fuentes con capítulo o página: confirmar que están verificadas contra el libro
 - ⚠ sin términos de glosario
 
@@ -267,6 +264,7 @@ Generado: 2026-11-01 · Estándar: Constitución §4 · Lecciones nuevas: desde 
 - 113: bautismo en el Espíritu / lenguas
 - 114: elección / seguridad eterna
 - 115: demonios y creyentes
+- 117: elección / seguridad eterna
 - 118: elección / seguridad eterna
 - 123: bautismo en el Espíritu / lenguas
 - 128: elección / seguridad eterna
