@@ -888,6 +888,7 @@
         <div id="listaEventosHist"><div class="estadoCargando">Cargando…</div></div>
       </div>
       <div id="subvistaFinReportesHub" style="display:none;"><div id="reportesHubTiles"></div></div>
+      <div id="subvistaFinAvanzadoHub" style="display:none;"><div id="avanzadoHubTiles"></div></div>
 
       <!-- Sub-vista: Bolsas (aparte) — fondos fuera de las finanzas de la iglesia -->
       <div id="subvistaFinBolsas" style="display:none;">
@@ -2687,8 +2688,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-072';
-document.getElementById('versionTopbar').textContent = 'Ver-072';
+const APP_VERSION = 'church-admin Ver-073';
+document.getElementById('versionTopbar').textContent = 'Ver-073';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -2892,53 +2893,46 @@ function mostrarFinanzas() {
 
 // ── Inicio de Finanzas con tarjetas (Ver-031, modelo A006) ──
 const FIN_TARJETAS = [
-  { grupo: 'Finanzas de la Iglesia', items: [
+  { grupo: 'Resumen', items: [
     { tab: 'resumen', icono: '📊', etiqueta: 'Resumen Mensual', sub: 'Ingresos, egresos y balance por mes', color: 'c-blue' },
     { tab: 'porAprobar', icono: '✅', etiqueta: 'Aprobaciones', sub: 'CashApp, Zelle y app móvil', color: 'c-green' },
-    { tab: 'bolsas', icono: '🗂️', etiqueta: 'Bolsas (aparte)', sub: 'Renta y otras, fuera de las finanzas', color: 'c-gold' },
+  ]},
+  { grupo: 'Ingresos', items: [
     { tab: 'diezmos', icono: '🙏', etiqueta: 'Diezmos', sub: 'Registro de diezmos', color: 'c-gold', tabla: 'diezmos' },
     { tab: 'ofrendas', icono: '🕊️', etiqueta: 'Ofrendas', sub: 'Ofrendas generales', color: 'c-blue', tabla: 'ofrendas' },
     { tab: 'donaciones', icono: '💝', etiqueta: 'Donaciones', sub: 'Donaciones especiales', color: 'c-purple', tabla: 'donaciones' },
-    { tab: 'transacciones', icono: '📚', etiqueta: 'Todas las Transacciones', sub: 'Todo en un solo lugar', color: 'c-blue', tabla: 'transacciones' },
-    { tab: 'depositos', icono: '🏦', etiqueta: 'Depósitos', sub: 'Registro bancario', color: 'c-teal', tabla: 'depositos' },
-    { tab: 'gastos', icono: '📉', etiqueta: 'Gastos', sub: 'Control de gastos', color: 'c-red', tabla: 'gastos' },
-    { tab: 'ventas', icono: '🛒', etiqueta: 'Ventas', sub: 'Recaudación e ingresos por eventos', color: 'c-pink', tabla: 'ventas' },
-    { tab: 'eventosHist', icono: '🗓️', etiqueta: 'Eventos histórico', sub: 'Gastos y ventas por evento', color: 'c-pink' },
-    { tab: 'eventos', icono: '🎪', etiqueta: 'Eventos', sub: 'Gastos de eventos', color: 'c-amber', tabla: 'eventos' },
-    { tab: 'otrosIngresos', icono: '💵', etiqueta: 'Otros Ingresos', sub: 'Alquiler, intereses y otros', color: 'c-green', tabla: 'otros_ingresos' },
     { tab: 'pagosPromesa', icono: '💳', etiqueta: 'Pagos de Promesas', sub: 'Pagos recibidos por campaña', color: 'c-purple', tabla: 'pagos_promesa' },
-    { tab: 'campanas', icono: '🎯', etiqueta: 'Campañas de Promesas', sub: 'Promesas vs. lo pagado, por campaña', color: 'c-purple', tabla: 'campanas' },
+    { tab: 'ventas', icono: '🛒', etiqueta: 'Ventas', sub: 'Recaudación e ingresos por eventos', color: 'c-pink', tabla: 'ventas' },
+    { tab: 'otrosIngresos', icono: '💵', etiqueta: 'Otros Ingresos', sub: 'Alquiler, intereses y otros', color: 'c-green', tabla: 'otros_ingresos' },
+  ]},
+  { grupo: 'Egresos', items: [
+    { tab: 'gastos', icono: '📉', etiqueta: 'Gastos', sub: 'Control de gastos', color: 'c-red', tabla: 'gastos' },
     { tab: 'recurrentes', icono: '🔁', etiqueta: 'Gastos Recurrentes', sub: 'Renta, salarios y gastos fijos', color: 'c-red', tabla: 'recurrentes' },
-    { tab: 'declaraciones', icono: '📄', etiqueta: 'Declaraciones de Donación', sub: 'Resumen anual por donante', color: 'c-gold' },
-  ]},
-  { grupo: 'Proveedores y presupuesto', items: [
+    { tab: 'eventos', icono: '🎪', etiqueta: 'Eventos', sub: 'Gastos de eventos', color: 'c-amber', tabla: 'eventos' },
     { tab: 'proveedores', icono: '🏢', etiqueta: 'Proveedores', sub: 'Registro de proveedores', color: 'c-teal', tabla: 'organizaciones' },
-    { tab: 'presupuesto', icono: '📋', etiqueta: 'Presupuesto', sub: 'Control presupuestal', color: 'c-amber' },
   ]},
-  { grupo: 'Contabilidad', items: [
-    { tab: 'cuentas', icono: '📒', etiqueta: 'Catálogo de Cuentas', sub: 'Plan de cuentas', color: 'c-gold', tabla: 'cuentas' },
-    { tab: 'bancos', icono: '🏧', etiqueta: 'Cuentas Bancarias', sub: 'Bancos y fondos', color: 'c-teal', tabla: 'bancos' },
+  { grupo: 'Dinero', items: [
+    { tab: 'depositos', icono: '🏦', etiqueta: 'Depósitos', sub: 'Registro bancario', color: 'c-teal', tabla: 'depositos' },
+    { tab: 'bancos', icono: '🏧', etiqueta: 'Cuentas Bancarias', sub: 'Bancos y saldos', color: 'c-teal', tabla: 'bancos' },
     { tab: 'fondos', icono: '💰', etiqueta: 'Fondos', sub: 'Balance por fondo ministerial', color: 'c-gold', tabla: 'fondos' },
     { tab: 'transferencias', icono: '🔄', etiqueta: 'Transferir Fondos', sub: 'Mover $ entre fondos', color: 'c-teal', tabla: 'transferencias' },
+    { tab: 'bolsas', icono: '🗂️', etiqueta: 'Bolsas (aparte)', sub: 'Renta y otras, fuera de las finanzas', color: 'c-gold' },
     { tab: 'conciliacion', icono: '⚖️', etiqueta: 'Conciliación Bancaria', sub: 'Contra el estado de cuenta', color: 'c-teal', tabla: 'reconciliaciones' },
-    { tab: 'reportes', icono: '📈', etiqueta: 'Estado de Resultados', sub: 'Reportes y exportación', color: 'c-purple' },
-    { tab: 'diario', icono: '📓', etiqueta: 'Libro Diario', sub: 'Asientos de doble entrada', color: 'c-green' },
-    { tab: 'mayor', icono: '📗', etiqueta: 'Libro Mayor', sub: 'Mayor por cuenta', color: 'c-blue' },
-    { tab: 'balance', icono: '🧮', etiqueta: 'Balance General', sub: 'Activos, pasivos y patrimonio', color: 'c-amber' },
-    { tab: 'comprobacion', icono: '✅', etiqueta: 'Balance de Comprobación', sub: 'Verifica débitos = créditos', color: 'c-green' },
-    { tab: 'cierre', icono: '🔒', etiqueta: 'Cierre de Periodo', sub: 'Bloquea meses ya cerrados', color: 'c-red' },
-    { tab: 'ajustes', icono: '🔧', etiqueta: 'Entradas de Ajuste', sub: 'Correcciones a periodos cerrados', color: 'c-amber' },
-    { tab: 'auditoria', icono: '🕵️', etiqueta: 'Auditoría', sub: 'Quién cambió qué y cuándo', color: 'c-purple' },
   ]},
-  { grupo: 'Sistema', items: [
-    { tab: 'reportesHub', icono: '📈', etiqueta: 'Reportes', sub: 'Todos los reportes en un lugar', color: 'c-teal' },
+  { grupo: 'Planificación', items: [
+    { tab: 'presupuesto', icono: '📋', etiqueta: 'Presupuesto', sub: 'Control presupuestal', color: 'c-amber' },
+    { tab: 'campanas', icono: '🎯', etiqueta: 'Campañas de Promesas', sub: 'Promesas vs. lo pagado, por campaña', color: 'c-purple', tabla: 'campanas' },
+  ]},
+  { grupo: 'Reportes y avanzado', items: [
+    { tab: 'reportesHub', icono: '📈', etiqueta: 'Reportes', sub: 'Estados, libros y declaraciones de donación', color: 'c-purple' },
+    { tab: 'avanzadoHub', icono: '🛠️', etiqueta: 'Avanzado', sub: 'Catálogo de cuentas, cierre, ajustes y auditoría', color: 'c-red' },
   ]},
 ];
 
 function finRenderTarjetas() {
   const cont = document.getElementById('finHomeTiles');
   if (cont.dataset.listo === '1') return;
-  cont.innerHTML = FIN_TARJETAS.map(g => ({ ...g, items: g.items.filter(i => !FIN_PERM_TAB[i.tab] || puede(FIN_PERM_TAB[i.tab])) })).filter(g => g.items.length).map(g => `
+  cont.innerHTML = FIN_TARJETAS.map(g => ({ ...g, items: g.items.filter(i => i.tab === 'avanzadoHub' ? AVANZADO_HUB.some(r => !FIN_PERM_TAB[r[0]] || puede(FIN_PERM_TAB[r[0]])) : (!FIN_PERM_TAB[i.tab] || puede(FIN_PERM_TAB[i.tab]))) })).filter(g => g.items.length).map(g => `
     <div class="grupoTitulo">${g.grupo}</div>
     <div class="btnGrid">
       ${g.items.map(i => g.pronto
@@ -2965,7 +2959,8 @@ function finMostrarInicio() {
 function finAbrirSubvista(tab) {
   document.getElementById('finanzasHome').style.display = 'none';
   const tarjeta = FIN_TARJETAS.flatMap(g => g.items).find(i => i.tab === tab);
-  document.getElementById('finTitulo').textContent = tarjeta ? tarjeta.etiqueta : 'Finanzas';
+  const filaHub = [...REPORTES_HUB, ...AVANZADO_HUB].find(r => r[0] === tab);
+  document.getElementById('finTitulo').textContent = tarjeta ? tarjeta.etiqueta : (filaHub ? filaHub[2] : 'Finanzas');
   document.getElementById('finanzasSubtitulo').textContent = '';
   cambiarSubtabFinanzas(tab);
   if (!history.state || history.state.ca !== 'sub') { try { history.pushState({ ca: 'sub' }, ''); } catch (e) { /* sin historial */ } }
@@ -3097,6 +3092,7 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'pagosPromesa') cargarPagosPromesa();
   else if (tab === 'eventosHist') cargarEventosHist();
   else if (tab === 'reportesHub') renderReportesHub();
+  else if (tab === 'avanzadoHub') renderAvanzadoHub();
   else if (tab === 'bolsas') cargarBolsas();
   else if (tab === 'auditoria') cargarAuditoria();
   else if (tab === 'ajustes') cargarAjustes();
@@ -4794,6 +4790,11 @@ function ehExportar() { csvDescargar('eventos_historico.csv', ['Evento', 'Gastos
 
 // ── Hub de Reportes (Ver-043) ──
 const REPORTES_HUB = [['reportes', '📈', 'Estado de Resultados', 'Ingresos y gastos por periodo', 'c-purple'], ['balance', '⚖️', 'Balance General', 'Dónde está el dinero', 'c-amber'], ['comprobacion', '✅', 'Balance de Comprobación', 'Débitos = créditos', 'c-green'], ['declaraciones', '🧾', 'Declaraciones de Donación', 'Estados anuales por donante', 'c-gold'], ['diario', '📓', 'Libro Diario', 'Todos los asientos', 'c-green'], ['mayor', '📗', 'Libro Mayor', 'Movimientos por cuenta', 'c-blue'], ['conciliacion', '⚖️', 'Conciliación Bancaria', 'Libro contra el banco', 'c-teal'], ['transacciones', '📚', 'Todas las Transacciones', 'Filtrar y exportar', 'c-blue']];
+const AVANZADO_HUB = [['cuentas', '📒', 'Catálogo de Cuentas', 'Plan de cuentas', 'c-gold'], ['cierre', '🔒', 'Cierre de Periodo', 'Bloquea meses ya cerrados', 'c-red'], ['ajustes', '🔧', 'Entradas de Ajuste', 'Correcciones a periodos cerrados', 'c-amber'], ['auditoria', '🕵️', 'Auditoría', 'Quién cambió qué y cuándo', 'c-purple'], ['eventosHist', '🗓️', 'Eventos histórico', 'Gastos y ventas por evento', 'c-pink']];
+function renderAvanzadoHub() {
+  const filas = AVANZADO_HUB.filter(r => !FIN_PERM_TAB[r[0]] || puede(FIN_PERM_TAB[r[0]]));
+  document.getElementById('avanzadoHubTiles').innerHTML = `<div class="btnGrid">${filas.map(r => `<div class="btnCard ${r[4]}" onclick="finAbrirSubvista('${r[0]}')"><div class="bcIcono">${r[1]}</div><div class="bcEtiqueta">${r[2]}</div><div class="bcSub">${r[3]}</div></div>`).join('')}</div>`;
+}
 function renderReportesHub() {
   document.getElementById('reportesHubTiles').innerHTML = `<div class="btnGrid">${REPORTES_HUB.map(r => `<div class="btnCard ${r[4]}" onclick="finAbrirSubvista('${r[0]}')"><div class="bcIcono">${r[1]}</div><div class="bcEtiqueta">${r[2]}</div><div class="bcSub">${r[3]}</div></div>`).join('')}</div>`;
 }
