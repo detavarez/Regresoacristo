@@ -2121,6 +2121,7 @@
       </div>
       <div class="formAcciones">
         <button type="button" class="btnPeligro" onclick="rmRechazar()">Rechazar</button>
+        <button type="button" class="btnSecundario" id="rmBtnSep" onclick="psAbrirMovil()">Pagos separados / Bolsas</button>
         <button type="button" class="btnSecundario" onclick="rmCerrar()">Cancelar</button>
         <button type="submit" class="btnPrincipal" style="width:auto;">Aprobar</button>
       </div>
@@ -2686,8 +2687,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-068';
-document.getElementById('versionTopbar').textContent = 'Ver-068';
+const APP_VERSION = 'church-admin Ver-069';
+document.getElementById('versionTopbar').textContent = 'Ver-069';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -4138,6 +4139,7 @@ function rmAbrir(id) {
     document.getElementById('rmPersonaAyuda').textContent = x.persona_id ? 'El nombre coincide con un miembro.' : `Escribió: “${x.nombre || ''}”. Elige el miembro correcto.`;
   }
   poblarSelectFondos('rmFondo', defaultTx(x.tipo === 'Donación' ? 'Donación' : x.tipo).fondo_id);
+  document.getElementById('rmBtnSep').style.display = x.tipo === 'Gasto' ? 'none' : '';
   document.getElementById('modalRegMovil').classList.add('abierto');
 }
 
@@ -6521,11 +6523,27 @@ async function psAbrir() {
   const x = cachePagosEntrantes.find(r => r.id === id);
   if (!x) return;
   paCerrar();
+  await psMostrar(x);
+}
+
+// Registro de MobileCash (Diezmo/Ofrenda/Donación) repartido en líneas y/o bolsas aparte.
+async function psAbrirMovil() {
+  const id = document.getElementById('rmId').value;
+  const m = cacheRegMovil.find(r => r.id === id);
+  if (!m || m.tipo === 'Gasto') return;
+  const fecha = document.getElementById('rmFecha').value || m.fecha;
+  rmCerrar();
+  await psMostrar({ id: m.id, _movil: true, _metodo: m.metodo || 'Efectivo', fuente: 'movil', remitente: m.nombre || 'Anónima',
+    nota: [m.subtipo, m.referencia].filter(Boolean).join(' · '), monto: m.monto, fecha, persona_id: m.persona_id || null,
+    external_id: m.referencia || (m.no_sobre ? 'Sobre ' + m.no_sobre : 'MobileCash') });
+}
+
+async function psMostrar(x) {
   const rb = await blCargarBolsas();
   if (rb.error) alert('No se pudieron cargar las bolsas (' + rb.error.message + '). ¿Ya corriste el SQL de bolsas? Solo estarán Diezmo, Ofrenda y Donación.');
   psPagoActual = x;
   psContador = 0;
-  document.getElementById('psRemitenteTxt').textContent = `${x.remitente} · ${(PA_FUENTES[x.fuente] || {}).etiqueta || x.fuente}`;
+  document.getElementById('psRemitenteTxt').textContent = x._movil ? `${x.remitente} · MobileCash` : `${x.remitente} · ${(PA_FUENTES[x.fuente] || {}).etiqueta || x.fuente}`;
   document.getElementById('psNotaTxt').textContent = x.nota || '—';
   document.getElementById('psTotalTxt').textContent = formatoMoneda(x.monto);
   document.getElementById('psFecha').value = x.fecha;
@@ -6641,13 +6659,13 @@ async function psCrearLinea(x, l, referencia, fecha) {
   else { descripcion = `Donación — ${nombre}`; categoria = l.sub; origen = 'Donación'; cuentaCr = cuentaIdPorCodigo('4003'); tabla = 'donaciones'; }
 
   const { data: trans, error: errTrans } = await sbCall(sb.from('transacciones').insert({
-    fecha, descripcion, categoria, tipo: 'Ingreso', tipo_origen: origen, metodo: f.metodo, monto,
+    fecha, descripcion, categoria, tipo: 'Ingreso', tipo_origen: origen, metodo: x._metodo || f.metodo, monto,
     referencia, estado: 'Completado', fondo_id: l.fondoId, cuenta_cr: cuentaCr, solo_fondo: false,
     creado_por: sesion.usuario?.id || null,
   }).select().single());
   if (errTrans) return { error: errTrans };
 
-  const base = { fecha, monto, metodo: f.metodo, estado: 'Completado', transaccion_id: trans.id, creado_por: sesion.usuario?.id || null };
+  const base = { fecha, monto, metodo: x._metodo || f.metodo, estado: 'Completado', transaccion_id: trans.id, creado_por: sesion.usuario?.id || null };
   let error;
   if (l.tipo === 'Diezmo') ({ error } = await sbCall(sb.from('diezmos').insert({ ...base, persona_id: l.personaId, referencia })));
   else if (l.tipo === 'Ofrenda') ({ error } = await sbCall(sb.from('ofrendas').insert({ ...base, tipo: l.sub })));
@@ -6665,7 +6683,7 @@ async function psCrearBolsa(x, l, referencia, fecha) {
   const f = PA_FUENTES[x.fuente] || { etiqueta: x.fuente, metodo: 'Electrónico' };
   const { data, error } = await sbCall(sb.from('bolsa_aportes').insert({
     bolsa_id: l.bolsaId, persona_id: l.personaId ? String(l.personaId) : null, aportante: l.personaId ? null : x.remitente,
-    fecha, monto: l.centavos / 100, metodo: f.metodo, referencia, nota: x.nota || null, pago_entrante_id: x.id,
+    fecha, monto: l.centavos / 100, metodo: x._metodo || f.metodo, referencia, nota: x.nota || null, pago_entrante_id: x._movil ? null : x.id,
     creado_por: sesion.usuario?.id ? String(sesion.usuario.id) : null,
   }).select().single());
   if (error) return { error };
@@ -6699,11 +6717,11 @@ async function psAprobar(evt) {
   const btn = document.getElementById('psBtnAprobar');
   btn.disabled = true;
   try {
-    const { data: ganado, error: eClaim } = await paReclamar(x.id, 'Aprobado');
+    const { data: ganado, error: eClaim } = await (x._movil ? rmReclamar(x.id, 'Aprobado') : paReclamar(x.id, 'Aprobado'));
     if (eClaim) { alert('No se pudo reservar el pago: ' + eClaim.message); return false; }
     if (!ganado || ganado.length === 0) { alert('Este pago ya fue procesado por otra persona.'); psCerrar(); cargarPorAprobar(); return false; }
 
-    const f = PA_FUENTES[x.fuente] || { etiqueta: x.fuente };
+    const f = x._movil ? { etiqueta: 'MobileCash' } : (PA_FUENTES[x.fuente] || { etiqueta: x.fuente });
     const creadas = [];
     for (let i = 0; i < lineas.length; i++) {
       const ref = lineas.length > 1 ? `${f.etiqueta} ${x.external_id} (${i + 1}/${lineas.length})` : `${f.etiqueta} ${x.external_id}`;
@@ -6715,7 +6733,7 @@ async function psAprobar(evt) {
           await sbCall(sb.from(c.tabla).delete().eq('transaccion_id', c.transId));
           await sbCall(sb.from('transacciones').delete().eq('id', c.transId));
         }
-        await paDevolver(x.id);
+        await (x._movil ? rmDevolver(x.id) : paDevolver(x.id));
         alert(`Error en la línea ${i + 1}: ${r.error.message}. No se guardó nada.`);
         return false;
       }
@@ -6725,14 +6743,15 @@ async function psAprobar(evt) {
     const idsTrans = creadas.filter(c => c.transId).map(c => String(c.transId));
     const soloBolsa = lineas.every(l => l.bolsaId);
     const bolsasUsadas = [...new Set(lineas.filter(l => l.bolsaId).map(l => l.bolsaId))];
-    await sbCall(sb.from('pagos_entrantes').update({
+    if (x._movil) await sbCall(sb.from('registros_movil').update({ transaccion_id: idsTrans.length ? idsTrans.join(',') : null }).eq('id', x.id));
+    else await sbCall(sb.from('pagos_entrantes').update({
       tipo_aprobado: soloBolsa ? (bolsasUsadas.length === 1 ? 'Bolsa: ' + blNombre(bolsasUsadas[0]) : 'Bolsa')
                                : (lineas.length > 1 ? 'Separado' : lineas[0].tipo),
       transaccion_id: idsTrans.length ? idsTrans.join(',') : null,
     }).eq('id', x.id));
     // Aprende el alias solo si todas las líneas con miembro son de la MISMA persona.
     const miembros = [...new Set(lineas.filter(l => l.personaId).map(l => String(l.personaId)))];
-    if (miembros.length === 1 && x.remitente_norm) {
+    if (!x._movil && miembros.length === 1 && x.remitente_norm) {
       await sbCall(sb.from('alias_donantes').upsert({ alias: x.remitente_norm, persona_id: miembros[0] }, { onConflict: 'alias' }));
     }
     psCerrar();
