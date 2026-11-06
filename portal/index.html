@@ -101,6 +101,32 @@ async function salirSesion() { SEG.detener(); await cerrarSesion(); location.rel
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 // En el portal, "atrás" sale de la aplicación (sin pantalla de bloqueo intermedia).
 SEG.init({ cerrarSesion: salirSesion, nombreApp: 'Portal de Asistentes', sinHistorial: true });
+// Atrás en el Portal: primera vez avisa, segunda vez (dentro de 2.5 s) sale de la aplicación.
+(function () {
+  const st = history.state;
+  try {
+    if (!st || (st.rac !== 'top' && st.rac !== 'base')) history.replaceState({ rac: 'base' }, '');
+    if (!st || st.rac !== 'top') history.pushState({ rac: 'top' }, '');
+  } catch (e) { return; }
+  function aviso(m) {
+    let d = document.getElementById('racAviso');
+    if (!d) {
+      d = document.createElement('div'); d.id = 'racAviso';
+      d.style.cssText = 'position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#0f2445;color:#fff;padding:12px 18px;border-radius:12px;font:600 .9rem system-ui,sans-serif;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .2s;pointer-events:none';
+      document.body.appendChild(d);
+    }
+    d.textContent = m; d.style.opacity = '1';
+    clearTimeout(d._t); d._t = setTimeout(() => { d.style.opacity = '0'; }, 2400);
+  }
+  let t = null;
+  window.addEventListener('popstate', () => {
+    const s = history.state;
+    if (s && s.rac === 'top') return;
+    aviso('Dale otra vez para salir');
+    clearTimeout(t);
+    t = setTimeout(() => { try { history.pushState({ rac: 'top' }, ''); } catch (e) { /* sin historial */ } }, 2500);
+  });
+})();
 (async function () {
   const { data } = await sb.auth.getSession();
   if (data && data.session) {

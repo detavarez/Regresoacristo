@@ -8,6 +8,9 @@
  */
 (function (global) {
   'use strict';
+  // Módulo abierto desde el Portal (?portal=1): sin entradas extra en el historial, así "atrás" vuelve directo al Portal.
+  const DESDE_PORTAL = new URLSearchParams(location.search).get('portal') === '1';
+  if (DESDE_PORTAL) { try { history.pushState = function () {}; } catch (e) { /* sin historial */ } }
   const CSS = `
     .nvBar{position:sticky;top:0;z-index:90;display:flex;align-items:center;gap:10px;box-sizing:border-box;width:100%;min-height:58px;
       padding:calc(8px + env(safe-area-inset-top,0px)) 14px 8px;background:var(--nvBg,var(--navy,#0f2445));color:#fff;font-family:inherit;
@@ -43,7 +46,7 @@
     }
     const bar = document.createElement('header');
     bar.className = 'nvBar';
-    if (op.portal !== false && !op.esPortal) bar.appendChild(boton({ href: '../portal/', html: '‹&nbsp;Portal', titulo: 'Volver al Portal' }));
+    if (op.portal !== false && !op.esPortal) bar.appendChild(boton({ href: '../portal/', html: '‹&nbsp;Portal', titulo: 'Volver al Portal', onclick: DESDE_PORTAL ? 'if(history.length>1){history.back();return false}' : '' }));
     const tit = document.createElement('div');
     tit.className = 'nvTit';
     tit.innerHTML = '<b>' + esc(op.titulo || '') + '</b>' + (op.sub ? '<small>' + op.sub + '</small>' : '');
