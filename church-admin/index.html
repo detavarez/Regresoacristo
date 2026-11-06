@@ -717,7 +717,7 @@
 
 <!-- ═══════════════ SHELL PRINCIPAL ═══════════════ -->
 <div id="pantallaApp">
-  <script>NAV.montar({ titulo: 'Church Admin', sub: '<span id="versionTopbar"></span> · <span id="nombreUsuarioTop"></span>',
+  <script>NAV.montar({ portal: false, titulo: 'Church Admin', sub: '<span id="versionTopbar"></span> · <span id="nombreUsuarioTop"></span>',
     extras: [{ id: 'btnInstalar', html: '📲', titulo: 'Instalar en el celular', onclick: 'instalarApp()', oculto: true }, { html: '🔍', titulo: 'Búsqueda global', onclick: 'abrirBusquedaGlobal()' }] });</script>
 
   <div class="contenido">
@@ -2687,8 +2687,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-070';
-document.getElementById('versionTopbar').textContent = 'Ver-070';
+const APP_VERSION = 'church-admin Ver-071';
+document.getElementById('versionTopbar').textContent = 'Ver-071';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
