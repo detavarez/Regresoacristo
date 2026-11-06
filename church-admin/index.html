@@ -2687,8 +2687,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-071';
-document.getElementById('versionTopbar').textContent = 'Ver-071';
+const APP_VERSION = 'church-admin Ver-072';
+document.getElementById('versionTopbar').textContent = 'Ver-072';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -4121,19 +4121,26 @@ async function rmActualizarInsignia() { return paActualizarInsignia(); }
 
 function cargarRegMovil() { return cargarPorAprobar(); }
 
+function rmLineasMixta(x) {
+  if (!x || x.subtipo !== 'Mixta' || !String(x.descripcion || '').startsWith('MIXTA:')) return null;
+  try { const l = JSON.parse(String(x.descripcion).slice(6)); return Array.isArray(l) && l.length ? l : null; } catch (e) { return null; }
+}
+
 function rmAbrir(id) {
   const x = cacheRegMovil.find(r => r.id === id);
   if (!x) return;
   document.getElementById('rmId').value = x.id;
   document.getElementById('rmResumen').textContent = `${x.tipo} · ${formatoMoneda(x.monto)} · ${x.nombre || 'Anónima'}`;
   document.getElementById('rmDetalle').textContent = [x.subtipo, x.categoria, x.proveedor ? 'Pagado a ' + x.proveedor : '', x.metodo, x.servicio, x.no_sobre ? 'Sobre ' + x.no_sobre : '', x.referencia, x.proyecto].filter(Boolean).join(' · ') || '—';
+  const lm = rmLineasMixta(x);
+  if (lm) document.getElementById('rmDetalle').textContent = 'Mixta: ' + lm.map(l => `${formatoMoneda(l.m)} ${l.n || l.t}`).join(' + ') + (x.referencia ? ' · ' + x.referencia : '');
   document.getElementById('rmFecha').value = x.fecha;
   const bRec = document.getElementById('rmRecibo');
   bRec.style.display = x.comprobante ? '' : 'none';
   bRec.dataset.path = x.comprobante || '';
   const conPersona = x.tipo !== 'Ofrenda' && x.tipo !== 'Gasto';
   document.getElementById('rmPersonaWrap').style.display = conPersona ? '' : 'none';
-  document.getElementById('rmPersona').required = conPersona;
+  document.getElementById('rmPersona').required = conPersona && !lm;
   if (conPersona) {
     poblarSelectPersonas('rmPersona', x.persona_id || '');
     document.getElementById('rmPersonaAyuda').textContent = x.persona_id ? 'El nombre coincide con un miembro.' : `Escribió: “${x.nombre || ''}”. Elige el miembro correcto.`;
@@ -4185,6 +4192,7 @@ async function rmAprobar(evt) {
   const id = document.getElementById('rmId').value;
   const x = cacheRegMovil.find(r => r.id === id);
   if (!x) return false;
+  if (rmLineasMixta(x)) { await psAbrirMovil(); return false; }
   const esGasto = x.tipo === 'Gasto';
   const personaId = (x.tipo === 'Ofrenda' || esGasto) ? null : (document.getElementById('rmPersona').value || null);
   const fondoId = document.getElementById('rmFondo').value || null;
@@ -6535,7 +6543,7 @@ async function psAbrirMovil() {
   rmCerrar();
   await psMostrar({ id: m.id, _movil: true, _metodo: m.metodo || 'Efectivo', fuente: 'movil', remitente: m.nombre || 'Anónima',
     nota: [m.subtipo, m.referencia].filter(Boolean).join(' · '), monto: m.monto, fecha, persona_id: m.persona_id || null,
-    external_id: m.referencia || (m.no_sobre ? 'Sobre ' + m.no_sobre : 'MobileCash') });
+    _lineas: rmLineasMixta(m), external_id: m.referencia || (m.no_sobre ? 'Sobre ' + m.no_sobre : 'MobileCash') });
 }
 
 async function psMostrar(x) {
@@ -6549,7 +6557,15 @@ async function psMostrar(x) {
   document.getElementById('psFecha').value = x.fecha;
   document.getElementById('psLineas').innerHTML = '';
   psAgregarLinea();
-  document.getElementById('psMonto_1').value = (psCentavos(x.monto) / 100).toFixed(2);
+  if (x._lineas) {
+    x._lineas.forEach((l, i) => {
+      if (i > 0) psAgregarLinea();
+      const n = psContador;
+      document.getElementById('psMonto_' + n).value = Number(l.m).toFixed(2);
+      const t = document.getElementById('psTipo_' + n); t.value = l.t; if (t.value !== l.t) t.value = '';
+      psCambiarTipo(n);
+    });
+  } else document.getElementById('psMonto_1').value = (psCentavos(x.monto) / 100).toFixed(2);
   psActualizar();
   document.getElementById('modalPorAprobarSep').classList.add('abierto');
 }

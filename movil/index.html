@@ -36,7 +36,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 .page{display:none;padding:16px}.page.active{display:block}
 .pg-title{font-family:Georgia,serif;font-size:20px;color:var(--cream);margin-bottom:4px}
 .pg-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
-.type-row{display:flex;gap:10px;margin-bottom:16px}
+.type-row{display:flex;gap:6px;margin-bottom:16px}
 .type-btn{flex:1;background:var(--navy-mid);border:1px solid var(--border);border-radius:12px;padding:14px 8px;cursor:pointer;text-align:center;color:inherit}
 .type-btn:active{transform:scale(.96)}.type-btn .ti{font-size:22px;margin-bottom:5px}.type-btn .tt{font-size:12px;font-weight:600;color:var(--cream)}
 .type-btn.sel{background:var(--tint);border-color:var(--tintB)}
@@ -90,7 +90,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <div id="loginBox" style="display:none">
   <div class="logo-i" style="margin:0 auto;width:56px;height:56px;font-size:28px">✝</div>
   <h2>MobileCash</h2>
-  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M013</div>
+  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M014</div>
   <div class="form-card">
     <div class="fgrp"><label>Correo</label><input type="email" id="lgEmail" autocomplete="username" inputmode="email"></div>
     <div class="fgrp"><label>Contraseña</label><input type="password" id="lgPass" autocomplete="current-password"></div>
@@ -100,7 +100,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 </div>
 
 <div id="app" style="display:none">
-<script>NAV.montar({ titulo: 'MobileCash', sub: 'Ver-M013 · <span id="quien"></span>', punto: true,
+<script>NAV.montar({ titulo: 'MobileCash', sub: 'Ver-M014 · <span id="quien"></span>', punto: true,
   extras: [{ id: 'btnInstalar', html: '📲', titulo: 'Instalar en el celular', onclick: 'instalarApp()', oculto: true }, { html: '↻', titulo: 'Actualizar', onclick: 'cargar(true)' }] });</script>
 <div id="toast" class="toast"></div>
 
@@ -126,6 +126,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     <button class="type-btn" id="tb-Ofrenda" onclick="setTipo('Ofrenda')"><div class="ti">🕊️</div><div class="tt">Ofrenda</div></button>
     <button class="type-btn" id="tb-Donación" onclick="setTipo('Donación')"><div class="ti">💝</div><div class="tt">Donación</div></button>
     <button class="type-btn" id="tb-Gasto" onclick="setTipo('Gasto')"><div class="ti">🧾</div><div class="tt">Gasto</div></button>
+    <button class="type-btn" id="tb-Mixta" onclick="setTipo('Mixta')"><div class="ti">🧩</div><div class="tt">Mixta</div></button>
   </div>
   <div class="form-card">
     <h3 id="frmTitulo">🙏 Registro de Diezmo</h3>
@@ -137,6 +138,10 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     <div class="fgrp" id="gCategoria" style="display:none"><label>Categoría</label><select id="fCategoria"></select></div>
     <div class="fgrp" id="gProveedor" style="display:none"><label>Pagado a (opcional)</label><input type="text" id="fProveedor" list="dlProveedores" placeholder="Tienda o proveedor" autocomplete="off"><datalist id="dlProveedores"></datalist></div>
     <div class="fgrp"><label>Monto</label><div class="amt"><span class="pfx">$</span><input type="text" id="fMonto" placeholder="0.00" inputmode="decimal" autocomplete="off"></div></div>
+    <div class="fgrp" id="gReparto" style="display:none"><label>Reparto (elige una o varias líneas)</label>
+      <div id="repLineas"></div>
+      <button type="button" class="fbtn" onclick="repAgregar()">+ Agregar línea</button>
+      <div id="repResumen" style="font-size:13px;margin-top:8px"></div></div>
     <div class="fgrp" id="gSub"><label id="lSub">Tipo</label><select id="fSub"></select></div>
     <div class="fgrp" id="gProyecto"><label>Proyecto (opcional)</label><input type="text" id="fProyecto" placeholder="Ej. Misión Norte"></div>
     <div class="fgrp" id="gServicio"><label>Servicio</label><select id="fServicio" disabled></select></div>
@@ -245,8 +250,8 @@ function setMetodo(m) { metodo = m; chips(); }
 function setTipo(t) {
   tipo = t;
   const g = t === 'Gasto';
-  ['Diezmo', 'Ofrenda', 'Donación', 'Gasto'].forEach(x => $('tb-' + x).classList.toggle('sel', x === t));
-  const ico = { Diezmo: '🙏', Ofrenda: '🕊️', 'Donación': '💝', Gasto: '🧾' }[t];
+  ['Diezmo', 'Ofrenda', 'Donación', 'Gasto', 'Mixta'].forEach(x => $('tb-' + x).classList.toggle('sel', x === t));
+  const ico = { Diezmo: '🙏', Ofrenda: '🕊️', 'Donación': '💝', Gasto: '🧾', Mixta: '🧩' }[t];
   $('frmTitulo').textContent = `${ico} Registro de ${t}`;
   METODOS = g ? METODOS_GASTO : METODOS_ING;
   if (!METODOS.includes(metodo)) metodo = 'Efectivo';
@@ -261,16 +266,81 @@ function setTipo(t) {
   if (!g) servicioAuto();
   $('frmAnon').style.display = t === 'Ofrenda' ? '' : 'none';
   $('gNombre').style.display = (t === 'Ofrenda' || g) ? 'none' : '';
-  $('lNombre').textContent = t === 'Diezmo' ? 'Nombre del miembro' : 'Nombre del donante';
+  $('lNombre').textContent = t === 'Diezmo' ? 'Nombre del miembro' : (t === 'Mixta' ? 'Nombre de quien entrega' : 'Nombre del donante');
   $('gSobre').style.display = (t === 'Diezmo' && usarSobresM) ? '' : 'none';
-  $('gServicio').style.display = (t === 'Donación' || g) ? 'none' : '';
+  $('gServicio').style.display = (t === 'Donación' || g || t === 'Mixta') ? 'none' : '';
   $('gProyecto').style.display = t === 'Donación' ? '' : 'none';
   $('gRef').style.display = t === 'Ofrenda' ? 'none' : '';
-  $('gSub').style.display = (t === 'Diezmo' || g) ? 'none' : '';
+  $('gSub').style.display = (t === 'Diezmo' || g || t === 'Mixta') ? 'none' : '';
+  $('gReparto').style.display = t === 'Mixta' ? '' : 'none';
+  if (t === 'Mixta') iniciarMixta();
   if (t === 'Ofrenda') { $('lSub').textContent = 'Tipo de ofrenda'; $('fSub').innerHTML = OFRENDAS.map(x => `<option>${x}</option>`).join(''); }
   if (t === 'Donación') { $('lSub').textContent = 'Propósito'; $('fSub').innerHTML = DONACIONES.map(x => `<option>${x}</option>`).join(''); }
 }
 function irRegistrar(t) { setTipo(t); mostrar('registrar'); }
+
+// ── Mixta: un pago repartido en líneas (Diezmo / Ofrenda / Donación / Aparte: bolsa) ──
+let bolsasM = [], bolsasCargadas = false;
+async function iniciarMixta() {
+  if (!bolsasCargadas) {
+    const { data, error } = await sbCall(sb.from('bolsas').select('id, nombre').eq('activa', true).order('nombre', { ascending: true }));
+    bolsasM = error ? [] : (data || []); bolsasCargadas = !error;
+  }
+  if (tipo === 'Mixta' && !document.querySelector('#repLineas .repLinea')) repAgregar();
+}
+function repOpciones() {
+  return ['Diezmo', 'Ofrenda', 'Donación'].map(x => `<option value="${x}">${x}</option>`).join('') +
+    bolsasM.map(b => `<option value="bolsa:${b.id}">Aparte: ${esc(b.nombre)}</option>`).join('');
+}
+function repAgregar() {
+  const d = document.createElement('div');
+  d.className = 'repLinea'; d.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:8px';
+  d.innerHTML = `<input type="text" inputmode="decimal" class="repMonto" placeholder="0.00" style="width:92px;flex:none" oninput="repActualizar()">
+    <select class="repTipo" style="flex:1;min-width:0">${repOpciones()}</select>
+    <button type="button" class="fbtn" onclick="this.parentNode.remove();repActualizar()">✕</button>`;
+  $('repLineas').appendChild(d);
+  const ls = document.querySelectorAll('#repLineas .repMonto');
+  if (ls.length === 1) ls[0].value = $('fMonto').value;
+  repActualizar();
+}
+function repLeer() {
+  return [...document.querySelectorAll('#repLineas .repLinea')].map(d => {
+    const t = d.querySelector('.repTipo');
+    return { m: Math.round(Number(d.querySelector('.repMonto').value.trim().replace(',', '.')) * 100) / 100, t: t.value, n: t.selectedOptions[0] ? t.selectedOptions[0].textContent : t.value };
+  });
+}
+function repActualizar() {
+  const total = Math.round(Number(String($('fMonto').value).trim().replace(',', '.')) * 100) || 0;
+  const asig = repLeer().reduce((s, l) => s + Math.round((l.m || 0) * 100), 0);
+  const falta = total - asig;
+  $('repResumen').textContent = `Asignado ${money(asig / 100)} de ${money(total / 100)}` + (falta === 0 && total > 0 ? ' ✓' : falta > 0 ? ` · falta ${money(falta / 100)}` : ` · se pasa por ${money(-falta / 100)}`);
+}
+async function enviarMixta(monto, fecha, nombre) {
+  if (!nombre) { toast('Escribe el nombre de quien entrega.'); return; }
+  const lineas = repLeer();
+  if (!lineas.length || lineas.some(l => !(l.m > 0))) { toast('Cada línea necesita un monto mayor que cero.'); return; }
+  if (lineas.reduce((s, l) => s + Math.round(l.m * 100), 0) !== Math.round(monto * 100)) { toast('La suma de las líneas debe ser igual al monto.'); return; }
+  const k = norm(nombre);
+  const m = personas.filter(p => norm(p.nombre) === k || norm(p.legal) === k || norm(p.completo) === k);
+  const fila = { tipo: 'Donación', subtipo: 'Mixta', nombre, persona_id: m.length === 1 ? m[0].id : null, monto, metodo, fecha,
+    referencia: $('fRef').value.trim() || null, descripcion: 'MIXTA:' + JSON.stringify(lineas) };
+  const b = $('btnEnviar'); b.disabled = true;
+  const { error } = await sbCall(sb.from('registros_movil').insert(fila));
+  b.disabled = false;
+  if (error) { toast('No se pudo enviar: ' + error.message); return; }
+  ['fNombre', 'fMonto', 'fRef'].forEach(i => $(i).value = '');
+  $('btnBorrarNombre').style.display = 'none';
+  $('repLineas').innerHTML = ''; repAgregar();
+  borrarBorrador();
+  $('ov').classList.add('show');
+  cargar();
+}
+$('fMonto').addEventListener('input', () => {
+  if (tipo !== 'Mixta') return;
+  const ls = document.querySelectorAll('#repLineas .repMonto');
+  if (ls.length === 1) ls[0].value = $('fMonto').value;
+  repActualizar();
+});
 
 async function comprimirFoto(file) {
   const url = URL.createObjectURL(file);
@@ -419,6 +489,7 @@ async function enviar() {
   if (!(monto > 0)) { toast('Escribe un monto válido.'); return; }
   if (!fecha) { toast('Elige la fecha.'); return; }
   if (tipo === 'Gasto') return enviarGasto(monto, fecha);
+  if (tipo === 'Mixta') return enviarMixta(monto, fecha, nombre);
   if (tipo !== 'Ofrenda' && !nombre) { toast('Escribe el nombre.'); return; }
   let personaId = null;
   if (tipo !== 'Ofrenda') {
