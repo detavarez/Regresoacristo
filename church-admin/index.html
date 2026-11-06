@@ -2687,8 +2687,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-069';
-document.getElementById('versionTopbar').textContent = 'Ver-069';
+const APP_VERSION = 'church-admin Ver-070';
+document.getElementById('versionTopbar').textContent = 'Ver-070';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -6549,7 +6549,7 @@ async function psMostrar(x) {
   document.getElementById('psFecha').value = x.fecha;
   document.getElementById('psLineas').innerHTML = '';
   psAgregarLinea();
-  psAgregarLinea();
+  document.getElementById('psMonto_1').value = (psCentavos(x.monto) / 100).toFixed(2);
   psActualizar();
   document.getElementById('modalPorAprobarSep').classList.add('abierto');
 }
@@ -6703,6 +6703,7 @@ async function psAprobar(evt) {
     const centavos = psCentavos(document.getElementById('psMonto_' + n).value);
     const tipo = document.getElementById('psTipo_' + n).value;
     const personaId = document.getElementById('psPersona_' + n).value || null;
+    if (centavos <= 0 && !tipo) continue; // línea en blanco: se ignora
     const nPos = lineas.length + 1;
     if (centavos <= 0) { alert(`Línea ${nPos}: escribe un monto mayor que cero.`); return false; }
     if (!tipo) { alert(`Línea ${nPos}: elige el tipo.`); return false; }
