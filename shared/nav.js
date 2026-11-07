@@ -10,6 +10,44 @@
   'use strict';
   // Módulo abierto desde el Portal (?portal=1): sin entradas extra en el historial, así "atrás" vuelve directo al Portal.
   const DESDE_PORTAL = new URLSearchParams(location.search).get('portal') === '1';
+  // Celular: las tablas se muestran como tarjetas (cada fila, un bloque con "Columna: valor") para no tener que mover la pantalla a la derecha.
+  (function tablasMovil() {
+    const css = `@media (max-width: 720px) {
+      table.apilada { display: block; width: 100%; border: 0; }
+      table.apilada thead { display: none; }
+      table.apilada tbody, table.apilada tfoot { display: block; }
+      table.apilada tr { display: block; border: 1px solid rgba(128,128,128,0.35); border-radius: 10px; margin: 0 0 10px; padding: 6px 10px; }
+      table.apilada td { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 4px 0 !important; border: 0 !important; text-align: right !important; white-space: normal !important; overflow-wrap: anywhere; }
+      table.apilada td[data-label]::before { content: attr(data-label); flex: none; max-width: 45%; font-weight: 600; font-size: 0.78rem; color: var(--text-muted, #667); text-align: left; }
+      table.apilada td:empty { display: none; }
+      table.apilada td > button, table.apilada td > a { white-space: normal; }
+    }
+    @media (max-width: 520px) { .evdFila { grid-template-columns: 1fr !important; } }`;
+    const st = document.createElement('style'); st.textContent = css; (document.head || document.documentElement).appendChild(st);
+    function marcar(t) {
+      if (t.dataset.apil) return;
+      const ths = [...t.querySelectorAll('thead th')].map(h => h.textContent.trim());
+      t.dataset.apil = '1';
+      t.classList.add('apilada');
+      if (!ths.length) return;
+      t.querySelectorAll('tbody tr, tfoot tr').forEach(tr => {
+        const tds = [...tr.children].filter(c => c.tagName === 'TD');
+        if (tds.length !== ths.length) return;
+        tds.forEach((td, i) => { if (ths[i]) td.setAttribute('data-label', ths[i]); });
+      });
+    }
+    let pend = false;
+    function barrer() {
+      pend = false;
+      document.querySelectorAll('.tablaWrap table, table.tablaTrans').forEach(marcar);
+    }
+    function programar() { if (!pend) { pend = true; requestAnimationFrame(barrer); } }
+    document.addEventListener('DOMContentLoaded', () => {
+      barrer();
+      new MutationObserver(programar).observe(document.body, { childList: true, subtree: true });
+    });
+  })();
+
   if (DESDE_PORTAL) { try { history.pushState = function () {}; } catch (e) { /* sin historial */ } }
   const CSS = `
     .nvBar{position:sticky;top:0;z-index:90;display:flex;align-items:center;gap:10px;box-sizing:border-box;width:100%;min-height:58px;
