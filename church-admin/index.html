@@ -428,6 +428,7 @@
   .btnPeligro { color: var(--danger); border-color: #f3c6c2; }
 
   /* ── Tarjetas visuales estilo A006 (Ver-031) ─────────────────── */
+  .admOculto { display: none !important; }
   .grupoTitulo { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 700; margin: 0 0 10px; }
   .btnGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; margin-bottom: 26px; }
   .btnCard {
@@ -1339,11 +1340,13 @@
 
     <!-- ═══ Vista: Administración ═══ -->
     <div id="vistaAdministracion" style="display:none;">
-      <button class="btnVolver" onclick="mostrarDashboard()">← Volver</button>
-      <h2>Administración</h2>
+      <button class="btnVolver" onclick="admVolver()">← Volver</button>
+      <h2 id="admTitulo">Administración</h2>
       <p class="fecha">Usuarios, roles y catálogos del sistema</p>
 
-      <div class="subtabs">
+      <div id="admHub"></div>
+
+      <div class="subtabs" style="display:none;">
         <button class="subtab activa" id="subtabUsuariosBtn" onclick="cambiarSubtabAdmin('usuarios')"><span class="stIcon">👤</span><span class="stTexto">Usuarios y Roles</span></button>
         <button class="subtab" id="subtabCatalogosBtn" onclick="cambiarSubtabAdmin('catalogos')"><span class="stIcon">🗃️</span><span class="stTexto">Catálogos</span></button>
         <button class="subtab" id="subtabConfigBtn" onclick="cambiarSubtabAdmin('config')"><span class="stIcon">⚙️</span><span class="stTexto">Configuración</span></button>
@@ -1360,7 +1363,7 @@
 
       <!-- Sub-vista: Configuración — Ver-041 -->
       <div id="subvistaConfig" style="display:none;">
-        <div class="tablaWrap" style="margin-bottom:20px;">
+        <div class="tablaWrap" data-adm="iglesia" style="margin-bottom:20px;">
           <h3>Datos de la Iglesia</h3>
           <form onsubmit="return cfgGuardar(event)" style="padding:14px 18px;">
             <div class="formGrid">
@@ -1384,7 +1387,7 @@
             <span id="cfgEstado" style="margin-left:10px; font-size:0.85rem; color:var(--text-muted);"></span>
           </form>
         </div>
-        <div class="tablaWrap" style="margin-bottom:20px;" id="cfgCartaBloque">
+        <div class="tablaWrap" data-adm="carta" style="margin-bottom:20px;" id="cfgCartaBloque">
           <h3>Declaraciones de donación (carta)</h3>
           <div style="padding:14px 18px;">
             <div class="formGrid">
@@ -1403,7 +1406,7 @@
             </div>
           </div>
         </div>
-        <div class="tablaWrap" style="margin-bottom:20px;">
+        <div class="tablaWrap" data-adm="accesos" style="margin-bottom:20px;">
           <h3>Accesos a las aplicaciones</h3>
           <div style="padding:14px 18px; font-size:0.88rem;">Cada una se abre por separado en el navegador y se puede instalar como app (botón 📲 dentro de la app, o "Agregar a pantalla de inicio"). Usan tu misma cuenta y la misma seguridad (PIN, huella o contraseña).</div>
           <div style="padding:0 18px 14px; display:flex; gap:8px; flex-wrap:wrap;">
@@ -1414,7 +1417,7 @@
           </div>
           <div style="padding:0 18px 14px; font-size:0.78rem; color:var(--text-muted);">El acceso al Resumen del Pastor se da por usuario en Usuarios ("Puede entrar al Resumen del Pastor"); esa persona no entra al programa completo.</div>
         </div>
-        <div class="tablaWrap" style="margin-bottom:20px;">
+        <div class="tablaWrap" data-adm="sobres" style="margin-bottom:20px;">
           <h3>Número de sobre</h3>
           <div style="padding:14px 18px;">
             <label class="interruptor"><input type="checkbox" id="cfgUsarSobres" onchange="cfgGuardarUsarSobres()"><span class="pista"></span><span>Pedir el número de sobre al registrar diezmos (programa y MobileCash)</span></label>
@@ -1422,7 +1425,7 @@
           </div>
         </div>
 
-        <div class="tablaWrap" style="margin-bottom:20px;" id="bloqueBloqueoCfg">
+        <div class="tablaWrap" data-adm="bloqueo" style="margin-bottom:20px;" id="bloqueBloqueoCfg">
           <h3>Bloqueo automático por inactividad</h3>
           <div style="padding:14px 18px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
             <input type="number" id="cfgBloqueoMin" min="0" max="240" style="max-width:110px;"> <span style="font-size:0.9rem;">minutos sin actividad (0 = nunca)</span>
@@ -1432,7 +1435,7 @@
           <div style="padding:0 18px 14px; font-size:0.78rem; color:var(--text-muted);">Al bloquearse, la sesión sigue abierta; se desbloquea con PIN, huella o rostro, o con la contraseña.</div>
         </div>
 
-        <div class="tablaWrap" style="margin-bottom:20px;" id="bloqueImportCfg">
+        <div class="tablaWrap" data-adm="correos" style="margin-bottom:20px;" id="bloqueImportCfg">
           <h3>Importación de correos (CashApp y Zelle)</h3>
           <div style="padding:14px 18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
             <span id="cfgImportDot" class="dotEstado"></span>
@@ -1442,7 +1445,7 @@
           <div style="padding:0 18px 14px; font-size:0.78rem; color:var(--text-muted);">Si la pausas, los correos nuevos no se pierden: entran al reactivarla.</div>
         </div>
 
-        <div class="tablaWrap" style="margin-bottom:20px;" id="bloqueSobresCfg">
+        <div class="tablaWrap" data-adm="sobres" style="margin-bottom:20px;" id="bloqueSobresCfg">
           <h3>Numeración de sobres</h3>
           <div style="padding:14px 18px;">
             <div id="sobEstado" style="font-size:0.9rem; margin-bottom:10px;"></div>
@@ -1454,11 +1457,11 @@
             </div>
           </div>
         </div>
-        <div class="btnGrid" style="margin-bottom:20px;">
+        <div class="btnGrid" data-adm="datos" style="margin-bottom:20px;">
           <div class="btnCard c-pink" id="cfgTileImportar" onclick="impAbrir()"><div class="bcIcono">📥</div><div class="bcEtiqueta">Importar Excel</div><div class="bcSub">Subir diezmos, ofrendas, donaciones o gastos</div></div>
           <div class="btnCard c-red" id="cfgTilePeligro" onclick="peAbrir()"><div class="bcIcono">🗑️</div><div class="bcEtiqueta">Zona de peligro</div><div class="bcSub">Borrar datos</div></div>
         </div>
-        <div class="tablaWrap">
+        <div class="tablaWrap" data-adm="datos">
           <h3>Respaldo</h3>
           <div style="padding:14px 18px;">
             <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:10px;">Descarga una copia de tus datos (transacciones, diezmos, ofrendas, donaciones, miembros, cuentas, fondos y más) en un archivo JSON. Supabase ya guarda copias automáticas; esta es tu copia personal.</div>
@@ -1470,7 +1473,7 @@
 
       <!-- Sub-vista: Catálogos -->
       <div id="subvistaCatalogos" style="display:none;">
-        <div class="tablaWrap" style="margin-bottom:20px;">
+        <div class="tablaWrap" data-adm="ministerios" style="margin-bottom:20px;">
           <h3>Ministerios</h3>
           <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
             <input type="text" id="nuevoMinisterioInput" placeholder="Nombre del nuevo ministerio…" style="flex:1;">
@@ -1479,13 +1482,13 @@
           <div id="listaCatalogoMinisterios" style="padding:8px 18px;"></div>
         </div>
 
-        <div class="tablaWrap" style="margin-bottom:20px;">
+        <div class="tablaWrap" data-adm="defaults" style="margin-bottom:20px;">
           <h3>Fondo y categoría predeterminados</h3>
           <div style="padding:8px 18px; font-size:0.8rem; color:var(--text-muted);">Lo que aparece ya elegido al registrar cada tipo de transacción. Siempre se puede cambiar en cada registro.</div>
           <div id="listaDefaultsTx" style="padding:8px 18px;"></div>
         </div>
 
-        <div class="tablaWrap" style="margin-bottom:20px;">
+        <div class="tablaWrap" data-adm="portal" style="margin-bottom:20px;">
           <h3>Páginas del Portal de Asistentes</h3>
           <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px;">
             <input type="text" id="ppNombre" placeholder="Nombre (ej. Inventario)">
@@ -1498,7 +1501,7 @@
           <div style="padding:0 18px 12px; font-size:0.78rem; color:var(--text-muted);">Después de agregar una página, autorízala a cada persona en Usuarios → Editar acceso. La página nueva debe pedir su propia clave de acceso para validar permisos.</div>
         </div>
 
-        <div class="tablaWrap" style="margin-bottom:20px;">
+        <div class="tablaWrap" data-adm="metodos" style="margin-bottom:20px;">
           <h3>Métodos de pago de entradas (diezmos, ofrendas, donaciones…)</h3>
           <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
             <input type="text" id="nuevoMetodoPrograma" placeholder="Nuevo método…" style="flex:1;">
@@ -1507,7 +1510,7 @@
           <div id="listaMetodosPrograma" style="padding:8px 18px;"></div>
         </div>
 
-        <div class="tablaWrap" style="margin-bottom:20px;">
+        <div class="tablaWrap" data-adm="metodos" style="margin-bottom:20px;">
           <h3>Métodos de pago de gastos</h3>
           <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
             <input type="text" id="nuevoMetodoGasto" placeholder="Nuevo método (ej. Tarjeta de banco)…" style="flex:1;">
@@ -1516,7 +1519,7 @@
           <div id="listaMetodosGasto" style="padding:8px 18px;"></div>
         </div>
 
-        <div class="tablaWrap" style="margin-bottom:20px;">
+        <div class="tablaWrap" data-adm="metodos" style="margin-bottom:20px;">
           <h3>Métodos de pago en MobileCash (diezmos, ofrendas, donaciones)</h3>
           <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
             <input type="text" id="nuevoMetodoIngreso" placeholder="Nuevo método…" style="flex:1;">
@@ -1525,7 +1528,7 @@
           <div id="listaMetodosIngreso" style="padding:8px 18px;"></div>
         </div>
 
-        <div class="tablaWrap">
+        <div class="tablaWrap" data-adm="servicios">
           <h3>Tipos de Servicio</h3>
           <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; gap:8px;">
             <input type="text" id="nuevoTipoServicioInput" placeholder="Nombre del nuevo tipo de servicio…" style="flex:1;">
@@ -2709,8 +2712,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-074';
-document.getElementById('versionTopbar').textContent = 'Ver-074';
+const APP_VERSION = 'church-admin Ver-075';
+document.getElementById('versionTopbar').textContent = 'Ver-075';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -5042,10 +5045,25 @@ async function finRenderAlertas(filas) {
   const cont = document.getElementById('finHomeAlertas');
   const anio = new Date().getFullYear();
   const alertas = [];
-  const [rp, rc] = await Promise.all([
+  const [rp, rc, rf, rtf, rtr] = await Promise.all([
     sbCall(sb.from('presupuesto').select('categoria, monto_anual').eq('anio', anio)),
     sbCall(sb.from('reconciliaciones').select('banco_id, fecha, diferencia').order('fecha', { ascending: false }).range(0, 499)),
+    sbCall(sb.from('fondos').select('id, nombre, activo')),
+    sbCall(sb.from('transacciones').select('fondo_id, tipo, monto').in('tipo', ['Ingreso', 'Egreso']).eq('historico', false).range(0, 9999)),
+    sbCall(sb.from('transferencias').select('fondo_origen_id, fondo_destino_id, monto').range(0, 9999)),
   ]);
+  if (!rf.error && !rtf.error && !rtr.error) {
+    const saldo = {};
+    (rtf.data || []).forEach(t => { if (t.fondo_id) saldo[t.fondo_id] = (saldo[t.fondo_id] || 0) + (esIngreso(t.tipo) ? 1 : -1) * (Number(t.monto) || 0); });
+    (rtr.data || []).forEach(t => {
+      const m = Number(t.monto) || 0;
+      if (t.fondo_origen_id) saldo[t.fondo_origen_id] = (saldo[t.fondo_origen_id] || 0) - m;
+      if (t.fondo_destino_id) saldo[t.fondo_destino_id] = (saldo[t.fondo_destino_id] || 0) + m;
+    });
+    (rf.data || []).filter(f => f.activo !== false && (saldo[f.id] || 0) < -0.005).forEach(f => {
+      alertas.push({ ic: '🔴', msg: `El fondo "${f.nombre}" tiene saldo negativo (${formatoMoneda(saldo[f.id])})`, tab: 'fondos' });
+    });
+  }
   const real = {};
   filas.forEach(t => { if (t.tipo === 'Egreso' && String(t.fecha).startsWith(String(anio))) { const c = (t.categoria || '').trim().toLowerCase(); real[c] = (real[c] || 0) + (Number(t.monto) || 0); } });
   (rp.data || []).forEach(p => {
@@ -10582,6 +10600,57 @@ function mostrarAdministracion() {
   document.getElementById('vistaAdministracion').style.display = 'block';
   cargarUsuariosAdmin();
   cargarCatalogos();
+  admMostrarMenu();
+}
+
+// ── Administración como menú de tarjetas (Ver-075) ──
+const ADM_TARJETAS = [
+  { grupo: 'General', items: [
+    { k: 'iglesia', sub: 'config', icono: '🏛️', etiqueta: 'Datos de la Iglesia', desc: 'Nombre, dirección, pastor, tesorero, EIN y logo', color: 'c-gold' },
+    { k: 'carta', sub: 'config', icono: '🧾', etiqueta: 'Declaraciones de donación', desc: 'Texto de la carta e idioma', color: 'c-purple', perm: 'gestionarConfig' },
+    { k: 'accesos', sub: 'config', icono: '📲', etiqueta: 'Accesos a las aplicaciones', desc: 'Programa, Portal, Pastor y MobileCash', color: 'c-teal' },
+  ]},
+  { grupo: 'Usuarios y accesos', items: [
+    { k: 'usuarios', sub: 'usuarios', icono: '👤', etiqueta: 'Usuarios y Roles', desc: 'Cuentas, roles y permisos', color: 'c-blue' },
+    { k: 'portal', sub: 'catalogos', icono: '🚪', etiqueta: 'Páginas del Portal', desc: 'Qué páginas ve cada asistente', color: 'c-green' },
+    { k: 'bloqueo', sub: 'config', icono: '🔒', etiqueta: 'Bloqueo automático', desc: 'Minutos de inactividad', color: 'c-red' },
+  ]},
+  { grupo: 'Contabilidad', items: [
+    { k: 'defaults', sub: 'catalogos', icono: '💰', etiqueta: 'Fondo y categoría predeterminados', desc: 'Lo que sale ya elegido al registrar', color: 'c-gold' },
+    { k: 'metodos', sub: 'catalogos', icono: '💳', etiqueta: 'Métodos de pago', desc: 'Entradas, gastos y MobileCash', color: 'c-purple' },
+    { k: 'sobres', sub: 'config', icono: '✉️', etiqueta: 'Sobres', desc: 'Usar sobres y numeración', color: 'c-amber' },
+    { k: 'correos', sub: 'config', icono: '📧', etiqueta: 'Importación de correos', desc: 'CashApp y Zelle', color: 'c-teal' },
+  ]},
+  { grupo: 'Iglesia', items: [
+    { k: 'ministerios', sub: 'catalogos', icono: '🕊️', etiqueta: 'Ministerios', desc: 'Lista de ministerios', color: 'c-blue' },
+    { k: 'servicios', sub: 'catalogos', icono: '🗓️', etiqueta: 'Tipos de Servicio', desc: 'Servicios y reuniones', color: 'c-amber' },
+  ]},
+  { grupo: 'Datos', items: [
+    { k: 'datos', sub: 'config', icono: '🔄', etiqueta: 'Respaldo, importar y zona de peligro', desc: 'Copia de datos, Excel y borrado', color: 'c-pink' },
+  ]},
+];
+function admMostrarMenu() {
+  document.getElementById('admTitulo').textContent = 'Administración';
+  ['subvistaUsuarios', 'subvistaCatalogos', 'subvistaConfig'].forEach(id => { document.getElementById(id).style.display = 'none'; });
+  const hub = document.getElementById('admHub');
+  hub.style.display = 'block';
+  hub.innerHTML = ADM_TARJETAS.map(g => ({ ...g, items: g.items.filter(i => !i.perm || puede(i.perm)) })).filter(g => g.items.length).map(g => `
+    <div class="grupoTitulo">${g.grupo}</div>
+    <div class="btnGrid" style="margin-bottom:22px;">${g.items.map(i => `<div class="btnCard ${i.color}" onclick="admAbrir('${i.k}')"><div class="bcIcono">${i.icono}</div><div class="bcEtiqueta">${i.etiqueta}</div><div class="bcSub">${i.desc}</div></div>`).join('')}</div>`).join('');
+  window.scrollTo(0, 0);
+}
+function admAbrir(k) {
+  const it = ADM_TARJETAS.flatMap(g => g.items).find(i => i.k === k);
+  if (!it) return;
+  document.getElementById('admHub').style.display = 'none';
+  document.getElementById('admTitulo').textContent = it.etiqueta;
+  cambiarSubtabAdmin(it.sub);
+  document.querySelectorAll('#vistaAdministracion [data-adm]').forEach(el => el.classList.toggle('admOculto', el.dataset.adm !== k));
+  window.scrollTo(0, 0);
+}
+function admVolver() {
+  if (document.getElementById('admHub').style.display === 'none') admMostrarMenu();
+  else mostrarDashboard();
 }
 
 function cambiarSubtabAdmin(tab) {
