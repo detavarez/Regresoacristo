@@ -1169,6 +1169,14 @@
       </div>
 
       <!-- Sub-vista: Proveedores -->
+      <div id="subvistaFinEventosDev" style="display:none;">
+        <div class="barraAcciones" style="align-items:center;">
+          <div style="flex:1;"></div>
+          <button class="btnAccion" id="evdNuevoBtn" onclick="evdNuevo()">+ Nuevo evento</button>
+        </div>
+        <div id="evdContenido"><div class="estadoCargando">Cargando…</div></div>
+      </div>
+
       <div id="subvistaFinProveedores" style="display:none;">
         <div class="barraAcciones" style="align-items:center;">
           <input type="text" id="pvBuscar" placeholder="Buscar proveedor…" oninput="renderProveedores()">
@@ -2191,6 +2199,69 @@
   </div>
 </div>
 
+<!-- ═══════════════ MODALES: Eventos con devolución ═══════════════ -->
+<div class="modalOverlay" id="modalEvd">
+  <div class="modalCaja">
+    <h3>Nuevo evento con devolución</h3>
+    <form id="formEvd" onsubmit="return evdGuardarNuevo(event)">
+      <div class="formGrid">
+        <div class="full"><label for="evdNombre">Nombre del evento *</label><input type="text" id="evdNombre" placeholder="Ej. Cena de parejas" required></div>
+        <div><label for="evdFecha">Fecha *</label><input type="date" id="evdFecha" required></div>
+        <div><label for="evdTotal">Total pagado por la iglesia *</label><input type="text" inputmode="decimal" id="evdTotal" placeholder="0.00" required></div>
+        <div><label for="evdMetodo">Pagado con</label><select id="evdMetodo"></select></div>
+        <div><label for="evdFondo">Fondo</label><select id="evdFondo"></select></div>
+      </div>
+      <div style="margin-top:14px; font-weight:600;">Participantes y lo que le toca a cada uno</div>
+      <div id="evdFilas" style="margin-top:8px;"></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btnSecundario" onclick="evdAgregarFila()">+ Agregar participante</button>
+        <button type="button" class="btnSecundario" onclick="evdDividirNuevo()">Repartir en partes iguales</button>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" onclick="evdCerrarModal('modalEvd')">Cancelar</button>
+        <button type="submit" class="btnPrincipal" id="evdBtnGuardar" style="width:auto;">Guardar evento</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="modalOverlay" id="modalEvdPart">
+  <div class="modalCaja">
+    <h3>Agregar participante</h3>
+    <form id="formEvdPart" onsubmit="return evdGuardarPart(event)">
+      <div class="formGrid">
+        <div class="full"><label for="evdPartPer">Miembro</label><select id="evdPartPer" onchange="evdEl('evdPartNomWrap').style.display = this.value ? 'none' : ''"></select></div>
+        <div class="full" id="evdPartNomWrap"><label for="evdPartNom">Nombre (si no es miembro)</label><input type="text" id="evdPartNom"></div>
+        <div class="full"><label for="evdPartMonto">Lo que le toca</label><input type="text" inputmode="decimal" id="evdPartMonto" placeholder="0.00"></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" onclick="evdCerrarModal('modalEvdPart')">Cancelar</button>
+        <button type="submit" class="btnPrincipal" style="width:auto;">Agregar</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="modalOverlay" id="modalEvdDev">
+  <div class="modalCaja">
+    <h3>Registrar devolución</h3>
+    <form id="formEvdDev" onsubmit="return evdGuardarDev(event)">
+      <div class="formGrid">
+        <div><label>Participante</label><div id="evdDevNombre" style="font-weight:600;"></div></div>
+        <div><label>Le toca</label><div id="evdDevDebe" style="font-weight:600;"></div></div>
+        <div><label for="evdDevMonto">Devolvió *</label><input type="text" inputmode="decimal" id="evdDevMonto" placeholder="0.00" oninput="evdDevRefrescar()" required></div>
+        <div><label for="evdDevFecha">Fecha *</label><input type="date" id="evdDevFecha" required></div>
+        <div class="full"><label for="evdDevMetodo">Método</label><select id="evdDevMetodo"></select></div>
+        <div class="full" id="evdDevExtraWrap" style="display:none;"><span id="evdDevExtraTxt"></span>
+          <label style="display:flex; gap:8px; align-items:center; margin-top:6px;"><input type="checkbox" id="evdDevOfrenda" style="width:auto;" checked> Agregar el restante a Ofrendas</label></div>
+        <div class="full" id="evdDevFalta" style="font-size:0.85rem; color:var(--text-muted);"></div>
+      </div>
+      <div class="formAcciones">
+        <button type="button" class="btnSecundario" onclick="evdCerrarModal('modalEvdDev')">Cancelar</button>
+        <button type="submit" class="btnPrincipal" id="evdDevBtn" style="width:auto;">Registrar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ═══════════════ MODAL: Aporte a una bolsa aparte ═══════════════ -->
 <div class="modalOverlay" id="modalBolsaAporte">
   <div class="modalCaja">
@@ -2712,8 +2783,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-076';
-document.getElementById('versionTopbar').textContent = 'Ver-076';
+const APP_VERSION = 'church-admin Ver-077';
+document.getElementById('versionTopbar').textContent = 'Ver-077';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -2933,6 +3004,7 @@ const FIN_TARJETAS = [
     { tab: 'gastos', icono: '📉', etiqueta: 'Gastos', sub: 'Control de gastos', color: 'c-red', tabla: 'gastos' },
     { tab: 'recurrentes', icono: '🔁', etiqueta: 'Gastos Recurrentes', sub: 'Renta, salarios y gastos fijos', color: 'c-red', tabla: 'recurrentes' },
     { tab: 'eventos', icono: '🎪', etiqueta: 'Eventos', sub: 'Gastos de eventos', color: 'c-amber', tabla: 'eventos' },
+    { tab: 'eventosDev', icono: '🍽️', etiqueta: 'Eventos con devolución', sub: 'La iglesia paga y los miembros devuelven', color: 'c-amber' },
     { tab: 'proveedores', icono: '🏢', etiqueta: 'Proveedores', sub: 'Registro de proveedores', color: 'c-teal', tabla: 'organizaciones' },
   ]},
   { grupo: 'Dinero', items: [
@@ -3115,6 +3187,7 @@ function cambiarSubtabFinanzas(tab) {
   else if (tab === 'porAprobar') cargarPorAprobar();
   else if (tab === 'pagosPromesa') cargarPagosPromesa();
   else if (tab === 'eventosHist') cargarEventosHist();
+  else if (tab === 'eventosDev') evdCargar();
   else if (tab === 'reportesHub') renderReportesHub();
   else if (tab === 'avanzadoHub') renderAvanzadoHub();
   else if (tab === 'bolsas') cargarBolsas();
@@ -4814,7 +4887,7 @@ function ruPintarPermisos(desdeRol) {
 }
 
 // Oculta tarjetas según permisos
-const FIN_PERM_TAB = { diario: 'verReportes', mayor: 'verReportes', balance: 'verReportes', comprobacion: 'verReportes', reportes: 'verReportes', reportesHub: 'verReportes', conciliacion: 'verReportes', declaraciones: 'verReportes', cierre: 'cerrarPeriodo', ajustes: 'agregarTrans', auditoria: 'verAuditoria', configIr: 'gestionarConfig' };
+const FIN_PERM_TAB = { eventosDev: 'verReportes', diario: 'verReportes', mayor: 'verReportes', balance: 'verReportes', comprobacion: 'verReportes', reportes: 'verReportes', reportesHub: 'verReportes', conciliacion: 'verReportes', declaraciones: 'verReportes', cierre: 'cerrarPeriodo', ajustes: 'agregarTrans', auditoria: 'verAuditoria', configIr: 'gestionarConfig' };
 
 // ── Importar Excel (Ver-043) ──
 const IMP_TIPOS = {
@@ -5080,6 +5153,306 @@ async function finRenderAlertas(filas) {
     }
   });
   cont.innerHTML = alertas.length ? `<div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">${alertas.map(a => `<div class="tablaWrap" style="padding:10px 14px; cursor:pointer; display:flex; gap:10px; align-items:center;" onclick="finAbrirSubvista('${a.tab}')"><span>${a.ic}</span><span style="flex:1; font-size:0.85rem;">${escV28(a.msg)}</span><span style="font-size:0.72rem; color:var(--text-muted);">Ver →</span></div>`).join('')}</div>` : '';
+}
+
+// ── Eventos con devolución (Ver-077) ──
+// La iglesia paga con la tarjeta; cada participante devuelve su parte. Todo queda en los libros de siempre:
+// el pago como Egreso (Eventos), cada devolución como Otros Ingresos, lo de más como Ofrenda y lo que falta, al cerrar, como Gastos Administrativos.
+let evdLista = [], evdPartes = [], evdAbierto = null, evdDevPart = null;
+const evdN = x => Number(x) || 0;
+const evdR = x => Math.round(evdN(x) * 100) / 100;
+const evdEl = id => document.getElementById(id);
+function evdHoy() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+
+async function evdBase() {
+  await libroAsegurarBase();
+  await asegurarDirectorioFinanzas();
+  if (!cacheMetodosPago.length) await cargarMetodosPago();
+}
+async function evdCargar() {
+  const cont = evdEl('evdContenido');
+  cont.innerHTML = '<div class="estadoCargando">Cargando…</div>';
+  await evdBase();
+  const [re, rp] = await Promise.all([
+    sbCall(sb.from('eventos_dev').select('*').order('fecha', { ascending: false }).range(0, 999)),
+    sbCall(sb.from('eventos_dev_part').select('*').range(0, 9999)),
+  ]);
+  if (re.error || rp.error) { cont.innerHTML = `<div class="estadoVacio">Error: ${escV28((re.error || rp.error).message)}</div>`; return; }
+  evdLista = re.data || []; evdPartes = rp.data || [];
+  if (evdAbierto && evdLista.some(e => e.id === evdAbierto)) evdRenderDetalle(); else { evdAbierto = null; evdRenderLista(); }
+}
+function evdPartesDe(id) { return evdPartes.filter(p => p.evento_dev_id === id); }
+function evdTot(e) {
+  const ps = evdPartesDe(e.id);
+  const reemb = ps.reduce((s, p) => s + evdN(p.devuelto), 0);
+  const extra = ps.reduce((s, p) => s + evdN(p.extra), 0);
+  const esperado = ps.reduce((s, p) => s + evdN(p.esperado), 0);
+  return { ps, reemb: evdR(reemb), extra: evdR(extra), esperado: evdR(esperado), falta: e.cerrado ? 0 : Math.max(0, evdR(evdN(e.total) - reemb)) };
+}
+function evdRenderLista() {
+  evdEl('evdNuevoBtn').style.display = '';
+  const abiertos = evdLista.filter(e => !e.cerrado);
+  const porCobrar = abiertos.reduce((s, e) => s + evdTot(e).falta, 0);
+  const cont = evdEl('evdContenido');
+  cont.innerHTML = `
+    <div class="grid-resumen" style="margin-bottom:20px;">
+      <div class="tarjetaResumen"><div class="etiqueta">Eventos abiertos</div><div class="monto">${abiertos.length}</div></div>
+      <div class="tarjetaResumen egreso"><div class="etiqueta">Por cobrar</div><div class="monto">${formatoMoneda(porCobrar)}</div></div>
+    </div>` + (evdLista.length ? evdLista.map(e => {
+      const t = evdTot(e);
+      return `<div class="tarjetaSeguimiento" style="cursor:pointer;" onclick="evdAbrir('${e.id}')"><div><div class="nombrePersona">${escV28(e.nombre)}</div>
+        <div class="metaLinea">${formatoFecha(e.fecha)} · Pagado ${formatoMoneda(e.total)} · Devuelto ${formatoMoneda(t.reemb)} · ${e.cerrado ? 'Cerrado' + (evdN(e.cierre_monto) > 0 ? ' (la iglesia cubrió ' + formatoMoneda(e.cierre_monto) + ')' : '') : 'Falta ' + formatoMoneda(t.falta)}</div></div></div>`;
+    }).join('') : '<div class="estadoVacio">Aún no hay eventos con devolución. Toca "+ Nuevo evento".</div>');
+}
+function evdVolver() { evdAbierto = null; evdRenderLista(); }
+function evdAbrir(id) { evdAbierto = id; evdRenderDetalle(); window.scrollTo(0, 0); }
+function evdRenderDetalle() {
+  const e = evdLista.find(x => x.id === evdAbierto); if (!e) { evdVolver(); return; }
+  evdEl('evdNuevoBtn').style.display = 'none';
+  const t = evdTot(e);
+  const filas = t.ps.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(p => {
+    const pag = evdN(p.devuelto) + evdN(p.extra);
+    const estado = pag <= 0 ? 'Falta' : (evdN(p.devuelto) >= evdN(p.esperado) - 0.005 ? 'Devolvió' : 'Parcial');
+    return `<tr><td>${escV28(p.nombre)}</td><td style="text-align:right;">${formatoMoneda(p.esperado)}</td>
+      <td style="text-align:right;">${pag > 0 ? formatoMoneda(pag) + (evdN(p.extra) > 0 ? ' <span style="font-size:0.75rem;color:var(--text-muted);">(' + formatoMoneda(p.extra) + ' a ofrendas)</span>' : '') : '—'}</td>
+      <td>${estado}</td>
+      <td style="white-space:nowrap;">${pag > 0 ? `<button type="button" class="btnSecundario" onclick="evdDeshacer('${p.id}')">Deshacer</button>` : `<button type="button" class="btnPrincipal" style="width:auto;" onclick="evdAbrirDev('${p.id}')">Registrar devolución</button>`}
+      ${pag <= 0 && !e.cerrado ? `<button type="button" class="btnPeligro" onclick="evdQuitarPart('${p.id}')">Quitar</button>` : ''}</td></tr>`;
+  }).join('');
+  evdEl('evdContenido').innerHTML = `
+    <button type="button" class="btnSecundario" onclick="evdVolver()">← Eventos</button>
+    <h3 style="margin:14px 0 4px;">${escV28(e.nombre)}</h3>
+    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:14px;">${formatoFecha(e.fecha)} · ${escV28(e.metodo || '')} · ${e.cerrado ? 'Cerrado' : 'Abierto'}</div>
+    <div class="grid-resumen" style="margin-bottom:20px;">
+      <div class="tarjetaResumen egreso"><div class="etiqueta">Pagado por la iglesia</div><div class="monto">${formatoMoneda(e.total)}</div></div>
+      <div class="tarjetaResumen ingreso"><div class="etiqueta">Devuelto</div><div class="monto">${formatoMoneda(t.reemb)}</div></div>
+      <div class="tarjetaResumen"><div class="etiqueta">${e.cerrado ? 'Cubierto por la iglesia' : 'Falta por cobrar'}</div><div class="monto">${formatoMoneda(e.cerrado ? evdN(e.cierre_monto) : t.falta)}</div></div>
+      ${t.extra > 0 ? `<div class="tarjetaResumen ingreso"><div class="etiqueta">Pasado a Ofrendas</div><div class="monto">${formatoMoneda(t.extra)}</div></div>` : ''}
+    </div>
+    <div class="tablaWrap" style="margin-bottom:16px;"><table>
+      <thead><tr><th>Participante</th><th style="text-align:right;">Le toca</th><th style="text-align:right;">Devolvió</th><th>Estado</th><th></th></tr></thead>
+      <tbody>${filas || '<tr><td colspan="5" style="color:var(--text-muted);">Sin participantes.</td></tr>'}</tbody></table></div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      ${e.cerrado ? '' : '<button type="button" class="btnSecundario" onclick="evdAbrirPart()">+ Agregar participante</button><button type="button" class="btnSecundario" onclick="evdRepartirIguales()">Repartir en partes iguales</button>'}
+      ${e.cerrado ? '<button type="button" class="btnSecundario" onclick="evdReabrir()">Reabrir evento</button>' : '<button type="button" class="btnPrincipal" style="width:auto;" onclick="evdCerrar()">Cerrar evento</button>'}
+      <button type="button" class="btnPeligro" onclick="evdEliminar()">Eliminar evento</button>
+    </div>
+    <div style="font-size:0.78rem; color:var(--text-muted); margin-top:10px;">Cada devolución se anota en Otros Ingresos con el nombre del evento. Si alguien da de más, puedes pasar lo restante a Ofrendas. Al cerrar, lo que falte lo cubre la iglesia y queda como Gastos Administrativos.</div>`;
+}
+
+// ── Nuevo evento ──
+function evdOpcionesPersonas() {
+  const lista = cacheDirectorio.slice().sort((a, b) => nombreMostrar(a).localeCompare(nombreMostrar(b)));
+  return '<option value="">— Otra persona (escribir nombre) —</option>' + lista.map(p => `<option value="${p.id}">${escV28(nombreMostrar(p))}</option>`).join('');
+}
+function evdAgregarFila(montoInicial) {
+  const d = document.createElement('div');
+  d.className = 'evdFila'; d.style.cssText = 'border:1px solid rgba(128,128,128,0.35); border-radius:10px; padding:8px; margin-bottom:8px; display:grid; grid-template-columns:2fr 1.4fr 1fr auto; gap:6px; align-items:center;';
+  d.innerHTML = `<select class="evdFPer" onchange="this.parentNode.querySelector('.evdFNom').style.display = this.value ? 'none' : ''">${evdOpcionesPersonas()}</select>
+    <input type="text" class="evdFNom" placeholder="Nombre">
+    <input type="text" inputmode="decimal" class="evdFMonto" placeholder="0.00" value="${montoInicial || ''}">
+    <button type="button" class="btnPeligro" onclick="this.parentNode.remove()">✕</button>`;
+  evdEl('evdFilas').appendChild(d);
+}
+async function evdNuevo() {
+  await evdBase();
+  evdEl('formEvd').reset();
+  evdEl('evdFecha').value = evdHoy();
+  evdEl('evdMetodo').innerHTML = metodosGastoActivos().map(m => `<option value="${escV28(m)}">${escV28(m)}</option>`).join('');
+  const tb = metodosGastoActivos().find(m => /tarjeta/i.test(m)); if (tb) evdEl('evdMetodo').value = tb;
+  poblarSelectFondos('evdFondo');
+  evdEl('evdFilas').innerHTML = '';
+  evdAgregarFila();
+  evdEl('modalEvd').classList.add('abierto');
+}
+function evdCerrarModal(id) { evdEl(id).classList.remove('abierto'); }
+function evdDividirNuevo() {
+  const total = Math.round(evdN(String(evdEl('evdTotal').value).replace(',', '.')) * 100);
+  const filas = [...document.querySelectorAll('#evdFilas .evdFila')];
+  if (!total || !filas.length) { alert('Escribe el total y agrega participantes.'); return; }
+  const base = Math.floor(total / filas.length), resto = total - base * filas.length;
+  filas.forEach((f, i) => { f.querySelector('.evdFMonto').value = ((base + (i < resto ? 1 : 0)) / 100).toFixed(2); });
+}
+async function evdGuardarNuevo(ev) {
+  ev.preventDefault();
+  const sesion = getSesion(), uid = sesion.usuario?.id || null;
+  const nombre = evdEl('evdNombre').value.trim(), fecha = evdEl('evdFecha').value, metodo = evdEl('evdMetodo').value, fondoId = evdEl('evdFondo').value || null;
+  const total = evdR(String(evdEl('evdTotal').value).replace(',', '.'));
+  if (!nombre || !fecha || !(total > 0)) { alert('Escribe nombre, fecha y un total mayor que cero.'); return false; }
+  const partes = [...document.querySelectorAll('#evdFilas .evdFila')].map(f => {
+    const pid = f.querySelector('.evdFPer').value;
+    const nom = pid ? nombrePersonaPorId(pid) : f.querySelector('.evdFNom').value.trim();
+    return { persona_id: pid || null, nombre: nom, esperado: evdR(String(f.querySelector('.evdFMonto').value).replace(',', '.')) };
+  });
+  if (!partes.length || partes.some(p => !p.nombre)) { alert('Cada participante necesita un nombre.'); return false; }
+  const btn = evdEl('evdBtnGuardar'); btn.disabled = true;
+  const limpiar = async (ids) => { for (const [t, id] of ids) if (id) await sbCall(sb.from(t).delete().eq('id', id)); };
+  const { data: tr, error: e1 } = await sbCall(sb.from('transacciones').insert({ fecha, descripcion: nombre, categoria: 'Gastos de Eventos', tipo: 'Egreso', tipo_origen: 'Evento', metodo, monto: total, estado: 'Completado', fondo_id: fondoId, cuenta_dr: cuentaIdPorCodigo('5006'), solo_fondo: false, creado_por: uid }).select().single());
+  if (e1) { btn.disabled = false; alert('No se pudo crear el gasto: ' + e1.message); return false; }
+  const { data: evn, error: e2 } = await sbCall(sb.from('eventos').insert({ fecha, nombre, monto: total, metodo, estado: 'Completado', transaccion_id: tr.id, creado_por: uid }).select().single());
+  if (e2) { await limpiar([['transacciones', tr.id]]); btn.disabled = false; alert('No se pudo crear el evento: ' + e2.message); return false; }
+  const { data: ed, error: e3 } = await sbCall(sb.from('eventos_dev').insert({ nombre, fecha, total, metodo, fondo_id: fondoId, evento_id: evn.id, transaccion_id: tr.id, creado_por: uid }).select().single());
+  if (e3) { await limpiar([['eventos', evn.id], ['transacciones', tr.id]]); btn.disabled = false; alert('No se pudo guardar: ' + e3.message); return false; }
+  const { error: e4 } = await sbCall(sb.from('eventos_dev_part').insert(partes.map(p => ({ ...p, evento_dev_id: ed.id }))));
+  if (e4) { await limpiar([['eventos_dev', ed.id], ['eventos', evn.id], ['transacciones', tr.id]]); btn.disabled = false; alert('No se pudieron guardar los participantes: ' + e4.message); return false; }
+  btn.disabled = false;
+  evdCerrarModal('modalEvd');
+  evdAbierto = ed.id;
+  await evdCargar();
+  return false;
+}
+
+// ── Participante nuevo en un evento ya creado ──
+function evdAbrirPart() {
+  evdEl('formEvdPart').reset();
+  evdEl('evdPartPer').innerHTML = evdOpcionesPersonas();
+  evdEl('evdPartNomWrap').style.display = '';
+  evdEl('modalEvdPart').classList.add('abierto');
+}
+async function evdGuardarPart(ev) {
+  ev.preventDefault();
+  const pid = evdEl('evdPartPer').value;
+  const nombre = pid ? nombrePersonaPorId(pid) : evdEl('evdPartNom').value.trim();
+  if (!nombre) { alert('Escribe un nombre.'); return false; }
+  const { error } = await sbCall(sb.from('eventos_dev_part').insert({ evento_dev_id: evdAbierto, persona_id: pid || null, nombre, esperado: evdR(String(evdEl('evdPartMonto').value).replace(',', '.')) }));
+  if (error) { alert('No se pudo agregar: ' + error.message); return false; }
+  evdCerrarModal('modalEvdPart'); await evdCargar(); return false;
+}
+async function evdQuitarPart(id) {
+  if (!(await confirmar('¿Quitar a este participante del evento?'))) return;
+  const { error } = await sbCall(sb.from('eventos_dev_part').delete().eq('id', id));
+  if (error) { alert('No se pudo quitar: ' + error.message); return; }
+  await evdCargar();
+}
+async function evdRepartirIguales() {
+  const e = evdLista.find(x => x.id === evdAbierto); if (!e) return;
+  const ps = evdPartesDe(e.id), pend = ps.filter(p => evdN(p.devuelto) + evdN(p.extra) <= 0);
+  if (!ps.length || !pend.length) { alert('No hay participantes pendientes para repartir.'); return; }
+  const pagados = ps.filter(p => !pend.includes(p)).reduce((s, p) => s + evdN(p.esperado), 0);
+  const centavos = Math.round((evdN(e.total) - pagados) * 100);
+  if (centavos <= 0) { alert('Lo ya asignado cubre el total.'); return; }
+  const base = Math.floor(centavos / pend.length), resto = centavos - base * pend.length;
+  for (let i = 0; i < pend.length; i++) await sbCall(sb.from('eventos_dev_part').update({ esperado: (base + (i < resto ? 1 : 0)) / 100 }).eq('id', pend[i].id));
+  await evdCargar();
+}
+
+// ── Registrar / deshacer una devolución ──
+function evdAbrirDev(partId) {
+  const p = evdPartes.find(x => x.id === partId); if (!p) return;
+  evdDevPart = p;
+  evdEl('evdDevNombre').textContent = p.nombre;
+  evdEl('evdDevDebe').textContent = formatoMoneda(p.esperado);
+  evdEl('evdDevMonto').value = evdN(p.esperado) > 0 ? evdN(p.esperado).toFixed(2) : '';
+  evdEl('evdDevFecha').value = evdHoy();
+  poblarSelectMetodo('evdDevMetodo');
+  evdEl('evdDevOfrenda').checked = true;
+  evdDevRefrescar();
+  evdEl('modalEvdDev').classList.add('abierto');
+}
+function evdDevRefrescar() {
+  const p = evdDevPart; if (!p) return;
+  const m = evdR(String(evdEl('evdDevMonto').value).replace(',', '.')), esp = evdN(p.esperado);
+  const sobra = esp > 0 && m > esp + 0.005;
+  evdEl('evdDevExtraWrap').style.display = sobra ? '' : 'none';
+  if (sobra) evdEl('evdDevExtraTxt').textContent = `Dio ${formatoMoneda(m - esp)} de más.`;
+  evdEl('evdDevFalta').textContent = (m > 0 && esp > 0 && m < esp - 0.005) ? `Quedan ${formatoMoneda(esp - m)} pendientes de esta persona.` : '';
+}
+async function evdGuardarDev(ev) {
+  ev.preventDefault();
+  const p = evdDevPart, e = evdLista.find(x => x.id === (p && p.evento_dev_id)); if (!p || !e) return false;
+  const sesion = getSesion(), uid = sesion.usuario?.id || null;
+  const m = evdR(String(evdEl('evdDevMonto').value).replace(',', '.')), fecha = evdEl('evdDevFecha').value, metodo = evdEl('evdDevMetodo').value;
+  if (!(m > 0) || !fecha) { alert('Escribe un monto mayor que cero y la fecha.'); return false; }
+  const esp = evdN(p.esperado);
+  const sobra = esp > 0 && m > esp + 0.005;
+  const pasaOfrenda = sobra && evdEl('evdDevOfrenda').checked;
+  const reemb = pasaOfrenda ? esp : m, extra = pasaOfrenda ? evdR(m - esp) : 0;
+  const btn = evdEl('evdDevBtn'); btn.disabled = true;
+  const limpiar = async (ids) => { for (const [t, id] of ids) if (id) await sbCall(sb.from(t).delete().eq('id', id)); };
+  const crear = async (tabla, origen, descripcion, categoria, cuentaCod, monto, extraCampos) => {
+    const { data: tr, error } = await sbCall(sb.from('transacciones').insert({ fecha, descripcion, categoria, tipo: 'Ingreso', tipo_origen: origen, metodo, monto, estado: 'Completado', fondo_id: e.fondo_id, cuenta_cr: cuentaIdPorCodigo(cuentaCod), solo_fondo: false, creado_por: uid }).select().single());
+    if (error) return { error };
+    const { data: reg, error: e2 } = await sbCall(sb.from(tabla).insert({ fecha, monto, metodo, estado: 'Completado', transaccion_id: tr.id, creado_por: uid, ...extraCampos }).select().single());
+    if (e2) { await limpiar([['transacciones', tr.id]]); return { error: e2 }; }
+    return { regId: reg.id, transId: tr.id };
+  };
+  const a = await crear('otros_ingresos', 'Otro Ingreso', `${e.nombre} — ${p.nombre}`, 'Otros Ingresos', '4005', reemb, { descripcion: `${e.nombre} — ${p.nombre}` });
+  if (a.error) { btn.disabled = false; alert('No se pudo registrar: ' + a.error.message); return false; }
+  let b = null;
+  if (extra > 0) {
+    b = await crear('ofrendas', 'Ofrenda', `Ofrenda — ${e.nombre} (${p.nombre})`, 'Ofrenda General', OFRENDA_TIPO_CUENTA['Ofrenda General'] || '4002', extra, { tipo: 'Ofrenda General' });
+    if (b.error) { await limpiar([['otros_ingresos', a.regId], ['transacciones', a.transId]]); btn.disabled = false; alert('No se pudo registrar lo restante en Ofrendas: ' + b.error.message); return false; }
+  }
+  const { error } = await sbCall(sb.from('eventos_dev_part').update({ devuelto: reemb, extra, fecha_devolucion: fecha, ingreso_id: a.regId, ingreso_trans_id: a.transId, ofrenda_id: b ? b.regId : null, ofrenda_trans_id: b ? b.transId : null }).eq('id', p.id));
+  btn.disabled = false;
+  if (error) { alert('Se registró el dinero pero no se pudo marcar al participante: ' + error.message); }
+  evdCerrarModal('modalEvdDev'); await evdCargar(); return false;
+}
+async function evdDeshacer(partId) {
+  const p = evdPartes.find(x => x.id === partId); if (!p) return;
+  if (!(await confirmar(`¿Deshacer la devolución de ${p.nombre}? Se borran los ingresos que se anotaron.`))) return;
+  await evdBorrarPago(p);
+  await evdCargar();
+}
+async function evdBorrarPago(p) {
+  if (p.ingreso_id) await sbCall(sb.from('otros_ingresos').delete().eq('id', p.ingreso_id));
+  if (p.ingreso_trans_id) await sbCall(sb.from('transacciones').delete().eq('id', p.ingreso_trans_id));
+  if (p.ofrenda_id) await sbCall(sb.from('ofrendas').delete().eq('id', p.ofrenda_id));
+  if (p.ofrenda_trans_id) await sbCall(sb.from('transacciones').delete().eq('id', p.ofrenda_trans_id));
+  await sbCall(sb.from('eventos_dev_part').update({ devuelto: 0, extra: 0, fecha_devolucion: null, ingreso_id: null, ingreso_trans_id: null, ofrenda_id: null, ofrenda_trans_id: null }).eq('id', p.id));
+}
+
+// ── Cerrar / reabrir / eliminar ──
+async function evdCerrar() {
+  const e = evdLista.find(x => x.id === evdAbierto); if (!e) return;
+  const t = evdTot(e);
+  const falta = evdR(evdN(e.total) - t.reemb);
+  const uid = getSesion().usuario?.id || null;
+  let gastoId = null, gastoTrans = null, cubierto = 0;
+  if (falta > 0.005) {
+    if (!(await confirmar(`Faltan ${formatoMoneda(falta)} por cobrar. La iglesia corre con ese gasto y queda como Gastos Administrativos. ¿Cerrar el evento?`))) return;
+    cubierto = falta;
+    const fecha = evdHoy();
+    const { data: tr, error: e1 } = await sbCall(sb.from('transacciones').insert({ fecha, descripcion: `${e.nombre} — diferencia cubierta por la iglesia`, categoria: 'Gastos Administrativos', tipo: 'Egreso', tipo_origen: 'Gasto', metodo: e.metodo, monto: falta, estado: 'Completado', fondo_id: e.fondo_id, cuenta_dr: cuentaIdPorCodigo('5004'), solo_fondo: false, creado_por: uid }).select().single());
+    if (e1) { alert('No se pudo registrar el gasto administrativo: ' + e1.message); return; }
+    const { data: g, error: e2 } = await sbCall(sb.from('gastos').insert({ fecha, descripcion: `${e.nombre} — diferencia cubierta por la iglesia`, categoria: 'Gastos Administrativos', monto: falta, metodo: e.metodo, estado: 'Completado', transaccion_id: tr.id, creado_por: uid }).select().single());
+    if (e2) { await sbCall(sb.from('transacciones').delete().eq('id', tr.id)); alert('No se pudo registrar el gasto administrativo: ' + e2.message); return; }
+    gastoId = g.id; gastoTrans = tr.id;
+    // El gasto del evento baja en esa cantidad para que el evento quede en cero: la diferencia ya está como Gastos Administrativos.
+    const nuevo = evdR(evdN(e.total) - falta);
+    await sbCall(sb.from('eventos').update({ monto: nuevo }).eq('id', e.evento_id));
+    await sbCall(sb.from('transacciones').update({ monto: nuevo }).eq('id', e.transaccion_id));
+  }
+  const { error } = await sbCall(sb.from('eventos_dev').update({ cerrado: true, cierre_monto: cubierto, cierre_gasto_id: gastoId, cierre_trans_id: gastoTrans }).eq('id', e.id));
+  if (error) { alert('No se pudo cerrar: ' + error.message); return; }
+  await evdCargar();
+}
+async function evdDeshacerCierre(e) {
+  if (e.cierre_gasto_id) await sbCall(sb.from('gastos').delete().eq('id', e.cierre_gasto_id));
+  if (e.cierre_trans_id) await sbCall(sb.from('transacciones').delete().eq('id', e.cierre_trans_id));
+  if (evdN(e.cierre_monto) > 0) {
+    await sbCall(sb.from('eventos').update({ monto: e.total }).eq('id', e.evento_id));
+    await sbCall(sb.from('transacciones').update({ monto: e.total }).eq('id', e.transaccion_id));
+  }
+}
+async function evdReabrir() {
+  const e = evdLista.find(x => x.id === evdAbierto); if (!e) return;
+  if (!(await confirmar('¿Reabrir el evento? Si la iglesia había cubierto una diferencia, ese gasto administrativo se borra.'))) return;
+  await evdDeshacerCierre(e);
+  const { error } = await sbCall(sb.from('eventos_dev').update({ cerrado: false, cierre_monto: null, cierre_gasto_id: null, cierre_trans_id: null }).eq('id', e.id));
+  if (error) { alert('No se pudo reabrir: ' + error.message); return; }
+  await evdCargar();
+}
+async function evdEliminar() {
+  const e = evdLista.find(x => x.id === evdAbierto); if (!e) return;
+  if (!(await confirmar(`¿Eliminar "${e.nombre}" con todo lo registrado (gasto, devoluciones y ofrendas pasadas)? No se puede deshacer.`))) return;
+  for (const p of evdPartesDe(e.id)) await evdBorrarPago(p);
+  await evdDeshacerCierre(e);
+  if (e.evento_id) await sbCall(sb.from('eventos').delete().eq('id', e.evento_id));
+  if (e.transaccion_id) await sbCall(sb.from('transacciones').delete().eq('id', e.transaccion_id));
+  const { error } = await sbCall(sb.from('eventos_dev').delete().eq('id', e.id));
+  if (error) { alert('No se pudo eliminar: ' + error.message); return; }
+  evdAbierto = null; await evdCargar();
 }
 
 // ── Pagos de Promesas (Ver-043) ──
