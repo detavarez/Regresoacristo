@@ -2712,8 +2712,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-075';
-document.getElementById('versionTopbar').textContent = 'Ver-075';
+const APP_VERSION = 'church-admin Ver-076';
+document.getElementById('versionTopbar').textContent = 'Ver-076';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -5117,10 +5117,13 @@ let ehFilas = [];
 async function cargarEventosHist() {
   const lista = document.getElementById('listaEventosHist');
   lista.innerHTML = '<div class="estadoCargando">Cargando…</div>';
-  const [re, rv] = await Promise.all([
+  const [re, rv0, ro] = await Promise.all([
     sbCall(sb.from('eventos').select('*').order('fecha', { ascending: false }).range(0, 4999)),
-    sbCall(sb.from('ventas').select('*').range(0, 4999)),
+    sbCall(sb.from('ventas').select('descripcion, monto').range(0, 4999)),
+    sbCall(sb.from('otros_ingresos').select('descripcion, monto').range(0, 4999)),
   ]);
+  // Ventas y Otros ingresos cuentan igual: lo recibido por el evento (ventas, reembolsos de miembros, etc.)
+  const rv = { data: [...(rv0.data || []), ...(ro.data || [])] };
   if (re.error) { lista.innerHTML = `<div class="estadoVacio">Error: ${escV28(re.error.message)}</div>`; return; }
   const grupos = {};
   (re.data || []).forEach(e => { const n = (e.nombre || 'Sin nombre').trim(); const g = grupos[n.toLowerCase()] ||= { nombre: n, gastos: 0, ventas: 0, n: 0, ultima: '' }; g.gastos += Number(e.monto) || 0; g.n++; if (String(e.fecha) > g.ultima) g.ultima = String(e.fecha); });
