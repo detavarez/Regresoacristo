@@ -1024,11 +1024,21 @@
           <button class="btnSecundario" onclick="exportarDeclaracionesCSV()">⬇ Exportar</button>
         </div>
         <div class="tablaWrap" style="margin-bottom:20px;">
-          <h3>Datos de la iglesia para la declaración</h3>
+          <h3>Tipo de reporte</h3>
           <div class="formGrid" style="padding:0 16px 16px;">
-            <div class="full"><label for="dcIglesiaNombre">Nombre de la iglesia</label><input type="text" id="dcIglesiaNombre" oninput="guardarDatosIglesiaDeclaracion()"></div>
-            <div class="full"><label for="dcIglesiaDireccion">Dirección y EIN (opcional)</label><input type="text" id="dcIglesiaDireccion" oninput="guardarDatosIglesiaDeclaracion()" placeholder="Dirección · EIN"></div>
+            <div><label for="dcTipo">Reporte</label><select id="dcTipo"><option value="carta">Carta con resumen (por tipo de contribución)</option><option value="detallada">Declaración detallada (todas las contribuciones)</option></select></div>
+            <div><label for="dcMes">Mes de la carta</label><select id="dcMes"></select></div>
+            <div><label for="dcLogo">Logo</label><select id="dcLogo"><option value="real">Logo subido</option><option value="generico">Genérico (cruz)</option><option value="ninguno">Ninguno</option></select></div>
+            <div><label for="dcMargen">Espacio superior sin membrete (puntos)</label><input type="number" id="dcMargen" min="0" max="400"></div>
+            <div class="full"><label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="dcMembrete" style="width:auto;"> Incluir membrete (logo, nombre y dirección). Desactívalo si usas papel con membrete impreso.</label></div>
+            <div class="full" id="dcInfo" style="font-size:0.78rem; color:var(--text-muted);"></div>
           </div>
+        </div>
+        <div class="barraAcciones" style="align-items:center;">
+          <button class="btnSecundario" onclick="dcMarcarTodos(true)">Marcar todos</button>
+          <button class="btnSecundario" onclick="dcMarcarTodos(false)">Desmarcar todos</button>
+          <div style="flex:1;"></div>
+          <button class="btnPrincipal" style="width:auto;" onclick="dcGenerarPdf()">Generar PDF (marcados)</button>
         </div>
         <div class="grid-resumen" id="resumenDeclaraciones" style="margin-bottom:20px;"></div>
         <div id="listaDeclaraciones"><div class="estadoCargando">Cargando declaraciones…</div></div>
@@ -1359,6 +1369,7 @@
               <div><label for="cfgTelefono">Teléfono</label><input type="text" id="cfgTelefono"></div>
               <div><label for="cfgCorreo">Correo</label><input type="email" id="cfgCorreo"></div>
               <div><label for="cfgPastor">Pastor</label><input type="text" id="cfgPastor"></div>
+              <div><label for="cfgTesorero">Tesorero</label><input type="text" id="cfgTesorero"></div>
               <div><label for="cfgEin">EIN</label><input type="text" id="cfgEin"></div>
               <div><label for="cfgMesFiscal">Año fiscal empieza en</label><select id="cfgMesFiscal"><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select></div>
               <div class="full"><label for="cfgLogoArchivo">Logo (sale en comprobantes y declaraciones)</label>
@@ -1372,6 +1383,25 @@
             <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
             <span id="cfgEstado" style="margin-left:10px; font-size:0.85rem; color:var(--text-muted);"></span>
           </form>
+        </div>
+        <div class="tablaWrap" style="margin-bottom:20px;" id="cfgCartaBloque">
+          <h3>Declaraciones de donación (carta)</h3>
+          <div style="padding:14px 18px;">
+            <div class="formGrid">
+              <div><label for="cartaIdioma">Idioma de la carta</label><select id="cartaIdioma" onchange="cartaCambiarIdioma()"><option value="es">Español</option><option value="en">English</option></select></div>
+              <div><label for="cartaLogo">Logo en la carta</label><select id="cartaLogo"><option value="real">Logo subido</option><option value="generico">Genérico (cruz)</option><option value="ninguno">Ninguno</option></select></div>
+              <div><label for="cartaMargen">Espacio superior sin membrete (puntos)</label><input type="number" id="cartaMargen" min="0" max="400"></div>
+              <div><label style="display:flex; gap:8px; align-items:center; margin-top:22px;"><input type="checkbox" id="cartaMembrete" style="width:auto;"> Incluir membrete</label></div>
+              <div class="full"><label for="cartaTexto">Texto de la carta</label><textarea id="cartaTexto" rows="18" style="width:100%; font-family:monospace; font-size:0.8rem;"></textarea></div>
+            </div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin:8px 0;">Datos que se llenan solos: [fecha] [donante] [direccion_donante] [iglesia] [anio] [ein] [pastor] [tesorero] [total]. Con [detalle] se dibuja la tabla de contribuciones. Para negrita: **texto**.</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              <button type="button" class="btnPrincipal" style="width:auto;" onclick="cartaGuardar()">Guardar carta</button>
+              <button type="button" class="btnSecundario" onclick="cartaRestablecer()">Restablecer al texto original</button>
+              <button type="button" class="btnSecundario" onclick="cartaVistaPrevia()">Vista previa (PDF de prueba)</button>
+              <span id="cartaEstado" style="font-size:0.85rem; color:var(--text-muted);"></span>
+            </div>
+          </div>
         </div>
         <div class="tablaWrap" style="margin-bottom:20px;">
           <h3>Accesos a las aplicaciones</h3>
@@ -1834,15 +1864,6 @@
 </div>
 
 <!-- ═══════════════ MODAL: Declaración de donación ═══════════════ -->
-<div class="modalOverlay" id="modalDeclaracion">
-  <div class="modalCaja" style="max-width:760px;">
-    <div id="declaracionContenido"></div>
-    <div class="formAcciones">
-      <button type="button" class="btnSecundario" onclick="cerrarModalDeclaracion()">Cerrar</button>
-      <button type="button" class="btnPrincipal" style="width:auto;" onclick="imprimirDeclaracion()">Imprimir / Guardar PDF</button>
-    </div>
-  </div>
-</div>
 
 <!-- ═══════════════ MODAL: Libro simple (Otros Ingresos / Ventas / Eventos) ═══════════════ -->
 <div class="modalOverlay" id="modalLibro">
@@ -2688,8 +2709,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-073';
-document.getElementById('versionTopbar').textContent = 'Ver-073';
+const APP_VERSION = 'church-admin Ver-074';
+document.getElementById('versionTopbar').textContent = 'Ver-074';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -3891,23 +3912,6 @@ let dcSinPersona = { n: 0, monto: 0 };
 let dcAnioActual = null;
 const DC_IGLESIA_POR_DEFECTO = 'Iglesia Cristiana Evangélica Regreso a Cristo';
 
-function cargarDatosIglesiaDeclaracion() {
-  let nombre = DC_IGLESIA_POR_DEFECTO, dir = '';
-  try {
-    nombre = localStorage.getItem('dcIglesiaNombre') || nombre;
-    dir = localStorage.getItem('dcIglesiaDireccion') || '';
-  } catch (e) { /* sin almacenamiento: se usan los valores por defecto */ }
-  if (!document.getElementById('dcIglesiaNombre').value) document.getElementById('dcIglesiaNombre').value = nombre;
-  if (!document.getElementById('dcIglesiaDireccion').value) document.getElementById('dcIglesiaDireccion').value = dir;
-}
-
-function guardarDatosIglesiaDeclaracion() {
-  try {
-    localStorage.setItem('dcIglesiaNombre', document.getElementById('dcIglesiaNombre').value);
-    localStorage.setItem('dcIglesiaDireccion', document.getElementById('dcIglesiaDireccion').value);
-  } catch (e) { /* ignorar */ }
-}
-
 function direccionDePersona(p, mapa) {
   const fuente = (p.address_mode === 'inherited' && p.address_source_persona_id && mapa[p.address_source_persona_id]) ? mapa[p.address_source_persona_id] : p;
   const l1 = [fuente.street, fuente.apartment].filter(Boolean).join(', ');
@@ -3917,7 +3921,8 @@ function direccionDePersona(p, mapa) {
 
 async function cargarDeclaraciones() {
   poblarSelectorAnio('dcSelectAnio');
-  cargarDatosIglesiaDeclaracion();
+  dcCfg = (await cfgSincronizar()) || dcCfg || {};
+  dcIniciarControles();
   const lista = document.getElementById('listaDeclaraciones');
   lista.innerHTML = '<div class="estadoCargando">Cargando declaraciones…</div>';
   const anio = parseInt(document.getElementById('dcSelectAnio').value, 10);
@@ -3976,81 +3981,398 @@ async function cargarDeclaraciones() {
   renderDeclaraciones();
 }
 
+// ══════════ Declaraciones de donación: carta con resumen y declaración detallada (PDF) ══════════
+let dcCfg = {};
+const DC_MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DC_MESES_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const DC_CARTA_ES =
+`**[fecha]**
+
+**Para:** [donante]
+
+**Dirección:** [direccion_donante]
+
+**Asunto:** Reconocimiento de Contribuciones Caritativas de [anio]
+
+Estimado/a [donante]:
+
+Gracias por su generoso apoyo a **[iglesia]** durante el año [anio]. Sus fieles contribuciones nos permiten continuar nuestro ministerio y alcance a la comunidad.
+
+**[iglesia]** es una organización religiosa exenta de impuestos bajo la Sección 501(c)(3) del Código de Rentas Internas. Número de Identificación Fiscal (EIN): [ein]
+
+A continuación un resumen de sus contribuciones deducibles de impuestos recibidas por nuestra iglesia:
+
+[detalle]
+
+No se proporcionaron bienes ni servicios a cambio de sus contribuciones, excepto beneficios religiosos intangibles.
+
+Apreciamos profundamente su asociación en el avance de la obra de Dios. ¡Que el Señor lo bendiga abundantemente en este nuevo año!
+
+En Su servicio,
+[pastor]
+**Pastor, [iglesia]**
+
+
+**Preparado por:**
+[tesorero]
+**Tesorero, [iglesia]**`;
+
+const DC_CARTA_EN =
+`**[fecha]**
+
+**To:** [donante]
+
+**Address:** [direccion_donante]
+
+**Subject:** Acknowledgment of [anio] Charitable Contributions
+
+Dear [donante]:
+
+Thank you for your generous support of **[iglesia]** during the year [anio]. Your faithful contributions enable us to continue our ministry and outreach to the community.
+
+**[iglesia]** is a tax-exempt religious organization under Section 501(c)(3) of the Internal Revenue Code. Federal Tax ID (EIN): [ein]
+
+Below is a summary of your tax-deductible contributions received by our church:
+
+[detalle]
+
+No goods or services were provided in exchange for your contributions, other than intangible religious benefits.
+
+We deeply appreciate your partnership in advancing God's work. May the Lord bless you abundantly in this new year!
+
+In His service,
+[pastor]
+**Pastor, [iglesia]**
+
+
+**Prepared by:**
+[tesorero]
+**Treasurer, [iglesia]**`;
+
+let _pdfLibsPromise = null;
+function pdfCargarLibs() {
+  if (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API.autoTable) return Promise.resolve();
+  if (_pdfLibsPromise) return _pdfLibsPromise;
+  const cargar = src => new Promise((ok, mal) => {
+    const s = document.createElement('script'); s.src = src; s.onload = ok;
+    s.onerror = () => mal(new Error('No se pudo cargar ' + src)); document.head.appendChild(s);
+  });
+  _pdfLibsPromise = cargar('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+    .then(() => cargar('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'))
+    .catch(e => { _pdfLibsPromise = null; throw e; });
+  return _pdfLibsPromise;
+}
+
+function dcRellenar(texto, mapa) {
+  let out = texto || '';
+  Object.entries(mapa).forEach(([k, v]) => { out = out.split('[' + k + ']').join(v); });
+  return out;
+}
+
+// Una línea con tramos **negrita**; cada tramo se dibuja de una sola vez para que no se peguen las palabras.
+function dcLineaRica(doc, texto, x, y, ancho, alto, tam) {
+  doc.setFontSize(tam);
+  const runs = (texto || '').split(/(\*\*[^*]+\*\*)/g).filter(s => s !== '');
+  let cx = x;
+  runs.forEach(seg => {
+    const neg = seg.startsWith('**') && seg.endsWith('**');
+    let limpio = neg ? seg.slice(2, -2) : seg;
+    doc.setFont('helvetica', neg ? 'bold' : 'normal');
+    while (limpio.startsWith(' ')) { if (cx > x) cx += doc.getTextWidth(' '); limpio = limpio.slice(1); }
+    while (limpio.length) {
+      const libre = x + ancho - cx;
+      const w = doc.getTextWidth(limpio);
+      if (w <= libre) { doc.text(limpio, cx, y); cx += w; limpio = ''; }
+      else {
+        const pal = limpio.split(' ');
+        let cab = '', i = 0;
+        for (; i < pal.length; i++) {
+          const cand = cab + (cab ? ' ' : '') + pal[i];
+          if (doc.getTextWidth(cand) > libre && cab) break;
+          cab = cand;
+        }
+        if (!cab) { cab = pal[0]; i = 1; }
+        doc.text(cab, cx, y);
+        limpio = pal.slice(i).join(' ');
+        cx = x; y += alto;
+      }
+    }
+  });
+  return y + alto;
+}
+
+function dcCruz(doc, cx, cy, t) {
+  doc.setFillColor(122, 20, 20);
+  doc.rect(cx - t * 0.18, cy - t, t * 0.36, t * 2, 'F');
+  doc.rect(cx - t * 0.7, cy - t * 0.45, t * 1.4, t * 0.36, 'F');
+}
+
+function dcMembrete(doc, cfg, op, titulo, subtitulo) {
+  const pw = doc.internal.pageSize.getWidth();
+  if (!op.membrete) return op.margen || 76;
+  const cx = pw / 2;
+  let y = 40;
+  let dibujo = false;
+  if (op.logo !== 'ninguno') {
+    if (op.logo === 'real' && cfg.logo) {
+      try { doc.addImage(cfg.logo, 'PNG', cx - 26, y - 16, 52, 52); dibujo = true; } catch (e) { dcCruz(doc, cx, y + 10, 14); dibujo = true; }
+    } else { dcCruz(doc, cx, y + 10, 14); dibujo = true; }
+  }
+  y += dibujo ? 48 : 14;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(26, 45, 66);
+  doc.text(cfg.nombre || DC_IGLESIA_POR_DEFECTO, cx, y, { align: 'center' });
+  y += 13;
+  const dir = [cfg.direccion, cfg.telefono, cfg.correo].filter(Boolean).join('   ·   ');
+  if (dir) { doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(100, 100, 100); doc.text(dir, cx, y, { align: 'center' }); y += 10; }
+  if (titulo) {
+    y += 6;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11.5); doc.setTextColor(26, 45, 66);
+    doc.text(titulo, cx, y, { align: 'center' }); y += 12;
+    if (subtitulo) { doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(110, 110, 110); doc.text(subtitulo, cx, y, { align: 'center' }); y += 10; }
+  }
+  y += 10;
+  doc.setFillColor(122, 20, 20);
+  doc.rect(0, y, pw, 6, 'F');
+  return y + 30;
+}
+
+function dcPie(doc, cfg, en) {
+  const n = doc.internal.getNumberOfPages();
+  const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight();
+  const hoy = new Date().toISOString().slice(0, 10);
+  for (let i = 1; i <= n; i++) {
+    doc.setPage(i);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(150, 150, 150);
+    doc.text(`${cfg.nombre || DC_IGLESIA_POR_DEFECTO} — ${en ? 'Generated' : 'Generado'} ${formatoFecha(hoy)}`, 40, ph - 18);
+    doc.text(`${en ? 'Page' : 'Página'} ${i} ${en ? 'of' : 'de'} ${n}`, pw - 40, ph - 18, { align: 'right' });
+  }
+}
+
+function dcTraducirTipo(t, en) {
+  if (!en) return t;
+  return t.replace(/^Diezmo/, 'Tithe').replace(/^Donación/, 'Donation').replace(/^Campaña/, 'Campaign');
+}
+function dcAgruparPorTipo(items) {
+  const g = {};
+  items.forEach(it => { g[it.tipo] = (g[it.tipo] || 0) + (it.monto || 0); });
+  return Object.entries(g).map(([tipo, total]) => ({ tipo, total }));
+}
+function dcPlantilla(cfg) {
+  const en = cfg.carta_idioma === 'en';
+  return (en ? cfg.carta_en : cfg.carta_es) || (en ? DC_CARTA_EN : DC_CARTA_ES);
+}
+function dcNombreArchivo(partes) {
+  return partes.filter(Boolean).join(' - ').replace(/[\\/:*?"<>|]/g, '').trim();
+}
+
+// Carta con resumen (por tipo de contribución).
+function dcPdfCarta(donantes, anio, op, cfg, plantilla) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+  const en = cfg.carta_idioma === 'en';
+  const plant = plantilla || dcPlantilla(cfg);
+  const cartaAnio = Number(anio) + 1;
+  const fecha = en ? `${DC_MESES_EN[op.mes - 1]} ${cartaAnio}` : `${DC_MESES_ES[op.mes - 1]} de ${cartaAnio}`;
+  const [antes0, despues0] = plant.split('[detalle]');
+  donantes.forEach((d, i) => {
+    if (i > 0) doc.addPage();
+    const mapa = {
+      fecha, donante: d.nombre,
+      direccion_donante: d.direccion || (en ? '(not on file)' : '(no registrada)'),
+      iglesia: cfg.nombre || DC_IGLESIA_POR_DEFECTO, anio: String(anio),
+      ein: cfg.ein || (en ? 'not on file' : 'no configurado'),
+      pastor: cfg.pastor || '_______________________', tesorero: cfg.tesorero || '_______________________',
+      total: formatoMoneda(d.total),
+    };
+    const antes = dcRellenar(antes0 || '', mapa), despues = dcRellenar(despues0 || '', mapa);
+    let y = dcMembrete(doc, cfg, op);
+    doc.setTextColor(30, 30, 30);
+    antes.split('\n').forEach(l => { if (!l.trim()) { y += 8; return; } y = dcLineaRica(doc, l, 40, y, 530, 13, 9.5); });
+    y += 4;
+    const agg = dcAgruparPorTipo(d.items);
+    if (agg.length) {
+      doc.autoTable({
+        startY: y,
+        head: [[en ? 'Contribution' : 'Contribución', { content: en ? 'Amount' : 'Monto', styles: { halign: 'right' } }]],
+        body: agg.map(a => [`${dcTraducirTipo(a.tipo, en)} (${en ? 'Total for' : 'Total de'} ${anio})`, formatoMoneda(a.total)]),
+        foot: [['TOTAL', { content: formatoMoneda(d.total), styles: { halign: 'right' } }]],
+        theme: 'grid', margin: { left: 40, right: 40 },
+        styles: { font: 'helvetica', fontSize: 9, textColor: [20, 20, 20], cellPadding: 5 },
+        headStyles: { fillColor: [26, 45, 66], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8.5 },
+        footStyles: { fillColor: [245, 238, 220], textColor: [20, 20, 20], fontStyle: 'bold' },
+        columnStyles: { 1: { halign: 'right' } },
+      });
+      y = doc.lastAutoTable.finalY + 20;
+    }
+    doc.setTextColor(30, 30, 30);
+    despues.split('\n').forEach(l => { if (!l.trim()) { y += 8; return; } y = dcLineaRica(doc, l, 40, y, 530, 13, 9.5); });
+  });
+  dcPie(doc, cfg, en);
+  const nombre = dcNombreArchivo(['Contribucion Anual', donantes.length === 1 ? donantes[0].nombre : '', anio]);
+  return { doc, nombre };
+}
+
+// Declaración detallada: cada contribución del año, sin agrupar.
+function dcPdfDetallada(donantes, anio, op, cfg) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+  const en = cfg.carta_idioma === 'en';
+  const iglesia = cfg.nombre || DC_IGLESIA_POR_DEFECTO;
+  donantes.forEach((d, i) => {
+    if (i > 0) doc.addPage();
+    let y = dcMembrete(doc, cfg, op, en ? 'Annual Statement of Contributions' : 'Declaración Anual de Donaciones', `${en ? 'Year' : 'Año'} ${anio}${cfg.ein ? ' · EIN ' + cfg.ein : ''}`);
+    y += 10;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(20, 20, 20);
+    doc.text(en ? 'Dear:' : 'Estimado/a:', 40, y); y += 16;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+    doc.text(d.nombre, 40, y); y += 16;
+    if (d.direccion) { doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text(d.direccion, 40, y); y += 14; }
+    y += 4;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(60, 60, 60);
+    const intro = en
+      ? `Below is a summary of your contributions to ${iglesia} during the year ${anio}, for your tax records.`
+      : `A continuación un resumen de sus aportaciones a ${iglesia} durante el año ${anio}, para sus registros fiscales.`;
+    const lin = doc.splitTextToSize(intro, 530);
+    doc.text(lin, 40, y); y += lin.length * 13 + 10;
+    doc.autoTable({
+      startY: y,
+      head: [[en ? 'Date' : 'Fecha', en ? 'Type' : 'Tipo', en ? 'Method' : 'Método', 'Ref.', { content: en ? 'Amount' : 'Monto', styles: { halign: 'right' } }]],
+      body: d.items.map(it => [formatoFecha(it.fecha), dcTraducirTipo(it.tipo, en), it.metodo || '—', it.ref || '—', formatoMoneda(it.monto)]),
+      foot: [['', '', '', 'TOTAL', { content: formatoMoneda(d.total), styles: { halign: 'right' } }]],
+      theme: 'grid', margin: { left: 40, right: 40 },
+      styles: { font: 'helvetica', fontSize: 8.5, textColor: [20, 20, 20], cellPadding: 4 },
+      headStyles: { fillColor: [26, 45, 66], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+      footStyles: { fillColor: [245, 238, 220], textColor: [20, 20, 20], fontStyle: 'bold' },
+      columnStyles: { 4: { halign: 'right' } },
+    });
+    y = doc.lastAutoTable.finalY + 24;
+    doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(90, 90, 90);
+    const nota = en
+      ? 'No goods or services were provided in exchange for these contributions, other than intangible religious benefits. Please keep this statement for your tax records.'
+      : 'No se proporcionaron bienes ni servicios a cambio de estas contribuciones, excepto beneficios religiosos intangibles. Por favor conserve esta declaración para sus registros de impuestos.';
+    const nl = doc.splitTextToSize(nota, 530);
+    doc.text(nl, 40, y); y += nl.length * 11 + 24;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(20, 20, 20);
+    doc.text(en ? 'Sincerely,' : 'Atentamente,', 40, y); y += 30;
+    doc.text(cfg.pastor || '_______________________', 40, y); y += 12;
+    doc.setFontSize(8); doc.setTextColor(110, 110, 110);
+    doc.text(iglesia, 40, y);
+  });
+  dcPie(doc, cfg, en);
+  const nombre = dcNombreArchivo(['Reporte Diezmo', donantes.length === 1 ? donantes[0].nombre : '', anio]);
+  return { doc, nombre };
+}
+
+function dcOpciones() {
+  const g = id => document.getElementById(id);
+  return {
+    tipo: g('dcTipo').value, mes: Number(g('dcMes').value) || 1, logo: g('dcLogo').value,
+    membrete: g('dcMembrete').checked, margen: Number(g('dcMargen').value) || 76,
+  };
+}
+
+async function dcGenerarPdf(ids) {
+  const sel = ids || [...document.querySelectorAll('.dc-chk:checked')].map(c => c.value);
+  const donantes = cacheDeclaraciones.filter(d => sel.includes(d.persona_id)).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  if (!donantes.length) { alert('Marca al menos un donante.'); return; }
+  try { await pdfCargarLibs(); } catch (e) { alert('No se pudo cargar la librería de PDF. Revisa tu conexión e intenta otra vez.'); return; }
+  const op = dcOpciones();
+  const r = op.tipo === 'detallada' ? dcPdfDetallada(donantes, dcAnioActual, op, dcCfg) : dcPdfCarta(donantes, dcAnioActual, op, dcCfg);
+  r.doc.save(r.nombre + '.pdf');
+}
+
+function dcMarcarTodos(v) { document.querySelectorAll('.dc-chk').forEach(c => { c.checked = v; }); }
+
+function dcIniciarControles() {
+  const mes = document.getElementById('dcMes');
+  if (!mes.options.length) mes.innerHTML = DC_MESES_ES.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+  const c = dcCfg || {};
+  document.getElementById('dcLogo').value = c.carta_logo || (c.logo ? 'real' : 'generico');
+  document.getElementById('dcMembrete').checked = c.carta_membrete !== false;
+  document.getElementById('dcMargen').value = c.carta_margen == null ? 76 : c.carta_margen;
+  const en = c.carta_idioma === 'en';
+  document.getElementById('dcInfo').innerHTML =
+    `Idioma de la carta: <strong>${en ? 'English' : 'Español'}</strong>. El nombre y la dirección de la iglesia, el EIN, las firmas y el texto de la carta se cambian solo en Configuración (administrador).` +
+    (c.ein ? '' : ' <span style="color:#b45309;">Falta el EIN: las cartas saldrán sin ese dato.</span>');
+}
+
 function renderDeclaraciones() {
   const lista = document.getElementById('listaDeclaraciones');
   const q = (document.getElementById('dcBuscador').value || '').trim().toLowerCase();
-  const filas = cacheDeclaraciones.filter(d => !q || d.nombre.toLowerCase().includes(q));
+  const filas = cacheDeclaraciones.filter(d => !q || d.nombre.toLowerCase().includes(q)).sort((a, b) => a.nombre.localeCompare(b.nombre));
   const totalGeneral = cacheDeclaraciones.reduce((s, d) => s + d.total, 0);
   document.getElementById('resumenDeclaraciones').innerHTML = `
     <div class="tarjetaResumen"><div class="etiqueta">Donantes con declaración ${dcAnioActual || ''}</div><div class="monto">${cacheDeclaraciones.length}</div></div>
     <div class="tarjetaResumen ingreso"><div class="etiqueta">Total declarado</div><div class="monto">${formatoMoneda(totalGeneral)}</div></div>
     ${dcSinPersona.n > 0 ? `<div class="tarjetaResumen egreso"><div class="etiqueta">Sin persona asignada (no incluidos)</div><div class="monto">${dcSinPersona.n} · ${formatoMoneda(dcSinPersona.monto)}</div></div>` : ''}`;
-
   if (filas.length === 0) { lista.innerHTML = '<div class="estadoVacio">No hay contribuciones con donante asignado en este año. Las ofrendas generales no tienen donante y no se incluyen.</div>'; return; }
-  lista.innerHTML = filas.map(d => `
-    <div class="tarjetaSeguimiento" onclick="abrirDeclaracion('${d.persona_id}')">
-      <div>
-        <div class="nombrePersona">${escV28(d.nombre)}</div>
-        <div class="metaLinea">Diezmos ${formatoMoneda(d.diezmos)} · Donaciones ${formatoMoneda(d.donaciones)} · Campañas ${formatoMoneda(d.promesas)} · ${d.items.length} contribución(es)</div>
-      </div>
-      <span class="badge badge-tipo">${formatoMoneda(d.total)}</span>
-    </div>`).join('');
+  lista.innerHTML = `<div class="tablaWrap"><table>
+    <thead><tr><th style="width:32px;"></th><th>Donante</th><th>Dirección</th><th>Aportes</th><th style="text-align:right;">Total</th><th></th></tr></thead>
+    <tbody>${filas.map(d => `<tr>
+      <td><input type="checkbox" class="dc-chk" value="${d.persona_id}" checked></td>
+      <td>${escV28(d.nombre)}</td>
+      <td style="font-size:0.8rem;">${d.direccion ? escV28(d.direccion) : '<span style="color:var(--text-muted);">— sin dirección —</span>'}</td>
+      <td>${d.items.length}</td>
+      <td style="text-align:right;">${formatoMoneda(d.total)}</td>
+      <td><button type="button" class="btnSecundario" onclick="dcGenerarPdf(['${d.persona_id}'])">PDF</button></td>
+    </tr>`).join('')}</tbody></table></div>`;
 }
 
-function construirHtmlDeclaracion(d) {
-  const iglesia = escV28(document.getElementById('dcIglesiaNombre').value || DC_IGLESIA_POR_DEFECTO);
-  const dirIglesia = escV28(document.getElementById('dcIglesiaDireccion').value || '');
-  const hoy = formatoFecha(new Date().toISOString().slice(0, 10));
-  const celda = 'padding:6px 8px; border-bottom:1px solid #ccc; font-size:13px;';
-  return `
-  <div id="areaDeclaracion" style="font-family: Georgia, 'Times New Roman', serif; color:#111; padding:8px 4px;">
-    <div style="text-align:center; margin-bottom:18px;">
-      ${logoIglesiaHtml(70)}
-      <div style="font-size:20px; font-weight:bold;">${iglesia}</div>
-      ${dirIglesia ? `<div style="font-size:13px; color:#444;">${dirIglesia}</div>` : ''}
-      <div style="font-size:16px; margin-top:12px; letter-spacing:0.04em;">DECLARACIÓN ANUAL DE CONTRIBUCIONES ${dcAnioActual}</div>
-    </div>
-    <div style="font-size:14px; margin-bottom:14px;">
-      <div><strong>Donante:</strong> ${escV28(d.nombre)}</div>
-      ${d.direccion ? `<div><strong>Dirección:</strong> ${escV28(d.direccion)}</div>` : ''}
-      <div><strong>Fecha de emisión:</strong> ${hoy}</div>
-    </div>
-    <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
-      <thead><tr style="text-align:left; background:#f0f0f0;">
-        <th style="${celda}">Fecha</th><th style="${celda}">Concepto</th><th style="${celda}">Método</th><th style="${celda}">Ref.</th><th style="${celda} text-align:right;">Monto</th>
-      </tr></thead>
-      <tbody>
-        ${d.items.map(i => `<tr><td style="${celda}">${formatoFecha(i.fecha)}</td><td style="${celda}">${escV28(i.tipo)}</td><td style="${celda}">${escV28(i.metodo)}</td><td style="${celda}">${escV28(i.ref)}</td><td style="${celda} text-align:right;">${formatoMoneda(i.monto)}</td></tr>`).join('')}
-        <tr><td colspan="4" style="${celda} text-align:right; font-weight:bold;">Total ${dcAnioActual}</td><td style="${celda} text-align:right; font-weight:bold;">${formatoMoneda(d.total)}</td></tr>
-      </tbody>
-    </table>
-    <p style="font-size:13px; line-height:1.5;">Certificamos que las contribuciones anteriores fueron recibidas por ${iglesia} durante el año ${dcAnioActual}. No se proporcionaron bienes ni servicios a cambio de estas contribuciones, salvo beneficios religiosos intangibles.</p>
-    <div style="margin-top:40px; font-size:13px;">______________________________<br>Firma autorizada</div>
-  </div>`;
+// ── Configuración: texto de la carta (solo administrador) ──
+let cartaTextos = { es: '', en: '' }, cartaIdiomaActual = 'es';
+function cartaCargar(d) {
+  d = d || {};
+  dcCfg = d;
+  const bloque = document.getElementById('cfgCartaBloque');
+  if (bloque) bloque.style.display = puede('gestionarConfig') ? '' : 'none';
+  cartaTextos = { es: d.carta_es || DC_CARTA_ES, en: d.carta_en || DC_CARTA_EN };
+  cartaIdiomaActual = d.carta_idioma === 'en' ? 'en' : 'es';
+  document.getElementById('cartaIdioma').value = cartaIdiomaActual;
+  document.getElementById('cartaTexto').value = cartaTextos[cartaIdiomaActual];
+  document.getElementById('cartaLogo').value = d.carta_logo || (d.logo ? 'real' : 'generico');
+  document.getElementById('cartaMembrete').checked = d.carta_membrete !== false;
+  document.getElementById('cartaMargen').value = d.carta_margen == null ? 76 : d.carta_margen;
 }
-
-function abrirDeclaracion(personaId) {
-  const d = cacheDeclaraciones.find(x => x.persona_id === personaId);
-  if (!d) return;
-  document.getElementById('declaracionContenido').innerHTML = construirHtmlDeclaracion(d);
-  document.getElementById('modalDeclaracion').classList.add('abierto');
+function cartaCambiarIdioma() {
+  cartaTextos[cartaIdiomaActual] = document.getElementById('cartaTexto').value;
+  cartaIdiomaActual = document.getElementById('cartaIdioma').value === 'en' ? 'en' : 'es';
+  document.getElementById('cartaTexto').value = cartaTextos[cartaIdiomaActual];
 }
-
-function cerrarModalDeclaracion() { document.getElementById('modalDeclaracion').classList.remove('abierto'); }
-
-function imprimirDeclaracion() {
-  const host = document.createElement('div');
-  host.id = 'printHostDeclaracion';
-  host.innerHTML = document.getElementById('declaracionContenido').innerHTML;
-  document.body.appendChild(host);
-  document.body.classList.add('imprimiendoDeclaracion');
-  const limpiar = () => {
-    document.body.classList.remove('imprimiendoDeclaracion');
-    host.remove();
-    window.removeEventListener('afterprint', limpiar);
+async function cartaGuardar() {
+  cartaTextos[cartaIdiomaActual] = document.getElementById('cartaTexto').value;
+  const fila = {
+    id: 1, carta_idioma: cartaIdiomaActual, carta_es: cartaTextos.es, carta_en: cartaTextos.en,
+    carta_logo: document.getElementById('cartaLogo').value, carta_membrete: document.getElementById('cartaMembrete').checked,
+    carta_margen: Number(document.getElementById('cartaMargen').value) || 76, actualizado_en: new Date().toISOString(),
   };
-  window.addEventListener('afterprint', limpiar);
-  window.print();
+  const est = document.getElementById('cartaEstado');
+  const { error } = await sbCall(sb.from('config_iglesia').upsert(fila, { onConflict: 'id' }));
+  if (error) { est.textContent = 'No se pudo guardar: ' + error.message; return; }
+  est.textContent = 'Carta guardada ✓';
+  dcCfg = { ...dcCfg, ...fila };
+}
+async function cartaRestablecer() {
+  const nom = cartaIdiomaActual === 'en' ? 'English' : 'Español';
+  if (!(await confirmar(`¿Restablecer el texto original de la carta en ${nom}? Se pierde lo que escribiste en ese idioma.`))) return;
+  cartaTextos[cartaIdiomaActual] = cartaIdiomaActual === 'en' ? DC_CARTA_EN : DC_CARTA_ES;
+  document.getElementById('cartaTexto').value = cartaTextos[cartaIdiomaActual];
+  document.getElementById('cartaEstado').textContent = 'Texto original puesto. Presiona Guardar carta para aplicarlo.';
+}
+async function cartaVistaPrevia() {
+  try { await pdfCargarLibs(); } catch (e) { alert('No se pudo cargar la librería de PDF.'); return; }
+  const g = id => document.getElementById(id).value.trim();
+  const logo = cfgLogoNuevo !== undefined ? cfgLogoNuevo : (dcCfg.logo || '');
+  const cfg = { ...dcCfg, nombre: g('cfgNombre'), direccion: g('cfgDireccion'), telefono: g('cfgTelefono'), correo: g('cfgCorreo'),
+    pastor: g('cfgPastor'), tesorero: g('cfgTesorero'), ein: g('cfgEin'), logo, carta_idioma: cartaIdiomaActual };
+  const texto = document.getElementById('cartaTexto').value;
+  const anio = new Date().getFullYear() - 1;
+  const ejemplo = { nombre: 'Nombre de Ejemplo', direccion: '123 Calle Ejemplo, Ciudad, ST 00000', total: 1650,
+    items: [{ tipo: 'Diezmo', monto: 1200 }, { tipo: 'Donación', monto: 300 }, { tipo: 'Campaña: Ejemplo', monto: 150 }] };
+  const op = { mes: 1, logo: document.getElementById('cartaLogo').value, membrete: document.getElementById('cartaMembrete').checked,
+    margen: Number(document.getElementById('cartaMargen').value) || 76 };
+  const r = dcPdfCarta([ejemplo], anio, op, cfg, texto);
+  r.doc.save('Vista previa - ' + r.nombre + '.pdf');
 }
 
 function exportarDeclaracionesCSV() {
@@ -4285,10 +4607,12 @@ async function cfgCargar() {
   document.getElementById('cfgTelefono').value = d.telefono || '';
   document.getElementById('cfgCorreo').value = d.correo || '';
   document.getElementById('cfgPastor').value = d.pastor || '';
+  document.getElementById('cfgTesorero').value = d.tesorero || '';
   document.getElementById('cfgEin').value = d.ein || '';
   document.getElementById('cfgMesFiscal').value = String(d.mes_inicio_fiscal || 1);
   cfgLogoNuevo = undefined;
   cfgLogoPintar(d.logo || '');
+  cartaCargar(d);
 }
 
 // Logo: se reduce a máx. 300 px de alto y se guarda como imagen incrustada (sin bucket aparte).
@@ -4334,7 +4658,7 @@ async function cfgGuardar(evt) {
   const v = id => document.getElementById(id).value.trim() || null;
   const fila = {
     id: 1, nombre: v('cfgNombre'), direccion: v('cfgDireccion'), telefono: v('cfgTelefono'),
-    correo: v('cfgCorreo'), pastor: v('cfgPastor'), ein: v('cfgEin'),
+    correo: v('cfgCorreo'), pastor: v('cfgPastor'), tesorero: v('cfgTesorero'), ein: v('cfgEin'),
     mes_inicio_fiscal: Number(document.getElementById('cfgMesFiscal').value) || 1,
     actualizado_en: new Date().toISOString(),
   };
