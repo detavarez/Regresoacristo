@@ -105,7 +105,6 @@
         <div class=\"segLista\">
           <button type=\"button\" class=\"segItem\" id=\"segAbrMetodo\"><span>Método de acceso</span><b id=\"segResMetodo\"></b></button>
           <button type=\"button\" class=\"segItem\" id=\"segAbrPin\"><span>PIN</span><b id=\"segPinEstado\"></b></button>
-          <button type=\"button\" class=\"segItem\" id=\"segBioBtn\"><span>Huella o rostro</span><b id=\"segBioEstado\"></b></button>
           <button type=\"button\" class=\"segItem\" id=\"segAbrClave\"><span>Contraseña</span><b>Cambiar</b></button>
           <button type=\"button\" class=\"segItem\" id=\"segTemaBtn\"><span>Tema</span><b id=\"segTemaTxt\"></b></button>
         </div>
@@ -126,6 +125,7 @@
           <div class="segSub">Cómo quieres entrar cada vez.</div>
           <select id="segSelMetodo" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(128,128,128,.45);background:transparent;color:inherit"></select>
           <button class="segBtn" id="segMetodoOk" type="button">Guardar</button>
+          <button class="segBtn2" id="segBioQuitar" type="button" style="display:none">Quitar la huella o rostro de este teléfono</button>
         </div>
         <div id="segPopPin" class="segPanelP">
           <h1>PIN de 4 números</h1>
@@ -157,7 +157,7 @@
     $('segMetodoOk').onclick = guardarMetodo;
     $('segPopCerrar').onclick = cerrarPop;
     $('segTemaBtn').onclick = alternarTema;
-    $('segBioBtn').onclick = () => (bioAqui() ? bioQuitar() : bioActivarYFijar());
+    $('segBioQuitar').onclick = async () => { await bioQuitar(); cerrarPop(); };
     $('segGuardarPin').onclick = guardarPin;
     $('segQuitarPin').onclick = quitarPin;
     $('segCambiarClave').onclick = cambiarClave;
@@ -339,21 +339,13 @@
   }
 
   // ───────── Biometría ─────────
-  // Un solo paso: al activar la huella o el rostro también queda como método predeterminado.
-  async function bioActivarYFijar() {
-    const ok = await bioActivar(false);
-    if (!ok) return;
-    const r = await sbCall(sb.rpc('ca_metodo_fijar', { m: 'bio' }));
-    if (!r.error) { est.metodo_defecto = 'bio'; est.preguntado = true; }
-    pintarPerfil();
-    msg('segPerfilMsg', r.error ? 'Activada, pero no se pudo dejar como predeterminada: ' + r.error.message : 'Listo: huella o rostro activada y es tu método predeterminado.', !r.error);
-  }
-  async function bioActivar(silenciosoPrimera) {
+  async function bioActivar(silenciosoPrimera, idMsg) {
+    idMsg = idMsg || 'segPerfilMsg';
     const u = usuario();
     if (!u) return false;
-    if (!bioSoportada()) { msg('segPerfilMsg', 'Este navegador no permite huella o rostro.'); return false; }
+    if (!bioSoportada()) { msg(idMsg, 'Este navegador no permite huella o rostro.'); return false; }
     try {
-      if (!(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())) { if (!silenciosoPrimera) msg('segPerfilMsg', 'Este dispositivo no tiene huella o rostro configurados.'); return false; }
+      if (!(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())) { if (!silenciosoPrimera) msg(idMsg, 'Este dispositivo no tiene huella o rostro configurados.'); return false; }
       const cred = await navigator.credentials.create({ publicKey: {
         challenge: crypto.getRandomValues(new Uint8Array(32)),
         rp: { name: cfg.nombreApp, id: location.hostname },
@@ -363,10 +355,10 @@
         timeout: 60000, attestation: 'none',
       } });
       localStorage.setItem('ca_bio_' + u.id, b64(cred.rawId));
-      if (!silenciosoPrimera) { msg('segPerfilMsg', 'Listo: ya puedes entrar con huella o rostro en este dispositivo.', true); pintarPerfil(); }
+      if (!silenciosoPrimera) { msg(idMsg, 'Listo: ya puedes entrar con huella o rostro en este dispositivo.', true); pintarPerfil(); }
       return true;
     } catch (e) {
-      if (!silenciosoPrimera) msg('segPerfilMsg', 'No se pudo activar: ' + (e && e.name === 'NotAllowedError' ? 'cancelado o sin permiso.' : (e.message || 'error')));
+      if (!silenciosoPrimera) msg(idMsg, 'No se pudo activar: ' + (e && e.name === 'NotAllowedError' ? 'cancelado o sin permiso.' : (e.message || 'error')));
       return false;
     }
   }
@@ -399,8 +391,7 @@
     $('segResMetodo').textContent = ETIQ_METODO[est.metodo_defecto || 'clave'] || '';
     $('segPinEstado').textContent = est.tiene_pin ? 'Activado · Cambiar' : 'Crear';
     $('segQuitarPin').style.display = est.tiene_pin ? '' : 'none';
-    $('segBioEstado').textContent = !bioSoportada() ? 'No disponible' : (bioAqui() ? 'Activada · Desactivar' : 'Activar');
-    $('segBioBtn').disabled = !bioSoportada();
+    $('segBioQuitar').style.display = bioAqui() ? '' : 'none';
     const sel = $('segSelMetodo');
     sel.innerHTML = `<option value="clave">Email y contraseña</option><option value="pin">PIN de 4 números</option><option value="bio">Huella o rostro (este dispositivo)</option>`;
     sel.value = est.metodo_defecto || 'clave';
@@ -437,11 +428,18 @@
   async function guardarMetodo() {
     const m = $('segSelMetodo').value;
     if (m === 'pin' && !est.tiene_pin) { msg('segPerfilMsg', 'Primero guarda un PIN.'); $('segSelMetodo').value = est.metodo_defecto || 'clave'; return; }
-    if (m === 'bio' && !bioAqui()) { msg('segPerfilMsg', 'Primero activa la huella o rostro en este dispositivo.'); $('segSelMetodo').value = est.metodo_defecto || 'clave'; return; }
+    // Un solo paso: si elige huella o rostro y aún no está activada en este teléfono, se activa aquí mismo y queda como predeterminada.
+    let activada = false;
+    if (m === 'bio' && !bioAqui()) {
+      if (!(await bioActivar(true, 'segPopMsg'))) { if (!$('segPopMsg').textContent) msg('segPopMsg', 'No se pudo activar la huella o rostro. Revisa que tengas una configurada en el teléfono.'); $('segSelMetodo').value = est.metodo_defecto || 'clave'; return; }
+      activada = true;
+    }
     const r = await sbCall(sb.rpc('ca_metodo_fijar', { m }));
-    if (r.error) { msg('segPerfilMsg', 'No se pudo guardar: ' + r.error.message); return; }
+    if (r.error) { msg('segPopMsg', 'No se pudo guardar: ' + r.error.message); return; }
     est.metodo_defecto = m; est.preguntado = true;
-    msg('segPerfilMsg', 'Método predeterminado guardado.', true);
+    cerrarPop();
+    pintarPerfil();
+    msg('segPerfilMsg', activada ? 'Listo: huella o rostro activada y es tu método predeterminado.' : 'Método predeterminado guardado.', true);
   }
   async function guardarPin() {
     const a = $('segPin1').value.trim(), b = $('segPin2').value.trim();
