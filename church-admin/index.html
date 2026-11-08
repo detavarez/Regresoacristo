@@ -429,6 +429,19 @@
 
   /* ── Tarjetas visuales estilo A006 (Ver-031) ─────────────────── */
   .admOculto { display: none !important; }
+  details.filtrosDet { flex: 1 1 100%; margin: 2px 0 6px; }
+  details.filtrosDet > summary { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; list-style: none; user-select: none; }
+  details.filtrosDet > summary::-webkit-details-marker { display: none; }
+  details.filtrosDet > summary::after { content: '▾'; font-size: 0.8rem; }
+  details.filtrosDet[open] > summary::after { content: '▴'; }
+  .filtrosCont { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+  label.permFila, label.interruptor { display: flex !important; }
+  .pista { display: block; }
+  .formGrid > * { min-width: 0; }
+  select, input, textarea { max-width: 100%; }
+  div[style*="justify-content:space-between"] > span:first-child { min-width: 0; overflow-wrap: anywhere; flex: 1 1 150px; }
+  .defRow { display: grid; grid-template-columns: 110px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  @media (max-width: 520px) { .defRow { grid-template-columns: minmax(0, 1fr); } }
   .grupoTitulo { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 700; margin: 0 0 10px; }
   .btnGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; margin-bottom: 26px; }
   .btnCard {
@@ -718,7 +731,7 @@
 
 <!-- ═══════════════ SHELL PRINCIPAL ═══════════════ -->
 <div id="pantallaApp">
-  <script>NAV.montar({ portal: false, titulo: 'Church Admin', sub: '<span id="versionTopbar"></span> · <span id="nombreUsuarioTop"></span>',
+  <script>NAV.montar({ portal: false, perfil: true, titulo: 'Church Admin', sub: '<span id="versionTopbar"></span> · <span id="nombreUsuarioTop"></span>',
     extras: [{ id: 'btnInstalar', html: '📲', titulo: 'Instalar en el celular', onclick: 'instalarApp()', oculto: true }, { html: '🔍', titulo: 'Búsqueda global', onclick: 'abrirBusquedaGlobal()' }] });</script>
 
   <div class="contenido">
@@ -897,7 +910,7 @@
           <button class="btnSecundario" id="blVolver" style="display:none;" onclick="blVolverLista()">← Bolsas</button>
           <input type="text" id="blBuscar" placeholder="Buscar por nombre…" oninput="blRender()" style="display:none;">
           <button class="btnAccion" id="blBtnAporte" style="display:none;" onclick="blAbrir(null)">+ Aporte</button>
-          <button class="btnSecundario" onclick="blAbrirAdmin()">Administrar bolsas</button>
+          <button class="btnSecundario" onclick="blAbrirAdmin()">Administrar cuentas aparte</button>
           <button class="btnSecundario" onclick="deshacerUltimo()">Deshacer</button>
         </div>
         <div class="grid-resumen" id="resumenBolsas" style="margin-bottom:16px;"></div>
@@ -969,8 +982,10 @@
       <!-- Sub-vista: Reportes -->
       <div id="subvistaFinReportes" style="display:none;">
         <div class="barraAcciones" style="align-items:center;">
+          <details class="filtrosDet"><summary>Fechas</summary><div class="filtrosCont">
           <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="repDesde" onchange="cargarReporteResultados()"></label>
           <label style="font-size:0.8rem; color: var(--text-muted);">Hasta <input type="date" id="repHasta" onchange="cargarReporteResultados()"></label>
+          </div></details>
           <select id="repPeriodo" onchange="aplicarPeriodoReporte()"></select>
           <select id="repAtajo" style="display:none;" onchange="aplicarAtajoReporte()">
             <option value="">Atajos…</option>
@@ -1096,11 +1111,13 @@
       <div id="subvistaFinAuditoria" style="display:none;">
         <div class="barraAcciones" style="align-items:center;">
           <input type="text" id="auBuscar" placeholder="Buscar descripción…" oninput="auRender()">
+          <details class="filtrosDet"><summary>Filtros y fechas</summary><div class="filtrosCont">
           <select id="auModulo" onchange="auRender()"><option value="">Todos los módulos</option></select>
           <select id="auAccion" onchange="auRender()"><option value="">Todas las acciones</option><option value="crear">Crear</option><option value="editar">Editar</option><option value="eliminar">Eliminar</option></select>
           <select id="auUsuario" onchange="auRender()"><option value="">Todos los usuarios</option></select>
           <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="auDesde" onchange="cargarAuditoria()"></label>
           <label style="font-size:0.8rem; color: var(--text-muted);">Hasta <input type="date" id="auHasta" onchange="cargarAuditoria()"></label>
+          </div></details>
           <button class="btnSecundario" onclick="auExportarCSV()">⬇ Exportar</button>
         </div>
         <div id="listaAuditoria"><div class="estadoCargando">Cargando…</div></div>
@@ -1129,9 +1146,11 @@
       <div id="subvistaFinTransacciones" style="display:none;">
         <div class="barraAcciones" style="align-items:center;">
           <input type="text" id="trBuscar" placeholder="Buscar descripción, categoría o referencia…" oninput="trRender()">
+          <details class="filtrosDet"><summary>Origen y fechas</summary><div class="filtrosCont">
           <select id="trOrigen" onchange="trRender()"><option value="">Todos los orígenes</option></select>
           <label style="font-size:0.8rem; color: var(--text-muted);">Desde <input type="date" id="trDesde" onchange="trCargar()"></label>
           <label style="font-size:0.8rem; color: var(--text-muted);">Hasta <input type="date" id="trHasta" onchange="trCargar()"></label>
+          </div></details>
           <button class="btnSecundario" onclick="trExportarCSV()">⬇ Exportar</button>
         </div>
         <div class="grid-resumen" id="trResumen" style="margin-bottom:16px;"></div>
@@ -2099,7 +2118,7 @@
       </div>
       <div class="formAcciones">
         <button type="button" class="btnPeligro" onclick="paRechazar()">Rechazar</button>
-        <button type="button" class="btnSecundario" onclick="psAbrir()">Pagos separados / Bolsas</button>
+        <button type="button" class="btnSecundario" onclick="psAbrir()">Pagos separados / Cuentas Aparte</button>
         <button type="button" class="btnSecundario" onclick="paCerrar()">Cancelar</button>
         <button type="submit" class="btnPrincipal" style="width:auto;">Aprobar</button>
       </div>
@@ -2154,7 +2173,7 @@
       </div>
       <div class="formAcciones">
         <button type="button" class="btnPeligro" onclick="rmRechazar()">Rechazar</button>
-        <button type="button" class="btnSecundario" id="rmBtnSep" onclick="psAbrirMovil()">Pagos separados / Bolsas</button>
+        <button type="button" class="btnSecundario" id="rmBtnSep" onclick="psAbrirMovil()">Pagos separados / Cuentas Aparte</button>
         <button type="button" class="btnSecundario" onclick="rmCerrar()">Cancelar</button>
         <button type="submit" class="btnPrincipal" style="width:auto;">Aprobar</button>
       </div>
@@ -2179,7 +2198,7 @@
 <!-- ═══════════════ MODAL: Pagos separados (un pago, varios propósitos) ═══════════════ -->
 <div class="modalOverlay" id="modalPorAprobarSep">
   <div class="modalCaja">
-    <h3>Pagos separados / Bolsas</h3>
+    <h3>Pagos separados / Cuentas Aparte</h3>
     <form id="formPorAprobarSep" onsubmit="return psAprobar(event)">
       <div class="formGrid">
         <div class="full"><label>Remitente</label><div id="psRemitenteTxt" style="font-weight:600; color:var(--navy);"></div></div>
@@ -2291,11 +2310,11 @@
 <!-- ═══════════════ MODAL: Administrar bolsas ═══════════════ -->
 <div class="modalOverlay" id="modalBolsasAdmin">
   <div class="modalCaja">
-    <h3>Administrar bolsas</h3>
+    <h3>Administrar cuentas aparte</h3>
     <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:10px;">Crea las bolsas que necesites. Las archivadas dejan de ofrecerse para aportes nuevos, pero su historial se conserva.</div>
     <div id="blAdminLista"></div>
     <div class="formGrid" style="margin-top:12px;">
-      <div class="full"><label for="blNuevoNombre">Nueva bolsa</label><input type="text" id="blNuevoNombre" maxlength="60" placeholder="Nombre de la bolsa"></div>
+      <div class="full"><label for="blNuevoNombre">Nueva cuenta aparte</label><input type="text" id="blNuevoNombre" maxlength="60" placeholder="Nombre de la bolsa"></div>
     </div>
     <div class="formAcciones">
       <button type="button" class="btnSecundario" onclick="blCerrarAdmin()">Cerrar</button>
@@ -2783,8 +2802,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-077';
-document.getElementById('versionTopbar').textContent = 'Ver-077';
+const APP_VERSION = 'church-admin Ver-078';
+document.getElementById('versionTopbar').textContent = 'Ver-078';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -3012,7 +3031,7 @@ const FIN_TARJETAS = [
     { tab: 'bancos', icono: '🏧', etiqueta: 'Cuentas Bancarias', sub: 'Bancos y saldos', color: 'c-teal', tabla: 'bancos' },
     { tab: 'fondos', icono: '💰', etiqueta: 'Fondos', sub: 'Balance por fondo ministerial', color: 'c-gold', tabla: 'fondos' },
     { tab: 'transferencias', icono: '🔄', etiqueta: 'Transferir Fondos', sub: 'Mover $ entre fondos', color: 'c-teal', tabla: 'transferencias' },
-    { tab: 'bolsas', icono: '🗂️', etiqueta: 'Bolsas (aparte)', sub: 'Renta y otras, fuera de las finanzas', color: 'c-gold' },
+    { tab: 'bolsas', icono: '🗂️', etiqueta: 'Cuentas Aparte', sub: 'Renta y otras, fuera de las finanzas', color: 'c-gold' },
     { tab: 'conciliacion', icono: '⚖️', etiqueta: 'Conciliación Bancaria', sub: 'Contra el estado de cuenta', color: 'c-teal', tabla: 'reconciliaciones' },
   ]},
   { grupo: 'Planificación', items: [
@@ -3044,6 +3063,7 @@ function finOcultarSubvistas() {
 }
 
 function finMostrarInicio() {
+  finTabActual = null;
   finOcultarSubvistas();
   document.getElementById('finanzasHome').style.display = 'block';
   document.getElementById('finTitulo').textContent = 'Finanzas';
@@ -3052,7 +3072,11 @@ function finMostrarInicio() {
   finCargarInicio();
 }
 
+let finTabActual = null;
 function finAbrirSubvista(tab) {
+  const HUBS = ['reportesHub', 'avanzadoHub'];
+  const desdeHub = HUBS.includes(finTabActual) && !HUBS.includes(tab) && document.getElementById('finanzasHome').style.display === 'none' ? finTabActual : null;
+  finTabActual = tab;
   document.getElementById('finanzasHome').style.display = 'none';
   const tarjeta = FIN_TARJETAS.flatMap(g => g.items).find(i => i.tab === tab);
   const filaHub = [...REPORTES_HUB, ...AVANZADO_HUB].find(r => r[0] === tab);
@@ -3060,10 +3084,12 @@ function finAbrirSubvista(tab) {
   document.getElementById('finanzasSubtitulo').textContent = '';
   cambiarSubtabFinanzas(tab);
   if (!history.state || history.state.ca !== 'sub') { try { history.pushState({ ca: 'sub' }, ''); } catch (e) { /* sin historial */ } }
+  if (desdeHub) navNivel(() => finAbrirSubvista(desdeHub));
   window.scrollTo(0, 0);
 }
 
 function finVolver() {
+  if (navNivelVolver()) return;
   if (document.getElementById('finanzasHome').style.display === 'none') {
     if (history.state && history.state.ca === 'sub') history.back();
     else finMostrarInicio();
@@ -5204,10 +5230,11 @@ function evdRenderLista() {
         <div class="metaLinea">${formatoFecha(e.fecha)} · Pagado ${formatoMoneda(e.total)} · Devuelto ${formatoMoneda(t.reemb)} · ${e.cerrado ? 'Cerrado' + (evdN(e.cierre_monto) > 0 ? ' (la iglesia cubrió ' + formatoMoneda(e.cierre_monto) + ')' : '') : 'Falta ' + formatoMoneda(t.falta)}</div></div></div>`;
     }).join('') : '<div class="estadoVacio">Aún no hay eventos con devolución. Toca "+ Nuevo evento".</div>');
 }
-function evdVolver() { evdAbierto = null; evdRenderLista(); }
-function evdAbrir(id) { evdAbierto = id; evdRenderDetalle(); window.scrollTo(0, 0); }
+function evdMostrarLista() { evdAbierto = null; evdRenderLista(); }
+function evdVolver() { if (!navNivelVolver()) evdMostrarLista(); }
+function evdAbrir(id) { evdAbierto = id; evdRenderDetalle(); navNivel(evdMostrarLista); window.scrollTo(0, 0); }
 function evdRenderDetalle() {
-  const e = evdLista.find(x => x.id === evdAbierto); if (!e) { evdVolver(); return; }
+  const e = evdLista.find(x => x.id === evdAbierto); if (!e) { evdMostrarLista(); return; }
   evdEl('evdNuevoBtn').style.display = 'none';
   const t = evdTot(e);
   const filas = t.ps.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(p => {
@@ -5297,8 +5324,9 @@ async function evdGuardarNuevo(ev) {
   if (e4) { await limpiar([['eventos_dev', ed.id], ['eventos', evn.id], ['transacciones', tr.id]]); btn.disabled = false; alert('No se pudieron guardar los participantes: ' + e4.message); return false; }
   btn.disabled = false;
   evdCerrarModal('modalEvd');
-  evdAbierto = ed.id;
+  evdAbierto = null;
   await evdCargar();
+  evdAbrir(ed.id);
   return false;
 }
 
@@ -7841,14 +7869,16 @@ function lfMontar(k) {
       <button type="button" class="btnSecundario" onclick="lfRango('${k}','anio')">Año</button>
       <button type="button" class="btnSecundario" onclick="lfRango('${k}','limpiar')">Limpiar</button>
     </div>
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px;">
+    ${cfg.buscador ? '' : `<div><input type="text" id="lfQ_${k}" placeholder="Buscar…" oninput="lfCambio('${k}')"></div>`}
+    <details class="filtrosDet"><summary>Fechas, año, orden y estado</summary>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px; margin-top:8px;">
       <div><label style="font-size:0.75rem;">Desde</label><input type="date" id="lfDesde_${k}" onchange="lfCambio('${k}')"></div>
       <div><label style="font-size:0.75rem;">Hasta</label><input type="date" id="lfHasta_${k}" onchange="lfCambio('${k}')"></div>
       <div><label style="font-size:0.75rem;">Año</label><select id="lfAnio_${k}" onchange="lfCambio('${k}')"><option value="">Todos</option>${anios.map(a => `<option value="${a}">${a}</option>`).join('')}</select></div>
       <div><label style="font-size:0.75rem;">Ordenar</label><select id="lfOrden_${k}" onchange="lfCambio('${k}')"><option value="fecha_desc">Fecha: reciente primero</option><option value="fecha_asc">Fecha: antigua primero</option><option value="monto_desc">Monto: mayor primero</option><option value="monto_asc">Monto: menor primero</option><option value="nombre_asc">Nombre A–Z</option></select></div>
       ${cfg.estados ? `<div><label style="font-size:0.75rem;">Estado</label><select id="lfEstado_${k}" onchange="lfCambio('${k}')"><option value="">Todos</option><option value="Pendiente">Pendiente</option><option value="Completado">Completado</option><option value="Cancelado">Cancelado</option></select></div>` : ''}
-      ${cfg.buscador ? '' : `<div><label style="font-size:0.75rem;">Buscar</label><input type="text" id="lfQ_${k}" placeholder="Buscar…" oninput="lfCambio('${k}')"></div>`}
     </div>
+    </details>
     `;
   cont.parentNode.insertBefore(barra, cont);
   const tot = document.createElement('div');
@@ -11022,10 +11052,11 @@ function admAbrir(k) {
   document.getElementById('admTitulo').textContent = it.etiqueta;
   cambiarSubtabAdmin(it.sub);
   document.querySelectorAll('#vistaAdministracion [data-adm]').forEach(el => el.classList.toggle('admOculto', el.dataset.adm !== k));
+  navNivel(admMostrarMenu);
   window.scrollTo(0, 0);
 }
 function admVolver() {
-  if (document.getElementById('admHub').style.display === 'none') admMostrarMenu();
+  if (document.getElementById('admHub').style.display === 'none') { if (!navNivelVolver()) admMostrarMenu(); }
   else mostrarDashboard();
 }
 
@@ -11313,7 +11344,7 @@ function renderDefaultsTx() {
     const d = defaultTx(t);
     const fondos = '<option value="">Sin predeterminado</option>' + cacheFondos.map(f => `<option value="${f.id}" ${d.fondo_id === f.id ? 'selected' : ''}>${escV28(f.nombre)}</option>`).join('');
     const cats = t === 'Gasto' ? '<option value="">Sin predeterminada</option>' + cacheCuentas.filter(c => c.tipo === 'Gasto').map(c => `<option value="${escV28(c.nombre)}" ${d.categoria === c.nombre ? 'selected' : ''}>${escV28(c.nombre)}</option>`).join('') : '';
-    return `<div style="display:grid; grid-template-columns:110px 1fr ${t === 'Gasto' ? '1fr' : ''}; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
+    return `<div class="defRow">
       <b style="font-size:0.88rem;">${t}</b>
       <select onchange="guardarDefaultTx('${t}', 'fondo_id', this.value)">${fondos}</select>
       ${t === 'Gasto' ? `<select onchange="guardarDefaultTx('${t}', 'categoria', this.value)">${cats}</select>` : ''}
@@ -11345,7 +11376,7 @@ function renderMetodosPago() {
     cont.innerHTML = filas.length ? filas.map(m => `
       <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px solid var(--border);">
         <span class="${m.activo ? '' : 'inactivo'}">${escV28(m.nombre)}</span>
-        <span style="display:flex; gap:6px;">
+        <span style="display:flex; gap:6px; flex-wrap:wrap;">
           <button class="btnSecundario ${m.activo ? 'btnOn' : 'btnOff'}" style="padding:4px 12px; font-size:0.78rem;" onclick="toggleMetodoPago('${m.id}', ${!m.activo})">${m.activo ? 'Activo' : 'Inactivo'}</button>
           <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="renombrarMetodoPago('${m.id}')">Editar</button>
           <button class="btnSecundario btnPeligro" style="padding:4px 12px; font-size:0.78rem;" onclick="quitarMetodoPago('${m.id}')">Eliminar</button>
@@ -11369,7 +11400,7 @@ async function cargarPaginasPortal() {
   document.getElementById('listaPaginasPortal').innerHTML = cachePortalPaginas.map(p => `
     <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px solid var(--border);">
       <span class="${p.activa ? '' : 'inactivo'}">${escV28(p.icono)} <b>${escV28(p.nombre)}</b> <small style="color:var(--text-muted)">${escV28(p.url)} · acceso: ${escV28(p.app)}${p.permiso ? '/' + escV28(p.permiso) : ''}</small></span>
-      <span style="display:flex; gap:6px;">
+      <span style="display:flex; gap:6px; flex-wrap:wrap;">
         <button class="btnSecundario ${p.activa ? 'btnOn' : 'btnOff'}" style="padding:4px 12px; font-size:0.78rem;" onclick="alternarPaginaPortal('${escV28(p.clave)}', ${!p.activa})">${p.activa ? 'Activa' : 'Oculta'}</button>
         <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="editarPaginaPortal('${escV28(p.clave)}')">Editar</button>
         <button class="btnSecundario btnPeligro" style="padding:4px 12px; font-size:0.78rem;" onclick="eliminarPaginaPortal('${escV28(p.clave)}')">Eliminar</button>
@@ -11442,9 +11473,9 @@ function renderCatalogoMinisterios() {
     return;
   }
   cont.innerHTML = cacheMinisterios.map(m => `
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px 10px; padding:10px 0; border-bottom:1px solid var(--border);">
       <span>${escV28(m.nombre)}</span>
-      <span style="display:flex; gap:6px;">
+      <span style="display:flex; gap:6px; flex-wrap:wrap;">
         <button class="btnSecundario ${m.activo ? 'btnOn' : 'btnOff'}" style="padding:4px 12px; font-size:0.78rem;" onclick="toggleActivoMinisterio('${m.id}', ${!m.activo})">${m.activo ? 'Activo' : 'Inactivo'}</button>
         <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="renombrarCatalogo('ministerios', '${m.id}')">Editar</button>
         <button class="btnSecundario btnPeligro" style="padding:4px 12px; font-size:0.78rem;" onclick="eliminarCatalogo('ministerios', '${m.id}')">Eliminar</button>
@@ -11459,9 +11490,9 @@ function renderCatalogoTiposServicio() {
     return;
   }
   cont.innerHTML = cacheTiposServicio.map(t => `
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px 10px; padding:10px 0; border-bottom:1px solid var(--border);">
       <span>${escV28(t.nombre)}</span>
-      <span style="display:flex; gap:6px;">
+      <span style="display:flex; gap:6px; flex-wrap:wrap;">
         <button class="btnSecundario ${t.activo ? 'btnOn' : 'btnOff'}" style="padding:4px 12px; font-size:0.78rem;" onclick="toggleActivoTipoServicio('${t.id}', ${!t.activo})">${t.activo ? 'Activo' : 'Inactivo'}</button>
         <button class="btnSecundario" style="padding:4px 12px; font-size:0.78rem;" onclick="renombrarCatalogo('tipos_servicio', '${t.id}')">Editar</button>
         <button class="btnSecundario btnPeligro" style="padding:4px 12px; font-size:0.78rem;" onclick="eliminarCatalogo('tipos_servicio', '${t.id}')">Eliminar</button>
@@ -11858,6 +11889,7 @@ async function actualizarResumenPastoral() {
   const pushPendientes = [];
   const ordenModales = [];
   const cerradosPorAtras = new Set();
+  const niveles = [];
 
   try { history.replaceState({ ca: 'base' }, ''); } catch (e) { return; }
 
@@ -11877,7 +11909,26 @@ async function actualizarResumenPastoral() {
     };
   });
 
+  // Niveles internos de un módulo (tarjeta de Administración, detalle de un evento, reporte abierto desde un menú…):
+  // cada uno agrega una entrada; "atrás" regresa al nivel anterior, no al menú principal.
+  window.navNivel = function (volverFn) { niveles.push(volverFn); empujar({ ca: 'nivel' }); };
+  window.navNivelVolver = function () {
+    if (!niveles.length || backPendiente > 0) return false;
+    const fn = niveles.pop();
+    backPendiente++;
+    history.back();
+    fn();
+    return true;
+  };
+
   window.mostrarDashboard = function () {
+    if (niveles.length && backPendiente === 0) {
+      const n = niveles.length; niveles.length = 0;
+      backPendiente++;
+      history.go(-(n + 1));
+      mostrarDashboardOriginal();
+      return;
+    }
     if (history.state && history.state.ca === 'vista' && backPendiente === 0) {
       backPendiente++;
       history.back();
@@ -11921,6 +11972,8 @@ async function actualizarResumenPastoral() {
       document.getElementById(id).classList.remove('abierto');
       return;
     }
+    // 1a) un nivel interno abierto: "atrás" regresa al nivel anterior
+    if (niveles.length) { const fn = niveles.pop(); fn(); return; }
     // 1b) dentro de una bolsa: "atrás" vuelve a la lista de Bolsas (no a Finanzas)
     if (typeof blBolsaAbierta !== 'undefined' && blBolsaAbierta && document.getElementById('subvistaFinBolsas').style.display !== 'none') {
       blVolverLista();
@@ -11939,10 +11992,13 @@ async function actualizarResumenPastoral() {
 
 // ── Auto-login si ya hay sesión guardada ─────────────────────────────────
 (async function iniciar() {
+  const loginEl = document.getElementById('pantallaLogin');
+  loginEl.style.visibility = 'hidden'; // no mostrar el formulario ni la app hasta saber si hay sesión o bloqueo
   const resultado = await cargarSesion();
+  loginEl.style.visibility = '';
   if (resultado.ok) {
+    await SEG.sesionIniciada({ nueva: false });
     mostrarApp();
-    SEG.sesionIniciada({ nueva: false });
   }
 })();
 SEG.init({ cerrarSesion: manejarLogout, nombreApp: 'Church Admin' });

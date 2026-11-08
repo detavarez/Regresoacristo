@@ -13,14 +13,18 @@
   // Celular: las tablas se muestran como tarjetas (cada fila, un bloque con "Columna: valor") para no tener que mover la pantalla a la derecha.
   (function tablasMovil() {
     const css = `@media (max-width: 720px) {
+      html, body { max-width: 100%; overflow-x: hidden; }
       table.apilada { display: block; width: 100%; border: 0; }
       table.apilada thead { display: none; }
       table.apilada tbody, table.apilada tfoot { display: block; }
-      table.apilada tr { display: block; border: 1px solid rgba(128,128,128,0.35); border-radius: 10px; margin: 0 0 10px; padding: 6px 10px; }
-      table.apilada td { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 4px 0 !important; border: 0 !important; text-align: right !important; white-space: normal !important; overflow-wrap: anywhere; }
-      table.apilada td[data-label]::before { content: attr(data-label); flex: none; max-width: 45%; font-weight: 600; font-size: 0.78rem; color: var(--text-muted, #667); text-align: left; }
-      table.apilada td:empty { display: none; }
-      table.apilada td > button, table.apilada td > a { white-space: normal; }
+      table.apilada tr { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; border: 1px solid rgba(128,128,128,0.35); border-radius: 10px; margin: 0 0 8px; padding: 8px 10px; }
+      table.apilada td { display: block; width: auto !important; max-width: none !important; min-width: 0; padding: 1px 0 !important; border: 0 !important; text-align: left !important; white-space: normal !important; overflow-wrap: anywhere; }
+      table.apilada td.ancha, table.apilada td.acciones { grid-column: 1 / -1; }
+      table.apilada td.vacia { display: none; }
+      table.apilada td.cabF { grid-column: 1; grid-row: 1; }
+      table.apilada td.cabM { grid-column: 2; grid-row: 1; text-align: right !important; font-weight: 700; }
+      table.apilada td[data-label]::before { content: attr(data-label); display: block; font-weight: 600; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted, #667); }
+      table.apilada td > button, table.apilada td > a { white-space: normal; margin-top: 2px; }
     }
     @media (max-width: 520px) { .evdFila { grid-template-columns: 1fr !important; } }`;
     const st = document.createElement('style'); st.textContent = css; (document.head || document.documentElement).appendChild(st);
@@ -33,7 +37,16 @@
       t.querySelectorAll('tbody tr, tfoot tr').forEach(tr => {
         const tds = [...tr.children].filter(c => c.tagName === 'TD');
         if (tds.length !== ths.length) return;
-        tds.forEach((td, i) => { if (ths[i]) td.setAttribute('data-label', ths[i]); });
+        tds.forEach((td, i) => {
+          if (ths[i]) td.setAttribute('data-label', ths[i]);
+          const txt = td.textContent.trim();
+          if (!txt && !td.querySelector('button, a, input, select')) td.classList.add('vacia');
+          else if (txt === '—' || txt === '-') td.classList.add('vacia');
+          if (i === 0 && /^(fecha|date)/i.test(ths[0] || '')) td.classList.add('cabF');
+          if (i === tds.length - 1 && /^[-+(]?\$?[\d,]+(\.\d+)?\)?$/.test(txt.replace(/\s/g, '')) && /\$/.test(txt) && !td.querySelector('button, a')) td.classList.add('cabM');
+          if (td.querySelector('button, a')) td.classList.add('acciones');
+          else if (txt.length > 24) td.classList.add('ancha');
+        });
       });
     }
     let pend = false;
