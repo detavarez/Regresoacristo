@@ -247,6 +247,19 @@
     try { if (history.state && history.state.ca === 'lock') history.pushState({ ca: 'base' }, ''); } catch (e) { /* sin historial */ }
     marcarActividad();
     if (cfg.alDesbloquear) cfg.alDesbloquear();
+    ofrecerReactivarBio();
+  }
+
+  // Si su método preferido es huella o rostro pero se borró en este dispositivo (por ejemplo al borrar los datos del navegador), se ofrece volver a activarlo.
+  async function ofrecerReactivarBio() {
+    try {
+      if (sessionStorage.getItem('ca_bio_ofrecida') === '1') return;
+      if (!usuario() || est.metodo_defecto !== 'bio' || bioAqui() || !bioSoportada()) return;
+      sessionStorage.setItem('ca_bio_ofrecida', '1');
+      if (!(await confirmar('Tu método preferido es huella o rostro, pero se borró en este teléfono. ¿Quieres activarlo otra vez ahora?'))) return;
+      const ok = await bioActivar(true);
+      alert(ok ? 'Listo: ya puedes entrar con huella o rostro en este teléfono.' : 'No se pudo activar. Puedes intentarlo desde el botón de perfil.');
+    } catch (e) { /* sin diálogo disponible */ }
   }
 
   // Pantalla 1: muestra un botón para el método predeterminado; nada se inicia solo.
@@ -514,7 +527,7 @@
       const last = Number(localStorage.getItem(LS_ACT)) || Date.now();
       const vencida = minutos > 0 && Date.now() - last > minutos * 60000;
       if (localStorage.getItem(LS_BLOQ) === '1' || vencida) bloquear();
-      else marcarActividad();
+      else { marcarActividad(); ofrecerReactivarBio(); }
     },
     bloquear,
     abrirPerfil,
