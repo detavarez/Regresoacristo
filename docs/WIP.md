@@ -6,3 +6,10 @@
 5. Decisiones abiertas: nuevo nombre para "Bolsas (aparte)" (opciones: Custodia / Fondos Aparte / Dinero de Terceros / Cuentas Aparte / Ingresos Aparte); ¿saldo inicial por fondo (Fondo General, Misiones…)? hoy los fondos suman todo lo registrado.
 6. Restos A006 pendientes: Inicio (sin definir). Hecho: Configuración (logo en comprobantes/declaraciones; mes de inicio del año fiscal, aplicado al botón "Año" de las listas; columnas `logo`, `mes_inicio_fiscal` en `config_iglesia`). Hechos: filtros en Ventas/Eventos/Otros Ingresos/Pagos de promesa; filtro Estado + total Pendientes (Gastos y demás); Recurrentes (buscar/estado/tipo); Auditoría (Hasta, Usuario); Aprobar todo (solo pagos listos de CashApp/Zelle; los del móvil se aprueban uno por uno). Cierre de periodo ya tenía selector de año.
 7. Cuando termine el trabajo histórico: borrar carpeta `/historico/` (nada depende de ella). Al terminar el proyecto David revoca su token de GitHub.
+
+## Actualización 2026-11-07
+- Probar con datos reales: Declaraciones PDF (falta EIN/Tesorero en Configuración si salen vacíos), Mixta en MobileCash, Eventos con devolución (crear un evento pequeño), Administración en tarjetas, tablas como tarjetas en celular (si alguna página aún se mueve de lado, avisar cuál).
+- Bolsas: solo las leen quienes aprueban pagos (RLS `bolsas`); un usuario de MobileCash sin ese permiso no ve "Aparte" en Mixta. Decisión abierta: ¿permitir leer solo nombre de bolsas activas?
+- A006 pendientes: "Listas del Sistema" (revisar si están servicios, métodos, cargos, ministerios, estados de miembros) e Inicio (sin definir). No quiere "abrir última pantalla".
+- Instalación Android del Portal: tras desinstalar, Chrome puede ofrecer solo acceso directo; solución dada (borrar datos del sitio en Chrome y abrir `/portal/?instalar`).
+- Tokens de GitHub pegados en el chat: revocar al terminar.
