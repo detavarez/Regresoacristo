@@ -2802,8 +2802,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-079';
-document.getElementById('versionTopbar').textContent = 'Ver-079';
+const APP_VERSION = 'church-admin Ver-080';
+document.getElementById('versionTopbar').textContent = 'Ver-080';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -2872,6 +2872,7 @@ function mostrarApp() {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
 
+  NAV.mostrar('btnPerfil');
   verificarConexion();
   paActualizarInsignia();
   aplicarRol();
