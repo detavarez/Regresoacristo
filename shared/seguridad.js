@@ -124,6 +124,7 @@
           <h1>Método de acceso</h1>
           <div class="segSub">Cómo quieres entrar cada vez.</div>
           <select id="segSelMetodo" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(128,128,128,.45);background:transparent;color:inherit"></select>
+          <div class="segSub" id="segMetodoAyuda"></div>
           <button class="segBtn" id="segMetodoOk" type="button">Guardar</button>
           <button class="segBtn2" id="segBioQuitar" type="button" style="display:none">Quitar la huella o rostro de este teléfono</button>
         </div>
@@ -155,6 +156,7 @@
     $('segAbrPin').onclick = () => abrirPop('segPopPin');
     $('segAbrClave').onclick = () => abrirPop('segPopClave');
     $('segMetodoOk').onclick = guardarMetodo;
+    $('segSelMetodo').onchange = rotularBotonMetodo;
     $('segPopCerrar').onclick = cerrarPop;
     $('segTemaBtn').onclick = alternarTema;
     $('segBioQuitar').onclick = async () => { await bioQuitar(); cerrarPop(); };
@@ -395,6 +397,7 @@
     const sel = $('segSelMetodo');
     sel.innerHTML = `<option value="clave">Email y contraseña</option><option value="pin">PIN de 4 números</option><option value="bio">Huella o rostro (este dispositivo)</option>`;
     sel.value = est.metodo_defecto || 'clave';
+    rotularBotonMetodo();
     $('segTemaTxt').textContent = temaActual() === 'oscuro' ? '🌞 Modo claro' : '🌛 Modo oscuro';
   }
   function abrirPop(panel) {
@@ -425,6 +428,12 @@
   }
   function cerrarPerfil() { cerrarPop(); if ($('segPerfil')) $('segPerfil').style.display = 'none'; }
 
+  // El botón dice qué va a pasar: si eligió huella o rostro y aún no está activada, la activa en ese momento.
+  function rotularBotonMetodo() {
+    const bio = $('segSelMetodo').value === 'bio' && !bioAqui();
+    $('segMetodoOk').textContent = bio ? 'Activar huella o rostro y usarla' : 'Guardar';
+    $('segMetodoAyuda').textContent = bio ? 'Al tocar el botón, el teléfono te pedirá tu huella o rostro una sola vez.' : '';
+  }
   async function guardarMetodo() {
     const m = $('segSelMetodo').value;
     if (m === 'pin' && !est.tiene_pin) { msg('segPerfilMsg', 'Primero guarda un PIN.'); $('segSelMetodo').value = est.metodo_defecto || 'clave'; return; }
