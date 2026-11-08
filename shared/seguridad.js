@@ -67,6 +67,30 @@
       .segPanelP{display:none}
       .segPanelP h1{margin-bottom:10px}
       .segPanelP .segFila{margin-top:8px}
+      /* Perfil moderno: hoja que sube desde abajo en el celular */
+      #segPerfil{align-items:flex-end;padding:0}
+      .segSheet{position:relative;max-width:480px;border-radius:24px 24px 0 0;padding:22px 18px 26px;animation:segSube .22s ease-out;max-height:92vh;overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.3)}
+      @keyframes segSube{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+      @media (min-width:600px){#segPerfil{align-items:center;padding:18px}.segSheet{border-radius:22px}}
+      .segX{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(128,128,128,.16);color:inherit;font-size:1rem;cursor:pointer}
+      .segCab{display:flex;align-items:center;gap:14px;margin:4px 40px 16px 0}
+      .segAvatar{flex:none;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--nvBg,#0b1f3a),var(--nvBg2,#2c5a9c));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;letter-spacing:.02em}
+      .segNom{font-weight:700;font-size:1.1rem;line-height:1.2;color:var(--heading,inherit)}
+      .segMail{font-size:.82rem;opacity:.65;overflow-wrap:anywhere}
+      .segTit{font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;opacity:.55;margin:18px 6px 8px}
+      .segGrupo{border-radius:16px;background:rgba(128,128,128,.10);overflow:hidden}
+      .segFilaItem{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:15px 16px;border:0;background:none;color:inherit;cursor:pointer;font-size:.98rem;text-align:left;font-family:inherit}
+      .segFilaItem + .segFilaItem{border-top:1px solid rgba(128,128,128,.18)}
+      .segFilaItem:active{background:rgba(128,128,128,.14)}
+      .segFilaItem b{font-weight:500;font-size:.88rem;opacity:.65;display:flex;align-items:center;gap:8px;text-align:right}
+      .segFilaItem b::after{content:'›';font-size:1.35rem;line-height:1;opacity:.7}
+      .segFilaItem .segSw{flex:none;position:relative;width:46px;height:27px;border-radius:14px;background:#b9c2d0;transition:background .2s}
+      .segFilaItem .segSw::after{content:'';position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+      .segFilaItem .segSw.on{background:#1fa971}
+      .segFilaItem .segSw.on::after{transform:translateX(19px)}
+      .segAcc{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+      .segBtnSoft{padding:13px;border-radius:14px;border:0;background:var(--nvBg,#0b1f3a);color:#fff;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit}
+      .segBtnDanger{padding:13px;border-radius:14px;border:1px solid rgba(217,48,37,.45);background:none;color:#c0392b;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit}
     `;
     document.head.appendChild(css);
 
@@ -97,19 +121,22 @@
     perfil.style.zIndex = '5500';
     perfil.style.background = 'rgba(0,0,0,.55)';
     perfil.innerHTML = `
-      <div class=\"segCard segPerfil\">
-        <h1>Mi perfil</h1>
-        <div class=\"segSub\" id=\"segPerfilUser\"></div>
+      <div class=\"segCard segSheet\">
+        <button class=\"segX\" id=\"segCerrarPerfil\" type=\"button\" aria-label=\"Cerrar\">✕</button>
+        <div class=\"segCab\"><div class=\"segAvatar\" id=\"segAvatar\"></div><div><div class=\"segNom\" id=\"segNom\"></div><div class=\"segMail\" id=\"segMail\"></div></div></div>
         <div class=\"segSub\" id=\"segPerfilIntro\" style=\"display:none\">Elige cómo quieres entrar cada vez. Es tu decisión: puedes usar PIN, huella o rostro, o tu email y contraseña.</div>
         <div class=\"segMsg\" id=\"segPerfilMsg\"></div>
-        <div class=\"segLista\">
-          <button type=\"button\" class=\"segItem\" id=\"segAbrMetodo\"><span>Método de acceso</span><b id=\"segResMetodo\"></b></button>
-          <button type=\"button\" class=\"segItem\" id=\"segAbrPin\"><span>PIN</span><b id=\"segPinEstado\"></b></button>
-          <button type=\"button\" class=\"segItem\" id=\"segAbrClave\"><span>Contraseña</span><b>Cambiar</b></button>
-          <button type=\"button\" class=\"segItem\" id=\"segTemaBtn\"><span>Tema</span><b id=\"segTemaTxt\"></b></button>
+        <div class=\"segTit\">Seguridad</div>
+        <div class=\"segGrupo\">
+          <button type=\"button\" class=\"segFilaItem\" id=\"segAbrMetodo\"><span>Método de acceso</span><b id=\"segResMetodo\"></b></button>
+          <button type=\"button\" class=\"segFilaItem\" id=\"segAbrPin\"><span>PIN</span><b id=\"segPinEstado\"></b></button>
+          <button type=\"button\" class=\"segFilaItem\" id=\"segAbrClave\"><span>Contraseña</span><b>Cambiar</b></button>
         </div>
-        <div class=\"segBtnRow\"><button class=\"segBtn2\" id=\"segBloquearAhora\" type=\"button\">Bloquear ahora</button><button class=\"segBtn2\" id=\"segCerrarSesion\" type=\"button\">Cerrar sesión</button></div>
-        <button class=\"segBtn2\" id=\"segCerrarPerfil\" type=\"button\" style=\"margin-top:14px\">Cerrar</button>
+        <div class=\"segTit\">Apariencia</div>
+        <div class=\"segGrupo\">
+          <button type=\"button\" class=\"segFilaItem\" id=\"segTemaBtn\"><span>Modo oscuro</span><i class=\"segSw\" id=\"segTemaSw\"></i></button>
+        </div>
+        <div class=\"segAcc\"><button class=\"segBtnSoft\" id=\"segBloquearAhora\" type=\"button\">Bloquear ahora</button><button class=\"segBtnDanger\" id=\"segCerrarSesion\" type=\"button\">Cerrar sesión</button></div>
       </div>`;
     document.body.appendChild(perfil);
 
@@ -389,7 +416,10 @@
   const ETIQ_METODO = { clave: 'Email y contraseña', pin: 'PIN', bio: 'Huella o rostro' };
   function pintarPerfil() {
     const u = usuario() || {};
-    $('segPerfilUser').textContent = (u.nombre || '') + (u.correo ? ' · ' + u.correo : '');
+    const nom = (u.nombre || u.correo || '').trim();
+    $('segNom').textContent = u.nombre || u.correo || '';
+    $('segMail').textContent = u.nombre ? (u.correo || '') : '';
+    $('segAvatar').textContent = (nom.split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0]).join('') || '?').toUpperCase();
     $('segResMetodo').textContent = ETIQ_METODO[est.metodo_defecto || 'clave'] || '';
     $('segPinEstado').textContent = est.tiene_pin ? 'Activado · Cambiar' : 'Crear';
     $('segQuitarPin').style.display = est.tiene_pin ? '' : 'none';
@@ -398,7 +428,7 @@
     sel.innerHTML = `<option value="clave">Email y contraseña</option><option value="pin">PIN de 4 números</option><option value="bio">Huella o rostro (este dispositivo)</option>`;
     sel.value = est.metodo_defecto || 'clave';
     rotularBotonMetodo();
-    $('segTemaTxt').textContent = temaActual() === 'oscuro' ? '🌞 Modo claro' : '🌛 Modo oscuro';
+    $('segTemaSw').classList.toggle('on', temaActual() === 'oscuro');
   }
   function abrirPop(panel) {
     ['segPopMetodo', 'segPopPin', 'segPopClave'].forEach(i => { $(i).style.display = i === panel ? 'block' : 'none'; });
