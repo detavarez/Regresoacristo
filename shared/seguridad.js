@@ -157,7 +157,7 @@
     $('segMetodoOk').onclick = guardarMetodo;
     $('segPopCerrar').onclick = cerrarPop;
     $('segTemaBtn').onclick = alternarTema;
-    $('segBioBtn').onclick = () => (bioAqui() ? bioQuitar() : bioActivar());
+    $('segBioBtn').onclick = () => (bioAqui() ? bioQuitar() : bioActivarYFijar());
     $('segGuardarPin').onclick = guardarPin;
     $('segQuitarPin').onclick = quitarPin;
     $('segCambiarClave').onclick = cambiarClave;
@@ -339,6 +339,15 @@
   }
 
   // ───────── Biometría ─────────
+  // Un solo paso: al activar la huella o el rostro también queda como método predeterminado.
+  async function bioActivarYFijar() {
+    const ok = await bioActivar(false);
+    if (!ok) return;
+    const r = await sbCall(sb.rpc('ca_metodo_fijar', { m: 'bio' }));
+    if (!r.error) { est.metodo_defecto = 'bio'; est.preguntado = true; }
+    pintarPerfil();
+    msg('segPerfilMsg', r.error ? 'Activada, pero no se pudo dejar como predeterminada: ' + r.error.message : 'Listo: huella o rostro activada y es tu método predeterminado.', !r.error);
+  }
   async function bioActivar(silenciosoPrimera) {
     const u = usuario();
     if (!u) return false;
