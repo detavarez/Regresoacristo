@@ -87,7 +87,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
   .repLinea{display:grid;grid-template-columns:minmax(0,1fr) 34px;gap:8px;align-items:center;margin-bottom:12px;padding:10px;border:1px solid rgba(128,128,128,.3);border-radius:12px}
   .repLinea .repMonto{grid-column:1;width:100%;min-width:0}
   .repLinea .repX{grid-column:2;grid-row:1;width:34px;height:34px;padding:0;border-radius:50%;border:0;background:rgba(128,128,128,.18);color:inherit;font-size:.85rem;line-height:1;cursor:pointer}
-  .repLinea .dvCat,.repLinea .dvMet{grid-column:1 / -1;width:100%;min-width:0;text-overflow:ellipsis}
+  .repLinea .pgChips{grid-column:1 / -1}
   .repLinea .repTipo{grid-column:1 / -1;width:100%;min-width:0;text-overflow:ellipsis}
 </style>
 </head>
@@ -96,7 +96,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <div id="loginBox" style="display:none">
   <div class="logo-i" style="margin:0 auto;width:56px;height:56px;font-size:28px">✝</div>
   <h2>MobileCash</h2>
-  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M018</div>
+  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M019</div>
   <div class="form-card">
     <div class="fgrp"><label>Correo</label><input type="email" id="lgEmail" autocomplete="username" inputmode="email"></div>
     <div class="fgrp"><label>Contraseña</label><input type="password" id="lgPass" autocomplete="current-password"></div>
@@ -106,7 +106,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 </div>
 
 <div id="app" style="display:none">
-<script>NAV.montar({ titulo: 'MobileCash', sub: 'Ver-M018 · <span id="quien"></span>', punto: true,
+<script>NAV.montar({ titulo: 'MobileCash', sub: 'Ver-M019 · <span id="quien"></span>', punto: true,
   extras: [{ id: 'btnInstalar', html: '📲', titulo: 'Instalar en el celular', onclick: 'instalarApp()', oculto: true }, { html: '↻', titulo: 'Actualizar', onclick: 'cargar(true)' }] });</script>
 <div id="toast" class="toast"></div>
 
@@ -145,14 +145,6 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     <div class="fgrp" id="gCategoria" style="display:none"><label>Categoría</label><select id="fCategoria"></select></div>
     <div class="fgrp" id="gProveedor" style="display:none"><label>Pagado a (opcional)</label><input type="text" id="fProveedor" list="dlProveedores" placeholder="Tienda o proveedor" autocomplete="off"><datalist id="dlProveedores"></datalist></div>
     <div class="fgrp"><label>Monto</label><div class="amt"><span class="pfx">$</span><input type="text" id="fMonto" placeholder="0.00" inputmode="decimal" autocomplete="off"></div></div>
-    <div class="fgrp" id="gDividir" style="display:none">
-      <button type="button" class="fbtn" id="btnDividir" onclick="dvToggle()">Dividir en varias líneas (categoría y/o método)</button>
-      <div id="dvWrap" style="display:none;margin-top:10px">
-        <div id="dvLineas"></div>
-        <button type="button" class="fbtn" onclick="dvAgregar()">+ Agregar línea</button>
-        <div id="dvResumen" style="font-size:13px;margin-top:8px"></div>
-      </div>
-    </div>
     <div class="fgrp" id="gReparto" style="display:none"><label>Reparto (elige una o varias líneas)</label>
       <div id="repLineas"></div>
       <button type="button" class="fbtn" onclick="repAgregar()">+ Agregar línea</button>
@@ -160,7 +152,12 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     <div class="fgrp" id="gSub"><label id="lSub">Tipo</label><select id="fSub"></select></div>
     <div class="fgrp" id="gProyecto"><label>Proyecto (opcional)</label><input type="text" id="fProyecto" placeholder="Ej. Misión Norte"></div>
     <div class="fgrp" id="gServicio"><label>Servicio</label><select id="fServicio" disabled></select></div>
-    <div class="fgrp"><label>Método de pago</label><div class="chips" id="chips"></div></div>
+    <div class="fgrp"><label>Método de pago</label>
+      <div class="amt" id="pgM1Wrap" style="display:none"><span class="pfx">$</span><input type="text" id="pgM1" placeholder="Monto de este pago" inputmode="decimal" autocomplete="off" oninput="pgM1Input()"></div>
+      <div class="chips" id="chips"></div>
+      <div id="pgExtra"></div>
+      <button type="button" class="fbtn" id="btnPagoMas" style="display:none" onclick="pgAgregar()">+ Agregar otra forma de pago</button>
+      <div id="pgResumen" style="display:none;font-size:13px;margin-top:6px"></div></div>
     <div class="fgrp" id="gRef"><label id="lRef">Referencia / # cheque / ID</label><input type="text" id="fRef" placeholder="CHQ-1234"></div>
     <div class="fgrp" id="gFoto" style="display:none"><label>Foto del recibo (opcional)</label>
       <div id="fotoVista" style="display:none"><img id="fotoImg" alt="Recibo" style="width:100%;border-radius:10px;border:1px solid var(--border)"><div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="fbtn" onclick="abrirCamara()">Tomar otra</button><button type="button" class="fbtn" onclick="quitarFoto()">Quitar</button></div></div>
@@ -288,8 +285,8 @@ function setTipo(t) {
   $('gRef').style.display = t === 'Ofrenda' ? 'none' : '';
   $('gSub').style.display = (t === 'Diezmo' || g || t === 'Mixta') ? 'none' : '';
   $('gReparto').style.display = t === 'Mixta' ? '' : 'none';
-  $('gDividir').style.display = g ? '' : 'none';
-  dvToggle(false);
+  $('btnPagoMas').style.display = g ? '' : 'none';
+  if (!g) pgReset(); else pgRefrescar();
   if (t === 'Mixta') iniciarMixta();
   if (t === 'Ofrenda') { $('lSub').textContent = 'Tipo de ofrenda'; $('fSub').innerHTML = OFRENDAS.map(x => `<option>${x}</option>`).join(''); }
   if (t === 'Donación') { $('lSub').textContent = 'Propósito'; $('fSub').innerHTML = DONACIONES.map(x => `<option>${x}</option>`).join(''); }
@@ -447,7 +444,7 @@ function guardarBorrador() {
       const campos = {}; CAMPOS_BORRADOR.forEach(i => { if ($(i)) campos[i] = $(i).value; });
       const hay = Object.values(campos).some((v, i) => v && !['fFecha', 'fCategoria'].includes(CAMPOS_BORRADOR[i])) || fotoDataUrl;
       if (!hay) { localStorage.removeItem('mc_borrador'); return; }
-      localStorage.setItem('mc_borrador', JSON.stringify({ t: Date.now(), tipo, metodo, campos, foto: fotoDataUrl, dv: dvOn ? dvLeer() : null }));
+      localStorage.setItem('mc_borrador', JSON.stringify({ t: Date.now(), tipo, metodo, campos, foto: fotoDataUrl, pg: pgExtras().length ? pgLeer() : null }));
     } catch (e) { /* almacenamiento lleno: se ignora */ }
   }, 400);
 }
@@ -460,7 +457,7 @@ function restaurarBorrador() {
     if (d.metodo) { metodo = d.metodo; chips(); }
     Object.entries(d.campos || {}).forEach(([i, v]) => { if ($(i) && v) $(i).value = v; });
     fotoDataUrl = d.foto || null; mostrarFoto();
-    if (d.dv && d.dv.length && tipo === 'Gasto') { dvToggle(true); $('dvLineas').innerHTML = ''; d.dv.forEach(l => dvAgregar(l.c, l.t, l.raw)); }
+    if (d.pg && d.pg.length > 1 && tipo === 'Gasto') { pgReset(); d.pg.slice(1).forEach(l => pgAgregar(l.t, l.raw)); $('pgM1').value = d.pg[0].raw || ''; pgRefrescar(); }
     if ($('fNombre').value) $('btnBorrarNombre').style.display = '';
     irRegistrar(d.tipo || 'Diezmo');
     toast('Recuperamos lo que estabas escribiendo.');
@@ -469,56 +466,60 @@ function restaurarBorrador() {
 document.addEventListener('input', e => { if (e.target && e.target.closest && e.target.closest('#pg-registrar')) guardarBorrador(); });
 document.addEventListener('change', e => { if (e.target && e.target.closest && e.target.closest('#pg-registrar')) guardarBorrador(); });
 
-// ── Gasto dividido: varias líneas, cada una con su categoría y método de pago ──
-let dvOn = false;
-function dvToggle(forzar) {
-  dvOn = forzar === undefined ? !dvOn : !!forzar;
-  $('dvWrap').style.display = dvOn ? '' : 'none';
-  $('btnDividir').textContent = dvOn ? 'Quitar la división' : 'Dividir en varias líneas (categoría y/o método)';
-  $('gCategoria').style.display = (tipo === 'Gasto' && !dvOn) ? '' : 'none';
-  $('chips').parentNode.style.display = dvOn ? 'none' : '';
-  if (dvOn && !document.querySelector('#dvLineas .repLinea')) { dvAgregar(); dvAgregar(); }
-  if (!dvOn) $('dvLineas').innerHTML = '';
-  dvActualizar(); guardarBorrador();
-}
-function dvAgregar(cat, met, monto) {
+// ── Gasto con varias formas de pago (misma categoría): $70 CashApp + $20 tarjeta + $10 efectivo ──
+const redondear = v => Math.round(Number(String(v ?? '').trim().replace(',', '.')) * 100) / 100 || 0;
+function pgExtras() { return [...document.querySelectorAll('#pgExtra .repLinea')]; }
+function pgChipsHtml(sel) { return METODOS_GASTO.map(x => `<div class="chip${x === sel ? ' sel' : ''}" data-m="${esc(x)}" onclick="pgElegir(this)">${esc(x)}</div>`).join(''); }
+function pgElegir(el) { el.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === el)); guardarBorrador(); }
+function pgAgregar(met, monto) {
   const d = document.createElement('div');
   d.className = 'repLinea';
-  const cats = [...$('fCategoria').options].map(o => `<option value="${esc(o.value)}">${esc(o.value)}</option>`).join('');
-  const mets = METODOS_GASTO.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join('');
-  d.innerHTML = `<input type="text" inputmode="decimal" class="repMonto" placeholder="Monto" oninput="dvActualizar();guardarBorrador()">
-    <button type="button" class="repX" onclick="this.parentNode.remove();dvActualizar();guardarBorrador()" aria-label="Quitar línea">✕</button>
-    <select class="dvCat" onchange="guardarBorrador()">${cats}</select>
-    <select class="dvMet" onchange="guardarBorrador()">${mets}</select>`;
-  $('dvLineas').appendChild(d);
-  d.querySelector('.dvCat').value = cat || $('fCategoria').value;
-  d.querySelector('.dvMet').value = met || metodo;
+  d.innerHTML = `<input type="text" inputmode="decimal" class="repMonto" placeholder="Monto de este pago" oninput="this.parentNode.dataset.auto='';pgRefrescar();guardarBorrador()">
+    <button type="button" class="repX" onclick="this.parentNode.remove();pgRefrescar();guardarBorrador()" aria-label="Quitar pago">✕</button>
+    <div class="chips pgChips">${pgChipsHtml(met || '')}</div>`;
+  $('pgExtra').appendChild(d);
+  if (pgExtras().length === 1 && !$('pgM1').value) $('pgM1').value = $('fMonto').value;
   if (monto) d.querySelector('.repMonto').value = monto;
-  dvActualizar();
+  pgRefrescar();
 }
-function dvLeer() {
-  return [...document.querySelectorAll('#dvLineas .repLinea')].map(d => {
-    const raw = d.querySelector('.repMonto').value;
-    return { c: d.querySelector('.dvCat').value, t: d.querySelector('.dvMet').value, raw, m: Math.round(Number(String(raw).trim().replace(',', '.')) * 100) / 100 || 0 };
-  });
+function pgM1Input() {
+  const ex = pgExtras();
+  if (ex.length === 1 && (ex[0].dataset.auto === '1' || !ex[0].querySelector('.repMonto').value)) {
+    const resto = redondear($('fMonto').value) - redondear($('pgM1').value);
+    ex[0].querySelector('.repMonto').value = resto > 0 ? resto.toFixed(2) : '';
+    ex[0].dataset.auto = '1';
+  }
+  pgRefrescar(); guardarBorrador();
 }
-function dvActualizar() {
-  if (!dvOn) return;
-  const total = Math.round(Number(String($('fMonto').value).trim().replace(',', '.')) * 100) || 0;
-  const asig = dvLeer().reduce((x, l) => x + Math.round(l.m * 100), 0);
+function pgLeer() {
+  const ex = pgExtras();
+  if (!ex.length) return [{ t: metodo, m: redondear($('fMonto').value), raw: '' }];
+  return [{ t: metodo, m: redondear($('pgM1').value), raw: $('pgM1').value }].concat(ex.map(d => {
+    const c = d.querySelector('.chip.sel');
+    return { t: c ? c.dataset.m : '', m: redondear(d.querySelector('.repMonto').value), raw: d.querySelector('.repMonto').value };
+  }));
+}
+function pgRefrescar() {
+  const multi = tipo === 'Gasto' && pgExtras().length > 0;
+  $('pgM1Wrap').style.display = multi ? '' : 'none';
+  $('pgResumen').style.display = multi ? '' : 'none';
+  if (!multi) return;
+  const total = Math.round(redondear($('fMonto').value) * 100);
+  const asig = pgLeer().reduce((x, l) => x + Math.round(l.m * 100), 0);
   const falta = total - asig;
-  $('dvResumen').textContent = `Asignado ${money(asig / 100)} de ${money(total / 100)}` + (falta === 0 && total > 0 ? ' ✓' : falta > 0 ? ` · falta ${money(falta / 100)}` : ` · se pasa por ${money(-falta / 100)}`);
+  $('pgResumen').textContent = `Asignado ${money(asig / 100)} de ${money(total / 100)}` + (falta === 0 && total > 0 ? ' ✓' : falta > 0 ? ` · falta ${money(falta / 100)}` : ` · se pasa por ${money(-falta / 100)}`);
 }
-$('fMonto').addEventListener('input', dvActualizar);
+function pgReset() { $('pgExtra').innerHTML = ''; $('pgM1').value = ''; pgRefrescar(); }
+$('fMonto').addEventListener('input', pgRefrescar);
 
 async function enviarGasto(monto, fecha) {
   const concepto = $('fConcepto').value.trim();
   if (!concepto) { toast('Escribe el concepto del gasto.'); return; }
-  let lineas = null;
-  if (dvOn) {
-    lineas = dvLeer();
-    if (lineas.length < 2 || lineas.some(l => !(l.m > 0))) { toast('Cada línea necesita un monto mayor que cero (mínimo dos líneas).'); return; }
-    if (lineas.reduce((x, l) => x + Math.round(l.m * 100), 0) !== Math.round(monto * 100)) { toast('La suma de las líneas debe ser igual al monto.'); return; }
+  const pagos = pgLeer();
+  if (pagos.length > 1) {
+    if (pagos.some(l => !l.t)) { toast('Elige el método de pago en cada línea.'); return; }
+    if (pagos.some(l => !(l.m > 0))) { toast('Cada forma de pago necesita un monto mayor que cero.'); return; }
+    if (pagos.reduce((x, l) => x + Math.round(l.m * 100), 0) !== Math.round(monto * 100)) { toast('La suma de los pagos debe ser igual al monto.'); return; }
   }
   const b = $('btnEnviar'); b.disabled = true;
   let ruta = null;
@@ -539,14 +540,13 @@ async function enviarGasto(monto, fecha) {
     proveedor: $('fProveedor').value.trim() || null, fecha,
     referencia: $('fRef').value.trim() || null, comprobante: ruta,
   };
-  const filas = lineas
-    ? lineas.map(l => ({ ...base, categoria: l.c || null, metodo: l.t, monto: l.m }))
-    : [{ ...base, categoria: $('fCategoria').value || null, metodo, monto }];
+  const categoria = $('fCategoria').value || null;
+  const filas = pagos.map(l => ({ ...base, categoria, metodo: l.t, monto: pagos.length > 1 ? l.m : monto }));
   const { error } = await sbCall(sb.from('registros_movil').insert(filas));
   b.disabled = false;
   if (error) { toast('No se pudo enviar: ' + error.message); return; }
   ['fConcepto', 'fProveedor', 'fMonto', 'fRef'].forEach(i => $(i).value = '');
-  dvToggle(false);
+  pgReset();
   borrarBorrador();
   $('ov').classList.add('show');
   cargar();
