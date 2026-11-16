@@ -96,7 +96,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <div id="loginBox" style="display:none">
   <div class="logo-i" style="margin:0 auto;width:56px;height:56px;font-size:28px">✝</div>
   <h2>MobileCash</h2>
-  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M019</div>
+  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M020</div>
   <div class="form-card">
     <div class="fgrp"><label>Correo</label><input type="email" id="lgEmail" autocomplete="username" inputmode="email"></div>
     <div class="fgrp"><label>Contraseña</label><input type="password" id="lgPass" autocomplete="current-password"></div>
@@ -106,7 +106,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 </div>
 
 <div id="app" style="display:none">
-<script>NAV.montar({ titulo: 'MobileCash', sub: 'Ver-M019 · <span id="quien"></span>', punto: true,
+<script>NAV.montar({ titulo: 'MobileCash', sub: 'Ver-M020 · <span id="quien"></span>', punto: true,
   extras: [{ id: 'btnInstalar', html: '📲', titulo: 'Instalar en el celular', onclick: 'instalarApp()', oculto: true }, { html: '↻', titulo: 'Actualizar', onclick: 'cargar(true)' }] });</script>
 <div id="toast" class="toast"></div>
 
@@ -144,7 +144,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <div class="fgrp" id="gConcepto" style="display:none"><label>Concepto del gasto</label><input type="text" id="fConcepto" placeholder="Ej. Compra de agua para el servicio" autocomplete="off"></div>
     <div class="fgrp" id="gCategoria" style="display:none"><label>Categoría</label><select id="fCategoria"></select></div>
     <div class="fgrp" id="gProveedor" style="display:none"><label>Pagado a (opcional)</label><input type="text" id="fProveedor" list="dlProveedores" placeholder="Tienda o proveedor" autocomplete="off"><datalist id="dlProveedores"></datalist></div>
-    <div class="fgrp"><label>Monto</label><div class="amt"><span class="pfx">$</span><input type="text" id="fMonto" placeholder="0.00" inputmode="decimal" autocomplete="off"></div></div>
+    <div class="fgrp"><label id="lblMonto">Monto</label><div class="amt"><span class="pfx">$</span><input type="text" id="fMonto" placeholder="0.00" inputmode="decimal" autocomplete="off"></div></div>
     <div class="fgrp" id="gReparto" style="display:none"><label>Reparto (elige una o varias líneas)</label>
       <div id="repLineas"></div>
       <button type="button" class="fbtn" onclick="repAgregar()">+ Agregar línea</button>
@@ -153,7 +153,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
     <div class="fgrp" id="gProyecto"><label>Proyecto (opcional)</label><input type="text" id="fProyecto" placeholder="Ej. Misión Norte"></div>
     <div class="fgrp" id="gServicio"><label>Servicio</label><select id="fServicio" disabled></select></div>
     <div class="fgrp"><label>Método de pago</label>
-      <div class="amt" id="pgM1Wrap" style="display:none"><span class="pfx">$</span><input type="text" id="pgM1" placeholder="Monto de este pago" inputmode="decimal" autocomplete="off" oninput="pgM1Input()"></div>
+      <div class="amt" id="pgM1Wrap" style="display:none;margin-bottom:8px"><span class="pfx">$</span><input type="text" id="pgM1" placeholder="Monto (vacío = total)" inputmode="decimal" autocomplete="off" oninput="pgM1Input()"></div>
       <div class="chips" id="chips"></div>
       <div id="pgExtra"></div>
       <button type="button" class="fbtn" id="btnPagoMas" style="display:none" onclick="pgAgregar()">+ Agregar otra forma de pago</button>
@@ -286,6 +286,7 @@ function setTipo(t) {
   $('gSub').style.display = (t === 'Diezmo' || g || t === 'Mixta') ? 'none' : '';
   $('gReparto').style.display = t === 'Mixta' ? '' : 'none';
   $('btnPagoMas').style.display = g ? '' : 'none';
+  $('lblMonto').textContent = g ? 'Total' : 'Monto';
   if (!g) pgReset(); else pgRefrescar();
   if (t === 'Mixta') iniciarMixta();
   if (t === 'Ofrenda') { $('lSub').textContent = 'Tipo de ofrenda'; $('fSub').innerHTML = OFRENDAS.map(x => `<option>${x}</option>`).join(''); }
@@ -444,7 +445,7 @@ function guardarBorrador() {
       const campos = {}; CAMPOS_BORRADOR.forEach(i => { if ($(i)) campos[i] = $(i).value; });
       const hay = Object.values(campos).some((v, i) => v && !['fFecha', 'fCategoria'].includes(CAMPOS_BORRADOR[i])) || fotoDataUrl;
       if (!hay) { localStorage.removeItem('mc_borrador'); return; }
-      localStorage.setItem('mc_borrador', JSON.stringify({ t: Date.now(), tipo, metodo, campos, foto: fotoDataUrl, pg: pgExtras().length ? pgLeer() : null }));
+      localStorage.setItem('mc_borrador', JSON.stringify({ t: Date.now(), tipo, metodo, campos, foto: fotoDataUrl, pg: (pgExtras().length || String($('pgM1').value).trim() !== '') ? pgLeer() : null }));
     } catch (e) { /* almacenamiento lleno: se ignora */ }
   }, 400);
 }
@@ -457,7 +458,7 @@ function restaurarBorrador() {
     if (d.metodo) { metodo = d.metodo; chips(); }
     Object.entries(d.campos || {}).forEach(([i, v]) => { if ($(i) && v) $(i).value = v; });
     fotoDataUrl = d.foto || null; mostrarFoto();
-    if (d.pg && d.pg.length > 1 && tipo === 'Gasto') { pgReset(); d.pg.slice(1).forEach(l => pgAgregar(l.t, l.raw)); $('pgM1').value = d.pg[0].raw || ''; pgRefrescar(); }
+    if (d.pg && d.pg.length && tipo === 'Gasto') { pgReset(); d.pg.slice(1).forEach(l => pgAgregar(l.t, l.raw)); $('pgM1').value = d.pg[0].raw || ''; pgRefrescar(); }
     if ($('fNombre').value) $('btnBorrarNombre').style.display = '';
     irRegistrar(d.tipo || 'Diezmo');
     toast('Recuperamos lo que estabas escribiendo.');
@@ -478,8 +479,11 @@ function pgAgregar(met, monto) {
     <button type="button" class="repX" onclick="this.parentNode.remove();pgRefrescar();guardarBorrador()" aria-label="Quitar pago">✕</button>
     <div class="chips pgChips">${pgChipsHtml(met || '')}</div>`;
   $('pgExtra').appendChild(d);
-  if (pgExtras().length === 1 && !$('pgM1').value) $('pgM1').value = $('fMonto').value;
   if (monto) d.querySelector('.repMonto').value = monto;
+  else if (pgExtras().length === 1 && redondear($('pgM1').value) > 0) {
+    const resto = redondear($('fMonto').value) - redondear($('pgM1').value);
+    if (resto > 0) { d.querySelector('.repMonto').value = resto.toFixed(2); d.dataset.auto = '1'; }
+  }
   pgRefrescar();
 }
 function pgM1Input() {
@@ -493,21 +497,22 @@ function pgM1Input() {
 }
 function pgLeer() {
   const ex = pgExtras();
-  if (!ex.length) return [{ t: metodo, m: redondear($('fMonto').value), raw: '' }];
+  if (!ex.length) { const v = $('pgM1').value; return [{ t: metodo, m: String(v).trim() === '' ? redondear($('fMonto').value) : redondear(v), raw: v }]; }
   return [{ t: metodo, m: redondear($('pgM1').value), raw: $('pgM1').value }].concat(ex.map(d => {
     const c = d.querySelector('.chip.sel');
     return { t: c ? c.dataset.m : '', m: redondear(d.querySelector('.repMonto').value), raw: d.querySelector('.repMonto').value };
   }));
 }
 function pgRefrescar() {
-  const multi = tipo === 'Gasto' && pgExtras().length > 0;
-  $('pgM1Wrap').style.display = multi ? '' : 'none';
-  $('pgResumen').style.display = multi ? '' : 'none';
-  if (!multi) return;
+  const g = tipo === 'Gasto';
+  $('pgM1Wrap').style.display = g ? '' : 'none';
+  const hay = g && (pgExtras().length > 0 || String($('pgM1').value).trim() !== '');
+  $('pgResumen').style.display = hay ? '' : 'none';
+  if (!hay) return;
   const total = Math.round(redondear($('fMonto').value) * 100);
   const asig = pgLeer().reduce((x, l) => x + Math.round(l.m * 100), 0);
   const falta = total - asig;
-  $('pgResumen').textContent = `Asignado ${money(asig / 100)} de ${money(total / 100)}` + (falta === 0 && total > 0 ? ' ✓' : falta > 0 ? ` · falta ${money(falta / 100)}` : ` · se pasa por ${money(-falta / 100)}`);
+  $('pgResumen').textContent = `Asignado ${money(asig / 100)} de ${money(total / 100)}` + (falta === 0 && total > 0 ? ' ✓' : falta > 0 ? ` · falta ${money(falta / 100)}: usa "+ Agregar otra forma de pago"` : ` · se pasa por ${money(-falta / 100)}`);
 }
 function pgReset() { $('pgExtra').innerHTML = ''; $('pgM1').value = ''; pgRefrescar(); }
 $('fMonto').addEventListener('input', pgRefrescar);
@@ -516,11 +521,9 @@ async function enviarGasto(monto, fecha) {
   const concepto = $('fConcepto').value.trim();
   if (!concepto) { toast('Escribe el concepto del gasto.'); return; }
   const pagos = pgLeer();
-  if (pagos.length > 1) {
-    if (pagos.some(l => !l.t)) { toast('Elige el método de pago en cada línea.'); return; }
-    if (pagos.some(l => !(l.m > 0))) { toast('Cada forma de pago necesita un monto mayor que cero.'); return; }
-    if (pagos.reduce((x, l) => x + Math.round(l.m * 100), 0) !== Math.round(monto * 100)) { toast('La suma de los pagos debe ser igual al monto.'); return; }
-  }
+  if (pagos.some(l => !l.t)) { toast('Elige el método de pago en cada línea.'); return; }
+  if (pagos.length > 1 && pagos.some(l => !(l.m > 0))) { toast('Cada forma de pago necesita un monto mayor que cero.'); return; }
+  if (pagos.reduce((x, l) => x + Math.round(l.m * 100), 0) !== Math.round(monto * 100)) { toast('Los pagos no suman el total. Usa "+ Agregar otra forma de pago".'); return; }
   const b = $('btnEnviar'); b.disabled = true;
   let ruta = null;
   if (fotoDataUrl) {
@@ -541,8 +544,9 @@ async function enviarGasto(monto, fecha) {
     referencia: $('fRef').value.trim() || null, comprobante: ruta,
   };
   const categoria = $('fCategoria').value || null;
-  const filas = pagos.map(l => ({ ...base, categoria, metodo: l.t, monto: pagos.length > 1 ? l.m : monto }));
-  const { error } = await sbCall(sb.from('registros_movil').insert(filas));
+  const varios = pagos.length > 1;
+  const fila = { ...base, categoria, metodo: varios ? 'Varios' : pagos[0].t, monto, pagos: varios ? pagos.map(l => ({ metodo: l.t, monto: l.m })) : null };
+  const { error } = await sbCall(sb.from('registros_movil').insert(fila));
   b.disabled = false;
   if (error) { toast('No se pudo enviar: ' + error.message); return; }
   ['fConcepto', 'fProveedor', 'fMonto', 'fRef'].forEach(i => $(i).value = '');
@@ -607,7 +611,7 @@ async function cancelar(id) {
 
 function item(r, conCancelar) {
   const cls = r.estado === 'Aprobado' ? 'bs' : r.estado === 'Rechazado' ? 'bd' : 'bw';
-  const det = [r.nombre, r.subtipo, r.categoria, r.proveedor, r.servicio, r.metodo, r.fecha, r.no_sobre ? 'Sobre ' + r.no_sobre : '', r.referencia, r.proyecto, r.comprobante ? '📎 recibo' : ''].filter(Boolean).map(esc).join(' · ');
+  const det = [r.nombre, r.subtipo, r.categoria, r.proveedor, r.servicio, (Array.isArray(r.pagos) && r.pagos.length > 1 ? r.pagos.map(p => p.metodo + ' ' + money(p.monto)).join(' + ') : r.metodo), r.fecha, r.no_sobre ? 'Sobre ' + r.no_sobre : '', r.referencia, r.proyecto, r.comprobante ? '📎 recibo' : ''].filter(Boolean).map(esc).join(' · ');
   return `<div class="pend-item"><div class="pi-h"><div><div class="pi-type">${r.tipo} <span class="badge ${cls}">${r.estado}</span></div></div><div class="pi-amt">${money(r.monto)}</div></div><div class="pi-det">${det}</div>${r.comprobante ? `<button class="rec-btn" onclick="verRecibo('${esc(r.comprobante)}')">Ver recibo</button>` : ''}${conCancelar ? `<button class="cancel-btn" onclick="cancelar('${r.id}')">✕ Cancelar</button>` : ''}</div>`;
 }
 

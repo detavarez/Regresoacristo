@@ -2431,7 +2431,7 @@
     <form id="formGasto" onsubmit="return guardarGasto(event)">
       <div class="formGrid">
         <div><label for="gsFecha">Fecha *</label><input type="date" id="gsFecha" required></div>
-        <div><label for="gsMonto">Monto *</label><input type="number" id="gsMonto" step="0.01" min="0" required></div>
+        <div><label for="gsMonto">Total *</label><input type="number" id="gsMonto" step="0.01" min="0" required></div>
         <div class="full"><label for="gsDescripcion">Descripción *</label><input type="text" id="gsDescripcion" placeholder="Descripción del gasto" required></div>
         <div><label for="gsCategoria">Categoría</label><select id="gsCategoria"></select></div>
         <div><label for="gsOrganizacion">Pagado a (proveedor)</label><input type="text" id="gsOrganizacion" list="dlGastoProv" placeholder="Escribe o elige" autocomplete="off"><datalist id="dlGastoProv"></datalist></div>
@@ -2440,7 +2440,7 @@
           <label>Método de pago</label>
           <select id="gsMetodo" style="display:none;"></select>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <input type="number" step="0.01" min="0" id="gsPagoM1" placeholder="Monto" style="display:none; max-width:130px;" oninput="gsPagoM1Input()">
+            <input type="number" step="0.01" min="0" id="gsPagoM1" placeholder="Monto (vacío = total)" style="max-width:170px;" oninput="gsPagoM1Input()">
             <div id="gsMetChips" class="gsChips"></div>
           </div>
           <div id="gsPagosExtra"></div>
@@ -2826,8 +2826,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-087';
-document.getElementById('versionTopbar').textContent = 'Ver-087';
+const APP_VERSION = 'church-admin Ver-088';
+document.getElementById('versionTopbar').textContent = 'Ver-088';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -3534,9 +3534,14 @@ async function cnCargarMovs(marcadosGuardados) {
   cnApertura = corte ? (Number(si.data && si.data.saldo_corte) || 0) : 0;
   cnPrevios = new Set((prev.data || []).filter(x => x.reconciliacion_id !== idEdicion).map(x => String(x.transaccion_id)));
   const guardados = new Set(marcadosGuardados || (prev.data || []).filter(x => x.reconciliacion_id === idEdicion).map(x => String(x.transaccion_id)));
-  cnMovs = (tr.data || []).map(t => { const a = lcAsiento(t); return a ? { ...a, id: String(t.id), hist: !!t.historico } : null; })
+  await lcCargarPagos();
+  const cnLista = (tr.data || []).flatMap(t => lcAsientosDe(t).map(a => ({ ...a, id: String(t.id), hist: !!t.historico })))
     .filter(a => a && (a.dr === codigo || a.cr === codigo) && !a.hist && (!corte || a.fecha > corte))
     .map(a => ({ id: a.id, fecha: a.fecha, desc: a.desc, ref: a.ref, efecto: ((a.dr === codigo ? a.c : 0) - (a.cr === codigo ? a.c : 0)) / 100, previo: cnPrevios.has(a.id), marcado: cnPrevios.has(a.id) || guardados.has(a.id) }));
+  // Si dos pagos de una misma transacción caen en la misma cuenta, se suman en una sola fila
+  const cnPorId = new Map();
+  cnLista.forEach(m => { const p = cnPorId.get(m.id); if (p) p.efecto += m.efecto; else cnPorId.set(m.id, { ...m }); });
+  cnMovs = [...cnPorId.values()];
   cont.innerHTML = cnMovs.length ? `<div style="max-height:280px; overflow:auto; border:1px solid var(--border); border-radius:8px;">${cnMovs.map((m, i) => `
     <label class="relFila" style="padding:6px 10px; cursor:${m.previo ? 'default' : 'pointer'}; opacity:${m.previo ? 0.6 : 1};">
       <span style="display:flex; gap:8px; align-items:center;"><input type="checkbox" ${m.marcado ? 'checked' : ''} ${m.previo ? 'disabled' : ''} onchange="cnMarcar(${i}, this.checked)"> <span>${formatoFecha(m.fecha)} · ${escV28(m.desc)}${m.previo ? ' <i>(ya conciliado)</i>' : ''}</span></span>
@@ -4576,7 +4581,7 @@ function rmAbrir(id) {
   if (!x) return;
   document.getElementById('rmId').value = x.id;
   document.getElementById('rmResumen').textContent = `${x.tipo} · ${formatoMoneda(x.monto)} · ${x.nombre || 'Anónima'}`;
-  document.getElementById('rmDetalle').textContent = [x.subtipo, x.categoria, x.proveedor ? 'Pagado a ' + x.proveedor : '', x.metodo, x.servicio, x.no_sobre ? 'Sobre ' + x.no_sobre : '', x.referencia, x.proyecto].filter(Boolean).join(' · ') || '—';
+  document.getElementById('rmDetalle').textContent = [x.subtipo, x.categoria, x.proveedor ? 'Pagado a ' + x.proveedor : '', (Array.isArray(x.pagos) && x.pagos.length > 1 ? x.pagos.map(p => p.metodo + ' ' + formatoMoneda(p.monto)).join(' + ') : x.metodo), x.servicio, x.no_sobre ? 'Sobre ' + x.no_sobre : '', x.referencia, x.proyecto].filter(Boolean).join(' · ') || '—';
   const lm = rmLineasMixta(x);
   if (lm) document.getElementById('rmDetalle').textContent = 'Mixta: ' + lm.map(l => `${formatoMoneda(l.m)} ${l.n || l.t}`).join(' + ') + (x.referencia ? ' · ' + x.referencia : '');
   document.getElementById('rmFecha').value = x.fecha;
@@ -4671,14 +4676,20 @@ async function rmAprobar(evt) {
     else if (x.tipo === 'Ofrenda') { descripcion = `Ofrenda — ${sub}`; categoria = sub; origen = 'Ofrenda'; cuentaCr = cuentaIdPorCodigo(OFRENDA_TIPO_CUENTA[sub] || '4002'); }
     else { descripcion = `Donación — ${nombre}`; categoria = sub; origen = 'Donación'; cuentaCr = cuentaIdPorCodigo('4003'); }
 
+    const pagosMovil = Array.isArray(x.pagos) && x.pagos.length > 1 ? x.pagos : null;
+    const metodoT = pagosMovil ? 'Varios' : x.metodo;
     const { data: trans, error: errTrans } = await sbCall(sb.from('transacciones').insert({
-      fecha, descripcion, categoria, tipo: esGasto ? 'Egreso' : 'Ingreso', tipo_origen: origen, metodo: x.metodo, monto,
+      fecha, descripcion, categoria, tipo: esGasto ? 'Egreso' : 'Ingreso', tipo_origen: origen, metodo: metodoT, monto,
       referencia, estado: 'Completado', fondo_id: fondoId, ...(esGasto ? { cuenta_dr: cuentaDr } : { cuenta_cr: cuentaCr }), solo_fondo: false,
       creado_por: sesion.usuario?.id || null,
     }).select().single());
     if (errTrans) { await rmDevolver(id); alert('Error al crear la transacción: ' + errTrans.message); return false; }
 
-    const base = { fecha, monto, metodo: x.metodo, estado: 'Completado', transaccion_id: trans.id, creado_por: sesion.usuario?.id || null };
+    if (pagosMovil) {
+      const rp = await sbCall(sb.from('transaccion_pagos').insert(pagosMovil.map(p => ({ transaccion_id: trans.id, metodo: p.metodo, monto: p.monto }))));
+      if (rp.error) { await sbCall(sb.from('transacciones').delete().eq('id', trans.id)); await rmDevolver(id); alert('Error al guardar el desglose de pagos: ' + rp.error.message); return false; }
+    }
+    const base = { fecha, monto, metodo: metodoT, estado: 'Completado', transaccion_id: trans.id, creado_por: sesion.usuario?.id || null };
     let error;
     if (esGasto) ({ error } = await sbCall(sb.from('gastos').insert({ ...base, descripcion, categoria, organizacion_id: orgId, comprobante: x.comprobante || null })));
     else if (x.tipo === 'Diezmo') ({ error } = await sbCall(sb.from('diezmos').insert({ ...base, persona_id: personaId, referencia, no_sobre: x.no_sobre || (personaPorId(personaId) || {}).sobre_actual?.toString() || null })));
@@ -5580,7 +5591,7 @@ async function rcDesdeRegistro(transId) {
 }
 
 // ── Comprobante imprimible de una transacción (Ver-040) ──
-function trAbrirRecibo(id) {
+async function trAbrirRecibo(id) {
   const t = cacheTransaccionesTodas.find(x => String(x.id) === String(id));
   if (!t) return;
   let iglesia = DC_IGLESIA_POR_DEFECTO;
@@ -5588,6 +5599,11 @@ function trAbrirRecibo(id) {
   const titulo = t.tipo === 'Ingreso' ? 'Comprobante de ingreso' : (t.tipo === 'Egreso' ? 'Comprobante de egreso' : 'Comprobante');
   const filas = [['Fecha', formatoFecha(t.fecha)], ['Concepto', t.descripcion], ['Sobre #', (cacheDiezmos.find(d => String(d.transaccion_id) === String(t.id)) || {}).no_sobre], ['Categoría', t.categoria], ['Método', t.metodo], ['Referencia', t.referencia], ['Estado', t.estado]]
     .filter(f => f[1]);
+  if (t.metodo === 'Varios') {
+    const rp = await sbCall(sb.from('transaccion_pagos').select('metodo, monto').eq('transaccion_id', t.id).order('creado_en', { ascending: true }));
+    const iM = filas.findIndex(f => f[0] === 'Método');
+    (rp.data || []).slice().reverse().forEach(p => filas.splice(iM + 1, 0, ['Pagado con ' + p.metodo, formatoMoneda(p.monto)]));
+  }
   document.getElementById('reciboContenido').innerHTML = `
     <div style="text-align:center; margin-bottom:14px;">${logoIglesiaHtml(56)}<div style="font-size:1.15rem; font-weight:700;">${escV28(iglesia)}</div>
       <div style="font-size:0.95rem;">${titulo}</div><div style="font-size:0.75rem; color:#666;">Folio ${escV28(String(t.id).slice(0, 8).toUpperCase())}</div></div>
@@ -5905,6 +5921,20 @@ function lcNombre(cod) { const c = cacheCuentas.find(x => x.codigo === cod); ret
 function lcCuenta(cod) { return cacheCuentas.find(x => x.codigo === cod) || { codigo: cod, nombre: cod, tipo: '', normal: 'Débito' }; }
 function lcM(c) { return formatoMoneda(c / 100); }
 
+let lcPagos = new Map();
+async function lcCargarPagos() {
+  const r = await sbCall(sb.from('transaccion_pagos').select('transaccion_id, metodo, monto').range(0, 9999));
+  lcPagos = new Map();
+  (r.data || []).forEach(p => { const k = String(p.transaccion_id); if (!lcPagos.has(k)) lcPagos.set(k, []); lcPagos.get(k).push(p); });
+}
+function lcAsientosDe(t) {
+  const ps = lcPagos.get(String(t.id));
+  if (ps && ps.length > 1 && (t.tipo === 'Egreso' || t.tipo === 'Ingreso') && !(t.tipo === 'Ingreso' ? t.cuenta_dr : t.cuenta_cr)) {
+    return ps.map(p => lcAsiento({ ...t, metodo: p.metodo, monto: p.monto })).filter(Boolean);
+  }
+  const a = lcAsiento(t);
+  return a ? [a] : [];
+}
 async function lcCargar(modo) {
   const cont = document.getElementById('lcCont_' + modo);
   cont.innerHTML = '<div class="estadoCargando">Cargando…</div>';
@@ -5913,7 +5943,8 @@ async function lcCargar(modo) {
     .select('id, historico, fecha, descripcion, categoria, referencia, tipo, tipo_origen, metodo, monto, solo_fondo, cuenta_dr, cuenta_cr')
     .order('fecha', { ascending: true }).order('creado_en', { ascending: true }).range(0, 9999));
   if (error) { cont.innerHTML = `<div class="estadoVacio">Error: ${escV28(error.message)}</div>`; return; }
-  lcAsientos = (data || []).map(lcAsiento).filter(Boolean);
+  await lcCargarPagos();
+  lcAsientos = (data || []).flatMap(lcAsientosDe);
   const cfgC = await sbCall(sb.from('config_iglesia').select('fecha_corte').eq('id', 1).maybeSingle());
   const siC = await sbCall(sb.from('saldos_iniciales').select('*'));
   lcCorte = (cfgC.data && cfgC.data.fecha_corte) || null;
@@ -8537,7 +8568,6 @@ function abrirFormGasto(id) {
   document.getElementById('formGasto').reset();
   gsFotoDataUrl = null; gsFotoActual = ''; gsFotoQuitada = false; gsPagoReset();
   document.getElementById('gsBorradorAviso').style.display = 'none';
-  document.getElementById('gsPagoAgregar').style.display = id ? 'none' : 'inline-block';
   document.getElementById('btnEliminarGasto').style.display = 'none';
   document.getElementById('gsFecha').value = new Date().toISOString().slice(0, 10);
   poblarSelectCategoriaGasto('gsCategoria', defaultTx('Gasto').categoria);
@@ -8561,6 +8591,7 @@ function abrirFormGasto(id) {
       poblarSelectCategoriaGasto('gsCategoria', g.categoria);
       gsPoblarProv(g.organizacion_id);
       gsFotoActual = g.comprobante || '';
+      gsCargarPagosEdicion(g);
       poblarSelectMetodoGasto('gsMetodo', g.metodo);
       poblarSelectEstado('gsEstado', g.estado);
       document.getElementById('btnEliminarGasto').style.display = 'inline-block';
@@ -8626,7 +8657,7 @@ async function gsVerReciboGuardado() {
 
 // Formas de pago: un gasto puede pagarse con varios métodos (misma categoría)
 const gsRedondear = v => Math.round((parseFloat(v) || 0) * 100) / 100;
-function gsMetLista() { return [...document.getElementById('gsMetodo').options].map(o => o.value); }
+function gsMetLista() { return [...document.getElementById('gsMetodo').options].map(o => o.value).filter(v => v && v !== 'Varios'); }
 function gsChipsHtml(sel) { return gsMetLista().map(m => `<span class="gsChip${m === sel ? ' on' : ''}" data-m="${escV28(m)}" onclick="gsChipTocar(this)">${escV28(m)}</span>`).join(''); }
 function gsChipsRender() { document.getElementById('gsMetChips').innerHTML = gsChipsHtml(document.getElementById('gsMetodo').value); }
 function gsChipTocar(el) {
@@ -8642,9 +8673,11 @@ function gsPagoAgregar(metodo, monto) {
   d.style.cssText = 'margin-top:10px; padding-top:10px; border-top:1px solid var(--border);';
   d.innerHTML = `<div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;"><input type="number" step="0.01" min="0" class="gsPagoMonto" placeholder="Monto" style="max-width:130px;" oninput="this.closest('.gsPagoX').dataset.auto=''; gsPagoRefrescar(); gsBorradorGuardar();"><button type="button" class="btnSecundario" onclick="this.closest('.gsPagoX').remove(); gsPagoRefrescar(); gsBorradorGuardar();">Quitar</button></div><div class="gsChips">${gsChipsHtml(metodo || '')}</div>`;
   document.getElementById('gsPagosExtra').appendChild(d);
-  const m1 = document.getElementById('gsPagoM1');
-  if (gsPagoExtras().length === 1 && !m1.value) m1.value = document.getElementById('gsMonto').value;
   if (monto) d.querySelector('.gsPagoMonto').value = monto;
+  else if (gsPagoExtras().length === 1) {
+    const resto = gsRedondear(document.getElementById('gsMonto').value) - gsRedondear(document.getElementById('gsPagoM1').value);
+    if (gsRedondear(document.getElementById('gsPagoM1').value) > 0 && resto > 0) { d.querySelector('.gsPagoMonto').value = resto.toFixed(2); d.dataset.auto = '1'; }
+  }
   gsPagoRefrescar();
 }
 function gsPagoM1Input() {
@@ -8660,27 +8693,37 @@ function gsPagoLeer() {
   const total = gsRedondear(document.getElementById('gsMonto').value);
   const ex = gsPagoExtras();
   const m1 = document.getElementById('gsMetodo').value;
-  if (!ex.length) return [{ metodo: m1, monto: total }];
+  if (!ex.length) { const v = document.getElementById('gsPagoM1').value; return [{ metodo: m1, monto: v === '' ? total : gsRedondear(v) }]; }
   return [{ metodo: m1, monto: gsRedondear(document.getElementById('gsPagoM1').value) }].concat(ex.map(d => ({
     metodo: (d.querySelector('.gsChip.on') || { dataset: {} }).dataset.m || '',
     monto: gsRedondear(d.querySelector('.gsPagoMonto').value),
   })));
 }
 function gsPagoRefrescar() {
-  const multi = gsPagoExtras().length > 0;
-  document.getElementById('gsPagoM1').style.display = multi ? '' : 'none';
   const r = document.getElementById('gsPagoResumen');
-  r.style.display = multi ? '' : 'none';
-  if (!multi) return;
+  const ex = gsPagoExtras().length;
+  const v = document.getElementById('gsPagoM1').value;
+  if (!ex && v === '') { r.style.display = 'none'; return; }
+  r.style.display = '';
   const total = gsRedondear(document.getElementById('gsMonto').value);
   const suma = gsRedondear(gsPagoLeer().reduce((a, l) => a + l.monto, 0));
   const dif = gsRedondear(total - suma);
-  r.textContent = `Asignado ${formatoMoneda(suma)} de ${formatoMoneda(total)}. ` + (dif === 0 ? 'Cuadra.' : dif > 0 ? `Faltan ${formatoMoneda(dif)}.` : `Sobran ${formatoMoneda(-dif)}.`);
+  r.textContent = `Asignado ${formatoMoneda(suma)} de ${formatoMoneda(total)}. ` + (dif === 0 ? 'Cuadra.' : dif > 0 ? `Faltan ${formatoMoneda(dif)}: usa "+ Agregar otra forma de pago".` : `Sobran ${formatoMoneda(-dif)}.`);
 }
 function gsPagoReset() {
   document.getElementById('gsPagosExtra').innerHTML = '';
   document.getElementById('gsPagoM1').value = '';
   gsPagoRefrescar();
+}
+async function gsCargarPagosEdicion(g) {
+  if (!g.transaccion_id) return;
+  const { data } = await sbCall(sb.from('transaccion_pagos').select('metodo, monto').eq('transaccion_id', g.transaccion_id).order('creado_en', { ascending: true }));
+  if (!data || data.length < 2) return;
+  const sel = document.getElementById('gsMetodo');
+  if (![...sel.options].some(o => o.value === data[0].metodo)) sel.add(new Option(data[0].metodo, data[0].metodo));
+  sel.value = data[0].metodo; gsChipsRender();
+  document.getElementById('gsPagoM1').value = Number(data[0].monto).toFixed(2);
+  data.slice(1).forEach(p => gsPagoAgregar(p.metodo, Number(p.monto).toFixed(2)));
 }
 document.getElementById('gsMonto').addEventListener('input', gsPagoRefrescar);
 
@@ -8692,7 +8735,7 @@ function gsBorradorGuardar() {
       const f = document.getElementById('formGasto');
       if (f.dataset.editId || !document.getElementById('modalGasto').classList.contains('abierto')) return;
       const campos = {}; GS_CAMPOS.forEach(i => { campos[i] = document.getElementById(i).value; });
-      const pagos = gsPagoExtras().length ? { m1: document.getElementById('gsPagoM1').value, extras: gsPagoExtras().map(d => ({ metodo: (d.querySelector('.gsChip.on') || { dataset: {} }).dataset.m || '', monto: d.querySelector('.gsPagoMonto').value })) } : null;
+      const pagos = (gsPagoExtras().length || document.getElementById('gsPagoM1').value) ? { m1: document.getElementById('gsPagoM1').value, extras: gsPagoExtras().map(d => ({ metodo: (d.querySelector('.gsChip.on') || { dataset: {} }).dataset.m || '', monto: d.querySelector('.gsPagoMonto').value })) } : null;
       const hay = campos.gsMonto || campos.gsDescripcion || campos.gsOrganizacion || gsFotoDataUrl;
       if (!hay) { localStorage.removeItem(GS_BORRADOR); return; }
       localStorage.setItem(GS_BORRADOR, JSON.stringify({ t: Date.now(), campos, foto: gsFotoDataUrl, pagos }));
@@ -8706,8 +8749,8 @@ function gsRestaurarBorrador() {
     Object.entries(d.campos || {}).forEach(([i, v]) => { const el = document.getElementById(i); if (el && v) el.value = v; });
     gsFotoDataUrl = d.foto || null; gsMostrarFoto();
     gsChipsRender();
-    if (d.pagos && d.pagos.extras && d.pagos.extras.length) {
-      d.pagos.extras.forEach(x => gsPagoAgregar(x.metodo, x.monto));
+    if (d.pagos) {
+      (d.pagos.extras || []).forEach(x => gsPagoAgregar(x.metodo, x.monto));
       document.getElementById('gsPagoM1').value = d.pagos.m1 || '';
       gsPagoRefrescar();
     }
@@ -8727,13 +8770,12 @@ async function guardarGasto(evt) {
   const id = document.getElementById('formGasto').dataset.editId;
   const sesion = getSesion();
   const monto = Math.round((parseFloat(document.getElementById('gsMonto').value) || 0) * 100) / 100;
-  const lineas = id ? null : gsPagoLeer();
-  if (lineas && lineas.length > 1) {
-    const suma = gsRedondear(lineas.reduce((a, l) => a + l.monto, 0));
-    if (lineas.some(l => !l.metodo)) { alert('Elige el método de pago en cada línea.'); return false; }
-    if (lineas.some(l => !(l.monto > 0))) { alert('Cada forma de pago necesita un monto mayor que cero.'); return false; }
-    if (suma !== monto) { alert('La suma de los pagos (' + formatoMoneda(suma) + ') debe ser igual al monto (' + formatoMoneda(monto) + ').'); return false; }
-  }
+  const lineas = gsPagoLeer();
+  const multi = lineas.length > 1;
+  const suma = gsRedondear(lineas.reduce((a, l) => a + l.monto, 0));
+  if (lineas.some(l => !l.metodo)) { alert('Elige el método de pago en cada línea.'); return false; }
+  if (multi && lineas.some(l => !(l.monto > 0))) { alert('Cada forma de pago necesita un monto mayor que cero.'); return false; }
+  if (suma !== monto) { alert('Los pagos suman ' + formatoMoneda(suma) + ' y el total es ' + formatoMoneda(monto) + '. Usa "+ Agregar otra forma de pago" hasta que cuadre.'); return false; }
   const categoria = document.getElementById('gsCategoria').value;
 
   // Proveedor: si coincide con uno registrado se enlaza; si no, se agrega a la descripción
@@ -8756,62 +8798,51 @@ async function guardarGasto(evt) {
     }
   }
 
+  // Una sola transacción por el total; si hay varios pagos, el método es "Varios" y el desglose va en transaccion_pagos
   const payload = {
     fecha: document.getElementById('gsFecha').value,
     monto,
     descripcion,
     categoria,
     organizacion_id: org ? org.id : null,
-    metodo: document.getElementById('gsMetodo').value,
+    metodo: multi ? 'Varios' : lineas[0].metodo,
     estado: document.getElementById('gsEstado').value,
     comprobante: ruta,
   };
   const fondoId = document.getElementById('gsFondo').value || null;
+  const cuentaGasto = cacheCuentas.find(c => c.tipo === 'Gasto' && c.nombre === categoria);
+  const filasPagos = tid => lineas.map(l => ({ transaccion_id: tid, metodo: l.metodo, monto: l.monto }));
 
   let error;
   if (id) {
     const g = cacheGastos.find(x => x.id === id);
     ({ error } = await sbCall(sb.from('gastos').update(payload).eq('id', id)));
-    const cuentaGasto = cacheCuentas.find(c => c.tipo === 'Gasto' && c.nombre === categoria);
     if (!error && g?.transaccion_id) {
-      await sbCall(sb.from('transacciones').update({
+      ({ error } = await sbCall(sb.from('transacciones').update({
         fecha: payload.fecha, monto: payload.monto, metodo: payload.metodo,
         estado: payload.estado, fondo_id: fondoId, categoria,
         descripcion: payload.descripcion, cuenta_dr: cuentaGasto ? cuentaGasto.id : null,
-      }).eq('id', g.transaccion_id));
+      }).eq('id', g.transaccion_id)));
+      if (!error) {
+        ({ error } = await sbCall(sb.from('transaccion_pagos').delete().eq('transaccion_id', g.transaccion_id)));
+        if (!error && multi) ({ error } = await sbCall(sb.from('transaccion_pagos').insert(filasPagos(g.transaccion_id))));
+      }
     }
   } else {
-    const partes = lineas ? lineas.map(l => ({ cat: categoria, monto: l.monto, metodo: l.metodo })) : [{ cat: categoria, monto, metodo: payload.metodo }];
-    const creadas = [];
-    for (const p of partes) {
-      const cuentaGasto = cacheCuentas.find(c => c.tipo === 'Gasto' && c.nombre === p.cat);
-      const { data: trans, error: errTrans } = await sbCall(
-        sb.from('transacciones').insert({
-          fecha: payload.fecha,
-          descripcion: payload.descripcion,
-          categoria: p.cat,
-          tipo: 'Egreso',
-          tipo_origen: 'Gasto',
-          metodo: p.metodo,
-          monto: p.monto,
-          estado: payload.estado,
-          fondo_id: fondoId,
-          cuenta_dr: cuentaGasto ? cuentaGasto.id : null,
-          solo_fondo: false,
-          creado_por: sesion.usuario?.id || null,
-        }).select().single()
-      );
-      if (errTrans) { error = errTrans; break; }
-      const r = await sbCall(sb.from('gastos').insert({ ...payload, categoria: p.cat, metodo: p.metodo, monto: p.monto, transaccion_id: trans.id, creado_por: sesion.usuario?.id || null }));
-      creadas.push(trans.id);
-      if (r.error) { error = r.error; break; }
-    }
-    if (error && creadas.length) {
-      // Si algo falló a medias, se deshace todo lo creado en este guardado
-      for (const tid of creadas) {
-        await sbCall(sb.from('gastos').delete().eq('transaccion_id', tid));
-        await sbCall(sb.from('transacciones').delete().eq('id', tid));
-      }
+    const { data: trans, error: errTrans } = await sbCall(
+      sb.from('transacciones').insert({
+        fecha: payload.fecha, descripcion: payload.descripcion, categoria,
+        tipo: 'Egreso', tipo_origen: 'Gasto', metodo: payload.metodo, monto,
+        estado: payload.estado, fondo_id: fondoId,
+        cuenta_dr: cuentaGasto ? cuentaGasto.id : null,
+        solo_fondo: false, creado_por: sesion.usuario?.id || null,
+      }).select().single()
+    );
+    if (errTrans) error = errTrans;
+    else {
+      if (multi) ({ error } = await sbCall(sb.from('transaccion_pagos').insert(filasPagos(trans.id))));
+      if (!error) ({ error } = await sbCall(sb.from('gastos').insert({ ...payload, transaccion_id: trans.id, creado_por: sesion.usuario?.id || null })));
+      if (error) await sbCall(sb.from('transacciones').delete().eq('id', trans.id)); // el desglose se borra en cascada
     }
   }
 
