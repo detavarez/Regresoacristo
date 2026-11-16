@@ -2434,14 +2434,35 @@
         <div><label for="gsMonto">Monto *</label><input type="number" id="gsMonto" step="0.01" min="0" required></div>
         <div class="full"><label for="gsDescripcion">Descripción *</label><input type="text" id="gsDescripcion" placeholder="Descripción del gasto" required></div>
         <div><label for="gsCategoria">Categoría</label><select id="gsCategoria"></select></div>
-        <div><label for="gsOrganizacion">Proveedor / Organización</label><select id="gsOrganizacion"></select></div>
+        <div><label for="gsOrganizacion">Pagado a (proveedor)</label><input type="text" id="gsOrganizacion" list="dlGastoProv" placeholder="Escribe o elige" autocomplete="off"><datalist id="dlGastoProv"></datalist></div>
         <div><label for="gsMetodo">Método</label><select id="gsMetodo"></select></div>
         <div><label for="gsFondo">Fondo</label><select id="gsFondo"></select></div>
         <div><label for="gsEstado">Estado</label><select id="gsEstado"></select></div>
+        <div class="full" id="gsDivBloque">
+          <label class="interruptor"><input type="checkbox" id="gsDividir" onchange="gsDivToggle()"><span class="pista"></span><span>Dividir en varias categorías (un solo recibo)</span></label>
+          <div id="gsDivWrap" style="display:none; margin-top:8px;">
+            <div id="gsDivLineas"></div>
+            <button type="button" class="btnSecundario" onclick="gsDivAgregar()">+ Agregar línea</button>
+            <div id="gsDivResumen" style="font-size:0.85rem; margin-top:6px; color:var(--text-muted);"></div>
+          </div>
+        </div>
+        <div class="full">
+          <label>Foto del recibo (opcional)</label>
+          <div id="gsFotoVista" style="display:none; margin-bottom:8px;"><img id="gsFotoImg" alt="Recibo" style="max-width:100%; max-height:220px; border-radius:8px; border:1px solid var(--border);"></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btnSecundario" onclick="document.getElementById('gsFotoTel').click()">Cámara</button>
+            <button type="button" class="btnSecundario" onclick="document.getElementById('gsFotoArch').click()">Elegir archivo</button>
+            <button type="button" class="btnSecundario" id="gsFotoVer" style="display:none;" onclick="gsVerReciboGuardado()">Ver recibo guardado</button>
+            <button type="button" class="btnSecundario" id="gsFotoQuitar" style="display:none;" onclick="gsQuitarFoto()">Quitar</button>
+          </div>
+          <input type="file" id="gsFotoTel" accept="image/*" capture="environment" style="display:none;" onchange="gsFotoElegida(this)">
+          <input type="file" id="gsFotoArch" accept="image/*" style="display:none;" onchange="gsFotoElegida(this)">
+        </div>
       </div>
+      <div id="gsBorradorAviso" style="display:none; font-size:0.85rem; margin:8px 0; color:var(--text-muted);">Recuperamos lo que estabas escribiendo. <a href="#" onclick="gsDescartarBorrador(true); return false;">Descartar</a></div>
       <div class="formAcciones">
         <button type="button" class="btnPeligro" id="btnEliminarGasto" onclick="eliminarGasto()" style="display:none;">Eliminar</button>
-        <button type="button" class="btnSecundario" onclick="cerrarModalGasto()">Cancelar</button>
+        <button type="button" class="btnSecundario" onclick="gsCancelar()">Cancelar</button>
         <button type="submit" class="btnPrincipal" style="width:auto;">Guardar</button>
       </div>
     </form>
@@ -2802,8 +2823,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-084';
-document.getElementById('versionTopbar').textContent = 'Ver-084';
+const APP_VERSION = 'church-admin Ver-085';
+document.getElementById('versionTopbar').textContent = 'Ver-085';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {
@@ -4656,7 +4677,7 @@ async function rmAprobar(evt) {
 
     const base = { fecha, monto, metodo: x.metodo, estado: 'Completado', transaccion_id: trans.id, creado_por: sesion.usuario?.id || null };
     let error;
-    if (esGasto) ({ error } = await sbCall(sb.from('gastos').insert({ ...base, descripcion, categoria, organizacion_id: orgId })));
+    if (esGasto) ({ error } = await sbCall(sb.from('gastos').insert({ ...base, descripcion, categoria, organizacion_id: orgId, comprobante: x.comprobante || null })));
     else if (x.tipo === 'Diezmo') ({ error } = await sbCall(sb.from('diezmos').insert({ ...base, persona_id: personaId, referencia, no_sobre: x.no_sobre || (personaPorId(personaId) || {}).sobre_actual?.toString() || null })));
     else if (x.tipo === 'Ofrenda') ({ error } = await sbCall(sb.from('ofrendas').insert({ ...base, tipo: sub })));
     else ({ error } = await sbCall(sb.from('donaciones').insert({ ...base, persona_id: personaId, referencia })));
@@ -8487,7 +8508,7 @@ function renderGastos(filas) {
     <div class="tarjetaSeguimiento" onclick="abrirFormGasto('${g.id}')">
       <div>
         <div class="nombrePersona">${g.descripcion || '—'}</div>
-        <div class="metaLinea">${formatoFecha(g.fecha)} · ${g.categoria || '—'}${nombreOrgPorId(g.organizacion_id) ? ' · ' + nombreOrgPorId(g.organizacion_id) : ''} · ${g.metodo || '—'} · ${g.estado || ''}</div>
+        <div class="metaLinea">${formatoFecha(g.fecha)} · ${g.categoria || '—'}${nombreOrgPorId(g.organizacion_id) ? ' · ' + nombreOrgPorId(g.organizacion_id) : ''} · ${g.metodo || '—'} · ${g.estado || ''}${g.comprobante ? ' · con recibo' : ''}</div>
       </div>
       <span class="badge badge-tipo">${formatoMoneda(g.monto)}</span>
     </div>`).join('');
@@ -8511,10 +8532,13 @@ function poblarSelectOrganizacion(selectId, valorActual) {
 
 function abrirFormGasto(id) {
   document.getElementById('formGasto').reset();
+  gsFotoDataUrl = null; gsFotoActual = ''; gsFotoQuitada = false; gsDivReset();
+  document.getElementById('gsBorradorAviso').style.display = 'none';
+  document.getElementById('gsDivBloque').style.display = id ? 'none' : '';
   document.getElementById('btnEliminarGasto').style.display = 'none';
   document.getElementById('gsFecha').value = new Date().toISOString().slice(0, 10);
   poblarSelectCategoriaGasto('gsCategoria', defaultTx('Gasto').categoria);
-  poblarSelectOrganizacion('gsOrganizacion');
+  gsPoblarProv();
   poblarSelectMetodoGasto('gsMetodo');
   poblarSelectEstado('gsEstado');
   poblarSelectFondos('gsFondo', defaultTx('Gasto').fondo_id);
@@ -8532,40 +8556,201 @@ function abrirFormGasto(id) {
       document.getElementById('gsMonto').value = g.monto;
       document.getElementById('gsDescripcion').value = g.descripcion || '';
       poblarSelectCategoriaGasto('gsCategoria', g.categoria);
-      poblarSelectOrganizacion('gsOrganizacion', g.organizacion_id);
+      gsPoblarProv(g.organizacion_id);
+      gsFotoActual = g.comprobante || '';
       poblarSelectMetodoGasto('gsMetodo', g.metodo);
       poblarSelectEstado('gsEstado', g.estado);
       document.getElementById('btnEliminarGasto').style.display = 'inline-block';
       restaurarFondoDesdeTransaccion('gsFondo', g.transaccion_id);
     }
   }
+  gsMostrarFoto();
+  if (!id) gsRestaurarBorrador();
   document.getElementById('modalGasto').classList.add('abierto');
 }
 
 function cerrarModalGasto() { document.getElementById('modalGasto').classList.remove('abierto'); }
 
+// ── Gasto: foto del recibo, borrador, proveedor y división ──
+let gsFotoDataUrl = null, gsFotoActual = '', gsFotoQuitada = false, _gsTBorrador = null;
+const GS_BORRADOR = 'ca_borrador_gasto';
+const GS_CAMPOS = ['gsFecha', 'gsMonto', 'gsDescripcion', 'gsCategoria', 'gsOrganizacion', 'gsMetodo', 'gsEstado', 'gsFondo'];
+
+function gsPoblarProv(orgId) {
+  document.getElementById('dlGastoProv').innerHTML = cacheOrganizacionesFinanzas.map(o => `<option value="${escV28(o.nombre)}">`).join('');
+  const inp = document.getElementById('gsOrganizacion');
+  inp.value = orgId ? (nombreOrgPorId(orgId) || '') : '';
+}
+
+async function gsComprimirFoto(file) {
+  const url = URL.createObjectURL(file);
+  const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
+  const k = Math.min(1, 1280 / Math.max(img.width, img.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  URL.revokeObjectURL(url);
+  return new Promise(r => c.toBlob(r, 'image/jpeg', 0.72));
+}
+function gsBlobADataURL(b) { return new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(b); }); }
+
+async function gsFotoElegida(inp) {
+  const f = inp.files[0];
+  if (!f) return;
+  try { gsFotoDataUrl = await gsBlobADataURL(await gsComprimirFoto(f)); gsFotoQuitada = false; gsMostrarFoto(); gsBorradorGuardar(); }
+  catch (e) { alert('No se pudo leer la foto. Intenta con otra.'); }
+  inp.value = '';
+}
+function gsMostrarFoto() {
+  const hayNueva = !!gsFotoDataUrl;
+  const hayGuardada = !!gsFotoActual && !gsFotoQuitada;
+  document.getElementById('gsFotoImg').src = gsFotoDataUrl || '';
+  document.getElementById('gsFotoVista').style.display = hayNueva ? '' : 'none';
+  document.getElementById('gsFotoVer').style.display = (hayGuardada && !hayNueva) ? '' : 'none';
+  document.getElementById('gsFotoQuitar').style.display = (hayNueva || hayGuardada) ? '' : 'none';
+}
+function gsQuitarFoto() {
+  if (gsFotoDataUrl) gsFotoDataUrl = null; else gsFotoQuitada = true;
+  gsMostrarFoto(); gsBorradorGuardar();
+}
+async function gsVerReciboGuardado() {
+  if (!gsFotoActual) return;
+  const { data, error } = await sb.storage.from('comprobantes').createSignedUrl(gsFotoActual, 300);
+  if (error || !data) { alert('No se pudo abrir el recibo: ' + (error ? error.message : '')); return; }
+  window.open(data.signedUrl, '_blank');
+}
+
+// División de un recibo en varias categorías
+function gsDivOpciones() { return cacheCuentas.filter(c => c.tipo === 'Gasto').map(c => `<option value="${escV28(c.nombre)}">${escV28(c.nombre)}</option>`).join(''); }
+function gsDivAgregar(cat, monto) {
+  const d = document.createElement('div');
+  d.className = 'gsDivLinea';
+  d.style.cssText = 'display:flex; gap:6px; margin:6px 0; align-items:center;';
+  d.innerHTML = `<select class="gsDivCat" style="flex:2;">${gsDivOpciones()}</select><input type="number" step="0.01" min="0" class="gsDivMonto" placeholder="Monto" style="flex:1;" oninput="gsDivActualizar()"><button type="button" class="btnSecundario" onclick="this.parentNode.remove(); gsDivActualizar(); gsBorradorGuardar();">Quitar</button>`;
+  document.getElementById('gsDivLineas').appendChild(d);
+  if (cat) d.querySelector('.gsDivCat').value = cat;
+  if (monto) d.querySelector('.gsDivMonto').value = monto;
+  gsDivActualizar();
+}
+function gsDivLeer() {
+  return [...document.querySelectorAll('#gsDivLineas .gsDivLinea')].map(d => ({
+    cat: d.querySelector('.gsDivCat').value,
+    monto: Math.round((parseFloat(d.querySelector('.gsDivMonto').value) || 0) * 100) / 100,
+  }));
+}
+function gsDivActualizar() {
+  const total = Math.round((parseFloat(document.getElementById('gsMonto').value) || 0) * 100) / 100;
+  const suma = Math.round(gsDivLeer().reduce((a, l) => a + l.monto, 0) * 100) / 100;
+  const dif = Math.round((total - suma) * 100) / 100;
+  document.getElementById('gsDivResumen').textContent = `Suma de líneas: ${formatoMoneda(suma)} de ${formatoMoneda(total)}. ` + (dif === 0 ? 'Cuadra.' : dif > 0 ? `Faltan ${formatoMoneda(dif)}.` : `Sobran ${formatoMoneda(-dif)}.`);
+}
+function gsDivToggle() {
+  const on = document.getElementById('gsDividir').checked;
+  document.getElementById('gsDivWrap').style.display = on ? '' : 'none';
+  document.getElementById('gsCategoria').parentNode.style.display = on ? 'none' : '';
+  if (on && !document.querySelector('#gsDivLineas .gsDivLinea')) { gsDivAgregar(); gsDivAgregar(); }
+  gsDivActualizar(); gsBorradorGuardar();
+}
+function gsDivReset() {
+  document.getElementById('gsDivLineas').innerHTML = '';
+  document.getElementById('gsDividir').checked = false;
+  document.getElementById('gsDivWrap').style.display = 'none';
+  document.getElementById('gsCategoria').parentNode.style.display = '';
+}
+document.getElementById('gsMonto').addEventListener('input', gsDivActualizar);
+
+// Borrador: si se recarga la página, lo escrito y la foto se recuperan (6 horas)
+function gsBorradorGuardar() {
+  clearTimeout(_gsTBorrador);
+  _gsTBorrador = setTimeout(() => {
+    try {
+      const f = document.getElementById('formGasto');
+      if (f.dataset.editId || !document.getElementById('modalGasto').classList.contains('abierto')) return;
+      const campos = {}; GS_CAMPOS.forEach(i => { campos[i] = document.getElementById(i).value; });
+      const dividir = document.getElementById('gsDividir').checked;
+      const hay = campos.gsMonto || campos.gsDescripcion || campos.gsOrganizacion || gsFotoDataUrl;
+      if (!hay) { localStorage.removeItem(GS_BORRADOR); return; }
+      localStorage.setItem(GS_BORRADOR, JSON.stringify({ t: Date.now(), campos, foto: gsFotoDataUrl, dividir, lineas: dividir ? gsDivLeer() : [] }));
+    } catch (e) { /* almacenamiento lleno: se ignora */ }
+  }, 400);
+}
+function gsRestaurarBorrador() {
+  try {
+    const d = JSON.parse(localStorage.getItem(GS_BORRADOR) || 'null');
+    if (!d || Date.now() - d.t > 6 * 3600 * 1000) { localStorage.removeItem(GS_BORRADOR); return; }
+    Object.entries(d.campos || {}).forEach(([i, v]) => { const el = document.getElementById(i); if (el && v) el.value = v; });
+    gsFotoDataUrl = d.foto || null; gsMostrarFoto();
+    if (d.dividir) {
+      document.getElementById('gsDividir').checked = true;
+      document.getElementById('gsDivWrap').style.display = '';
+      document.getElementById('gsCategoria').parentNode.style.display = 'none';
+      (d.lineas || []).forEach(l => gsDivAgregar(l.cat, l.monto || ''));
+      if (!document.querySelector('#gsDivLineas .gsDivLinea')) gsDivAgregar();
+    }
+    gsDivActualizar();
+    document.getElementById('gsBorradorAviso').style.display = '';
+  } catch (e) { localStorage.removeItem(GS_BORRADOR); }
+}
+function gsDescartarBorrador(limpiarForm) {
+  clearTimeout(_gsTBorrador);
+  localStorage.removeItem(GS_BORRADOR);
+  if (limpiarForm) { abrirFormGasto(); }
+}
+function gsCancelar() { gsDescartarBorrador(false); cerrarModalGasto(); }
+['input', 'change'].forEach(ev => document.getElementById('formGasto').addEventListener(ev, gsBorradorGuardar));
+
 async function guardarGasto(evt) {
   evt.preventDefault();
   const id = document.getElementById('formGasto').dataset.editId;
   const sesion = getSesion();
+  const monto = Math.round((parseFloat(document.getElementById('gsMonto').value) || 0) * 100) / 100;
+  const dividir = !id && document.getElementById('gsDividir').checked;
+  let lineas = null;
+  if (dividir) {
+    lineas = gsDivLeer().filter(l => l.monto > 0);
+    const suma = Math.round(lineas.reduce((a, l) => a + l.monto, 0) * 100) / 100;
+    if (lineas.length < 2) { alert('Para dividir necesitas al menos dos líneas con monto.'); return false; }
+    if (suma !== monto) { alert('La suma de las líneas (' + formatoMoneda(suma) + ') debe ser igual al monto (' + formatoMoneda(monto) + ').'); return false; }
+  }
   const categoria = document.getElementById('gsCategoria').value;
+
+  // Proveedor: si coincide con uno registrado se enlaza; si no, se agrega a la descripción
+  const provTxt = document.getElementById('gsOrganizacion').value.trim();
+  const org = provTxt ? cacheOrganizacionesFinanzas.find(o => normNombre(o.nombre) === normNombre(provTxt)) : null;
+  let descripcion = document.getElementById('gsDescripcion').value.trim();
+  if (provTxt && !org) descripcion += ' — ' + provTxt;
+
+  // Foto del recibo
+  let ruta = id ? ((gsFotoQuitada && !gsFotoDataUrl) ? null : (gsFotoActual || null)) : null;
+  if (gsFotoDataUrl) {
+    try {
+      const blob = await (await fetch(gsFotoDataUrl)).blob();
+      const nueva = sesion.usuario.id + '/' + Date.now() + '.jpg';
+      const up = await sb.storage.from('comprobantes').upload(nueva, blob, { contentType: 'image/jpeg' });
+      if (up.error) throw up.error;
+      ruta = nueva;
+    } catch (e) {
+      if (!await confirmar('No se pudo subir la foto (' + (e.message || 'error') + '). ¿Guardar el gasto sin foto?')) return false;
+    }
+  }
 
   const payload = {
     fecha: document.getElementById('gsFecha').value,
-    monto: parseFloat(document.getElementById('gsMonto').value) || 0,
-    descripcion: document.getElementById('gsDescripcion').value.trim(),
+    monto,
+    descripcion,
     categoria,
-    organizacion_id: document.getElementById('gsOrganizacion').value || null,
+    organizacion_id: org ? org.id : null,
     metodo: document.getElementById('gsMetodo').value,
     estado: document.getElementById('gsEstado').value,
+    comprobante: ruta,
   };
   const fondoId = document.getElementById('gsFondo').value || null;
-  const cuentaGasto = cacheCuentas.find(c => c.tipo === 'Gasto' && c.nombre === categoria);
 
   let error;
   if (id) {
     const g = cacheGastos.find(x => x.id === id);
     ({ error } = await sbCall(sb.from('gastos').update(payload).eq('id', id)));
+    const cuentaGasto = cacheCuentas.find(c => c.tipo === 'Gasto' && c.nombre === categoria);
     if (!error && g?.transaccion_id) {
       await sbCall(sb.from('transacciones').update({
         fecha: payload.fecha, monto: payload.monto, metodo: payload.metodo,
@@ -8574,29 +8759,42 @@ async function guardarGasto(evt) {
       }).eq('id', g.transaccion_id));
     }
   } else {
-    const { data: trans, error: errTrans } = await sbCall(
-      sb.from('transacciones').insert({
-        fecha: payload.fecha,
-        descripcion: payload.descripcion,
-        categoria,
-        tipo: 'Egreso',
-        tipo_origen: 'Gasto',
-        metodo: payload.metodo,
-        monto: payload.monto,
-        estado: payload.estado,
-        fondo_id: fondoId,
-        cuenta_dr: cuentaGasto ? cuentaGasto.id : null,
-        solo_fondo: false,
-        creado_por: sesion.usuario?.id || null,
-      }).select().single()
-    );
-    if (errTrans) { alert('Error al crear la transacción vinculada: ' + errTrans.message); return false; }
-    payload.transaccion_id = trans.id;
-    payload.creado_por = sesion.usuario?.id || null;
-    ({ error } = await sbCall(sb.from('gastos').insert(payload)));
+    const partes = lineas ? lineas.map(l => ({ cat: l.cat, monto: l.monto })) : [{ cat: categoria, monto }];
+    const creadas = [];
+    for (const p of partes) {
+      const cuentaGasto = cacheCuentas.find(c => c.tipo === 'Gasto' && c.nombre === p.cat);
+      const { data: trans, error: errTrans } = await sbCall(
+        sb.from('transacciones').insert({
+          fecha: payload.fecha,
+          descripcion: payload.descripcion,
+          categoria: p.cat,
+          tipo: 'Egreso',
+          tipo_origen: 'Gasto',
+          metodo: payload.metodo,
+          monto: p.monto,
+          estado: payload.estado,
+          fondo_id: fondoId,
+          cuenta_dr: cuentaGasto ? cuentaGasto.id : null,
+          solo_fondo: false,
+          creado_por: sesion.usuario?.id || null,
+        }).select().single()
+      );
+      if (errTrans) { error = errTrans; break; }
+      const r = await sbCall(sb.from('gastos').insert({ ...payload, categoria: p.cat, monto: p.monto, transaccion_id: trans.id, creado_por: sesion.usuario?.id || null }));
+      creadas.push(trans.id);
+      if (r.error) { error = r.error; break; }
+    }
+    if (error && creadas.length) {
+      // Si algo falló a medias, se deshace todo lo creado en este guardado
+      for (const tid of creadas) {
+        await sbCall(sb.from('gastos').delete().eq('transaccion_id', tid));
+        await sbCall(sb.from('transacciones').delete().eq('id', tid));
+      }
+    }
   }
 
   if (error) { alert('Error al guardar: ' + error.message); return false; }
+  gsDescartarBorrador(false);
   cerrarModalGasto();
   cargarGastos();
   return false;

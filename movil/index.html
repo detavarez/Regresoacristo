@@ -67,6 +67,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 .bw{background:rgba(232,160,48,.15);color:var(--warnT);border:1px solid rgba(232,160,48,.3)}
 .bs{background:rgba(61,170,110,.15);color:var(--okT);border:1px solid rgba(61,170,110,.3)}
 .bd{background:rgba(217,79,79,.15);color:var(--badT);border:1px solid rgba(217,79,79,.3)}
+.rec-btn{margin-top:9px;margin-right:8px;padding:7px 14px;border-radius:7px;background:rgba(15,36,69,.08);border:1px solid rgba(15,36,69,.25);color:inherit;font-size:12px;font-weight:600;cursor:pointer}
 .cancel-btn{margin-top:9px;padding:7px 14px;border-radius:7px;background:rgba(217,79,79,.12);border:1px solid rgba(217,79,79,.3);color:var(--badT);font-size:12px;font-weight:600;cursor:pointer}
 .empty{text-align:center;color:var(--muted);font-size:13px;padding:30px 10px}
 .ov{display:none;position:fixed;inset:0;background:var(--ovBg);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:30px}
@@ -94,7 +95,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 <div id="loginBox" style="display:none">
   <div class="logo-i" style="margin:0 auto;width:56px;height:56px;font-size:28px">✝</div>
   <h2>MobileCash</h2>
-  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M016</div>
+  <div class="pg-sub" style="text-align:center">MobileCash · Ver-M017</div>
   <div class="form-card">
     <div class="fgrp"><label>Correo</label><input type="email" id="lgEmail" autocomplete="username" inputmode="email"></div>
     <div class="fgrp"><label>Contraseña</label><input type="password" id="lgPass" autocomplete="current-password"></div>
@@ -104,7 +105,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background
 </div>
 
 <div id="app" style="display:none">
-<script>NAV.montar({ titulo: 'MobileCash', sub: 'Ver-M016 · <span id="quien"></span>', punto: true,
+<script>NAV.montar({ titulo: 'MobileCash', sub: 'Ver-M017 · <span id="quien"></span>', punto: true,
   extras: [{ id: 'btnInstalar', html: '📲', titulo: 'Instalar en el celular', onclick: 'instalarApp()', oculto: true }, { html: '↻', titulo: 'Actualizar', onclick: 'cargar(true)' }] });</script>
 <div id="toast" class="toast"></div>
 
@@ -523,6 +524,16 @@ async function enviar() {
 }
 function cerrarOv(sinNav) { $('ov').classList.remove('show'); if (!sinNav) mostrar('pendientes'); }
 
+async function verRecibo(ruta) {
+  const { data, error } = await sb.storage.from('comprobantes').createSignedUrl(ruta, 300);
+  if (error || !data) { toast('No se pudo abrir el recibo.'); return; }
+  const v = document.createElement('div');
+  v.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;';
+  v.innerHTML = '<img src="' + data.signedUrl + '" alt="Recibo" style="max-width:100%;max-height:82vh;border-radius:8px;"><button type="button" style="margin-top:14px;padding:10px 26px;border-radius:8px;border:0;font-size:15px;font-weight:600;">Cerrar</button>';
+  v.onclick = e => { if (e.target !== v.querySelector('img')) v.remove(); };
+  document.body.appendChild(v);
+}
+
 async function cancelar(id) {
   if (!await confirmar('¿Cancelar este registro?')) return;
   const { error } = await sbCall(sb.from('registros_movil').delete().eq('id', id).eq('estado', 'Pendiente'));
@@ -533,7 +544,7 @@ async function cancelar(id) {
 function item(r, conCancelar) {
   const cls = r.estado === 'Aprobado' ? 'bs' : r.estado === 'Rechazado' ? 'bd' : 'bw';
   const det = [r.nombre, r.subtipo, r.categoria, r.proveedor, r.servicio, r.metodo, r.fecha, r.no_sobre ? 'Sobre ' + r.no_sobre : '', r.referencia, r.proyecto, r.comprobante ? '📎 recibo' : ''].filter(Boolean).map(esc).join(' · ');
-  return `<div class="pend-item"><div class="pi-h"><div><div class="pi-type">${r.tipo} <span class="badge ${cls}">${r.estado}</span></div></div><div class="pi-amt">${money(r.monto)}</div></div><div class="pi-det">${det}</div>${conCancelar ? `<button class="cancel-btn" onclick="cancelar('${r.id}')">✕ Cancelar</button>` : ''}</div>`;
+  return `<div class="pend-item"><div class="pi-h"><div><div class="pi-type">${r.tipo} <span class="badge ${cls}">${r.estado}</span></div></div><div class="pi-amt">${money(r.monto)}</div></div><div class="pi-det">${det}</div>${r.comprobante ? `<button class="rec-btn" onclick="verRecibo('${esc(r.comprobante)}')">Ver recibo</button>` : ''}${conCancelar ? `<button class="cancel-btn" onclick="cancelar('${r.id}')">✕ Cancelar</button>` : ''}</div>`;
 }
 
 function pintar() {
