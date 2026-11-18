@@ -15,7 +15,7 @@
 <script src="../shared/supabase-client.js?v=20261108d"></script>
 <script src="../shared/dialogos.js?v=20261108d"></script>
 <script src="../shared/auth.js?v=20261108d"></script>
-<script src="../shared/seguridad.js?v=20261108d"></script>
+<script src="../shared/seguridad.js?v=20261116a"></script>
 <script src="../shared/nav.js?v=20261108d"></script>
 <script src="../shared/instalar.js?v=20261108d"></script>
 <style>
@@ -1459,7 +1459,7 @@
             <button type="button" class="btnPrincipal" style="width:auto;" onclick="cfgGuardarBloqueo()">Guardar</button>
             <span id="cfgBloqueoMsg" style="font-size:0.85rem; color:var(--text-muted);"></span>
           </div>
-          <div style="padding:0 18px 14px; font-size:0.78rem; color:var(--text-muted);">Al bloquearse, la sesión sigue abierta; se desbloquea con PIN, huella o rostro, o con la contraseña.</div>
+          <div style="padding:0 18px 14px; font-size:0.78rem; color:var(--text-muted);">Al bloquearse, la sesión sigue abierta; se desbloquea con PIN, con la huella o el rostro del teléfono (según lo que tenga), o con la contraseña.</div>
         </div>
 
         <div class="tablaWrap" data-adm="correos" style="margin-bottom:20px;" id="bloqueImportCfg">
@@ -2826,8 +2826,8 @@
 </div>
 
 <script>
-const APP_VERSION = 'church-admin Ver-088';
-document.getElementById('versionTopbar').textContent = 'Ver-088';
+const APP_VERSION = 'church-admin Ver-089';
+document.getElementById('versionTopbar').textContent = 'Ver-089';
 
 // ── Seguridad: ahora vive en shared/seguridad.js (SEG) ──
 async function cfgGuardarBloqueo() {

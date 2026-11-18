@@ -35,6 +35,21 @@
 
   function b64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
   function deB64(t) { const s = atob(t.replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(s, c => c.charCodeAt(0)); }
+  // Cada teléfono decide qué pide: iPhone/iPad (Face ID o Touch ID) = "huella o rostro"; Android normalmente solo huella.
+  // En Android el texto dice solo "huella" para no prometer un rostro que el teléfono no pide.
+  const ES_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const T = t => ES_IOS ? t : String(t).replace(/huella o rostro configurados/g, 'huella configurada').replace(/([Hh])uella o (?:el )?rostro/g, '$1uella');
+  function adaptarTextos(raiz) {
+    if (ES_IOS || !raiz) return;
+    const w = document.createTreeWalker(raiz.nodeType === 3 ? raiz.parentNode : raiz, NodeFilter.SHOW_TEXT);
+    for (let n = w.nextNode(); n; n = w.nextNode()) { const v = T(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; }
+  }
+  function vigilarTextos(el) {
+    if (ES_IOS || !el) return;
+    adaptarTextos(el);
+    new MutationObserver(ms => ms.forEach(m => { if (m.type === 'characterData') adaptarTextos(m.target); else m.addedNodes.forEach(adaptarTextos); }))
+      .observe(el, { childList: true, subtree: true, characterData: true });
+  }
   const bioSoportada = () => !!(global.PublicKeyCredential && navigator.credentials && navigator.credentials.create);
   const bioAqui = () => !!localStorage.getItem('ca_bio_' + uid()) && bioSoportada();
 
@@ -114,6 +129,7 @@
         </div>
       </div>`;
     document.body.appendChild(lock);
+    vigilarTextos(lock);
 
     const perfil = document.createElement('div');
     perfil.id = 'segPerfil';
@@ -139,6 +155,7 @@
         <div class=\"segAcc\"><button class=\"segBtnSoft\" id=\"segBloquearAhora\" type=\"button\">Bloquear ahora</button><button class=\"segBtnDanger\" id=\"segCerrarSesion\" type=\"button\">Cerrar sesión</button></div>
       </div>`;
     document.body.appendChild(perfil);
+    vigilarTextos(perfil);
 
     const pop = document.createElement('div');
     pop.id = 'segPop';
@@ -171,6 +188,7 @@
         <button class="segBtn2" id="segPopCerrar" type="button">Cancelar</button>
       </div>`;
     document.body.appendChild(pop);
+    vigilarTextos(pop);
 
     $('segBtnInicio').onclick = () => iniciarMetodo(metodo);
     $('segInPin').oninput = e => { if (e.target.value.length === 4) verificarPin(); };
@@ -285,9 +303,9 @@
       if (sessionStorage.getItem('ca_bio_ofrecida') === '1') return;
       if (!usuario() || est.metodo_defecto !== 'bio' || bioAqui() || !bioSoportada()) return;
       sessionStorage.setItem('ca_bio_ofrecida', '1');
-      if (!(await confirmar('Tu método preferido es huella o rostro, pero se borró en este teléfono. ¿Quieres activarlo otra vez ahora?'))) return;
+      if (!(await confirmar(T('Tu método preferido es huella o rostro, pero se borró en este teléfono. ¿Quieres activarlo otra vez ahora?')))) return;
       const ok = await bioActivar(true);
-      alert(ok ? 'Listo: ya puedes entrar con huella o rostro en este teléfono.' : 'No se pudo activar. Puedes intentarlo desde el botón de perfil.');
+      alert(ok ? T('Listo: ya puedes entrar con huella o rostro en este teléfono.') : 'No se pudo activar. Puedes intentarlo desde el botón de perfil.');
     } catch (e) { /* sin diálogo disponible */ }
   }
 
